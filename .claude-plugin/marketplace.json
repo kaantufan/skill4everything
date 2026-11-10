@@ -1,0 +1,19 @@
+{
+  "name": "skill4everything",
+  "description": "Agent skills by Kaan Tufan. First skill: mobile-ui-craft.",
+  "owner": { "name": "Kaan Tufan" },
+  "plugins": [
+    {
+      "name": "mobile-ui-craft",
+      "description": "Design, build, restyle and review mobile app UI and UX that feels native, fits its niche and does not look AI-generated.",
+      "version": "1.0.0",
+      "source": "./",
+      "skills": ["./skills/mobile-ui-craft"],
+      "author": { "name": "Kaan Tufan" },
+      "homepage": "https://github.com/kaantufan/skill4everything",
+      "repository": "https://github.com/kaantufan/skill4everything",
+      "license": "MIT",
+      "keywords": ["skills", "mobile", "ui", "ux", "ios", "android", "flutter", "react-native", "swiftui", "compose"]
+    }
+  ]
+}

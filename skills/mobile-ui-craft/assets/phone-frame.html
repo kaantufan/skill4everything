@@ -1,0 +1,69 @@
+<!doctype html>
+<!-- Phone-sized frame for HTML mockups. It draws device chrome only: screen size, status bar,
+     home indicator, safe areas and the platform font stack. It carries no product styling on purpose. -->
+<html lang="en" data-platform="ios" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Screen preview</title>
+<style>
+  :root {
+    --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px;
+    --font: -apple-system, "SF Pro Text", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+    --chrome: #000;
+  }
+  [data-platform="android"] {
+    --w: 412px; --h: 915px; --safe-top: 40px; --safe-bottom: 24px;
+    --font: Roboto, "Google Sans", "Segoe UI", system-ui, sans-serif;
+  }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  /* body is the device: headless browsers can enforce a wider minimum window, so nothing may depend on the viewport */
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--screen-bg); color: var(--screen-fg); }
+  .statusbar {
+    position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 10;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none;
+  }
+  [data-platform="android"] .statusbar { padding: 0 18px 8px; font-weight: 500; font-size: 14px; }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  [data-platform="ios"] .statusbar .android, [data-platform="android"] .statusbar .ios { display: none; }
+  .home-indicator {
+    position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 10;
+    width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none;
+  }
+  [data-platform="android"] .home-indicator { width: 108px; height: 4px; opacity: .6; }
+  /* The screen fills the device. Use the safe-area variables for bars; let backgrounds run edge to edge. */
+  #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+</style>
+<style>
+  /* PRODUCT TOKENS: replace these with the brief's colour roles, type roles, spacing and radii. */
+  :root { --screen-bg: #fff; --screen-fg: #111; }
+  [data-theme="dark"] { --screen-bg: #000; --screen-fg: #f2f2f2; }
+</style>
+</head>
+<body>
+  <div class="statusbar">
+    <span>9:41</span>
+    <svg class="android" viewBox="0 -2 46 14" aria-hidden="true">
+      <path d="M8 12 0.6 3.4a11 11 0 0 1 14.8 0z"/><path d="M20 12h12V0z"/>
+      <rect x="38" y="0" width="7" height="12" rx="1.6"/><rect x="40" y="-1.6" width="3" height="2" rx=".6"/>
+    </svg>
+    <svg class="ios" viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" stroke="currentColor" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen">
+    <!-- SCREEN MARKUP: navigation bar, content and tab bar go here.
+         Pad the top bar with var(--safe-top) and the bottom bar with var(--safe-bottom). -->
+  </main>
+
+  <div class="home-indicator"></div>
+</body>
+</html>

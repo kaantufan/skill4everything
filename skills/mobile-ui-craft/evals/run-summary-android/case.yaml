@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: run-summary-android
+expected_outcome: |
+  A single-file HTML mockup of a Material 3 post-run summary whose dominant content is distance, pace and time in tabular figures with quieter units, with splits, a map placeholder, a primary Save and a clearly secondary Discard, Android structure and no generated-UI tells, plus a short report.

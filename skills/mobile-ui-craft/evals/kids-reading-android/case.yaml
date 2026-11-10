@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: kids-reading-android
+expected_outcome: |
+  A single-file HTML mockup of a child-facing home screen with a few large story choices, very large touch targets and minimal reading, a gated parent area, no purchases or ads within reach of the child, playful but not garish styling and no generated-UI tells, plus a short report.

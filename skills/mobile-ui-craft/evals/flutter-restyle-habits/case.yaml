@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: flutter-restyle-habits
+expected_outcome: |
+  Revised Flutter code for the same screen with the same features, themed from one place, free of template colours, emoji icons, fake greeting and invented stats, using accessible tap targets and platform-appropriate widgets, passing flutter analyze, plus a report of what changed, what was verified and what was not.
+context:
+  scaffold_script: place-files.sh

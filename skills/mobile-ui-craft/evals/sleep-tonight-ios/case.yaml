@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: sleep-tonight-ios
+expected_outcome: |
+  A single-file HTML mockup of a dark, low-glare iOS screen with one clear primary action for tonight, airy layout, calm copy, no streak pressure and no generated-UI tells, plus a short report of the direction and what was not verified.
