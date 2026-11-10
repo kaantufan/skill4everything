@@ -1,0 +1,589 @@
+<!doctype html>
+<!-- Rota · listing screen prototype (iOS, 393x852). HTML mockup: fonts, materials, controls and scrolling approximate the native ones.
+     All listing content, prices and photos are SAMPLE DATA; the photos are drawn stand-ins for the host's real photos. -->
+<html lang="en" data-platform="ios" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rota · The lookout on Sarıkız Ridge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px;
+    --font: -apple-system, "SF Pro Text", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+    --chrome: #000;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--screen-bg); color: var(--screen-fg); }
+  .statusbar {
+    position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 10;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none;
+  }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  .home-indicator {
+    position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 10;
+    width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none;
+  }
+  #screen { position: absolute; inset: 0; overflow: hidden; }
+</style>
+<style>
+  /* ROTA TOKENS. Source: a fire lookout at dusk and the surveyor's field notebook kept in it. */
+  :root {
+    --paper: #F3ECDF;      /* notebook page: content ground */
+    --paper-2: #E8DFCC;    /* tonal surface inside the page */
+    --ink: #1D2A27;        /* pine ink: primary text */
+    --ink-2: #545E58;      /* secondary text, 5.3:1 on paper */
+    --line: rgba(29,42,39,.16);
+    --cream: #F6EEDF;      /* annotation ink on photos */
+    --lamp: #FFC46B;       /* the cab light: the hero's response */
+    --action: #E9762F;     /* fire-service orange: the one action colour */
+    --on-action: #1B140E;  /* 5.8:1 on action */
+    --glass: rgba(18,24,40,.44);
+    --bar: rgba(243,236,223,.86);
+    --scrim: rgba(8,12,22,.5);
+    --screen-bg: var(--paper); --screen-fg: var(--ink);
+    --display: "Fraunces", Georgia, serif;
+    --r-control: 14px; --r-container: 22px; --r-sheet: 28px;
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px;
+    --t-quick: 120ms; --t-sheet: 420ms;
+    --spring: cubic-bezier(.34,1.56,.64,1); --ease-out: cubic-bezier(.2,.9,.25,1);
+  }
+  :root[data-theme="dark"] {
+    --paper: #151D1B; --paper-2: #1F2926; --ink: #EFE7D6; --ink-2: #B3AE9F;
+    --line: rgba(239,231,214,.14); --action: #E5813F; --bar: rgba(31,41,38,.86); --scrim: rgba(0,0,0,.55);
+    color-scheme: dark;
+  }
+</style>
+<style>
+  body { font-size: 17px; line-height: 1.4; }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  button:focus-visible { outline: 3px solid var(--action); outline-offset: 2px; }
+  .statusbar { --chrome: var(--cream); transition: color .2s; }
+  .compact .statusbar { --chrome: var(--ink); }
+  .sheet-open .statusbar { --chrome: var(--cream); }
+  .home-indicator { background: var(--ink); }
+
+  .scroller { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; z-index: 1; }
+  .scroller::-webkit-scrollbar { display: none; }
+
+  /* ---------- hero: the photos, each carrying one measured field note ---------- */
+  .hero { position: relative; height: 470px; background: #121C35; }
+  .track { display: flex; height: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+  .track::-webkit-scrollbar { display: none; }
+  .slide { flex: 0 0 100%; height: 100%; scroll-snap-align: start; position: relative; }
+  .slide svg { display: block; width: 100%; height: 100%; }
+  .count {
+    position: absolute; right: var(--s4); bottom: 40px; z-index: 2;
+    padding: 4px 10px; border-radius: 999px; background: var(--glass); color: var(--cream);
+    font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums;
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  }
+  .note-num { font-family: var(--display); font-weight: 560; fill: var(--cream); font-variant-numeric: tabular-nums;
+              paint-order: stroke; stroke: rgba(14,18,34,.35); stroke-width: 4px; letter-spacing: -.02em; }
+  .note-cap { font-family: var(--font); font-size: 13px; font-weight: 600; fill: var(--cream);
+              paint-order: stroke; stroke: rgba(14,18,34,.45); stroke-width: 3px; }
+  .dim-line, .dim-tick { stroke: var(--cream); stroke-width: 1.3; fill: none; }
+  .dim-ext { stroke: var(--cream); stroke-width: 1; stroke-dasharray: 3 3; opacity: .7; }
+
+  /* the cab light: dim and breathing until you reserve, then it comes on */
+  .win { fill: #6E5E4B; transition: fill var(--t-quick) linear; }
+  .glow { opacity: .18; transform-box: fill-box; transform-origin: center; transform: scale(.7);
+          transition: opacity 260ms ease-out, transform 420ms var(--spring); }
+  .lit .win { fill: var(--lamp); }
+  .lit .glow { opacity: 1; transform: scale(1); }
+
+  /* ---------- top bar ---------- */
+  .nav { position: absolute; inset: 0 0 auto 0; height: calc(var(--safe-top) + 52px); z-index: 5;
+         display: flex; align-items: flex-end; justify-content: space-between; padding: 0 var(--s4) var(--s2); pointer-events: none; }
+  .nav::before { content: ""; position: absolute; inset: 0; background: var(--bar); border-bottom: .5px solid var(--line);
+                 -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4); opacity: 0; transition: opacity .2s; }
+  .compact .nav::before { opacity: 1; }
+  .nav > * { position: relative; pointer-events: auto; }
+  .nav-title { position: absolute; left: 120px; right: 120px; bottom: 19px; text-align: center; font-size: 17px; font-weight: 600;
+               white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  .compact .nav-title { opacity: 1; }
+  .nav-right { display: flex; gap: var(--s2); }
+  .icon-btn { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+              background: var(--glass); color: var(--cream); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+              transition: background .2s, color .2s, transform var(--t-quick); }
+  .icon-btn:active { transform: scale(.92); }
+  .compact .nav .icon-btn { background: transparent; color: var(--ink); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .icon-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  #save[aria-pressed="true"] svg { fill: currentColor; }
+
+  /* ---------- the notebook page ---------- */
+  .page { position: relative; margin-top: -28px; background: var(--paper); border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+          padding: var(--s5) 20px 150px; min-height: 600px; }
+  .overline { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+  h1 { text-wrap: balance; font-family: var(--display); font-weight: 600; font-size: 32px; line-height: 1.08; letter-spacing: -.015em; margin: var(--s2) 0 var(--s3); }
+  .meta { margin: 0; font-size: 15px; color: var(--ink-2); }
+  .host { display: flex; align-items: center; gap: var(--s3); margin-top: var(--s5); }
+  .avatar { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: #C98B5B; color: #1B140E;
+            font-family: var(--display); font-weight: 600; font-size: 18px; flex: none; }
+  .host b { display: block; font-size: 15px; }
+  .host div span { font-size: 13px; color: var(--ink-2); }
+  h2 { font-family: var(--display); font-weight: 600; font-size: 22px; line-height: 1.15; margin: 40px 0 var(--s3); }
+  .notes { list-style: none; margin: 0; padding: 0; }
+  .notes li { display: grid; grid-template-columns: 36px 1fr; padding: var(--s4) 0; }
+  .notes li + li > div { border-top: .5px solid var(--line); margin-top: calc(-1 * var(--s4)); padding-top: var(--s4); }
+  .notes .no { font-family: var(--display); font-size: 15px; font-weight: 600; color: var(--action); font-variant-numeric: tabular-nums; padding-top: 1px; }
+  :root[data-theme="light"] .notes .no { color: #A4471A; } /* action orange darkened to pass 4.5:1 as text */
+  .notes b { display: block; font-size: 17px; font-weight: 600; margin-bottom: 2px; }
+  .notes p { text-wrap: pretty; margin: 0; font-size: 15px; color: var(--ink-2); line-height: 1.45; }
+  .facts { margin: 0; }
+  .facts div { padding: var(--s3) 0; border-top: .5px solid var(--line); }
+  .facts div:first-child { border-top: 0; padding-top: 0; }
+  .facts dt { font-size: 13px; font-weight: 600; color: var(--ink-2); margin-bottom: 2px; }
+  .facts dd { margin: 0; font-size: 15px; }
+
+  /* ---------- reserve bar (floats in the thumb zone) ---------- */
+  .bar { position: absolute; left: var(--s3); right: var(--s3); bottom: calc(var(--safe-bottom) - 8px); z-index: 6;
+         display: flex; align-items: center; justify-content: space-between; padding: var(--s2) var(--s2) var(--s2) var(--s4);
+         border-radius: var(--r-container); background: var(--bar); box-shadow: 0 10px 28px rgba(10,15,25,.22);
+         -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4); }
+  .price-btn { text-align: left; min-height: 56px; display: flex; flex-direction: column; justify-content: center; }
+  .price-btn .amt { font-family: var(--display); font-size: 24px; font-weight: 600; line-height: 1.05; font-variant-numeric: tabular-nums; }
+  .price-btn .amt small { font-family: var(--font); font-size: 13px; font-weight: 500; color: var(--ink-2); margin-left: 4px; }
+  .price-btn .when { font-size: 13px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line); margin-top: 3px; }
+  .primary { height: 56px; padding: 0 28px; border-radius: var(--r-control); background: var(--action); color: var(--on-action);
+             font-size: 17px; font-weight: 650; transition: transform var(--t-quick), filter var(--t-quick); white-space: nowrap; }
+  .primary:active { transform: scale(.97); filter: brightness(.94); }
+  .primary[aria-disabled="true"] { background: var(--paper-2); color: var(--ink-2); }
+  .primary[aria-disabled="true"]:active { transform: none; }
+
+  /* ---------- reserve sheet ---------- */
+  .scrim { position: absolute; inset: 0; z-index: 8; background: var(--scrim); opacity: 0; pointer-events: none; transition: opacity .25s; }
+  .sheet-open .scrim { opacity: 1; pointer-events: auto; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 9; background: var(--paper);
+           border-radius: var(--r-sheet) var(--r-sheet) 0 0; padding: var(--s2) 20px calc(var(--safe-bottom) + var(--s2));
+           transform: translateY(105%); transition: transform var(--t-sheet) var(--ease-out); box-shadow: 0 -12px 40px rgba(0,0,0,.25); }
+  .sheet-open .sheet { transform: none; }
+  .grabber { width: 36px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto var(--s2); }
+  .sheet-head { display: flex; align-items: center; justify-content: space-between; }
+  .sheet-head h2 { margin: 0; font-size: 24px; }
+  .icon-btn.plain { background: var(--paper-2); color: var(--ink); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .icon-btn.plain svg { width: 18px; height: 18px; stroke-width: 2.2; }
+  .dates { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: var(--s3); margin-top: var(--s4);
+           padding: var(--s3) var(--s4); border-radius: var(--r-control); background: var(--paper-2); }
+  .dates .lbl { display: block; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+  .dates b { font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .dates .arrow { color: var(--ink-2); padding-bottom: 1px; }
+  .stepper-row { display: flex; align-items: center; justify-content: space-between; margin-top: var(--s4); }
+  .stepper-row b { display: block; font-size: 17px; font-weight: 600; }
+  .stepper-row .sub { font-size: 13px; color: var(--ink-2); }
+  .stepper { display: flex; align-items: center; gap: var(--s2); }
+  .stepper button { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); font-size: 22px; line-height: 1; display: grid; place-items: center; }
+  .stepper button:active { background: var(--paper-2); }
+  .stepper button:disabled { opacity: .35; cursor: default; }
+  .stepper output { min-width: 28px; text-align: center; font-family: var(--display); font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .note { min-height: 36px; margin: var(--s1) 0 var(--s2); font-size: 13px; color: var(--ink-2); }
+  .lines { margin: 0; }
+  .lines div { display: flex; justify-content: space-between; padding: 6px 0; font-size: 15px; }
+  .lines dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .lines .total { border-top: .5px solid var(--line); margin-top: 6px; padding-top: var(--s3); align-items: baseline; }
+  .lines .total dt { font-size: 17px; font-weight: 600; }
+  .lines .total dd { font-family: var(--display); font-size: 28px; font-weight: 600; }
+  .cancel { font-size: 13px; color: var(--ink-2); margin: var(--s2) 0 var(--s4); }
+  .sheet .primary { width: 100%; }
+  .foot { font-size: 13px; color: var(--ink-2); text-align: center; margin: var(--s3) 0 0; }
+  .sent { padding: var(--s5) 0 var(--s2); }
+    .sent p { font-size: 15px; color: var(--ink-2); margin: 0 0 var(--s5); }
+
+  .tick { animation: tick 260ms var(--spring); }
+  @keyframes tick { 0% { transform: translateY(-3px); opacity: .5; } 100% { transform: none; opacity: 1; } }
+  .toast { position: absolute; left: 50%; top: calc(var(--safe-top) + 60px); z-index: 11; transform: translate(-50%, -8px);
+           padding: 10px 16px; border-radius: 999px; background: var(--ink); color: var(--paper); font-size: 15px; font-weight: 600;
+           opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* ---------- entrance (once) and living loop ---------- */
+  .ready .sky { animation: fade .35s both; }
+  .ready .tower { animation: rise .55s .12s both var(--ease-out); }
+  .ready .dim-line { stroke-dasharray: 202; animation: draw .6s .45s both ease-out; }
+  .ready .dim-label { animation: fade .4s .75s both; }
+  .ready .page { animation: pageUp .55s .3s both var(--ease-out); }
+  .ready .bar { animation: barUp .45s .7s both var(--ease-out); }
+  .ready .nav .icon-btn, .ready .count { animation: fade .3s .9s both; }
+  @keyframes fade { from { opacity: 0; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+  @keyframes draw { from { stroke-dashoffset: 202; } to { stroke-dashoffset: 0; } }
+  @keyframes pageUp { from { transform: translateY(60px); } }
+  @keyframes barUp { from { opacity: 0; transform: translateY(24px); } }
+
+  .mist { animation: drift 9s ease-in-out infinite alternate; }
+  .tw { animation: twinkle 5s ease-in-out infinite alternate; }
+  .breathe { animation: breathe 6s ease-in-out infinite alternate; }
+  @keyframes drift { from { transform: translateX(-28px); } to { transform: translateX(28px); } }
+  @keyframes twinkle { from { opacity: .25; } to { opacity: .9; } }
+  @keyframes breathe { from { opacity: .7; } to { opacity: 1; } }
+  .paused .mist, .paused .tw, .paused .breathe { animation-play-state: paused; }
+  .lit .breathe { animation: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition-duration: 1ms !important; }
+  }
+  .reduce *, .reduce *::before, .reduce *::after { animation: none !important; transition-duration: 1ms !important; }
+</style>
+</head>
+<body>
+  <div class="statusbar">
+    <span>9:41</span>
+    <svg class="ios" viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" stroke="currentColor" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen">
+    <div class="scroller" id="scroller">
+      <section class="hero" id="hero" aria-label="Photos">
+        <div class="track" id="track">
+
+          <!-- Photo 1: the tower at dusk. The measure is to scale: 202 px = 16 m. -->
+          <div class="slide">
+            <svg viewBox="0 0 393 470" preserveAspectRatio="xMidYMid slice" role="img"
+                 aria-label="Photo 1 of 3. The steel lookout tower rising above the pines at dusk. Field note: 16 metres from the forest floor to the bed, 74 steps.">
+              <defs>
+                <linearGradient id="sky1" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#121C35"/><stop offset=".5" stop-color="#3D3D60"/>
+                  <stop offset=".68" stop-color="#7A5A6D"/><stop offset=".82" stop-color="#D49067"/>
+                </linearGradient>
+                <radialGradient id="sun1" cx="1" cy=".8" r=".55">
+                  <stop offset="0" stop-color="#F2B27A" stop-opacity=".5"/><stop offset="1" stop-color="#F2B27A" stop-opacity="0"/>
+                </radialGradient>
+                <radialGradient id="lamp">
+                  <stop offset="0" stop-color="#FFD28A" stop-opacity=".95"/><stop offset=".35" stop-color="#FFB55A" stop-opacity=".4"/>
+                  <stop offset="1" stop-color="#FFB55A" stop-opacity="0"/>
+                </radialGradient>
+                <filter id="soft" x="-20%" y="-200%" width="140%" height="500%"><feGaussianBlur stdDeviation="5"/></filter>
+              </defs>
+              <g class="sky">
+                <rect width="393" height="470" fill="url(#sky1)"/>
+                <rect width="393" height="470" fill="url(#sun1)"/>
+                <g id="stars1" fill="#F6EEDF"></g>
+              </g>
+              <path fill="#6A6283" d="M0 302 L44 286 L92 298 L140 272 L196 292 L252 262 L304 286 L352 270 L393 284 V470 H0Z"/>
+              <path fill="#394260" d="M0 334 L58 316 L118 336 L172 318 L232 342 L292 312 L350 332 L393 318 V470 H0Z"/>
+              <g class="mist"><ellipse cx="196" cy="362" rx="260" ry="12" fill="#F6EEDF" opacity=".14" filter="url(#soft)"/></g>
+              <path id="pinesBack" fill="#1F2F2E"/>
+              <g class="tower">
+                <circle class="glow" cx="140" cy="168" r="84" fill="url(#lamp)"/>
+                <g id="brace" stroke="#0D1615" stroke-width="1.1" fill="none"></g>
+                <g stroke="#0D1615" stroke-width="2.6" stroke-linecap="round">
+                  <line x1="114" y1="190" x2="96" y2="392"/><line x1="166" y1="190" x2="184" y2="392"/>
+                </g>
+                <line x1="167.3" y1="191" x2="185.3" y2="392" stroke="#D49067" stroke-width=".9" opacity=".5"/>
+                <g stroke="#0D1615" stroke-width="1.6">
+                  <line x1="100" y1="190" x2="180" y2="190"/><line x1="100" y1="182" x2="180" y2="182"/>
+                  <line x1="100" y1="182" x2="100" y2="190"/><line x1="180" y1="182" x2="180" y2="190"/>
+                  <line x1="140" y1="130" x2="140" y2="116"/>
+                </g>
+                <rect x="108" y="150" width="64" height="40" fill="#1A2422"/>
+                <rect class="win breathe" x="112" y="156" width="56" height="24"/>
+                <g stroke="#1A2422" stroke-width="2"><line x1="126" y1="156" x2="126" y2="180"/><line x1="140" y1="156" x2="140" y2="180"/><line x1="154" y1="156" x2="154" y2="180"/></g>
+                <polygon points="102,150 178,150 140,130" fill="#121A19"/>
+                <line x1="140" y1="130" x2="178" y2="150" stroke="#D49067" stroke-width="1" opacity=".55"/>
+              </g>
+              <path id="pinesFront" fill="#0F1A19"/>
+              <g class="dim">
+                <line class="dim-ext" x1="182" y1="190" x2="228" y2="190"/>
+                <line class="dim-ext" x1="190" y1="392" x2="228" y2="392"/>
+                <line class="dim-tick" x1="216" y1="190" x2="228" y2="190"/>
+                <line class="dim-tick" x1="216" y1="392" x2="228" y2="392"/>
+                <line class="dim-line" x1="222" y1="392" x2="222" y2="190"/>
+                <path class="dim-tick" d="M218 197 L222 190 L226 197 M218 385 L222 392 L226 385"/>
+                <g class="dim-label">
+                  <text class="note-num" x="234" y="268" font-size="76"><tspan id="n16">16</tspan><tspan font-size="30" dx="6">m</tspan></text>
+                  <text class="note-cap" x="236" y="292">up to your bed</text>
+                  <text class="note-cap" x="236" y="309">74 steel steps</text>
+                </g>
+              </g>
+            </svg>
+          </div>
+
+          <!-- Photo 2: inside the glass cab at sunrise -->
+          <div class="slide">
+            <svg viewBox="0 0 393 470" preserveAspectRatio="xMidYMid slice" role="img"
+                 aria-label="Photo 2 of 3. Inside the glass cab at sunrise, the old fire-finder table in the middle. Field note: glass on all four sides.">
+              <defs>
+                <linearGradient id="sky2" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#93A8C6"/><stop offset=".6" stop-color="#EBC1A2"/><stop offset="1" stop-color="#F5D7A6"/>
+                </linearGradient>
+              </defs>
+              <rect width="393" height="470" fill="#2A1F1A"/>
+              <rect x="0" y="40" width="393" height="250" fill="url(#sky2)"/>
+              <circle cx="300" cy="214" r="15" fill="#FFF3D6" opacity=".95"/>
+              <path fill="#A3A7C0" d="M0 232 L60 214 L120 228 L190 204 L250 222 L320 208 L393 222 V290 H0Z"/>
+              <path fill="#7882A4" d="M0 256 L70 238 L140 252 L210 236 L280 256 L340 240 L393 250 V290 H0Z"/>
+              <path fill="#56618A" d="M0 278 L90 262 L170 276 L250 264 L330 280 L393 270 V290 H0Z"/>
+              <g fill="#2A1F1A">
+                <rect x="0" y="28" width="393" height="16"/><rect x="-4" y="28" width="22" height="270"/>
+                <rect x="126" y="28" width="10" height="270"/><rect x="258" y="28" width="10" height="270"/>
+                <rect x="378" y="28" width="20" height="270"/>
+              </g>
+              <rect x="0" y="286" width="393" height="20" fill="#3B2B21"/>
+              <rect x="0" y="286" width="393" height="1.5" fill="#8A6A4E"/>
+              <g stroke="#33261F" stroke-width="1"><line x1="0" y1="350" x2="393" y2="350"/><line x1="0" y1="398" x2="393" y2="398"/><line x1="0" y1="446" x2="393" y2="446"/></g>
+              <ellipse cx="300" cy="452" rx="176" ry="58" fill="#4A3626"/>
+              <ellipse cx="300" cy="452" rx="128" ry="40" fill="#A88E63"/>
+              <ellipse cx="330" cy="440" rx="70" ry="14" fill="#F5D7A6" opacity=".22"/>
+              <g id="ring" stroke="#2A1F1A" stroke-width="1.2"></g>
+              <ellipse cx="300" cy="452" rx="128" ry="40" fill="none" stroke="#2A1F1A" stroke-width="1.5"/>
+              <line x1="196" y1="470" x2="396" y2="430" stroke="#2A1F1A" stroke-width="3"/>
+              <text class="note-num" x="20" y="372" font-size="64">360°</text>
+              <text class="note-cap" x="22" y="396">of glass, and the old</text>
+              <text class="note-cap" x="22" y="413">fire-finder table</text>
+            </svg>
+          </div>
+
+          <!-- Photo 3: the ridge at night -->
+          <div class="slide">
+            <svg viewBox="0 0 393 470" preserveAspectRatio="xMidYMid slice" role="img"
+                 aria-label="Photo 3 of 3. The ridge at night under a clear sky, the lookout's cab the only light. Field note: 6 kilometres to the nearest other light.">
+              <defs>
+                <linearGradient id="sky3" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#060A17"/><stop offset=".62" stop-color="#141C35"/><stop offset="1" stop-color="#2A3254"/>
+                </linearGradient>
+              </defs>
+              <rect width="393" height="470" fill="url(#sky3)"/>
+              <g id="stars3" fill="#F6EEDF"></g>
+              <path fill="#10172B" d="M0 330 L70 312 L130 326 L200 300 L270 322 L330 306 L393 318 V470 H0Z"/>
+              <circle cx="304" cy="322" r="26" fill="url(#lamp)"/>
+              <g stroke="#04070C" stroke-width="1.6"><line x1="298" y1="330" x2="292" y2="392"/><line x1="310" y1="330" x2="316" y2="392"/></g>
+              <rect x="294" y="318" width="20" height="12" fill="#04070C"/><rect x="296" y="320" width="16" height="7" fill="#FFC46B"/>
+              <polygon points="292,318 316,318 304,311" fill="#04070C"/>
+              <path id="pinesBack3" fill="#070C12"/>
+              <path id="pinesFront3" fill="#030609"/>
+              <text class="note-num" x="20" y="250" font-size="64">6<tspan font-size="30" dx="8">km</tspan></text>
+              <text class="note-cap" x="22" y="274">to the nearest other light</text>
+            </svg>
+          </div>
+        </div>
+        <span class="count" id="count" aria-live="polite">1 / 3</span>
+      </section>
+
+      <article class="page">
+        <p class="overline">Former fire lookout · Kazdağı, Türkiye</p>
+        <h1>The lookout on Sarıkız Ridge</h1>
+        <p class="meta">One glass room · sleeps 2 · off grid</p>
+        <div class="host">
+          <span class="avatar" aria-hidden="true">S</span>
+          <div><b>Hosted by Selin</b><span>Keeper of the tower since 2019</span></div>
+        </div>
+
+        <h2>What makes it odd</h2>
+        <ol class="notes">
+          <li><span class="no">01</span><div><b>You sleep 16 m up</b><p>74 steel steps from the pines to the bed. The cab sways a little when the north wind comes in.</p></div></li>
+          <li><span class="no">02</span><div><b>Glass on all four sides</b><p>The fire-finder table is still in the middle, with the bearing to every peak painted on its brass ring.</p></div></li>
+          <li><span class="no">03</span><div><b>6 km to the nearest other light</b><p>No road for the last 1.2 km. Leave the car at the forestry gate; the walk up takes about 25 minutes.</p></div></li>
+          <li><span class="no">04</span><div><b>The toilet is on the ground</b><p>A composting toilet and a rain-fed shower sit at the foot of the tower. Bring a head torch.</p></div></li>
+        </ol>
+
+        <h2>Before you book</h2>
+        <dl class="facts">
+          <div><dt>Not suited to</dt><dd>A fear of heights, children under 12, or anyone who can't manage steep stairs</dd></div>
+          <div><dt>Check-in</dt><dd>From 15:00, at the forestry gate</dd></div>
+          <div><dt>Cancellation</dt><dd>Free until 31 May. Half back until 7 Jun, then no refund.</dd></div>
+          <div><dt>Getting there</dt><dd>45 min by car from Edremit, then the walk. Directions are saved for offline use once you book.</dd></div>
+        </dl>
+      </article>
+    </div>
+
+    <nav class="nav" aria-label="Listing">
+      <button class="icon-btn" id="back" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <span class="nav-title" aria-hidden="true">Sarıkız lookout</span>
+      <div class="nav-right">
+        <button class="icon-btn" id="share" aria-label="Share"><svg viewBox="0 0 24 24"><path d="M12 3v12M8 7l4-4 4 4M6 11v8a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-8"/></svg></button>
+        <button class="icon-btn" id="save" aria-label="Save" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M7 4h10a1 1 0 0 1 1 1v15l-6-4-6 4V5a1 1 0 0 1 1-1z"/></svg></button>
+      </div>
+    </nav>
+
+    <div class="bar">
+      <button class="price-btn" id="openDates" aria-label="Change dates. Total €486 for 14 to 17 June, 3 nights, fees included">
+        <span class="amt"><span id="barTotal">€486</span><small>total, fees in</small></span>
+        <span class="when" id="barWhen">14–17 Jun · 3 nights</span>
+      </button>
+      <button class="primary" id="reserve">Reserve</button>
+    </div>
+
+    <div class="scrim" id="scrim"></div>
+    <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" inert>
+      <div class="grabber"></div>
+      <div class="sheet-head">
+        <h2 id="sheetTitle">Your stay</h2>
+        <button class="icon-btn plain" id="closeSheet" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+      <div id="quote">
+        <div class="dates">
+          <div><span class="lbl">Check-in</span><b>Mon 14 Jun</b></div>
+          <span class="arrow" aria-hidden="true">→</span>
+          <div><span class="lbl">Check-out</span><b id="outDate">Thu 17 Jun</b></div>
+        </div>
+        <div class="stepper-row">
+          <div><b>Nights</b><span class="sub">2 guests, the most the cab sleeps</span></div>
+          <div class="stepper">
+            <button id="minus" aria-label="One night fewer">−</button>
+            <output id="nights" aria-live="polite">3</output>
+            <button id="plus" aria-label="One night more">+</button>
+          </div>
+        </div>
+        <p class="note" id="note" aria-live="polite"></p>
+        <dl class="lines">
+          <div><dt id="lineNights">3 nights × €148</dt><dd id="sub">€444</dd></div>
+          <div><dt>Cleaning</dt><dd>€24</dd></div>
+          <div><dt>Rota service fee</dt><dd id="fee">€18</dd></div>
+          <div class="total"><dt>Total</dt><dd id="total">€486</dd></div>
+        </dl>
+        <p class="cancel">Free cancellation until 31 May. Half back until 7 Jun, then no refund.</p>
+        <button class="primary" id="request">Request to book · <span id="btnTotal">€486</span></button>
+        <p class="foot">Nothing is charged until Selin accepts. She usually answers within an hour.</p>
+      </div>
+      <div class="sent" id="sent" hidden>
+        <p>Selin has your dates, <span id="sentWhen">14–17 Jun</span>. We'll tell you here when she answers, usually within an hour. Nothing is charged until she accepts.</p>
+        <button class="primary" id="done" style="width:100%">Done</button>
+      </div>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+  </main>
+
+  <div class="home-indicator"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const params = new URLSearchParams(location.search);
+if (params.get('theme')) document.documentElement.dataset.theme = params.get('theme');
+else if (matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.dataset.theme = 'dark';
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches || params.get('motion') === 'reduce';
+if (reduce) document.body.classList.add('reduce');
+const NS = 'http://www.w3.org/2000/svg';
+const el = (tag, attrs) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); return n; };
+const rnd = (i, s) => { const x = Math.sin(i * 12.9898 + s * 78.233) * 43758.5453; return x - Math.floor(x); };
+
+// ---- drawn scenery ----
+function pines(base, minH, maxH, step, w, seed) {
+  let d = `M-20 470 L-20 ${base}`;
+  for (let x = -10, i = 0; x < 410; x += step, i++) {
+    const h = minH + (maxH - minH) * rnd(i, seed), ww = w * (.8 + .4 * rnd(i, seed + 1)), f = v => v.toFixed(1);
+    d += ` L${f(x - ww / 2)} ${base} L${f(x - ww * .3)} ${f(base - h * .42)} L${f(x - ww * .13)} ${f(base - h * .46)} L${f(x)} ${f(base - h)}` +
+         ` L${f(x + ww * .13)} ${f(base - h * .46)} L${f(x + ww * .3)} ${f(base - h * .42)} L${f(x + ww / 2)} ${base}`;
+  }
+  return d + ' L413 470 Z';
+}
+$('#pinesBack').setAttribute('d', pines(400, 18, 34, 7, 13, 1));
+$('#pinesFront').setAttribute('d', pines(470, 52, 76, 11, 22, 2));
+$('#pinesBack3').setAttribute('d', pines(400, 16, 30, 7, 12, 3));
+$('#pinesFront3').setAttribute('d', pines(470, 50, 74, 11, 22, 4));
+
+// lattice and stairs, from cab floor (y190) to forest floor (y392)
+const xl = y => 114 - 18 * (y - 190) / 202, xr = y => 166 + 18 * (y - 190) / 202;
+const levels = [190, 240, 290, 340, 392], brace = $('#brace');
+levels.forEach((y, i) => {
+  brace.append(el('line', { x1: xl(y), y1: y, x2: xr(y), y2: y }));
+  const n = levels[i + 1]; if (n) {
+    brace.append(el('line', { x1: xl(y), y1: y, x2: xr(n), y2: n }));
+    brace.append(el('line', { x1: xr(y), y1: y, x2: xl(n), y2: n }));
+  }
+});
+
+function stars(g, n, maxY, seed) {
+  for (let i = 0; i < n; i++) {
+    const c = el('circle', { cx: (rnd(i, seed) * 393).toFixed(1), cy: (rnd(i, seed + 7) * maxY).toFixed(1), r: (.4 + rnd(i, seed + 3) * .9).toFixed(2), opacity: (.3 + rnd(i, seed + 5) * .6).toFixed(2) });
+    if (i % 4 === 0) { c.classList.add('tw'); c.style.animationDelay = `-${(rnd(i, seed + 9) * 5).toFixed(1)}s`; }
+    g.append(c);
+  }
+}
+stars($('#stars1'), 26, 150, 11);
+stars($('#stars3'), 90, 300, 13);
+
+const ring = $('#ring');
+for (let a = 0; a < 360; a += 10) {
+  const r = a * Math.PI / 180, len = a % 30 ? 8 : 14;
+  ring.append(el('line', { x1: 300 + (128 - len) * Math.cos(r), y1: 452 + (40 - len * .31) * Math.sin(r), x2: 300 + 128 * Math.cos(r), y2: 452 + 40 * Math.sin(r) }));
+}
+
+// ---- price for the selected dates (sample rates) ----
+const NIGHTLY = 148, CLEANING = 24, FEE_RATE = .04, MIN_NIGHTS = 2, MAX_NIGHTS = 4; // 18 Jun is already booked
+const quote = n => { const sub = n * NIGHTLY, fee = Math.round(sub * FEE_RATE); return { sub, fee, total: sub + CLEANING + fee }; };
+console.assert(quote(2).total === 332 && quote(3).total === 486 && quote(4).total === 640, 'price check failed');
+const OUT = { 2: ['Wed 16 Jun', '14–16 Jun', 16], 3: ['Thu 17 Jun', '14–17 Jun', 17], 4: ['Fri 18 Jun', '14–18 Jun', 18] };
+const eur = v => '€' + v.toLocaleString('en-GB');
+let nights = 3, requested = false;
+
+function tick(node, text) { if (node.textContent === text) return; node.textContent = text; node.classList.remove('tick'); void node.offsetWidth; node.classList.add('tick'); }
+function render() {
+  const q = quote(nights), [out, range, day] = OUT[nights];
+  tick($('#barTotal'), eur(q.total)); tick($('#total'), eur(q.total));
+  $('#barWhen').textContent = `${range} · ${nights} nights`;
+  $('#openDates').setAttribute('aria-label', `Change dates. Total ${eur(q.total)} for 14 to ${day} June, ${nights} nights, fees included`);
+  $('#outDate').textContent = out; $('#nights').textContent = nights;
+  $('#lineNights').textContent = `${nights} nights × ${eur(NIGHTLY)}`;
+  $('#sub').textContent = eur(q.sub); $('#fee').textContent = eur(q.fee); $('#btnTotal').textContent = eur(q.total);
+  $('#sentWhen').textContent = range;
+  $('#minus').disabled = nights <= MIN_NIGHTS; $('#plus').disabled = nights >= MAX_NIGHTS;
+  $('#note').textContent = nights >= MAX_NIGHTS ? 'The night of Fri 18 Jun is taken, so 4 nights is the longest stay from Mon 14 Jun.'
+                         : nights <= MIN_NIGHTS ? 'Two nights is the shortest stay at the lookout.' : '';
+}
+function step(d) { const n = Math.min(MAX_NIGHTS, Math.max(MIN_NIGHTS, nights + d)); if (n !== nights) { nights = n; render(); } }
+
+// ---- sheet ----
+const body = document.body, sheet = $('#sheet');
+let opener = null;
+function openSheet(from) {
+  opener = from || null;
+  body.classList.add('lit');                       // the hero answers first: the cab light comes on
+  setTimeout(() => { body.classList.add('sheet-open'); sheet.inert = false; $('#closeSheet').focus({ preventScroll: true }); }, reduce ? 0 : 90);
+}
+function closeSheet() {
+  body.classList.remove('sheet-open'); sheet.inert = true;
+  if (!requested) body.classList.remove('lit');
+  if (opener) opener.focus({ preventScroll: true });
+}
+$('#reserve').onclick = e => { if (requested) { $('#quote').hidden = true; $('#sent').hidden = false; } openSheet(e.currentTarget); };
+$('#openDates').onclick = e => openSheet(e.currentTarget);
+$('#closeSheet').onclick = closeSheet; $('#scrim').onclick = closeSheet; $('#done').onclick = closeSheet;
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && body.classList.contains('sheet-open')) closeSheet(); });
+$('#minus').onclick = () => step(-1); $('#plus').onclick = () => step(1);
+$('#request').onclick = () => {
+  requested = true; $('#quote').hidden = true; $('#sent').hidden = false;
+  $('#sheetTitle').textContent = 'Request sent';
+  const r = $('#reserve'); r.textContent = 'Request sent'; r.setAttribute('aria-disabled', 'true');
+  $('#openDates').disabled = true;
+  $('#done').focus({ preventScroll: true });
+};
+
+// ---- small controls ----
+function toast(t) { const n = $('#toast'); n.textContent = t; n.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => n.classList.remove('show'), 1800); }
+$('#save').onclick = e => { const on = e.currentTarget.getAttribute('aria-pressed') !== 'true'; e.currentTarget.setAttribute('aria-pressed', on); toast(on ? 'Saved to your list' : 'Removed from your list'); };
+$('#share').onclick = async () => { try { if (navigator.share) await navigator.share({ title: 'The lookout on Sarıkız Ridge', url: location.href }); else { await navigator.clipboard.writeText(location.href); toast('Link copied'); } } catch (_) {} };
+$('#back').onclick = () => history.back();
+
+const scroller = $('#scroller'), track = $('#track');
+scroller.addEventListener('scroll', () => body.classList.toggle('compact', scroller.scrollTop > 400), { passive: true });
+track.addEventListener('scroll', () => { $('#count').textContent = `${Math.round(track.scrollLeft / track.clientWidth) + 1} / 3`; }, { passive: true });
+new IntersectionObserver(([e]) => $('#hero').classList.toggle('paused', !e.isIntersecting)).observe($('#hero'));
+
+// ---- entrance, then the main interaction once so the screen explains itself ----
+render();
+if (!reduce) {
+  body.classList.add('ready');
+  const n16 = $('#n16'); n16.textContent = '0';
+  setTimeout(() => {
+    const t0 = performance.now();
+    const run = now => { const p = Math.min(1, (now - t0) / 600); n16.textContent = Math.round(16 * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(run); };
+    requestAnimationFrame(run); setTimeout(() => { n16.textContent = '16'; }, 700);
+  }, 450);
+  if (params.get('demo') !== '0') {
+    const t = [setTimeout(() => openSheet($('#reserve')), 3000), setTimeout(() => step(1), 4400)];
+    addEventListener('pointerdown', e => { if (e.isTrusted) t.forEach(clearTimeout); }, { once: true });
+  }
+}
+</script>
+</body>
+</html>

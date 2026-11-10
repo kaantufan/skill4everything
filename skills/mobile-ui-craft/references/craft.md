@@ -45,7 +45,7 @@ Use this file once the structure of a screen stands. Every rule here is checkabl
 ## Typography
 
 - Use the platform text styles and let them scale. The default body size on both platforms is already tuned; do not shrink body text to fit more.
-- Get character from the system face's own range before importing a font: weights, widths, and its rounded, serif and mono variants. A custom face belongs in display moments, never in body or controls, unless the brand requires it.
+- A display face with a voice is one of the strongest identity tools. Use it for hero numerals and titles. Keep body text and controls in a quiet, legible face; the system font is a good one, and its own rounded, serif and mono variants are worth a look first.
 - **Tabular figures** for every number that changes or lines up: prices, timers, counters, tables. Otherwise digits jitter.
 - For big numbers, make the unit and the decimals quieter than the integer part.
 - **Truncation is designed.** Names and titles: one line, tail ellipsis. Paths, IDs and file names: middle truncation. Descriptions: two or three lines with a way to expand. Money, times and codes never truncate.
@@ -55,10 +55,10 @@ Use this file once the structure of a screen stands. Every rule here is checkabl
 
 ## Colour and dark mode
 
-- **Jobs for colours.** One neutral family carries most of the screen, one supporting colour marks structure, one accent marks action or the single most important thing. An accent on everything is not an accent.
+- **Jobs for colours.** Every colour has one job: the field, the hero, action, state. A colour used on everything says nothing.
 - Tint the neutrals slightly toward the brand hue instead of using flat grey. Avoid pure black text on pure white; step each in a little.
 - Semantic colours (success, warning, error) are for state only, and always come with an icon or label.
-- **Light leads unless the scene is dark.** Lead with dark only when the product is used mostly at night or in low light (sleep, media playback, cockpit-like tools). Everything else leads with light, including products with one evening use among many. Dark makes any screen look finished, which is why it hides weak hierarchy. Design both and say which one you are showing.
+- **Choose the ground from the concept and the scene of use.** Neither white nor near-black is a default; both are what a screen looks like before anyone chose. Near-black with a glowing accent is the easiest way to look finished and the fastest way to look like everything else. Say which appearance you are showing and why.
 - **Dark mode is designed, not inverted.** Separate values per role; accents slightly less saturated; elevation by lighter surface; images and illustrations checked on the dark background.
 - Check contrast on the real background, including text over photos (add a scrim) and text over translucent material while content scrolls behind it.
 - Charts: one hue plus neutrals, the accent on the series or point being discussed, labels on the data instead of a legend where space allows.

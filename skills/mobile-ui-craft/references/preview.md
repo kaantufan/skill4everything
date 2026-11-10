@@ -60,15 +60,21 @@ When a vision model reviews a screenshot, keep the long edge at or under about 1
 Use a mockup when there is no project yet, no toolchain to build with, or the user wants to see a direction before any native code. It is a sketch of a native app, not a web page.
 
 1. Copy `assets/phone-frame.html` from this skill. It provides the screen size, status bar, home indicator, safe-area variables and the platform system font stack, and nothing else. Set `data-platform` to `ios` or `android` and `data-theme` to `light` or `dark`.
-2. Put the product's tokens in the marked style block and the screen's markup inside `#screen`. Show the light appearance unless the brief says the product is used mostly at night or in low light; a dark mockup flatters weak hierarchy.
-3. Draw native-shaped structure: a real navigation bar and tab bar in the platform's proportions, lists with separators, system-like controls. Do not add hero sections, hover states or anything a phone app would not have.
-4. Render it with any browser tool you have. With plain headless Chrome or Edge:
+2. Put the product's tokens in the marked style block and the screen's markup inside `#screen`.
+3. Make it a prototype, not a picture: the entrance plays, the hero has its living loop, and the primary action works and changes the hero. The first three seconds show the resting state a user sees on opening. After that, run the main interaction once automatically so the screen explains itself, and skip that under `prefers-reduced-motion`. A display face may be loaded from a web font service in a prototype; say that the native build must bundle and license it. Do not add marketing sections, hover states or anything a phone app would not have.
+4. Capture it in real time with the bundled script, which drives a local Chrome or Edge at a true phone viewport and writes one image per moment:
+
+```
+node scripts/capture.mjs screen.html shots/screen --size 393x852 --at 1200,3000,6500
+```
+
+Add `--tap x,y@ms` to tap a point at a given time. Without Node, use plain headless Chrome or Edge:
 
 ```
 chrome --headless=new --hide-scrollbars --force-device-scale-factor=2 --window-size=393,852 --screenshot=screen.png file:///ABSOLUTE/PATH/screen.html
 ```
 
-Use `412,915` for the Android frame. On Windows pass a Windows path to `--screenshot` and a `file:///C:/...` URL.
+Use `412,915` for the Android frame. On Windows pass a Windows path to `--screenshot` and a `file:///C:/...` URL. Add `--virtual-time-budget=3000` to capture the screen three seconds in, and repeat with other values to see several moments. Animations that start after load do not always advance in headless capture, so check the interaction in a real browser when you can and say so when you cannot.
 
 Size everything relative to the frame, never the viewport: no `vw` or `vh` units and no `position: fixed`. Some headless browsers enforce a minimum window wider than a phone, lay the page out at that width and crop the screenshot, which cuts off anything anchored to the viewport's right edge. If a capture looks cropped or off-centre, that is the cause.
 

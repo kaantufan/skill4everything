@@ -1,0 +1,499 @@
+<!doctype html>
+<!-- Dusk / Tonight. HTML mockup of a native iOS screen. Fonts, materials, controls and scrolling approximate the native ones.
+     Sample states: screen.html (11:04 pm), screen.html#late (past lights-out), screen.html#firstnight (nothing logged yet). -->
+<html lang="en" data-platform="ios" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dusk · Tonight</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,400..600,0..100;1,9..144,400..600,0..100&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px;
+    --font: -apple-system, "SF Pro Text", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+    --chrome: #000;
+  }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--screen-bg); color: var(--screen-fg); }
+  .statusbar {
+    position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 10;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  .home-indicator {
+    position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 10;
+    width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none;
+  }
+  #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+</style>
+<style>
+  /* ---------- PRODUCT TOKENS: Dusk ---------- */
+  :root {
+    /* colour roles: the sky after sunset, the afterglow under the horizon, still water */
+    --sky-high: #0b0f24;        /* field, upper sky */
+    --sky-low: #1a1d3c;         /* field, just above the horizon */
+    --water: #0c0e1e;           /* below the horizon: where controls live */
+    --water-deep: #080a16;
+    --ember: #e9a27a;           /* the afterglow: hero light and the one action colour */
+    --ember-core: #f6c79c;
+    --plum: #6a3a55;            /* afterglow's upper fringe, only inside the glow */
+    --ink-on-ember: #1a1326;
+    --text: #ece3d6;            /* warm, dimmed off-white: no pure white at night (14.4:1 on sky) */
+    --text-2: #aaa4b8;          /* 7.6:1 */
+    --text-3: #8c879c;          /* 5.5:1 on water */
+    --hairline: rgba(236,227,214,.12);
+    --screen-bg: var(--water); --screen-fg: var(--text); --chrome: #e6ddd0;
+
+    /* type roles */
+    --display: "Fraunces", "Iowan Old Style", Georgia, serif;
+    --t-hero: 96px; --t-cue: 56px; --t-title: 22px; --t-body: 17px; --t-sub: 15px; --t-cap: 12px;
+
+    /* spacing (base 4) and layout */
+    --gutter: 24px; --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s6: 24px; --s8: 32px;
+    --horizon: 430px;           /* y of the horizon line */
+    --glow-max: 180px;          /* afterglow height at a full 45-minute wind-down */
+
+    /* radii by role: control (capsule), container, sheet */
+    --r-control: 28px; --r-container: 20px; --r-toast: 22px;
+
+    /* motion: breathing-paced, no overshoot */
+    --ease-breath: cubic-bezier(.45,0,.55,1);
+    --ease-out: cubic-bezier(.2,.7,.2,1);
+  }
+
+  /* ---------- the sky (hero) ---------- */
+  .sky {
+    position: absolute; inset: 0 0 auto 0; height: var(--horizon);
+    background: linear-gradient(180deg, var(--sky-high) 0%, #10142e 55%, var(--sky-low) 100%);
+    overflow: hidden;
+  }
+  .stars { position: absolute; inset: 0; }
+  .star {
+    position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #efe6d8;
+    opacity: .5; animation: twinkle 7s ease-in-out infinite;
+    transition: opacity 1.6s var(--ease-out);
+  }
+  .star.s { width: 1.5px; height: 1.5px; }
+  .star.b { width: 2.5px; height: 2.5px; box-shadow: 0 0 6px rgba(239,230,216,.5); }
+  @keyframes twinkle { 0%,100% { opacity: .55; } 50% { opacity: .2; } }
+
+  /* the afterglow: its height is the time left before lights-out */
+  .glow {
+    position: absolute; left: -30%; right: -30%; bottom: 0; height: var(--glow-max);
+    transform-origin: 50% 100%; transform: scaleY(.6);
+    background:
+      radial-gradient(ellipse 34% 26% at 50% 100%, rgba(246,199,156,.95) 0%, rgba(233,162,122,.0) 100%),
+      radial-gradient(ellipse 50% 100% at 50% 100%, rgba(233,162,122,.62) 0%, rgba(196,110,96,.38) 30%, rgba(106,58,85,.22) 62%, rgba(106,58,85,0) 100%);
+    will-change: transform, opacity;
+  }
+  .horizon-line {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
+    background: linear-gradient(90deg, rgba(246,199,156,0) 0%, rgba(246,199,156,.35) 22%, var(--ember-core) 50%, rgba(246,199,156,.35) 78%, rgba(246,199,156,0) 100%);
+  }
+
+  .topbar {
+    position: absolute; top: var(--safe-top); left: 0; right: 0; height: 44px;
+    display: flex; align-items: center; justify-content: space-between; padding: 0 var(--gutter);
+    z-index: 3;
+  }
+  .topbar h1 { margin: 0; font: italic 500 var(--t-title)/1 var(--display); font-variation-settings: "SOFT" 100, "opsz" 36; letter-spacing: .1px; color: var(--text); }
+  .topbar .date { font-size: var(--t-sub); color: var(--text-2); }
+
+  .reading {
+    position: absolute; left: 0; right: 0; top: 150px; text-align: center; z-index: 2;
+    transition: opacity .8s var(--ease-out), transform .8s var(--ease-out);
+  }
+  .reading .label { font-size: var(--t-sub); color: var(--text-2); letter-spacing: .2px; }
+  .reading .num {
+    margin-top: var(--s2);
+    font-family: var(--display); font-weight: 400; font-size: var(--t-hero); line-height: .95;
+    font-variation-settings: "SOFT" 100, "opsz" 144; font-variant-numeric: tabular-nums lining-nums;
+    letter-spacing: -2px; color: var(--text);
+  }
+  .reading .num .unit { font-size: 30px; letter-spacing: 0; color: var(--text-2); margin-left: 6px; font-variation-settings: "SOFT" 100, "opsz" 36; }
+  .reading .num.words { font-size: 64px; letter-spacing: -1px; font-style: italic; }
+  .reading .sub { margin-top: var(--s3); font-size: var(--t-sub); color: var(--text-2); font-variant-numeric: tabular-nums; }
+
+  /* breathing cue replaces the reading while a session runs */
+  .cue {
+    position: absolute; left: 0; right: 0; top: 168px; text-align: center; z-index: 2;
+    opacity: 0; transform: translateY(8px); pointer-events: none;
+    transition: opacity .8s var(--ease-out), transform .8s var(--ease-out);
+  }
+  .cue .word { font: italic 400 var(--t-cue)/1.05 var(--display); font-variation-settings: "SOFT" 100, "opsz" 96; color: var(--text); transition: opacity .6s var(--ease-out); }
+  .cue .count { margin-top: var(--s4); font-size: var(--t-sub); color: var(--text-2); font-variant-numeric: tabular-nums; }
+  .cue .small { margin-top: var(--s1); font-size: var(--t-cap); color: var(--text-2); letter-spacing: .3px; font-variant-numeric: tabular-nums; }
+
+  .breathing .reading { opacity: 0; transform: translateY(-8px); }
+  .breathing .cue { opacity: 1; transform: none; }
+  .breathing .star { opacity: .18 !important; animation-play-state: paused; }
+
+  /* ---------- the water ---------- */
+  .water {
+    position: absolute; left: 0; right: 0; top: var(--horizon); bottom: 0;
+    background: linear-gradient(180deg, #121430 0%, var(--water) 22%, var(--water-deep) 100%);
+  }
+  .reflect {
+    position: absolute; left: 50%; top: var(--horizon); width: 220px; height: 110px; margin-left: -110px;
+    transform-origin: 50% 0; transform: scaleY(.6);
+    background: radial-gradient(ellipse 50% 100% at 50% 0%, rgba(246,199,156,.42) 0%, rgba(233,162,122,.14) 45%, rgba(233,162,122,0) 100%);
+    -webkit-mask: repeating-linear-gradient(180deg, #000 0 2px, rgba(0,0,0,.25) 2px 5px);
+            mask: repeating-linear-gradient(180deg, #000 0 2px, rgba(0,0,0,.25) 2px 5px);
+    will-change: transform, opacity;
+    animation: shimmer 6s ease-in-out infinite alternate;
+  }
+  /* living loop: the ripple lines drift; transform stays free for the glow's data */
+  @keyframes shimmer { from { -webkit-mask-position: 0 0; mask-position: 0 0; } to { -webkit-mask-position: 0 10px; mask-position: 0 10px; } }
+
+  /* ---------- controls, below the horizon ---------- */
+  .controls { position: absolute; left: var(--gutter); right: var(--gutter); top: 516px; z-index: 2; }
+
+  .primary {
+    width: 100%; height: 56px; border: 0; border-radius: var(--r-control);
+    background: var(--ember); color: var(--ink-on-ember);
+    display: flex; align-items: center; justify-content: space-between; padding: 0 22px 0 24px;
+    font: 600 var(--t-body)/1 var(--font); cursor: pointer;
+    box-shadow: 0 10px 30px -12px rgba(233,162,122,.55);
+    transition: transform .12s var(--ease-out), background-color .3s var(--ease-out), box-shadow .3s var(--ease-out);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .primary .meta { font-weight: 500; opacity: .72; font-variant-numeric: tabular-nums; }
+  .primary:active { transform: scale(.98); background: #dd9670; }
+  .primary:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+  .breathing .primary { background: rgba(236,227,214,.10); color: var(--text); box-shadow: none; }
+  .breathing .primary .meta { opacity: 1; color: var(--text-2); }
+
+  .rows { margin-top: 28px; }
+  .row {
+    display: flex; align-items: center; gap: var(--s4); min-height: 64px; padding: 8px 0;
+    border-top: 0; position: relative;
+  }
+  .row + .row::before { content: ""; position: absolute; top: 0; left: 44px; right: 0; height: 1px; background: var(--hairline); transform: scaleY(.5); transform-origin: top; }
+  .row .glyph { width: 28px; height: 28px; flex: none; color: var(--ember); display: grid; place-items: center; }
+  .row .glyph svg { width: 22px; height: 22px; }
+  .row .txt { flex: 1; min-width: 0; }
+  .row .t1 { font-size: var(--t-body); color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .t2 { margin-top: 3px; font-size: var(--t-sub); color: var(--text-2); font-variant-numeric: tabular-nums; }
+  .row.tap { cursor: pointer; border: 0; background: none; width: 100%; text-align: left; color: inherit; font: inherit; padding: 8px 0; border-radius: 12px; -webkit-tap-highlight-color: transparent; }
+  .row.tap:active { background: rgba(236,227,214,.05); }
+  .row.tap:focus-visible, .icon-btn:focus-visible, .tab:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+  .chev { width: 16px; height: 16px; color: var(--text-3); flex: none; }
+
+  .icon-btn {
+    width: 44px; height: 44px; flex: none; border-radius: 22px; border: 0; cursor: pointer;
+    background: rgba(236,227,214,.08); color: var(--text); display: grid; place-items: center;
+    transition: transform .12s var(--ease-out), background-color .3s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .icon-btn:active { transform: scale(.94); background: rgba(236,227,214,.14); }
+  .icon-btn svg { width: 18px; height: 18px; }
+  .icon-btn[aria-pressed="true"] { background: rgba(233,162,122,.18); color: var(--ember-core); }
+
+  /* ---------- tab bar ---------- */
+  .tabbar {
+    position: absolute; left: 0; right: 0; bottom: 0; height: calc(49px + var(--safe-bottom)); z-index: 4;
+    padding-bottom: var(--safe-bottom); display: flex;
+    background: rgba(8,10,22,.82); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+    border-top: 0.5px solid var(--hairline);
+  }
+  .tab {
+    flex: 1; border: 0; background: none; cursor: pointer; color: var(--text-3);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    font: 500 10px/1 var(--font); letter-spacing: .1px; -webkit-tap-highlight-color: transparent;
+  }
+  .tab svg { width: 26px; height: 22px; }
+  .tab[aria-selected="true"] { color: var(--ember); }
+  .tab:active { opacity: .7; }
+
+  .toast {
+    position: absolute; left: 50%; bottom: calc(49px + var(--safe-bottom) + 14px); z-index: 6;
+    transform: translate(-50%, 8px); opacity: 0; pointer-events: none;
+    background: #23233f; color: var(--text); font-size: var(--t-sub); padding: 12px 18px; border-radius: var(--r-toast);
+    white-space: nowrap; box-shadow: 0 12px 30px -10px rgba(0,0,0,.6);
+    transition: opacity .3s var(--ease-out), transform .3s var(--ease-out);
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* ---------- entrance: field, then glow, then reading, then controls ---------- */
+  .enter-field { animation: fieldIn .5s var(--ease-out) both; }
+  .enter-glow { animation: glowIn 1s var(--ease-out) .15s both; }
+  .enter-read { animation: rise .7s var(--ease-out) .4s both; }
+  .enter-ctrl { animation: rise .6s var(--ease-out) .65s both; }
+  .enter-rows { animation: rise .6s var(--ease-out) .8s both; }
+  .enter-tab  { animation: fade .5s var(--ease-out) .95s both; }
+  @keyframes fieldIn { from { opacity: 0; } }
+  @keyframes glowIn { from { opacity: 0; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+  @keyframes fade { from { opacity: 0; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .enter-field, .enter-glow, .enter-read, .enter-ctrl, .enter-rows, .enter-tab { animation: none; }
+    .star, .reflect { animation: none; }
+    .reading, .cue { transform: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="statusbar">
+    <span id="clock">11:04</span>
+    <svg class="ios" viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" stroke="currentColor" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="9" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen">
+    <!-- hero: the sky -->
+    <section class="sky enter-field" aria-labelledby="readingLabel">
+      <div class="stars" id="stars" aria-hidden="true"></div>
+      <div class="glow enter-glow" id="glow" aria-hidden="true"></div>
+      <div class="horizon-line" id="horizonLine" aria-hidden="true"></div>
+    </section>
+    <div class="water" aria-hidden="true"></div>
+    <div class="reflect enter-glow" id="reflect" aria-hidden="true"></div>
+
+    <header class="topbar enter-read">
+      <h1>Tonight</h1>
+      <span class="date">Tue 10 November</span>
+    </header>
+
+    <div class="reading enter-read" id="reading">
+      <div class="label" id="readingLabel">Lights out in</div>
+      <div class="num" id="readingNum">26<span class="unit">min</span></div>
+      <div class="sub" id="readingSub">at 11:30 pm, your usual time</div>
+    </div>
+
+    <div class="cue" id="cue" aria-hidden="true">
+      <div class="word" id="cueWord">Breathe in</div>
+      <div class="count" id="cueCount">Breath 1 of 24</div>
+      <div class="small" id="cueSmall">Lights out at 11:30 pm</div>
+    </div>
+    <div class="sr" aria-live="polite" id="live"></div>
+
+    <!-- below the horizon -->
+    <div class="controls">
+      <button class="primary enter-ctrl" id="breathe" type="button">
+        <span id="breatheLabel">Start breathing</span>
+        <span class="meta" id="breatheMeta">4 min</span>
+      </button>
+
+      <div class="rows enter-rows">
+        <div class="row">
+          <div class="glyph" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 4v5M12 7v6M18 3v5M8 13v5M15 15v5M4 18v2M20 12v4"/></svg>
+          </div>
+          <div class="txt">
+            <div class="t1">Rain on a slate roof</div>
+            <div class="t2" id="soundSub">30 min, then fades out</div>
+          </div>
+          <button class="icon-btn" id="sound" type="button" aria-pressed="false" aria-label="Play Rain on a slate roof">
+            <svg id="soundIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>
+          </button>
+        </div>
+
+        <button class="row tap" id="logRow" type="button">
+          <div class="glyph" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M15.5 3.5a8.5 8.5 0 1 0 5 13.6A7 7 0 0 1 15.5 3.5z"/></svg>
+          </div>
+          <div class="txt">
+            <div class="t1" id="logT1">Last night, 6 h 52 m asleep</div>
+            <div class="t2" id="logT2">11:48 pm to 6:40 am</div>
+          </div>
+          <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3l5 5-5 5"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <nav class="tabbar enter-tab" role="tablist" aria-label="Dusk">
+      <button class="tab" role="tab" aria-selected="true" type="button" data-name="Tonight">
+        <svg viewBox="0 0 26 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 16h20M7.5 16a5.5 5.5 0 0 1 11 0M13 5v2.5M5.6 8.6l1.6 1.6M20.4 8.6l-1.6 1.6M8 19.5h10"/></svg>
+        Tonight
+      </button>
+      <button class="tab" role="tab" aria-selected="false" type="button" data-name="Sounds">
+        <svg viewBox="0 0 26 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 8c2.5-2 5-2 7.5 0s5 2 7.5 0 3.5-1.5 5-1M3 13c2.5-2 5-2 7.5 0s5 2 7.5 0 3.5-1.5 5-1M3 18c2.5-2 5-2 7.5 0s5 2 7.5 0 3.5-1.5 5-1"/></svg>
+        Sounds
+      </button>
+      <button class="tab" role="tab" aria-selected="false" type="button" data-name="Log">
+        <svg viewBox="0 0 26 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><path d="M15 2.5a8.5 8.5 0 1 0 6.5 12.4A7 7 0 0 1 15 2.5z"/></svg>
+        Log
+      </button>
+    </nav>
+
+    <div class="toast" id="toast" role="status"></div>
+  </main>
+
+  <div class="home-indicator"></div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const state = location.hash.slice(1);
+
+  // Sample data (not real): the user set lights-out at 11:30 pm and a 45-minute wind-down.
+  const LIGHTS_OUT = 23 * 60 + 30, WINDOW = 45;
+  const START = state === 'late' ? 23 * 60 + 42 : 23 * 60 + 4;
+  const t0 = Date.now();
+  const now = () => START + Math.floor((Date.now() - t0) / 60000);
+
+  const pad = n => String(n).padStart(2, '0');
+  const fmt = m => { m = ((m % 1440) + 1440) % 1440; const h = Math.floor(m / 60); return `${h % 12 || 12}:${pad(m % 60)} ${h < 12 ? 'am' : 'pm'}`; };
+  const clock = m => { m = ((m % 1440) + 1440) % 1440; return `${Math.floor(m / 60) % 12 || 12}:${pad(m % 60)}`; };
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+  // The afterglow's height is the share of the wind-down still ahead; it thins to the horizon line at lights-out.
+  let base = 0.6;
+  function setGlow(s, ms, ease = 'var(--ease-breath)') {
+    const g = $('glow'), r = $('reflect'), h = $('horizonLine');
+    const t = `transform ${ms}ms ${ease}, opacity ${ms}ms ${ease}`;
+    g.style.transition = r.style.transition = h.style.transition = t;
+    if (RM) { // designed still version: brightness carries the breath, nothing moves
+      g.style.transform = `scaleY(${base})`; r.style.transform = `scaleY(${base})`;
+      g.style.opacity = r.style.opacity = String(0.45 + 0.55 * s);
+    } else {
+      g.style.transform = `scaleY(${s})`; r.style.transform = `scaleY(${s})`;
+      g.style.opacity = r.style.opacity = '1';
+    }
+    h.style.opacity = String(0.35 + 0.65 * Math.min(1, s * 1.4));
+  }
+
+  function render() {
+    const n = now(), left = LIGHTS_OUT - n;
+    $('clock').textContent = clock(n);
+    const num = $('readingNum');
+    if (left > 0) {
+      $('readingLabel').textContent = 'Lights out in';
+      num.classList.remove('words');
+      num.innerHTML = left >= 60
+        ? `${Math.floor(left / 60)}:${pad(left % 60)}<span class="unit">h</span>`
+        : `${left}<span class="unit">min</span>`;
+      $('readingSub').textContent = `at ${fmt(LIGHTS_OUT)}, your usual time`;
+      base = clamp(left / WINDOW, 0.06, 1);
+      $('reading').setAttribute('aria-label', `Lights out in ${left} minutes, at ${fmt(LIGHTS_OUT)}`);
+    } else {
+      $('readingLabel').textContent = `It's past ${fmt(LIGHTS_OUT)}`;
+      num.classList.add('words');
+      num.textContent = 'No rush';
+      $('readingSub').textContent = 'Breathe whenever you are ready';
+      base = 0.04;
+      $('reading').setAttribute('aria-label', `It's past ${fmt(LIGHTS_OUT)}. No rush.`);
+    }
+    $('cueSmall').textContent = left > 0 ? `Lights out at ${fmt(LIGHTS_OUT)}` : `${fmt(n)}`;
+    if (!breathing) setGlow(base, 1200, 'var(--ease-out)');
+  }
+
+  // ---- breathing: in 4 s, out 6 s, 24 breaths = 4 min ----
+  const IN = 4000, OUT = 6000, TOTAL = 24;
+  let breathing = false, breath = 0, timer = 0, secTimer = 0, endsAt = 0;
+  function cue(word) {
+    const w = $('cueWord');
+    w.style.opacity = '0';
+    setTimeout(() => { w.textContent = word; w.style.opacity = '1'; }, 250);
+    $('live').textContent = word;
+  }
+  function cycle() {
+    if (!breathing) return;
+    if (breath >= TOTAL) return stop();
+    breath++;
+    $('cueCount').textContent = `Breath ${breath} of ${TOTAL}`;
+    cue('Breathe in');
+    setGlow(1, IN);                       // native: soft haptic tap at each turn of the breath
+    timer = setTimeout(() => {
+      cue('Breathe out');
+      setGlow(base, OUT);
+      timer = setTimeout(cycle, OUT);
+    }, IN);
+  }
+  function tickSession() {
+    const s = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+    $('breatheMeta').textContent = `${Math.floor(s / 60)}:${pad(s % 60)} left`;
+  }
+  function start() {
+    breathing = true; breath = 0; endsAt = Date.now() + TOTAL * (IN + OUT);
+    document.body.classList.add('breathing');
+    $('cue').setAttribute('aria-hidden', 'false');
+    $('breatheLabel').textContent = 'Stop';
+    $('breathe').setAttribute('aria-label', 'Stop breathing session');
+    tickSession(); secTimer = setInterval(tickSession, 1000);
+    cycle();
+  }
+  function stop() {
+    breathing = false; clearTimeout(timer); clearInterval(secTimer);
+    document.body.classList.remove('breathing');
+    $('cue').setAttribute('aria-hidden', 'true');
+    $('breatheLabel').textContent = 'Start breathing';
+    $('breatheMeta').textContent = '4 min';
+    $('breathe').removeAttribute('aria-label');
+    $('live').textContent = 'Breathing stopped';
+    setGlow(base, 2000);
+  }
+  $('breathe').addEventListener('click', () => { demo && clearTimeout(demo); breathing ? stop() : start(); });
+
+  // ---- sleep sound with a fade-out timer ----
+  const PLAY = '<path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/>';
+  const PAUSE = '<rect x="6.5" y="5" width="4" height="14" rx="1.2"/><rect x="13.5" y="5" width="4" height="14" rx="1.2"/>';
+  $('sound').addEventListener('click', () => {
+    const b = $('sound'), on = b.getAttribute('aria-pressed') !== 'true';
+    b.setAttribute('aria-pressed', String(on));
+    b.setAttribute('aria-label', `${on ? 'Pause' : 'Play'} Rain on a slate roof`);
+    $('soundIcon').innerHTML = on ? PAUSE : PLAY;
+    $('soundSub').textContent = on ? `Playing, fades out at ${fmt(now() + 30)}` : '30 min, then fades out';
+  });
+
+  // ---- screens that are not part of this prototype say so ----
+  let toastT = 0;
+  function toast(msg) {
+    const t = $('toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+  $('logRow').addEventListener('click', () => toast('The sleep log is not in this prototype'));
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+    if (t.getAttribute('aria-selected') !== 'true') toast(`${t.dataset.name} is not in this prototype`);
+  }));
+
+  if (state === 'firstnight') {
+    $('logT1').textContent = 'Nothing logged yet';
+    $('logT2').textContent = 'In the morning, add when you woke';
+  }
+
+  // ---- stars: fixed positions, kept clear of the reading ----
+  const stars = $('stars');
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; stars.children.length < 26 && i < 400; i++) {
+    const x = rnd() * 393, y = 112 + rnd() * 220;
+    if (x > 70 && x < 323 && y > 130 && y < 320) continue;
+    const s = document.createElement('i');
+    const k = rnd();
+    s.className = 'star' + (k < .4 ? ' s' : k > .9 ? ' b' : '');
+    s.style.left = x.toFixed(1) + 'px'; s.style.top = y.toFixed(1) + 'px';
+    s.style.animationDelay = (-rnd() * 7).toFixed(2) + 's';
+    s.style.animationDuration = (6 + rnd() * 4).toFixed(2) + 's';
+    stars.appendChild(s);
+  }
+
+  render();
+  setInterval(render, 15000);
+
+  // Prototype only: play one breath a few seconds after load so the screen explains itself.
+  let demo = RM ? 0 : setTimeout(() => {
+    start();
+    demo = setTimeout(() => { if (breathing && breath === 1) stop(); }, IN + OUT - 200);
+  }, 2600);
+  document.addEventListener('visibilitychange', () => {
+    document.querySelectorAll('.star, .reflect').forEach(e => e.style.animationPlayState = document.hidden ? 'paused' : '');
+  });
+})();
+</script>
+</body>
+</html>

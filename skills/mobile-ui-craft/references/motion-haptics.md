@@ -2,6 +2,8 @@
 
 Motion on a phone is felt more than seen. The right answer for most interactions is the platform default or nothing; a small number of moments deserve design. This file is platform-neutral: it gives the decisions and the numbers. API names for your stack are in the platform file.
 
+At Expression 4 and 5 the hero and the signature interaction are designed motion: an entrance, a living loop, a physical consequence for the main action. The gates below still decide everything else on the screen, and Reduce Motion applies to all of it.
+
 ## Contents
 
 - Gate 1: should it animate at all
@@ -58,7 +60,7 @@ Keep interface motion under about 300 ms unless a large surface is travelling. E
 - **Progress and continuous rotation:** linear.
 - **Never ease-in** for interface motion; a slow start reads as lag.
 - **Anything a finger moved uses a spring**, started with the finger's release velocity.
-- **No overshoot by default.** Use a critically damped spring (no bounce). Allow a small overshoot only when a gesture carried momentum into the motion, such as a flicked card settling. Bounce on taps reads as a toy.
+- **Overshoot follows the Energy dial.** At Energy 1 and 2 use critically damped springs with no bounce. From Energy 3 a small overshoot is right where a gesture carried momentum or a tap has a physical consequence in the hero. Bounce on every control reads as a toy at any setting.
 - **Never grow from nothing.** Elements appear from 90-97% scale with opacity, not from zero scale.
 
 ## What to animate

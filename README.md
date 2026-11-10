@@ -4,26 +4,76 @@ Kişisel kullanım için AI ajan skill'leri. Açık standart olan `SKILL.md` bi�
 
 | Skill | Ne yapar |
 |---|---|
-| [`mobile-ui-craft`](skills/mobile-ui-craft/SKILL.md) | Mobil uygulama arayüzünü tasarlar, yazar, yeniden stillendirir ve inceler: platforma uygun, nişe oturan, AI yapımı gibi görünmeyen |
+| [`mobile-ui-craft`](skills/mobile-ui-craft/SKILL.md) | Mobil uygulama arayüzünü tasarlar, yazar, yeniden stillendirir ve inceler: her uygulamaya kendine ait, akılda kalan bir kimlik verir |
 
 ## mobile-ui-craft
 
-iOS (SwiftUI, UIKit), Android (Jetpack Compose), Flutter ve React Native / Expo için. Üç şeyi hedefler:
+iOS (SwiftUI, UIKit), Android (Jetpack Compose), Flutter ve React Native / Expo için.
 
-1. **Platforma uysun.** Sistem gezinmesi, sistem kontrolleri, Dynamic Type, güvenli alanlar, geri hareketi.
-2. **Ürüne otursun.** Banka uygulaması ile meditasyon uygulaması aynı görünmesin.
-3. **Her görünür seçim karar verilmiş olsun.** AI yapımı arayüzün asıl sorunu yanlış olması değil, hiçbir şeyin seçilmemiş olması.
+AI yapımı arayüzün sorunu yanlış olması değil, hiçbir şeyin seçilmemiş olmasıdır: nötr bir zemin, içinde büyük bir sayı olan yuvarlak bir kart, bir liste, bir sekme çubuğu. Bu skill her ekranı tek bir fikre bağlar:
 
-![Aynı skill, dört farklı niş](docs/previews/gallery.png)
+1. **Tek fikir.** Ürünün kendi dünyasından gelen bir kavram: bir dil uygulaması için dolan çay bardağı, bir serbest çalışan uygulaması için koçanı yırtılan fatura.
+2. **Merkez öğe.** Ekranın asıl verisini taşıyan, çizilmiş, derinliği olan, yaşayan bir nesne. Kart içinde sayı değil.
+3. **Kendine ait yüzey.** Ürünün dünyasından türetilmiş renk, karakterli bir başlık fontu, tek bir malzeme hikâyesi.
+4. **Kimlik olarak hareket.** Bir giriş koreografisi, merkez öğede yaşayan bir döngü, ana eylemin merkez öğede fiziksel bir sonucu.
+5. **Taban.** Dokunma hedefleri, metin ölçekleme, kontrast, durumlar, geri hareketi, karanlık kalıpların reddi. Cesur tasarım bunlardan muaf değil.
 
-Yukarıdaki dört ekran aynı skill'in dört farklı nişe verdiği yanıt. Aşağıdakiler ise aynı istek ve aynı modelle (Claude Sonnet), solda skill olmadan, sağda skill ile üretildi. Hiçbiri elle düzeltilmedi.
+Skill bilerek **palet, hex kodu ya da font listesi içermez**: "iyi seçenekler" menüsü bir sonraki varsayılana dönüşür.
 
-| | |
-|---|---|
-| ![Bütçe](docs/previews/compare-budget-home-ios.png) | ![Uyku](docs/previews/compare-sleep-tonight-ios.png) |
-| ![Koşu](docs/previews/compare-run-summary-android.png) | ![Çocuk](docs/previews/compare-kids-reading-android.png) |
+### Ne üretiyor
 
-Görseller native ekran değil, skill'in "kod yazmadan önce yönü gör" modunun ürettiği HTML mockup'lardır; fontlar, malzemeler ve kontroller yaklaşık çizimdir.
+Aşağıdaki sekiz ekranın her biri tek bir istekle, **Claude Opus 5.5 (high)** tarafından, skill yüklüyken üretildi. Hiçbiri elle düzeltilmedi.
+
+![mobile-ui-craft ile](docs/previews/bench-with-skill.png)
+
+Aynı sekiz istek, aynı model, skill olmadan:
+
+![Skill olmadan](docs/previews/bench-without-skill.png)
+
+Ekranlar durağan görsel değil, hareketli ve dokunulabilir HTML prototipleridir. Dördünün kaydı:
+
+| Söz (dil) | Pano (finans) | Sofra (yemek) | Kumbara (bütçe) |
+|---|---|---|---|
+| ![Söz](docs/previews/language.gif) | ![Pano](docs/previews/finance.gif) | ![Sofra](docs/previews/food.gif) | ![Kumbara](docs/previews/kumbara.gif) |
+
+Prototiplerin kendisi [`docs/prototypes/`](docs/prototypes) klasöründe; tarayıcıda açıp dokunabilirsin. Kumbara, yönü belirlemek için elle yazılmış ilk örnektir; diğer sekizi skill'in çıktısıdır.
+
+Bunlar native ekran değil, skill'in "kod yazmadan önce gör" modunun ürettiği prototiplerdir; fontlar, malzemeler ve kontroller native karşılıklarının yaklaşık halidir.
+
+### Ölçüm: 8 niş, kör puanlama
+
+Sekiz niş için aynı istek iki kez koşuldu: skill ile ve skill olmadan, ikisi de Opus 5.5 (high). Her nişte iki bağımsız puanlayıcı (yine Opus 5.5, high) üç adayı beş ölçütte 1-10 arası puanladı: A ve B (hangisinin skill'li olduğunu bilmeden, sıraları iki puanlayıcıda ters) ve referans olarak o nişin çok satan gerçek bir uygulamasının App Store ekran görüntüleri.
+
+| Niş | Referans | Skill ile | Skill'siz | Gerçek uygulama | İki puanlayıcının tercihi |
+|---|---|---|---|---|---|
+| Finans | Revolut | 7,5 | 6,8 | 7,2 | skill, skill |
+| Koşu | Strava | 7,1 | 6,8 | 7,0 | skill'siz, skill |
+| Uyku | Calm | 7,2 | 6,7 | 4,9 | skill, skill |
+| Dil | Duolingo | 7,9 | 7,1 | 7,2 | skill, skill |
+| Yemek | Uber Eats | 7,4 | 6,7 | 6,6 | skill, skill |
+| Müzik | Spotify | 8,0 | 6,6 | 7,0 | skill, skill |
+| Flört | Tinder | 7,2 | 6,0 | 6,2 | skill, skill |
+| Seyahat | Airbnb | 7,9 | 7,1 | 7,5 | skill, skill |
+| **Ortalama** | | **7,5** | **6,7** | **6,7** | **15 - 1** |
+
+Ölçüt bazında ortalamalar:
+
+| Ölçüt | Skill ile | Skill'siz | Gerçek uygulama |
+|---|---|---|---|
+| Kimlik (başka uygulamayla karıştırılamaz mı) | 8,4 | 4,9 | 6,8 |
+| Etki (durup baktırıyor mu) | 7,9 | 5,3 | 5,8 |
+| Cila | 7,0 | 7,3 | 7,3 |
+| Netlik (kullanıcının işini görüyor mu) | 6,8 | 8,2 | 6,2 |
+| Nişe uygunluk | 7,4 | 7,9 | 7,6 |
+
+Bu sonuçlar okunurken:
+
+- **Kazanç kimlik ve etkide.** Skill'siz tasarımlar derli toplu ama birbirine benziyor: sekizin altısı krem bir zemin üzerine kurulu ve çoğunda turuncu-kiremit bir vurgu var. Puanlayıcıların skill'siz taraf için en sık yazdığı kusur "jenerik, logoyu değiştir başka uygulama olur".
+- **Bedeli netlik.** Skill'li tasarımlar netlikte 1,4 puan geride. Tekrarlayan eleştiriler: merkez öğe fazla yer kaplayıp istenen içeriği ekran dışına itiyor, yüzen düğmeler ve bildirimler içeriğin üstünü örtüyor, merkez öğedeki yazı yer yer soluk kalıyor.
+- **Bu eleştiriler skill'e işlendi, ama yeniden ölçülmedi.** Ölçümden sonra eklenenler: merkez öğenin boyutu yoğunluk kadranına bağlandı, "istenen her şey ilk ekranda mı" testi, "hiçbir içerik yüzen öğenin altında kalmaz" kuralı, merkez öğe yazısına en güçlü kontrast.
+- **Gerçek uygulama sütunu kaba bir çıtadır.** App Store görselleri pazarlama görselidir; çoğu aynı ekranı değil ana sayfayı gösteriyor, Calm'ınkilerde arayüz hiç yok (4,9 bu yüzden anlamsız). Prototiplerde gerçek fotoğraf da yok; puanlayıcılara bunu cezalandırmamaları söylendi.
+- **Maliyet.** Skill'li koşular ortalama 1,5 kat token (164 bine karşı 112 bin) ve 2,7 kat süre (8,6 dakikaya karşı 3,2 dakika) harcadı.
+- **Sınırlar.** Niş başına tek koşu. Puanlayıcılar üreticiyle aynı model ailesinden; hangi adayın skill'li olduğunu bilmeseler de kendi tarzına yatkınlık dışlanamaz. Sonuç bir kıyaslama değil, bir örnektir.
 
 ### Kurulum
 
@@ -52,7 +102,19 @@ Elle kurulum: `skills/mobile-ui-craft` klasörünü aşağıdaki yerlerden birin
 
 Repo özel (private) olduğu sürece komutlar yalnızca bu repoya git erişimi olan makinelerde çalışır.
 
-**Skill'in her oturumda devrede olması için:** ajanlar skill'leri yalnızca görev tetiklediğinde yükler ve ölçümlere göre bunu sık sık atlar. [`assets/always-on.md`](skills/mobile-ui-craft/assets/always-on.md) içindeki on satırı projenin `AGENTS.md`, `CLAUDE.md` ya da `GEMINI.md` dosyasına ekle. Skill desteği olmayan ajanlarda da aynı blok işe yarar.
+### Skill'in gerçekten yüklenmesi için
+
+Skill'i kurmak yetmiyor. Gerçek dosyaları olan bir projede, 800'den fazla skill kurulu bir Claude Code'da ölçtüm (Opus 5.5, başsız oturumlar):
+
+| Durum | Tetiklenmesi gereken isteklerde | Tetiklenmemesi gerekenlerde |
+|---|---|---|
+| Yalnızca skill kurulu | 5/30 | ölçülmedi |
+| Skill açıklaması yeniden yazıldı | 4/20 | ölçülmedi |
+| `CLAUDE.md`'de "her zaman açık" blok | 20/20 | 0/20 |
+
+Neden: çok sayıda skill kuruluyken Claude Code bağlam bütçesi yüzünden yalnızca birkaç yerleşik skill'in açıklamasını gösteriyor; bu skill modele sadece adıyla görünüyor. Model önce koda bakıyor, sonra skill'i çağırmadan yazmaya başlıyor.
+
+Çözüm: [`assets/always-on.md`](skills/mobile-ui-craft/assets/always-on.md) içindeki on satırı mobil projenin `CLAUDE.md`, `AGENTS.md` ya da `GEMINI.md` dosyasına ekle.
 
 ### Nasıl şekil değiştirir
 
@@ -63,39 +125,47 @@ Skill her işte dört şeyi belirler ve yalnızca ilgili dosyaları okur:
 | Şerit | Tam yön, devralınmış tasarım sistemi, yerel cila | |
 | Platform | iOS, Android, Flutter, React Native (+ iki platforma tek koddan) | `references/ios.md` vb. |
 | Niş | 24 niş: fintech, kripto, fitness, meditasyon, verimlilik, notlar, sosyal, flört, e-ticaret, yemek, seyahat, eğitim, çocuk, medya, haber, AI asistan, araçlar, yaratıcı araçlar, akıllı ev, sağlık, emlak, oyun, B2B/saha, kamu | `references/niche-*.md` |
-| Görev | Tasarım, yeniden stillendirme, inceleme, hareket, akışlar, önizleme | `craft`, `slop-tells`, `review`, `motion-haptics`, `ux-flows`, `preview` |
+| Görev | Tasarım, yeniden stillendirme, inceleme, hareket, akışlar, önizleme | `signature`, `craft`, `slop-tells`, `review`, `motion-haptics`, `ux-flows`, `preview` |
 
-Her niş üç kadran için bir ön ayar verir; kadranlar soyut sıfatları ölçülebilir seçimlere çevirir:
+Dört kadran soyut sıfatları ölçülebilir seçimlere çevirir:
 
-- **D Yoğunluk** (1 ferah, 5 sıkı): satır yükseklikleri, bölüm aralıkları, kart mı ayraç mı.
-- **E Enerji** (1 sakin, 5 ifadeli): renk doygunluğu, hareket, kutlama.
-- **W Sıcaklık** (1 resmî ve keskin, 5 samimi ve yuvarlak): köşe yarıçapları, metin sesi, illüstrasyon.
+- **D Yoğunluk** (1 ferah, 5 sıkı): satır yükseklikleri, bölüm aralıkları, merkez öğenin kapladığı alan.
+- **E Enerji** (1 sakin, 5 ifadeli): renk, hareket, kutlama.
+- **W Sıcaklık** (1 resmî ve keskin, 5 samimi ve yuvarlak): köşeler, metin sesi, karakter.
+- **X İfade** (1 sistem bileşenleri ve platform görünümü, 5 her şey ürüne özel): varsayılan 4. Saha, kurumsal, kamu ve klinik araçlarda ya da sade bir sonuç istendiğinde 1-2'ye iner.
 
-Fintech `D4 E2 W2`, meditasyon `D1 E1 W4`, çocuk uygulaması `D1 E4 W5` ile başlar. Ajan kod yazmadan önce kısa bir brief doldurur (ürün, niş, kadranlar, yön, renklerin kaynağı, imza, kaçınılan klişe, reddedilen karanlık kalıplar), planı dört testle sınar, sonra kurar ve render alıp bakar.
+Ajan kod yazmadan önce kısa bir brief doldurur (ürün, niş, kadranlar, fikir, merkez öğe, renklerin kaynağı, font, hareket, kaçınılan klişe, reddedilen karanlık kalıplar), planı altı testle sınar, önce merkez öğeyi kurar, sonra render alıp bakar.
 
-Skill bilerek **palet, hex kodu ya da font listesi içermez**: "iyi seçenekler" menüsü bir sonraki varsayılana dönüşür. Renk ve biçim ürünün kendi dünyasından türetilir.
+Nişler davranışı belirler (kullanıcının o andaki hali, güven sinyalleri, tasarlanacak durumlar, reddedilecek kalıplar); yüzeyin ne kadar cesur olacağını İfade kadranı belirler.
 
 ### İçindekiler
 
 ```
 skills/mobile-ui-craft/
-  SKILL.md              iş akışı, yönlendirme tabloları, 12 maddelik taban, niş dizini
+  SKILL.md              iş akışı, yönlendirme tabloları, dört kadran, 13 maddelik taban, niş dizini
   references/
+    signature.md        fikir, merkez öğe, yüzey, hareket, "wow" testi
     ios.md android.md flutter.md react-native.md cross-platform.md
     craft.md slop-tells.md motion-haptics.md ux-flows.md preview.md review.md
     niche-*.md          24 niş dosyası
   assets/
-    always-on.md        AGENTS.md / CLAUDE.md için on satırlık kural bloğu
-    phone-frame.html    HTML mockup için telefon çerçevesi (iOS ve Android)
+    always-on.md        CLAUDE.md / AGENTS.md için on satırlık kural bloğu
+    phone-frame.html    HTML prototip için telefon çerçevesi (iOS ve Android)
   scripts/
-    slop-scan.mjs       Swift, Kotlin, Dart, TSX ve HTML kaynağında AI işaretlerini sayan tarayıcı
-  evals/                beş test senaryosu
+    capture.mjs         prototipi gerçek telefon boyutunda, gerçek zamanlı, birkaç anda yakalar
+    slop-scan.mjs       Swift, Kotlin, Dart, TSX ve HTML kaynağında seçilmemiş varsayılanları sayar
+  evals/                dokuz test senaryosu
 tests/lint.mjs          skill yapısını doğrulayan lint
 docs/previews/          bu sayfadaki görseller
+docs/prototypes/        açıp dokunabileceğin prototipler
 RESEARCH.md             araştırma özeti ve eleştiri -> tasarım kararı tablosu
 ```
 
-Tarayıcı tek başına da kullanılabilir (Node 18+, bağımlılık yok, ağ erişimi yok):
+İki script de bağımlılıksızdır (Node 18+) ve tek başına kullanılabilir:
+
+```bash
+node skills/mobile-ui-craft/scripts/capture.mjs docs/prototypes/language.html shots/soz --at 1200,3000,6500
+```
 
 ```bash
 node skills/mobile-ui-craft/scripts/slop-scan.mjs lib/
@@ -115,44 +185,27 @@ node skills/mobile-ui-craft/scripts/slop-scan.mjs --self-test
 claude plugin validate .
 ```
 
-**Karşılaştırmalı değerlendirme (2026-11-10).** Beş senaryo aynı istekle iki kez koşuldu: skill ile ve skill olmadan (Claude Sonnet, senaryo başına tek koşu). Çıktıları, önceden yazılmış 47 iddiaya göre ayrı bir puanlayıcı ajan değerlendirdi; nesnel iddialar (gradyan sayısı, emoji, web fontu, `flutter analyze`) script çıktısıyla kontrol edildi.
-
-| Senaryo | Skill ile | Skill olmadan |
-|---|---|---|
-| Bütçe ana ekranı (iOS, Türkçe istek) | 10/10 | 5/10 |
-| Uyku "Tonight" ekranı (iOS) | 10/10 | 6/10 |
-| Koşu özeti (Android, Material 3) | 9/9 | 7/9 |
-| Çocuk okuma ana ekranı (Android) | 9/9 | 4/9 |
-| Flutter ekranını yeniden stillendirme | 8/9 | 5/9 |
-| **Toplam** | **46/47 (%98)** | **27/47 (%57)** |
-
-Bu sayılar okunurken:
-
-- **Farkın bir kısmı rapor biçiminden geliyor.** İddiaların 8'i skill'in açıkça istediği iki rapor satırını ölçüyor (adlandırılmış yön, "doğrulanmadı" satırı). Onlar sayılmazsa sonuç 38/39'a karşı 27/39 (%97'ye karşı %69).
-- **Taban model zaten yetkin.** Skill'siz çıktılar kötü değil. Skill'in kaldırdıkları: emoji ikonlar, selamlama başlığı, web fontu, dekoratif gradyanlar, sekme çubuğundaki eylem düğmesi. Eklediği: nişe uygun yoğunluk, tek yerden tema, raporda doğrulanmayanların yazılması.
-- **Flutter senaryosunda tarayıcı sayımı:** girdi dosyasında 46 işaret vardı; skill ile 0'a, skill olmadan 24'e indi. İki çıktı da `flutter analyze`'dan hatasız geçti.
-- **Maliyet:** skill'li koşular ortalama 1,4 kat token ve 2,8 kat süre harcadı (146 bine karşı 103 bin token, 249 saniyeye karşı 88 saniye).
-- **Sonraki turlar.** İlk turdan sonra skill'e dört düzeltme yapıldı: Android çerçevesinin durum çubuğu, uydurma sayıların yeniden stillenmek yerine kaldırılması, yıkıcı eylemin birincil eylemden ayrı durması, aydınlık görünümün önce gelmesi (ilk turlarda dört ekrandan üçü koyu çıkmıştı). Etkilenen senaryolar yalnızca skill koluyla yeniden koşuldu. İkinci tur: koşu özeti 9/9, çocuk okuma 9/9, Flutter 7/9. Üçüncü tur: bütçe 10/10, çocuk okuma 9/9.
-- **Flutter'daki 7/9 bir test hatasıydı.** İki iddianın metni skill'in platform kuralıyla çelişiyordu: iOS dalında 44 pt hedef ve Cupertino ikonu doğru davranıştır, iddialar ise "48" ve "tek ikon ailesi" diyordu. İddialar düzeltildi; o koşu yeniden puanlanmadı.
-- **Görsellerdeki skill'li ekranlar** son turlardan: bütçe ve çocuk okuma üçüncü, koşu özeti ikinci, uyku birinci tur. Skill'siz ekranlar birinci turdan.
-- **Sınırlar:** senaryo başına tek koşu, tek model; puanlayıcı hangi çıktının hangi kola ait olduğunu biliyordu. Sonuç bir kıyaslama değil, bir örnektir.
-
 Senaryoları yeniden koşmak için (gerçek ve ücretli model koşularıdır):
 
 ```bash
 cd skills/mobile-ui-craft && claude plugin eval . --allow-tools Write,Edit,Bash --scaffold
 ```
 
+### Sürüm geçmişi
+
+- **1.0** platforma uygunluk ve AI işaretlerinin temizlenmesi üzerine kuruluydu. Sonnet ile yapılan iddia tabanlı testte skill'li koşular 46/47, skill'siz koşular 27/47 aldı; ama çıktılar "daha temiz" olmaktan öteye geçmiyordu.
+- **2.0** bu geri bildirim üzerine yeniden yazıldı: fikir ve merkez öğe zorunlu, İfade kadranı eklendi, hareketli prototip ve gerçek zamanlı yakalama geldi. Yukarıdaki sekiz nişlik ölçüm bu sürüme aittir.
+
 ### Araştırma
 
-Skill yazılmadan önce yaklaşık 90 skill reposu, platform kılavuzları, AI-slop üzerine yazılanlar ve gerçek uygulama eleştirileri tarandı. Her tekrarlayan eleştirinin skill'de neye dönüştüğü [RESEARCH.md](RESEARCH.md) içinde.
+Skill yazılmadan önce yaklaşık 90 skill reposu, platform kılavuzları, AI-slop üzerine yazılanlar ve gerçek uygulama eleştirileri tarandı. Ayrıntılar [RESEARCH.md](RESEARCH.md) içinde.
 
 ### Sınırlar
 
+- Prototipler HTML'dir. Hiçbir ekran simülatörde ya da cihazda denenmedi; SwiftUI, Compose ve React Native için kod üretimi test edilmedi (Flutter için bir senaryo `flutter analyze`'dan geçti, o da 1.0 ile).
+- İddialı bir prototipi native koda çevirmek, sistem bileşenleriyle kurmaktan daha fazla iştir; özel gezinme ve kontrollerde erişilebilirlik elle sağlanmalıdır.
 - Platform bilgisi 2026-11 itibarıyla kontrol edildi. Daha yeni bir SDK ile çelişirse SDK ve resmi belge geçerlidir.
-- Önizlemeler HTML mockup'tır. Hareket, haptik ve gerçek his ancak cihazda değerlendirilebilir; skill bunu raporunda açıkça yazar.
-- Araştırmada Reddit ve X doğrudan okunamadı (ayrıntı RESEARCH.md'de).
-- Skill'in kendiliğinden tetiklenme oranı ölçülmedi.
+- Araştırmada Reddit ve X doğrudan okunamadı.
 
 ## Lisans
 

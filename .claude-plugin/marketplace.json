@@ -6,7 +6,7 @@
     {
       "name": "mobile-ui-craft",
       "description": "Design, build, restyle and review mobile app UI and UX that feels native, fits its niche and does not look AI-generated.",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "source": "./",
       "skills": ["./skills/mobile-ui-craft"],
       "author": { "name": "Kaan Tufan" },

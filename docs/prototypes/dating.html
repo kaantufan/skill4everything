@@ -1,0 +1,418 @@
+<!doctype html>
+<!-- Kıvılcım · Discover. HTML mockup of a native iOS screen (393x852 pt). -->
+<html lang="en" data-platform="ios" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kıvılcım · Discover</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap" rel="stylesheet">
+<style>
+  /* Device frame (from the skill's phone-frame.html) */
+  :root {
+    --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px;
+    --font: -apple-system, "SF Pro Text", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--field); color: var(--on-field); }
+  .statusbar {
+    position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 30;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--on-field); pointer-events: none;
+  }
+  .statusbar svg { height: 12px; fill: var(--on-field); }
+  .home-indicator {
+    position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 30;
+    width: 134px; height: 5px; border-radius: 3px; background: var(--on-field); opacity: .9; pointer-events: none;
+  }
+  #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  button:focus-visible { outline: 3px solid var(--spark); outline-offset: 2px; }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+<style>
+  /* PRODUCT TOKENS. Source: an electric spark is blue-violet with a hot gold-white core,
+     not an orange flame. Indigo field = the dark gap the spark jumps; gold = the spark itself
+     (likes and shared interests only); cream = the paper people write their answers on. */
+  :root {
+    --field-top: #3B2CA8; --field: #2D2089; --field-low: #231970;
+    --on-field: #FFF7EA; --on-field-2: rgba(255,247,234,.70);
+    --spark: #FFC93C; --spark-core: #FFF3C4; --on-spark: #22186A;
+    --sheet: #FFF4E2; --ink: #22186A; --ink-2: #5E5296; --hair: rgba(34,24,106,.14);
+    --raised: #FFFFFF; --danger: #B8283F;
+    --scrim: 17,10,58;
+    --display: "Bricolage Grotesque", var(--font);
+    --r-control: 999px; --r-card: 28px; --r-sheet: 24px;
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
+    --t-press: 90ms; --ease-spring: cubic-bezier(.2,.9,.3,1.18); --ease-out: cubic-bezier(.2,.8,.2,1);
+  }
+  [data-theme="dark"] {
+    --field-top: #22186C; --field: #180F4A; --field-low: #110A38;
+    --sheet: #241A5E; --ink: #FFF4E2; --ink-2: rgba(255,244,226,.72); --hair: rgba(255,244,226,.16);
+    --raised: #3A2F82; --danger: #FF8C9C; --spark: #F5C243;
+    color-scheme: dark;
+  }
+</style>
+<style>
+  body { background: linear-gradient(180deg, var(--field-top) 0%, var(--field) 38%, var(--field-low) 100%); }
+
+  /* Top bar */
+  .topbar { padding: var(--safe-top) var(--s4) 0; height: calc(var(--safe-top) + 52px); display: flex; align-items: center; justify-content: space-between; flex: none; }
+  .wordmark { font-family: var(--display); font-weight: 800; font-size: 27px; letter-spacing: -.02em; font-variation-settings: "opsz" 96; display: flex; align-items: center; gap: 6px; margin: 0; }
+  .wordmark svg { width: 15px; height: 15px; fill: var(--spark); transform: translateY(-7px); }
+  .iconbtn { width: 44px; height: 44px; border-radius: 22px; display: grid; place-items: center; transition: transform var(--t-press), background var(--t-press); }
+  .iconbtn:active { transform: scale(.92); background: rgba(255,247,234,.12); }
+  .iconbtn svg { width: 24px; height: 24px; stroke: var(--on-field); fill: none; stroke-width: 1.8; stroke-linecap: round; }
+
+  .offline { margin: 0 var(--s4) var(--s2); padding: 10px 14px; border-radius: 14px; background: rgba(255,247,234,.12); font-size: 14px; line-height: 1.35; color: var(--on-field); display: none; }
+  .is-offline .offline { display: block; }
+
+  /* Deck */
+  .deck { flex: 1; position: relative; padding: 0 var(--s2) var(--s2); min-height: 0; }
+  .card { position: relative; height: 100%; border-radius: var(--r-card); overflow: hidden; background: var(--sheet); box-shadow: 0 18px 40px -18px rgba(8,4,32,.7); will-change: transform, opacity; }
+  .scroll { height: 100%; overflow-y: auto; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* Hero: photo + the sparks you share */
+  .photo { position: relative; height: 72%; min-height: 400px; background-size: cover; color: #FFF7EA; transition: background .25s; }
+  .photo::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); pointer-events: none; }
+  .segs { position: absolute; top: 10px; left: 14px; right: 14px; display: flex; gap: 4px; z-index: 2; }
+  .segs span { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,247,234,.38); }
+  .segs span.on { background: #FFF7EA; }
+  .tap { position: absolute; top: 0; height: 52%; width: 50%; z-index: 1; }
+  .tap.prev { left: 0; } .tap.next { right: 0; }
+  .more { position: absolute; top: 22px; right: 10px; z-index: 3; background: rgba(var(--scrim),.42); }
+  .more svg { stroke: none; fill: #FFF7EA; }
+  .scrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(var(--scrim),0) 34%, rgba(var(--scrim),.62) 58%, rgba(var(--scrim),.92) 100%); pointer-events: none; }
+  .id { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 20px 44px; z-index: 2; }
+  .name { margin: 0; font-family: var(--display); font-size: 36px; line-height: 1.05; font-weight: 700; letter-spacing: -.02em; font-variation-settings: "opsz" 72; display: flex; align-items: baseline; white-space: nowrap; }
+  .nm { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .age { flex: none; }
+  .age { font-weight: 400; color: rgba(255,247,234,.78); margin-left: 10px; }
+  .meta { margin: 6px 0 0; font-size: 15px; color: rgba(255,247,234,.86); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .ver { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: #FFF7EA; }
+  .ver svg { width: 16px; height: 16px; }
+  .sparks { display: flex; gap: 14px; margin-top: 18px; align-items: flex-start; }
+  .num { font-family: var(--display); font-weight: 800; font-size: 60px; line-height: .82; letter-spacing: -.04em; color: var(--spark); font-variant-numeric: tabular-nums; font-variation-settings: "opsz" 96; text-shadow: 0 0 22px rgba(255,201,60,.35); transform-origin: 50% 60%; min-width: 34px; }
+  .sl { margin: 0 0 8px; font-size: 15px; font-weight: 600; color: #FFF7EA; }
+  .chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px 0 10px; border-radius: var(--r-control); font-size: 14px; font-weight: 600; white-space: nowrap; }
+  .chip svg { width: 13px; height: 13px; fill: currentColor; flex: none; }
+  .chip.lit { background: var(--spark); color: var(--on-spark); animation: ignite .55s var(--ease-out) both; animation-delay: calc(var(--base, .25s) + var(--n) * 90ms); }
+  .chip.lit svg { animation: twinkle 7s ease-in-out infinite; animation-delay: calc(var(--n) * 1.4s + 2s); }
+  .chip.dim { border: 1px solid var(--hair); color: var(--ink); padding-left: 12px; }
+
+  /* Sheet: the written part of the profile */
+  .sheet { position: relative; margin-top: -24px; border-radius: var(--r-sheet) var(--r-sheet) 0 0; background: var(--sheet); color: var(--ink); padding: 22px 20px 0; z-index: 3; }
+  .prompt { position: relative; padding: 0 0 26px; margin-bottom: 22px; border-bottom: 1px solid var(--hair); }
+  .prompt:last-of-type { border-bottom: 0; }
+  .q { margin: 0 56px 8px 0; font-size: 15px; font-weight: 600; color: var(--ink-2); }
+  .a { margin: 0; font-family: var(--display); font-size: 23px; line-height: 1.26; font-weight: 500; letter-spacing: -.01em; font-variation-settings: "opsz" 28; text-wrap: pretty; }
+  .pspark { position: absolute; top: -10px; right: -8px; width: 44px; height: 44px; border-radius: 22px; display: grid; place-items: center; transition: transform var(--t-press), background var(--t-press); }
+  .pspark svg { width: 22px; height: 22px; fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linejoin: round; }
+  .pspark:active { transform: scale(.88); background: var(--hair); }
+  .ints h3 { margin: 6px 0 12px; font-size: 15px; font-weight: 600; color: var(--ink-2); }
+  .ints .chip.lit { animation: none; }
+  .report { display: flex; align-items: center; gap: 8px; height: 44px; margin: 22px 0 0 -2px; font-size: 15px; font-weight: 500; color: var(--ink-2); }
+  .report svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .tail { height: 118px; }
+
+  /* Floating decision */
+  .actions { position: absolute; left: 0; right: 0; bottom: 0; padding: 30px 16px 16px; display: flex; gap: 12px; align-items: center; justify-content: space-between; z-index: 5;
+    background: linear-gradient(180deg, transparent, var(--sheet) 46%); pointer-events: none; }
+  .actions button { pointer-events: auto; height: 64px; border-radius: 32px; display: inline-flex; align-items: center; justify-content: center; transition: transform var(--t-press) ease-out; box-shadow: 0 10px 24px -10px rgba(8,4,32,.55); }
+  .actions button:active { transform: scale(.94); }
+  .pass { width: 64px; background: var(--raised); color: var(--ink); }
+  .pass svg { width: 26px; height: 26px; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+  .like { flex: 0 1 216px; gap: 10px; background: var(--spark); color: var(--on-spark); font-size: 17px; font-weight: 700; padding: 0 22px; }
+  .like svg { width: 22px; height: 22px; fill: currentColor; }
+
+  /* Empty and loading */
+  .empty { height: 100%; border-radius: var(--r-card); background: rgba(255,247,234,.07); border: 1px solid rgba(255,247,234,.14); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 32px 28px; }
+  .empty svg { width: 64px; height: 64px; fill: none; stroke: var(--on-field-2); stroke-width: 1.2; margin-bottom: 20px; }
+  .empty h2 { margin: 0 0 10px; font-family: var(--display); font-size: 27px; line-height: 1.15; font-weight: 700; letter-spacing: -.02em; }
+  .empty p { margin: 0 0 26px; font-size: 16px; line-height: 1.45; color: var(--on-field-2); }
+  .btn { height: 52px; padding: 0 24px; border-radius: 26px; font-size: 17px; font-weight: 600; min-width: 220px; }
+  .btn.primary { background: var(--spark); color: var(--on-spark); }
+  .btn.secondary { color: var(--on-field); margin-top: 8px; }
+  .skel .photo { background: rgba(34,24,106,.10); }
+  .skel .bar { height: 18px; border-radius: 9px; background: var(--hair); margin: 0 0 12px; }
+  .skel .photo, .skel .bar { animation: pulse 1.4s ease-in-out infinite; }
+
+  /* Tab bar */
+  .tabbar { flex: none; height: calc(49px + var(--safe-bottom)); padding-bottom: var(--safe-bottom); display: flex; }
+  .tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10px; font-weight: 600; color: var(--on-field-2); }
+  .tab svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; }
+  .tab[aria-current="page"] { color: var(--spark); }
+  .tab[aria-current="page"] svg { fill: currentColor; }
+
+  /* Overlays */
+  .toast { position: absolute; left: 16px; right: 16px; top: calc(var(--safe-top) + 2px); z-index: 20; min-height: 48px; padding: 6px 6px 6px 18px; border-radius: 18px; background: var(--ink); color: var(--sheet); display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 15px; font-weight: 500; box-shadow: 0 14px 30px -12px rgba(8,4,32,.6); opacity: 0; transform: translateY(-8px); transition: opacity .2s, transform .25s var(--ease-out); pointer-events: none; }
+  [data-theme="dark"] .toast { background: var(--sheet); color: var(--ink); }
+  .toast.show { opacity: 1; transform: none; pointer-events: auto; }
+  .toast button { height: 44px; padding: 0 16px; border-radius: 14px; font-weight: 700; color: var(--spark); }
+  .ovl { position: absolute; inset: 0; z-index: 25; background: rgba(10,6,40,.5); display: none; align-items: flex-end; }
+  .ovl.show { display: flex; }
+  .menu { width: 100%; background: var(--sheet); color: var(--ink); border-radius: var(--r-sheet) var(--r-sheet) 0 0; padding: 10px 16px calc(var(--safe-bottom) + 8px); animation: up .32s var(--ease-out); }
+  .grab { width: 36px; height: 5px; border-radius: 3px; background: var(--hair); margin: 0 auto 14px; }
+  .menu h2 { margin: 0 4px 6px; font-size: 17px; font-weight: 700; }
+  .menu .opt { display: block; width: 100%; text-align: left; padding: 12px 4px; min-height: 60px; border-bottom: 1px solid var(--hair); }
+  .menu .opt b { display: block; font-size: 17px; font-weight: 600; color: var(--danger); }
+  .menu .opt span { display: block; font-size: 14px; color: var(--ink-2); margin-top: 2px; }
+  .menu .cancel { width: 100%; height: 52px; margin-top: 10px; border-radius: 16px; background: var(--hair); font-size: 17px; font-weight: 600; }
+  .spk { position: absolute; z-index: 22; width: 10px; height: 10px; margin: -5px 0 0 -5px; pointer-events: none; background: radial-gradient(circle, var(--spark-core) 0 30%, var(--spark) 55%, transparent 72%); border-radius: 50%; }
+
+  /* Choreographed entrance: field, bar, card, identity, sparks, decision, tabs */
+  .enter { --base: .72s; }
+  .enter .topbar { animation: rise .5s .05s var(--ease-out) both; }
+  .enter .card { animation: cardIn .7s .14s var(--ease-spring) both; }
+  .enter .id .name, .enter .id .meta { animation: rise .45s var(--ease-out) both; }
+  .enter .id .name { animation-delay: .42s; } .enter .id .meta { animation-delay: .5s; }
+  .enter .num { animation: flare .6s .66s var(--ease-spring) both; }
+  .enter .actions button { animation: rise .45s .95s var(--ease-spring) both; }
+  .enter .actions .like { animation-delay: 1.02s; }
+  .enter .tabbar { animation: rise .45s 1.05s var(--ease-out) both; }
+
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+  @keyframes cardIn { from { opacity: 0; transform: translateY(36px) scale(.96); } }
+  @keyframes ignite { 0% { background: transparent; color: #FFF7EA; box-shadow: inset 0 0 0 1px rgba(255,247,234,.4); } 55% { box-shadow: 0 0 0 7px rgba(255,201,60,.28); } 100% { box-shadow: 0 0 0 0 rgba(255,201,60,0); } }
+  @keyframes twinkle { 0%, 86%, 100% { transform: none; } 91% { transform: scale(1.45) rotate(45deg); } }
+  @keyframes flare { from { opacity: 0; transform: scale(.6); } }
+  @keyframes pulse { 50% { opacity: .55; } }
+  @keyframes up { from { transform: translateY(100%); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+<body class="enter">
+  <div class="statusbar">
+    <span>9:41</span>
+    <svg viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" style="stroke: var(--on-field)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen">
+    <header class="topbar">
+      <h1 class="wordmark">kıvılcım<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1C12.9 8 16 11.1 23 12 16 12.9 12.9 16 12 23 11.1 16 8 12.9 1 12 8 11.1 11.1 8 12 1Z"/></svg></h1>
+      <button class="iconbtn" id="filters" aria-label="Interests and distance filters">
+        <svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></svg>
+      </button>
+    </header>
+    <p class="offline" role="status">You're offline. These profiles were saved 4 min ago; sparks you send will go out when you reconnect.</p>
+    <section class="deck" id="deck" aria-label="Discover"></section>
+    <nav class="tabbar" aria-label="Tabs">
+      <button class="tab" aria-current="page"><svg viewBox="0 0 24 24"><rect x="6" y="3.5" width="12" height="16" rx="3"/><path d="M3.5 7.5v10a3 3 0 0 0 3 3h9" fill="none"/></svg>Discover</button>
+      <button class="tab" data-stub="Likes"><svg viewBox="0 0 24 24"><path d="M12 3C12.7 8.6 15.4 11.3 21 12 15.4 12.7 12.7 15.4 12 21 11.3 15.4 8.6 12.7 3 12 8.6 11.3 11.3 8.6 12 3Z"/></svg>Likes</button>
+      <button class="tab" data-stub="Chats"><svg viewBox="0 0 24 24"><path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-4.5 3.5V17H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>Chats</button>
+      <button class="tab" data-stub="Profile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5"/></svg>Profile</button>
+    </nav>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMsg"></span><button id="toastAct" hidden>Undo</button></div>
+  <div class="ovl" id="ovl"><div class="menu" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
+    <div class="grab"></div><h2 id="menuTitle"></h2>
+    <button class="opt" id="optReport"><b></b><span>We review every report. They won't be told who sent it.</span></button>
+    <button class="opt" id="optBlock"><b></b><span>They won't see you or be able to message you again.</span></button>
+    <button class="cancel" id="optCancel">Cancel</button>
+  </div></div>
+  <div class="home-indicator"></div>
+
+<script>
+// Sample data for layout only. Interests in common are computed from both lists, never typed in.
+const ME = ['Film photography', 'Bouldering', 'Ferry rides', 'Chess', 'Jazz records', 'Hiking', 'Ceramics'];
+const PROFILES = [
+  { name: 'Defne', age: 29, place: 'Kadıköy', km: 3, verified: true,
+    interests: ['Sourdough', 'Film photography', 'Bağlama', 'Bouldering', 'Swimming', 'Ferry rides', 'Board games'],
+    photos: [
+      ['Defne laughing on a ferry deck at sunset', 'radial-gradient(70% 40% at 72% 26%, #FFD7A1 0, transparent 70%), linear-gradient(180deg, #F0A57C 0%, #C9787A 36%, #4C5F80 60%, #1D3350 100%)'],
+      ['Defne mid-climb on a yellow boulder problem', 'radial-gradient(40% 30% at 30% 30%, #E9C46A 0, transparent 70%), linear-gradient(160deg, #8FA39B 0%, #52645F 50%, #2C3A3B 100%)'],
+      ['A contact sheet of Defne’s film photos on a light table', 'radial-gradient(60% 50% at 50% 46%, #FCEFD6 0, transparent 70%), linear-gradient(180deg, #8E3B3B 0%, #4A1C22 100%)'] ],
+    prompts: [
+      ['A weekend I’d plan around us', 'A roll of Portra, the 8:10 ferry to Büyükada, and a long argument about which frames deserve a print.'],
+      ['I’ll fall for you if', 'You can tell me why a V3 at my gym is secretly a V5, and you’re right.'],
+      ['My most irrational fear', 'Opening the camera back before rewinding. Again.'] ] },
+  { name: 'Emirhan', age: 33, place: 'Beşiktaş', km: 6, verified: false,
+    interests: ['Cycling', 'Chess', 'Podcasts', 'Street food', 'Running'],
+    photos: [
+      ['Emirhan at a street chess table in Beşiktaş', 'linear-gradient(180deg, #B9C7D6 0%, #7E8FA3 50%, #3D4A5C 100%)'],
+      ['Emirhan with his bike on the Bosphorus coast road', 'radial-gradient(50% 30% at 50% 30%, #DDE8F0 0, transparent 70%), linear-gradient(180deg, #6C9BBF 0%, #2E5878 100%)'] ],
+    prompts: [
+      ['A weekend I’d plan around us', 'Blitz chess at the Ortaköy tea garden. Loser buys the simit, winner explains every move whether you asked or not.'],
+      ['Together we could', 'Ride to Rumeli Hisarı at dawn and still make brunch.'] ] },
+  { name: 'Ayşegül Nur', age: 27, place: 'Moda', km: 2, verified: true,
+    interests: ['Ceramics', 'Tango', 'Jazz records', 'Hiking', 'Houseplants', 'Film photography', 'Ferry rides'],
+    photos: [
+      ['Ayşegül at a pottery wheel, hands covered in clay', 'radial-gradient(60% 40% at 30% 24%, #F6E2C4 0, transparent 70%), linear-gradient(180deg, #D8A47F 0%, #9C6646 55%, #4A2E22 100%)'],
+      ['Ayşegül flipping through records at a shop in Moda', 'radial-gradient(40% 40% at 60% 40%, #E6B35A 0, transparent 70%), linear-gradient(180deg, #5B3F6E 0%, #2A1C38 100%)'] ],
+    prompts: [
+      ['A weekend I’d plan around us', 'Glazing day at the studio, then the Kadıköy record fair, then pretending we didn’t spend all our money there.'],
+      ['The way to win me over', 'A hand-thrown mug. Lopsided counts double.'] ] }
+];
+
+const $ = s => document.querySelector(s);
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sharedOf = p => p.interests.filter(x => ME.includes(x));
+const SPARK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1C12.9 8 16 11.1 23 12 16 12.9 12.9 16 12 23 11.1 16 8 12.9 1 12 8 11.1 11.1 8 12 1Z"/></svg>';
+console.assert(sharedOf(PROFILES[0]).length === 3 && sharedOf(PROFILES[1]).join() === 'Chess', 'shared interests');
+
+let deck = PROFILES.slice(), i = 0, photo = 0, busy = false, demoed = false, lastPass = null;
+
+// States for review: #dark #light #offline #loading #empty
+const flags = location.hash.slice(1).split(',').filter(Boolean);
+document.documentElement.dataset.theme = flags.includes('dark') ? 'dark' : flags.includes('light') ? 'light'
+  : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+if (flags.includes('offline')) document.body.classList.add('is-offline');
+if (flags.includes('empty')) i = deck.length;
+
+function cardHTML(p) {
+  const shared = sharedOf(p), others = p.interests.filter(x => !shared.includes(x));
+  const [alt, bg] = p.photos[photo];
+  return `<article class="card" aria-label="${p.name}, ${p.age}">
+    <div class="scroll">
+      <div class="photo" role="img" aria-label="Photo ${photo + 1} of ${p.photos.length}: ${alt}" style="background-image:${bg}">
+        <div class="segs" aria-hidden="true">${p.photos.map((_, n) => `<span class="${n === photo ? 'on' : ''}"></span>`).join('')}</div>
+        <button class="tap prev" aria-label="Previous photo"></button><button class="tap next" aria-label="Next photo"></button>
+        <button class="iconbtn more" aria-label="Report or block ${p.name}"><svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18.5" cy="12" r="2"/></svg></button>
+        <div class="scrim"></div>
+        <div class="id">
+          <h2 class="name"><span class="nm">${p.name}</span><span class="age">${p.age}</span></h2>
+          <p class="meta">${p.verified ? `<span class="ver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5l2.4 1.8 3-.1.9 2.9 2.4 1.8-1 2.8 1 2.9-2.4 1.7-.9 2.9-3-.1-2.4 1.8-2.4-1.8-3 .1-.9-2.9-2.4-1.7 1-2.9-1-2.8 2.4-1.8.9-2.9 3 .1z"/><path d="M8.6 12.2l2.3 2.3 4.5-4.6"/></svg>Verified</span> · ` : ''}${p.place} · ${p.km} km away</p>
+          <div class="sparks">
+            <div class="num" aria-hidden="true">${shared.length}</div>
+            <div><p class="sl">${shared.length === 1 ? 'spark' : 'sparks'} in common<span class="vh">: ${shared.join(', ')}</span></p>
+              <ul class="chips" aria-hidden="true">${shared.map((x, n) => `<li class="chip lit" style="--n:${n}">${SPARK}${x}</li>`).join('')}</ul></div>
+          </div>
+        </div>
+      </div>
+      <div class="sheet">
+        ${p.prompts.map(([q, a], n) => `<section class="prompt"><p class="q">${q}</p><p class="a">${a}</p>
+          <button class="pspark" data-n="${n}" aria-label="Send a spark on ${p.name}’s answer: ${q}"><svg viewBox="0 0 24 24"><path d="M12 2C12.8 8.4 15.6 11.2 22 12 15.6 12.8 12.8 15.6 12 22 11.2 15.6 8.4 12.8 2 12 8.4 11.2 11.2 8.4 12 2Z"/></svg></button></section>`).join('')}
+        <section class="ints"><h3>Everything ${p.name.split(' ')[0]} is into</h3>
+          <ul class="chips">${shared.map(x => `<li class="chip lit">${SPARK}${x}<span class="vh">, you both list this</span></li>`).join('')}${others.map(x => `<li class="chip dim">${x}</li>`).join('')}</ul></section>
+        <button class="report"><svg viewBox="0 0 24 24"><path d="M5 21V4h11l-1.5 4L16 12H5"/></svg>Report or block ${p.name}</button>
+        <div class="tail"></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="pass" aria-label="Pass on ${p.name}"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <button class="like">${SPARK}Send a spark</button>
+    </div>
+  </article>`;
+}
+
+function emptyHTML() {
+  return `<div class="empty"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 6C33.8 22 42 30.2 58 32 42 33.8 33.8 42 32 58 30.2 42 22 33.8 6 32 22 30.2 30.2 22 32 6Z"/></svg>
+    <h2>You’ve met everyone here for now</h2>
+    <p>That’s every person within 15 km who shares at least one of your interests. Widen your distance or add interests to see more people.</p>
+    <button class="btn primary" data-stub="Distance settings">Widen distance</button>
+    <button class="btn secondary" data-stub="Your interests">Edit my interests</button></div>`;
+}
+
+function render(animateIn) {
+  const el = $('#deck');
+  if (flags.includes('loading')) {
+    el.innerHTML = `<div class="card skel" aria-label="Loading profiles"><div class="photo"></div><div class="sheet" style="margin-top:0"><div class="bar" style="width:40%"></div><div class="bar" style="width:92%;height:24px"></div><div class="bar" style="width:74%;height:24px"></div></div></div>`;
+    return;
+  }
+  el.innerHTML = i < deck.length ? cardHTML(deck[i]) : emptyHTML();
+  const card = el.querySelector('.card');
+  if (animateIn && card) card.animate(reduced ? [{ opacity: 0 }, { opacity: 1 }]
+    : [{ opacity: 0, transform: 'translateY(30px) scale(.965)' }, { opacity: 1, transform: 'none' }],
+    { duration: reduced ? 150 : 560, easing: 'cubic-bezier(.2,.9,.3,1.18)' });
+}
+
+let toastTimer;
+function toast(msg, undo) {
+  $('#toastMsg').textContent = msg;
+  $('#toastAct').hidden = !undo;
+  $('#toastAct').onclick = () => { undo(); hideToast(); };
+  $('#toast').classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(hideToast, undo ? 5000 : 3200);
+}
+const hideToast = () => $('#toast').classList.remove('show');
+
+// The signature: sparks jump from your thumb to the number you share; the shared chips flare first.
+function sparkBurst(fromEl, card) {
+  const body = document.body.getBoundingClientRect(), f = fromEl.getBoundingClientRect();
+  const num = card.querySelector('.num'), t = num.getBoundingClientRect(), deckTop = $('#deck').getBoundingClientRect().top;
+  const fx = f.left + f.width / 2 - body.left, fy = f.top + f.height / 2 - body.top;
+  const tx = t.left + t.width / 2 - body.left, ty = Math.max(t.top + t.height / 2, deckTop + 40) - body.top;
+  num.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.28)', textShadow: '0 0 34px rgba(255,201,60,.9)' }, { transform: 'scale(1)' }], { duration: 520, delay: 300, easing: 'cubic-bezier(.2,.9,.3,1.3)' });
+  card.querySelectorAll('.id .chip').forEach((c, n) => c.animate([{ boxShadow: '0 0 0 0 rgba(255,201,60,.6)' }, { boxShadow: '0 0 0 8px rgba(255,201,60,0)' }], { duration: 480, delay: 40 * n }));
+  for (let k = 0; k < 11; k++) {
+    const s = document.createElement('i'); s.className = 'spk';
+    s.style.left = fx + 'px'; s.style.top = fy + 'px';
+    document.body.appendChild(s);
+    const dx = tx - fx + (Math.random() - .5) * 46, dy = ty - fy + (Math.random() - .5) * 30;
+    const mx = dx * .45 + (Math.random() - .5) * 120, my = dy * .55 - 30 - Math.random() * 40;
+    s.animate([{ transform: 'translate(0,0) scale(.6)', opacity: 1 },
+               { transform: `translate(${mx}px,${my}px) scale(1.3)`, opacity: 1, offset: .55 },
+               { transform: `translate(${dx}px,${dy}px) scale(.3)`, opacity: 0 }],
+      { duration: 420 + Math.random() * 200, delay: k * 18, easing: 'cubic-bezier(.3,.6,.4,1)' }).onfinish = () => s.remove();
+  }
+}
+
+function decide(kind, fromEl) {
+  const card = $('#deck .card');
+  if (busy || !card) return;
+  busy = true; demoed = true; hideToast();
+  const p = deck[i];
+  if (kind === 'like' && !reduced) sparkBurst(fromEl, card);
+  const exit = reduced ? [{ opacity: 1 }, { opacity: 0 }]
+    : kind === 'like' ? [{ transform: 'none', opacity: 1 }, { transform: 'translateY(-40px) scale(.95)', opacity: 0 }]
+    : [{ transform: 'none', opacity: 1 }, { transform: 'translateY(26px) scale(.98)', opacity: 0 }];
+  card.animate(exit, { duration: reduced ? 150 : kind === 'like' ? 380 : 280, delay: kind === 'like' && !reduced ? 560 : 0,
+    easing: 'cubic-bezier(.5,0,.75,0)', fill: 'forwards' }).onfinish = () => {
+    const at = i; i++; photo = 0; busy = false; render(true);
+    if (kind === 'pass') toast(`Passed on ${p.name}`, () => { i = at; render(true); });
+    else if (kind === 'prompt') toast(`Spark sent on ${p.name}’s answer`);
+    else toast(document.body.classList.contains('is-offline') ? `Spark to ${p.name} will send when you’re online` : `Spark sent to ${p.name}`);
+  };
+}
+
+function openMenu(p) {
+  $('#menuTitle').textContent = p.name;
+  $('#optReport b').textContent = `Report ${p.name}`;
+  $('#optBlock b').textContent = `Block ${p.name}`;
+  $('#ovl').classList.add('show'); $('#optCancel').focus();
+}
+const closeMenu = () => $('#ovl').classList.remove('show');
+$('#ovl').onclick = e => { if (e.target.id === 'ovl' || e.target.id === 'optCancel') closeMenu(); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+$('#optReport').onclick = () => { closeMenu(); toast(`Report started. ${deck[i].name} won’t be told.`); };
+$('#optBlock').onclick = () => { const p = deck[i]; closeMenu(); deck.splice(i, 1); photo = 0; render(true); toast(`${p.name} is blocked`); };
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const p = deck[i];
+  if (b.dataset.stub) return toast(`${b.dataset.stub} isn’t part of this prototype`);
+  if (b.id === 'filters') return toast('Interest and distance filters open here');
+  if (b.classList.contains('like')) return decide('like', b);
+  if (b.classList.contains('pass')) return decide('pass', b);
+  if (b.classList.contains('pspark')) return decide('prompt', b);
+  if (b.classList.contains('more') || b.classList.contains('report')) return openMenu(p);
+  if (b.classList.contains('tap')) {
+    photo = (photo + (b.classList.contains('next') ? 1 : p.photos.length - 1)) % p.photos.length;
+    const ph = $('#deck .photo'), [alt, bg] = p.photos[photo];
+    ph.style.backgroundImage = bg; ph.setAttribute('aria-label', `Photo ${photo + 1} of ${p.photos.length}: ${alt}`);
+    ph.querySelectorAll('.segs span').forEach((s, n) => s.classList.toggle('on', n === photo));
+  }
+});
+document.addEventListener('pointerdown', () => { demoed = true; }, { once: true });
+
+render(false);
+setTimeout(() => document.body.classList.remove('enter'), 1700);
+// Explain the screen once: send a spark to the first profile, unless the person already acted or prefers less motion.
+if (!reduced && !flags.length) setTimeout(() => { if (!demoed) decide('like', $('#deck .like')); }, 3600);
+</script>
+</body>
+</html>

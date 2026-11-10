@@ -74,9 +74,25 @@ En çok tekrarlanan şikâyetler ve skill'deki yeri:
 
 2026-11-10 itibarıyla kontrol edilenler: iOS/iPadOS 26 ve iOS 27 duyuruları, Material 3 Expressive ve Compose `material3` 1.4/1.5, Android 16/17 davranış değişiklikleri, Flutter 3.47 ve 3.50 beta, React Native 0.88 ve Expo SDK 58, WCAG 2.2. Ayrıntı ve sayılar `skills/mobile-ui-craft/references/` altındaki platform dosyalarında.
 
+## Sürüm 2: araştırmanın gözden kaçırdığı şey
+
+İlk sürüm bu araştırmanın doğrudan ürünüydü: platform kuralları, AI işaretlerinin temizlenmesi, ölçülülük. İddia tabanlı testte iyi sonuç verdi (46/47'ye karşı 27/47) ama çıktılar "daha temiz" olmaktan öteye geçmedi. Araştırmadaki uyarı doğru çıktı, yalnızca ters yönden: yasak listeleri yeni bir aynılık üretiyorsa, ölçülülük kuralları da üretiyor. İlk sürümün yasakladığı şeylerin çoğu (cesur renk, karakterli font, özel gezinme, cam, yaylanma) seçilmediklerinde şablon, bir fikirden türetilip bitirildiklerinde kimlik.
+
+İkinci sürümün ekledikleri:
+
+- Her ekran için ürünün kendi dünyasından tek bir fikir ve ekranın asıl verisini taşıyan bir merkez öğe zorunlu.
+- Dördüncü kadran: İfade (X). Varsayılan 4; iş araçlarında 1-2.
+- Durağan mockup yerine hareketli prototip ve onu gerçek zamanlı yakalayan bağımlılıksız bir script.
+- İşaret kataloğu "kaçın" listesinden "seçilmemiş varsayılan" tanımına çevrildi; en derin işaret artık fikirsiz ekran.
+
+Sekiz nişlik kör kıyaslamanın (Opus 5.5 high, niş başına iki puanlayıcı) sonucu README'de: skill'li tasarım 16 kararın 15'inde tercih edildi; kimlik 8,4'e karşı 4,9, etki 7,9'a karşı 5,3, netlik ise 6,8'e karşı 8,2. Netlikteki kayıp, merkez öğenin içeriği ekran dışına itmesi ve yüzen öğelerin içeriği örtmesinden geldi; ikisi de skill'e kural olarak işlendi ama yeniden ölçülmedi.
+
+Tetiklenme ölçümü de araştırmadaki Vercel bulgusunu bu kurulumda doğruladı: 800'den fazla skill kuruluyken Claude Code skill açıklamalarının çoğunu göstermiyor, skill gerçek bir projede yaklaşık beş koşudan birinde kendiliğinden yükleniyor; `CLAUDE.md`'ye eklenen on satırlık blokla 20/20.
+
 ## Bilinen boşluklar
 
 - Reddit ve X konuları doğrudan okunmadı.
 - AI asistan, B2B/saha, sağlık hizmeti, emlak ve yaratıcı araç nişlerinde nişe özel şikâyet verisi zayıf; o dosyalar daha çok genel bulgulara ve teamüle dayanıyor.
 - Tarayıcı kuralları gerçek, büyük bir mobil kod tabanında yanlış pozitif açısından denenmedi.
-- Skill'in tetiklenme oranı (açıklama optimizasyonu) ölçülmedi.
+- Ölçümden sonra yapılan netlik düzeltmeleri yeniden ölçülmedi.
+- Hiçbir tasarım simülatörde ya da cihazda native olarak kurulup denenmedi.

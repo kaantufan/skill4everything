@@ -1,0 +1,449 @@
+<!doctype html>
+<!-- Söz home screen. HTML mockup of a native iOS screen, built on the mobile-ui-craft phone frame.
+     States: append #loading, #empty, #error, #offline, #dark (comma-separated, e.g. #dark,empty). -->
+<html lang="en" data-platform="ios" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Söz · Today</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..800,0..100&display=swap" rel="stylesheet">
+<script>
+  (function () {
+    var h = location.hash.slice(1).split(',');
+    var dark = h.indexOf('dark') > -1 || (h.indexOf('light') < 0 && matchMedia('(prefers-color-scheme: dark)').matches);
+    if (dark) document.documentElement.dataset.theme = 'dark';
+  })();
+</script>
+<style>
+  :root {
+    --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px;
+    --font: -apple-system, "SF Pro Text", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+    --chrome: #000;
+  }
+  [data-platform="android"] {
+    --w: 412px; --h: 915px; --safe-top: 40px; --safe-bottom: 24px;
+    --font: Roboto, "Google Sans", "Segoe UI", system-ui, sans-serif;
+  }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--screen-bg); color: var(--screen-fg); }
+  .statusbar {
+    position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 10;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none;
+  }
+  [data-platform="android"] .statusbar { padding: 0 18px 8px; font-weight: 500; font-size: 14px; }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  [data-platform="ios"] .statusbar .android, [data-platform="android"] .statusbar .ios { display: none; }
+  .home-indicator {
+    position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 10;
+    width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none;
+  }
+  [data-platform="android"] .home-indicator { width: 108px; height: 4px; opacity: .6; }
+  #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+</style>
+<style>
+  /* PRODUCT TOKENS. Source: a çay ocağı by the Bosphorus at dusk.
+     Field = the water, tea = tavşan kanı ("rabbit's blood", the ideal steep), sheet = saucer porcelain,
+     brass = the tea tray, sugar cubes = the words that still need dissolving. */
+  :root {
+    --field-a: #1B5566; --field-b: #0B2C37;
+    --on-field: #F7ECDA; --on-field-2: rgba(247,236,218,.74);
+    --glass-edge: rgba(247,236,218,.62); --glass-body: rgba(247,236,218,.07);
+    --tea-lit: #D3492D; --tea: #A92619; --tea-deep: #64110C; --tea-surface: #DC5A3B;
+    --porcelain: #F4E9D7; --brass: #D4A44E; --halo: rgba(255,168,92,.22);
+    --sheet: #FBF4E8; --ink: #2B1A12; --ink-2: #6B5244; --hair: rgba(43,26,18,.12);
+    --action: #A3241A; --action-press: #86190F; --on-action: #FFF6EA;
+    --cube: #FFFDF8; --cube-ink: #2B1A12; --cube-ink-2: #76604F; --cube-shade: rgba(80,48,24,.16);
+    --skel: rgba(43,26,18,.08);
+    --tab: rgba(251,244,232,.94); --tab-off: #7C6656;
+    --display: "Fraunces", Georgia, serif;
+    --r-control: 27px; --r-cube: 12px; --r-sheet: 28px;
+    --t-fast: 120ms; --t-pour: 1100ms;
+    --screen-bg: var(--field-b); --screen-fg: var(--on-field); --chrome: #fff;
+  }
+  [data-theme="dark"] {
+    --field-a: #123F4C; --field-b: #06191F;
+    --porcelain: #DCCFBB; --halo: rgba(255,150,80,.15);
+    --sheet: #132D35; --ink: #F3E7D5; --ink-2: #B8A893; --hair: rgba(243,231,213,.12);
+    --action: #BE3A26; --action-press: #A02D1C;
+    --cube: #ECE2D1; --cube-ink-2: #6E5A4A; --cube-shade: rgba(0,0,0,.35);
+    --skel: rgba(243,231,213,.09);
+    --tab: rgba(15,38,45,.94); --tab-off: #9C8E7C;
+  }
+  body { background: linear-gradient(172deg, var(--field-a) 0%, var(--field-b) 58%); }
+  .home-indicator { background: var(--ink); }
+  button { font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  button:focus-visible { outline: 3px solid var(--brass); outline-offset: 2px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+  /* Top bar */
+  .topbar { position: absolute; top: var(--safe-top); left: 0; right: 0; height: 44px; z-index: 3;
+    display: flex; align-items: center; gap: 8px; padding: 0 10px 0 24px; }
+  .wordmark { margin: 0; flex: 1; font-family: var(--display); font-size: 30px; line-height: 1; font-weight: 700;
+    font-variation-settings: "SOFT" 100, "opsz" 72; color: var(--on-field); letter-spacing: -.01em; }
+  .pill { height: 28px; padding: 0 10px; border-radius: 14px; display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(247,236,218,.14); color: var(--on-field); font: 600 13px var(--font); }
+  .pill[hidden] { display: none; }
+  .icon-btn { width: 44px; height: 44px; border-radius: 22px; border: 0; background: transparent; color: var(--on-field);
+    display: grid; place-items: center; transition: background var(--t-fast); }
+  .icon-btn:active { background: rgba(247,236,218,.14); }
+
+  /* Hero */
+  .hero { position: absolute; top: 103px; left: 0; width: 393px; height: 337px; }
+  .hero svg { display: block; overflow: visible; }
+  .glass-body { fill: var(--glass-body); }
+  .glass-edge { fill: none; stroke: var(--glass-edge); stroke-width: 1.5; }
+  .glint { fill: none; stroke: rgba(255,255,255,.38); stroke-width: 4; stroke-linecap: round; }
+  .rim { fill: none; stroke: var(--glass-edge); stroke-width: 1.5; }
+  .saucer { fill: var(--porcelain); }
+  .surface { fill: var(--tea-surface); transform-box: fill-box; transform-origin: center; animation: sway 5.5s ease-in-out infinite; }
+  .numeral { font-family: var(--display); font-size: 80px; font-weight: 650; font-variation-settings: "SOFT" 100, "opsz" 144;
+    fill: var(--on-field); font-variant-numeric: tabular-nums; }
+  .numeral-sub { font: 600 12px var(--font); fill: var(--on-field); letter-spacing: .02em; }
+  .steam path { fill: none; stroke: var(--on-field); stroke-width: 3; stroke-linecap: round; opacity: 0;
+    stroke-dasharray: 14 90; animation: steam 6s linear infinite; }
+  .steam path:nth-child(2) { animation-delay: 2s; }
+  .steam path:nth-child(3) { animation-delay: 4s; }
+  #stream { transform-box: fill-box; transform-origin: top; transform: scaleY(0); transition: transform 180ms ease-in; }
+  .pouring #stream { transform: scaleY(1); }
+  .pour-end #stream { transform-origin: bottom; transform: scaleY(0); transition: transform 240ms ease-out; }
+
+  .course { position: absolute; left: 14px; right: 14px; top: 252px; height: 64px; padding: 6px 10px 0; border: 0;
+    border-radius: 16px; background: transparent; color: var(--on-field); text-align: left; transition: background var(--t-fast); }
+  .course:active { background: rgba(247,236,218,.10); }
+  .course-cap { display: flex; justify-content: space-between; font: 600 13px/16px var(--font); color: var(--on-field-2); }
+  .course-cap b { color: var(--on-field); font-weight: 600; }
+  #tray { display: block; margin-top: 4px; }
+  .rail { stroke: var(--brass); stroke-width: 2.5; stroke-linecap: round; }
+  .mini-glass { fill: none; stroke: var(--on-field-2); stroke-width: 1.2; }
+  .mini-glass.cur { stroke: var(--brass); stroke-width: 1.8; }
+  .mini-tea { fill: var(--tea-lit); }
+
+  /* Sheet */
+  .sheet { position: absolute; top: 432px; left: 0; right: 0; bottom: 0; padding: 22px 24px 0; z-index: 2;
+    background: var(--sheet); color: var(--ink); border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+    box-shadow: 0 -12px 32px rgba(0,0,0,.22); }
+  .eyebrow { margin: 0; font: 600 13px/18px var(--font); color: var(--ink-2); }
+  .lesson-title { margin: 6px 0 4px; font-family: var(--display); font-size: 24px; line-height: 30px; font-weight: 600;
+    font-variation-settings: "SOFT" 100, "opsz" 36; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .meta { margin: 0 0 16px; font: 400 15px/20px var(--font); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .primary { width: 100%; height: 54px; border: 0; border-radius: var(--r-control); padding: 0 8px 0 22px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--action); color: var(--on-action); font: 600 17px var(--font);
+    transition: transform var(--t-fast), background var(--t-fast); }
+  .primary:active { transform: scale(.97); background: var(--action-press); }
+  .primary:disabled { background: var(--skel); }
+  .loading .course-cap { visibility: hidden; }
+  .chip { height: 38px; padding: 0 14px; border-radius: 19px; display: flex; align-items: center; gap: 6px;
+    background: rgba(255,246,234,.17); font: 600 15px var(--font); font-variant-numeric: tabular-nums; }
+
+  .ww-head { display: flex; align-items: center; justify-content: space-between; height: 44px; margin-top: 26px; }
+  .ww-head h2 { margin: 0; font-family: var(--display); font-size: 19px; line-height: 22px; font-weight: 600; font-variation-settings: "SOFT" 100, "opsz" 24; }
+  .ww-head small { display: block; font: 400 13px/18px var(--font); color: var(--ink-2); }
+  .text-btn { height: 44px; padding: 0 12px; margin-right: -12px; border: 0; background: none; border-radius: 22px;
+    color: var(--action); font: 600 15px var(--font); }
+  [data-theme="dark"] .text-btn { color: #F0A58F; }
+  .text-btn:active { background: var(--hair); }
+  .cubes { display: flex; gap: 10px; margin: 6px -24px 0; padding: 0 24px 12px; overflow-x: auto; scrollbar-width: none; }
+  .cubes::-webkit-scrollbar { display: none; }
+  .cube { flex: none; min-width: 78px; height: 64px; padding: 0 14px; border: 0; border-radius: var(--r-cube);
+    display: flex; flex-direction: column; justify-content: center; text-align: left; color: var(--cube-ink);
+    background-color: var(--cube);
+    background-image: radial-gradient(rgba(140,110,80,.06) 1px, transparent 1.3px); background-size: 4px 4px;
+    box-shadow: inset 0 -4px 0 rgba(120,90,60,.12), inset 1px 1px 0 rgba(255,255,255,.9), 0 3px 8px var(--cube-shade), 0 1px 2px var(--cube-shade);
+    transition: transform var(--t-fast); }
+  .cube:active { transform: scale(.95); }
+  .cube b { font-family: var(--display); font-size: 18px; line-height: 22px; font-weight: 600; font-variation-settings: "SOFT" 100, "opsz" 24; white-space: nowrap; }
+  .cube span { font: 400 12px/16px var(--font); color: var(--cube-ink-2); white-space: nowrap; }
+  .ww-empty { display: flex; align-items: center; gap: 14px; height: 64px; margin-top: 6px; color: var(--ink-2); font: 400 15px/20px var(--font); }
+  .ww-empty svg { flex: none; }
+
+  .skel { display: block; border-radius: 8px; background: var(--skel); }
+
+  /* Tab bar */
+  .tabbar { position: absolute; left: 0; right: 0; bottom: 0; height: 83px; z-index: 4; display: flex;
+    padding-bottom: var(--safe-bottom); background: var(--tab); border-top: .5px solid var(--hair);
+    -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
+  .tab { flex: 1; border: 0; background: none; padding: 6px 0 0; display: flex; flex-direction: column; align-items: center; gap: 2px;
+    color: var(--tab-off); font: 500 10px/12px var(--font); }
+  .tab svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .tab[aria-current="page"] { color: var(--action); }
+  [data-theme="dark"] .tab[aria-current="page"] { color: #F0A58F; }
+  .tab[aria-current="page"] .fillable { fill: currentColor; }
+
+  /* Entrance: field is already there, then glass, tea pours in, sheet, rows, tray, tab bar. */
+  .enter .hero-glass { animation: rise 620ms cubic-bezier(.2,.8,.2,1) both 60ms; }
+  .enter .saucer-g { animation: fade 420ms ease-out both; }
+  .enter .sheet { animation: sheetUp 560ms cubic-bezier(.2,.8,.2,1) both 300ms; }
+  .enter .sheet > * { animation: fadeUp 420ms ease-out both; }
+  .enter .sheet > :nth-child(1) { animation-delay: 520ms; }
+  .enter .sheet > :nth-child(2) { animation-delay: 620ms; }
+  .enter .sheet > :nth-child(3) { animation-delay: 720ms; }
+  .enter .course { animation: fade 500ms ease-out both 760ms; }
+  .enter .tabbar { animation: fade 380ms ease-out both 880ms; }
+  @keyframes rise { from { opacity: 0; transform: translateY(18px); } }
+  @keyframes sheetUp { from { transform: translateY(140px); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } }
+  @keyframes fade { from { opacity: 0; } }
+  @keyframes steam { 0% { stroke-dashoffset: 14; opacity: 0; } 25% { opacity: .30; } 80% { opacity: .12; } 100% { stroke-dashoffset: -50; opacity: 0; } }
+  @keyframes sway { 50% { transform: rotate(-2.2deg) scaleX(1.02); } }
+
+  /* Reduce Motion: a designed still. Steam is drawn once, faint; no pour, no sway. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .steam path { opacity: .16; stroke-dasharray: none; }
+  }
+  .loading .steam, .loading #num, .loading #numSub { display: none; }
+</style>
+</head>
+<body>
+  <div class="statusbar">
+    <span>9:41</span>
+    <svg class="android" viewBox="0 -2 46 14" aria-hidden="true">
+      <path d="M8 12 0.6 3.4a11 11 0 0 1 14.8 0z"/><path d="M20 12h12V0z"/>
+      <rect x="38" y="0" width="7" height="12" rx="1.6"/><rect x="40" y="-1.6" width="3" height="2" rx=".6"/>
+    </svg>
+    <svg class="ios" viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" stroke="currentColor" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen" class="enter">
+    <header class="topbar">
+      <h1 class="wordmark" lang="tr">Söz</h1>
+      <span class="pill" id="offline" hidden>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l18 18M7 18h10.5a3.5 3.5 0 0 0 1-6.86A6 6 0 0 0 9.2 7.6M5.6 9.6A4.5 4.5 0 0 0 7 18"/></svg>
+        Offline
+      </span>
+      <button class="icon-btn" aria-label="Profile and settings">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.8 20c1.2-3.5 3.9-5.3 7.2-5.3s6 1.8 7.2 5.3"/></svg>
+      </button>
+    </header>
+
+    <section class="hero" aria-label="Today's tea">
+      <svg id="heroSvg" width="393" height="337" viewBox="0 0 393 337" role="img" aria-label="Today: 2 of 5 minutes done">
+        <defs>
+          <radialGradient id="halo" cx="196" cy="150" r="175" gradientUnits="userSpaceOnUse">
+            <stop offset="0" style="stop-color: var(--halo)"/><stop offset="1" stop-color="rgba(255,168,92,0)"/>
+          </radialGradient>
+          <linearGradient id="teaG" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" style="stop-color: var(--tea-lit)"/><stop offset=".45" style="stop-color: var(--tea)"/><stop offset="1" style="stop-color: var(--tea-deep)"/>
+          </linearGradient>
+          <linearGradient id="streamG" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#D3492D" stop-opacity="0"/><stop offset=".35" style="stop-color: var(--tea-lit)"/><stop offset="1" style="stop-color: var(--tea)"/>
+          </linearGradient>
+          <clipPath id="glassClip"><path d="M142 44 C144 96, 160 122, 162 150 C164 176, 150 186, 152 206 Q154 224 196 224 Q238 224 240 206 C242 186, 228 176, 230 150 C232 122, 248 96, 250 44 Z"/></clipPath>
+          <filter id="soft" x="-30%" y="-100%" width="160%" height="300%"><feGaussianBlur stdDeviation="6"/></filter>
+        </defs>
+        <circle cx="196" cy="150" r="175" fill="url(#halo)"/>
+        <g class="saucer-g">
+          <ellipse cx="196" cy="242" rx="82" ry="9" fill="rgba(0,0,0,.38)" filter="url(#soft)"/>
+          <ellipse class="saucer" cx="196" cy="230" rx="84" ry="14"/>
+          <ellipse cx="196" cy="229" rx="62" ry="8.5" fill="none" style="stroke: var(--brass)" stroke-width="1.3"/>
+          <ellipse cx="196" cy="229" rx="46" ry="5.5" fill="rgba(80,40,20,.13)"/>
+        </g>
+        <g class="hero-glass">
+          <path class="glass-body" d="M142 44 C144 96, 160 122, 162 150 C164 176, 150 186, 152 206 Q154 224 196 224 Q238 224 240 206 C242 186, 228 176, 230 150 C232 122, 248 96, 250 44 Z"/>
+          <g clip-path="url(#glassClip)">
+            <rect id="tea" x="130" y="224" width="132" height="200" fill="url(#teaG)"/>
+            <ellipse id="surface" class="surface" cx="196" cy="224" rx="64" ry="4.5"/>
+          </g>
+          <path class="glass-edge" d="M142 44 C144 96, 160 122, 162 150 C164 176, 150 186, 152 206 Q154 224 196 224 Q238 224 240 206 C242 186, 228 176, 230 150 C232 122, 248 96, 250 44 Z"/>
+          <path class="glint" d="M150 56 C152 96, 164 120, 167 144"/>
+          <path class="glint" d="M159 186 C157 194, 157 202, 160 210" style="stroke-width:3; opacity:.7"/>
+          <ellipse class="rim" cx="196" cy="44" rx="54" ry="5.5"/>
+          <text id="num" class="numeral" x="196" y="178" text-anchor="middle">2</text>
+          <text id="numSub" class="numeral-sub" x="196" y="205" text-anchor="middle">of 5 min</text>
+        </g>
+        <g class="steam" aria-hidden="true">
+          <path d="M184 34 C176 22, 192 14, 184 -4"/>
+          <path d="M198 30 C206 18, 190 8, 200 -10"/>
+          <path d="M212 34 C220 22, 204 12, 214 -4"/>
+        </g>
+        <rect id="stream" x="193" y="-140" width="6" height="0" rx="3" fill="url(#streamG)"/>
+      </svg>
+
+      <button class="course" id="course" aria-label="Course: unit 3 of 12, lesson 4 of 9. Opens the course map.">
+        <span class="course-cap" aria-hidden="true"><span>Beginner A1</span><span><b>Unit 3</b> of 12</span></span>
+        <svg id="tray" width="345" height="34" viewBox="0 0 345 34" aria-hidden="true"></svg>
+      </button>
+    </section>
+
+    <section class="sheet">
+      <div id="lesson"></div>
+      <div id="ww"></div>
+      <p class="sr" aria-live="polite" id="live"></p>
+    </section>
+
+    <nav class="tabbar" aria-label="Tabs">
+      <button class="tab" aria-current="page">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path class="fillable" d="M7.2 3.5C7.5 7.4 9.4 9 9.6 12c.2 2.4-1.4 3.4-1.2 5.5.2 2 1.6 2.5 3.6 2.5s3.4-.5 3.6-2.5c.2-2.1-1.4-3.1-1.2-5.5.2-3 2.1-4.6 2.4-8.5z"/><path d="M5 21.5h14"/></svg>
+        Today
+      </button>
+      <button class="tab">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path class="fillable" d="M5 8l7-4 7 4v8l-7 4-7-4z"/><path d="M5 8l7 4 7-4M12 12v8"/></svg>
+        Practice
+      </button>
+      <button class="tab">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path class="fillable" d="M4.5 9.5h4l-.9 4 .9 3.5h-4l.9-3.5zM15.5 9.5h4l-.9 4 .9 3.5h-4l.9-3.5z"/><path d="M10 6.5h4l-.9 5 .9 5.5h-4l.9-5.5z"/><path d="M3 20.5h18"/></svg>
+        Course
+      </button>
+      <button class="tab">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.8 20c1.2-3.5 3.9-5.3 7.2-5.3s6 1.8 7.2 5.3"/></svg>
+        Me
+      </button>
+    </nav>
+  </main>
+
+  <div class="home-indicator"></div>
+
+<script>
+  /* Sample data, not real course content. */
+  const data = {
+    minutesDone: 2, minutesGoal: 5,
+    unit: 3, units: 12, lesson: 4, lessons: 9, question: 6, questions: 14,
+    title: 'Ordering at the <span lang="tr">çay ocağı</span>',
+    weak: [['değil', 'not'], ['ışık', 'light'], ['hesap', 'the bill'], ['lütfen', 'please'], ['teşekkür ederim', 'thank you']],
+    unitFill: [1, 1, 3 / 9, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  };
+  const states = location.hash.slice(1).split(',');
+  const has = s => states.includes(s);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = id => document.getElementById(id);
+
+  /* Tea level: the glass is the day's five minutes. Empty at y=224, brim at y=62. */
+  const TOP = 62, BOT = 224;
+  let minutes = 0;
+  const yFor = m => BOT - (m / data.minutesGoal) * (BOT - TOP);
+  function setLevel(m) {
+    minutes = m;
+    const y = yFor(m);
+    $('tea').setAttribute('y', y);
+    $('surface').setAttribute('cy', y);
+    $('surface').style.display = m <= 0.02 ? 'none' : '';
+    $('num').textContent = Math.round(m);
+    $('stream').setAttribute('height', Math.max(0, y + 140));
+  }
+  function animateTo(target, dur, done) {
+    if (reduce) { setLevel(target); done && done(); return; }
+    const from = minutes, t0 = performance.now();
+    (function step(t) {
+      const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+      setLevel(from + (target - from) * e);
+      p < 1 ? requestAnimationFrame(step) : done && done();
+    })(t0);
+  }
+
+  /* The brass tray: one small glass per unit, filled by how much of it is done. */
+  const MINI = 'M0 0C.5 6 3 9 3.5 12S1.5 17 2 19.5Q2.5 22 7 22T12 19.5C12.5 17 10 15 10.5 12S13.5 6 14 0Z';
+  function drawTray(fills, unknown) {
+    let s = '<line class="rail" x1="2" y1="31" x2="343" y2="31"/>';
+    fills.forEach((f, i) => {
+      const x = (i * 28.75 + 7.4).toFixed(1), cur = !unknown && i === data.unit - 1;
+      s += `<g transform="translate(${x} 6)"><clipPath id="mg${i}"><path d="${MINI}"/></clipPath>` +
+        `<rect class="mini-tea" clip-path="url(#mg${i})" x="0" y="${unknown ? 22 : 22 - f * 20}" width="14" height="22"${cur ? ' id="curTea"' : ''}/>` +
+        `<path class="mini-glass${cur ? ' cur' : ''}" d="${MINI}"/></g>`;
+    });
+    $('tray').innerHTML = s;
+  }
+
+  function renderLesson(mode) {
+    const d = data, left = d.minutesGoal - d.minutesDone;
+    const L = $('lesson');
+    if (mode === 'loading') {
+      L.innerHTML = '<span class="skel" style="width:190px;height:14px;margin:2px 0 10px"></span>' +
+        '<span class="skel" style="width:270px;height:24px;margin-bottom:10px"></span>' +
+        '<span class="skel" style="width:230px;height:14px;margin-bottom:20px"></span>' +
+        '<button class="primary" disabled aria-label="Loading today\'s lesson"></button>';
+      return;
+    }
+    if (mode === 'error') {
+      L.innerHTML = `<p class="eyebrow">Today · Unit ${d.unit}, lesson ${d.lesson} of ${d.lessons}</p>` +
+        (has('offline')
+          ? '<h2 class="lesson-title">Not on this phone yet</h2><p class="meta">Connect once to download it. Weak words work offline.</p>'
+          : `<h2 class="lesson-title">This lesson didn’t load</h2><p class="meta">Your place is saved at question ${d.question}.</p>`) +
+        '<button class="primary" id="retry">Try again</button>';
+      $('retry').onclick = () => { history.replaceState(null, '', location.pathname); location.reload(); };
+      return;
+    }
+    if (mode === 'done') {
+      L.innerHTML = '<p class="eyebrow">Done for today · <span lang="tr">“afiyet olsun”</span> means enjoy</p>' +
+        '<h2 class="lesson-title" lang="tr">Afiyet olsun</h2>' +
+        `<p class="meta">Lesson ${d.lesson} of ${d.lessons} done · lesson ${d.lesson + 1} is ready</p>` +
+        '<button class="primary" id="go">Practise weak words<span class="chip">2 min</span></button>';
+      return;
+    }
+    const where = has('offline') ? 'Saved on this phone' : `Today · Unit ${d.unit}, lesson ${d.lesson} of ${d.lessons}`;
+    L.innerHTML = `<p class="eyebrow">${where}</p>` +
+      `<h2 class="lesson-title">${d.title}</h2>` +
+      `<p class="meta">Pick up at question ${d.question} of ${d.questions} · ${left} min left</p>` +
+      `<button class="primary" id="go">Continue lesson<span class="chip">` +
+      `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>${left} min</span></button>`;
+    $('go').onclick = pour;
+  }
+
+  function renderWords(mode) {
+    const W = $('ww');
+    if (mode === 'loading') {
+      W.innerHTML = '<div class="ww-head"><span class="skel" style="width:120px;height:18px"></span></div><div class="cubes">' +
+        '<span class="skel" style="flex:none;width:78px;height:64px;border-radius:12px"></span>'.repeat(4) + '</div>';
+      return;
+    }
+    if (mode === 'empty' || !data.weak.length) {
+      W.innerHTML = '<div class="ww-head"><div><h2>Weak words</h2><small>Nothing to practise right now</small></div></div>' +
+        '<div class="ww-empty"><svg width="52" height="44" viewBox="0 0 52 44" aria-hidden="true">' +
+        '<ellipse cx="26" cy="38" rx="24" ry="5" fill="var(--hair)"/><path d="M6 18h40c0 12-8 20-20 20S6 30 6 18z" fill="var(--cube)" stroke="var(--ink-2)" stroke-width="1.5"/>' +
+        '<path d="M4 18h44" stroke="var(--ink-2)" stroke-width="1.5" stroke-linecap="round"/></svg>' +
+        '<span>Words you miss in a lesson settle here, ready to practise.</span></div>';
+      return;
+    }
+    W.innerHTML = '<div class="ww-head"><div><h2>Weak words</h2><small>Missed most this week</small></div>' +
+      `<button class="text-btn" aria-label="Practise all ${data.weak.length} weak words">Practise all</button></div>` +
+      '<div class="cubes" role="list">' + data.weak.map(([tr, en]) =>
+        `<button class="cube" role="listitem" aria-label="Practise ${tr}, ${en}"><b lang="tr">${tr}</b><span>${en}</span></button>`).join('') + '</div>';
+  }
+
+  /* Signature interaction: tea pours into the glass and the day's minutes rise to the brim.
+     Prototype shortcut: the lesson itself is skipped; this plays the moment you return from it.
+     Native: success haptic when the level reaches the brim. */
+  let poured = false;
+  function pour() {
+    if (poured) return; poured = true;
+    const scr = $('screen');
+    scr.classList.add('pouring');
+    animateTo(data.minutesGoal, reduce ? 0 : 1100, () => {
+      scr.classList.add('pour-end');
+      $('heroSvg').setAttribute('aria-label', 'Today: 5 of 5 minutes done');
+      const cur = $('curTea');
+      if (cur) cur.setAttribute('y', 22 - (4 / 9) * 20);
+      $('course').setAttribute('aria-label', `Course: unit ${data.unit} of ${data.units}, lesson ${data.lesson + 1} of ${data.lessons} next. Opens the course map.`);
+      renderLesson('done');
+      $('live').textContent = 'Lesson 4 done. 5 of 5 minutes today.';
+    });
+  }
+
+  /* Boot */
+  const loading = has('loading');
+  if (loading) document.body.classList.add('loading');
+  $('offline').hidden = !has('offline');
+  drawTray(data.unitFill, loading);
+  renderLesson(loading ? 'loading' : has('error') ? 'error' : 'today');
+  renderWords(loading ? 'loading' : has('empty') ? 'empty' : 'words');
+  setLevel(0);
+  if (!loading) {
+    if (reduce) setLevel(data.minutesDone);
+    else setTimeout(() => animateTo(data.minutesDone, 700), 420);
+  }
+  const plain = states.every(s => s === '' || s === 'dark' || s === 'light');
+  if (plain && !reduce) setTimeout(pour, 3600);
+</script>
+</body>
+</html>

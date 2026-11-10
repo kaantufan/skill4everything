@@ -1,0 +1,554 @@
+<!doctype html>
+<!-- Sofra · restaurant page. HTML mockup of an iOS screen at 393x852.
+     States: add #closed, #loading, #error and/or #dark to the URL (e.g. screen.html#closed,dark). -->
+<html lang="en" data-platform="ios" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sofra · Hatice Hanım Lokantası</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,400..700,0..100,0..1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px;
+    --font: -apple-system, "SF Pro Text", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+    --chrome: #000;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--screen-bg); color: var(--screen-fg); }
+  .statusbar {
+    position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 40;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none;
+  }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  .home-indicator {
+    position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 40;
+    width: 134px; height: 5px; border-radius: 3px; background: var(--ink); opacity: .9; pointer-events: none;
+  }
+  #screen { position: absolute; inset: 0; overflow: hidden; }
+</style>
+<style>
+  /* ---------- PRODUCT TOKENS (Sofra) ----------
+     Source: a lokanta's sofra. Sumac-dyed cloth for the field, a hammered brass sini (tray) for the hero,
+     linen for the menu sheet. Every dish is drawn top-down, as it sits on the table. */
+  :root {
+    --field: #6A1F33;          /* sumac cloth */
+    --field-deep: #4E1526;
+    --on-field: #F7EEDC;
+    --on-field-2: rgba(247,238,220,.80);
+    --brass-hi: #F0DA9E; --brass: #C9A35E; --brass-lo: #8A672C; --engrave: #6E5020;
+    --sheet: #F7EFE1;          /* linen */
+    --sheet-2: #EFE4D1;
+    --ink: #2B1A1C; --ink-2: #6A5452;
+    --line: rgba(43,26,28,.14);
+    --action: #6A1F33; --on-action: #F7EEDC;
+    --skeleton: #E8DCC7;
+    --screen-bg: var(--field); --screen-fg: var(--ink);
+    --chrome: var(--on-field);
+    /* type */
+    --display: "Fraunces", Georgia, serif;
+    /* space (base 4) */
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
+    /* radii by role: control = capsule, container = 18, sheet = 28 */
+    --r-container: 18px; --r-sheet: 28px;
+    /* motion */
+    --ease-out: cubic-bezier(.2,.8,.2,1);
+    --spring: cubic-bezier(.34,1.56,.64,1);
+  }
+  [data-theme="dark"] {
+    --field: #561829; --field-deep: #3D0F1D;
+    --sheet: #221719; --sheet-2: #2E2023;
+    --ink: #F3E8D8; --ink-2: #BFAAA4;
+    --line: rgba(243,232,216,.14);
+    --action: #8C2C46;
+    --skeleton: #33252A;
+    color-scheme: dark;
+  }
+</style>
+<style>
+  /* ---------- Screen ---------- */
+  #scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; background: var(--field); scrollbar-width: none; }
+  #scroll::-webkit-scrollbar { display: none; }
+
+  .hero {
+    position: relative; min-height: 450px; padding: calc(var(--safe-top) + 52px) var(--s4) 196px;
+    color: var(--on-field);
+    background:
+      radial-gradient(120% 70% at 20% 0%, rgba(255,220,200,.10), transparent 60%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'%3E%3Cg fill='none' stroke='%23F7EEDC' stroke-opacity='.06' stroke-width='1.2'%3E%3Cpath d='M22 6c4 6 4 10 0 16-4-6-4-10 0-16z'/%3E%3Cpath d='M22 38c4-6 4-10 0-16-4 6-4 10 0 16z'/%3E%3Ccircle cx='0' cy='22' r='3'/%3E%3Ccircle cx='44' cy='22' r='3'/%3E%3C/g%3E%3C/svg%3E"),
+      var(--field);
+  }
+  .kicker { margin: 0 0 6px; font-size: 14px; line-height: 18px; color: var(--on-field-2); }
+  .kicker b { font-weight: 600; color: var(--on-field); }
+  .name {
+    margin: 0; font-family: var(--display); font-weight: 600; font-size: 36px; line-height: 1.02; letter-spacing: -.01em;
+    font-variation-settings: "SOFT" 100, "WONK" 1; text-wrap: balance;
+  }
+  .ledger { display: flex; margin: 16px 0 0; padding: 0; list-style: none; }
+  .ledger li { flex: 1; padding: 0 12px; border-left: 1px solid rgba(247,238,220,.22); }
+  .ledger li:first-child { padding-left: 0; border-left: 0; }
+  .ledger strong { display: block; font-size: 16px; line-height: 20px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ledger span { font-size: 13px; line-height: 16px; color: var(--on-field-2); }
+
+  /* the sini: brass tray that holds the order */
+  .tray { position: absolute; left: 0; bottom: -20px; width: 393px; height: 200px; pointer-events: none; z-index: 1;
+          filter: drop-shadow(0 10px 14px rgba(30,5,12,.45)); }
+  .readout { position: absolute; left: 0; right: 0; bottom: 6px; z-index: 1; text-align: center; color: #3A2709; pointer-events: none; }
+  .readout .total { font-family: var(--display); font-weight: 650; font-size: 36px; line-height: 1; font-variant-numeric: tabular-nums lining-nums;
+                    font-variation-settings: "SOFT" 60, "WONK" 0; letter-spacing: -.01em; }
+  .readout .total small { font-family: var(--font); font-size: 22px; font-weight: 600; margin-right: 1px; }
+  .readout .total .dec { font-size: 22px; }
+  .readout .sub { font-size: 13px; line-height: 16px; font-weight: 600; color: #4A3412; margin-top: 2px; }
+  .readout .empty { font-family: var(--display); font-style: italic; font-size: 21px; line-height: 1.1; font-variation-settings: "SOFT" 100; }
+  .tick { animation: tick .32s var(--spring); }
+  @keyframes tick { from { transform: translateY(6px); opacity: .3 } to { transform: none; opacity: 1 } }
+  .steam path { fill: none; stroke: #FFF6E6; stroke-width: 2; stroke-linecap: round; opacity: 0;
+                animation: steam 6s ease-in-out infinite; transform-box: fill-box; }
+  @keyframes steam { 0% { opacity: 0; transform: translateY(6px) } 30% { opacity: .55 } 70% { opacity: .25 } 100% { opacity: 0; transform: translateY(-14px) } }
+  .landing { animation: land .45s var(--spring); transform-box: fill-box; transform-origin: center; }
+  @keyframes land { from { transform: scale(1.35) } to { transform: scale(1) } }
+
+  /* top bar: buttons on the cloth, condenses when the menu scrolls under it */
+  .navbar { position: absolute; inset: 0 0 auto 0; height: calc(var(--safe-top) + 48px); padding: var(--safe-top) 10px 0; z-index: 30;
+            display: flex; align-items: center; gap: 4px; transition: background .2s, box-shadow .2s; }
+  .navbar.solid { background: var(--field); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+  .navbar .title { flex: 1; text-align: center; font-weight: 600; font-size: 17px; color: var(--on-field); opacity: 0; transition: opacity .2s;
+                   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .navbar.solid .title { opacity: 1; }
+  .icon-btn { width: 44px; height: 44px; border: 0; border-radius: 22px; display: grid; place-items: center; cursor: pointer;
+              background: rgba(247,238,220,.14); color: var(--on-field); transition: transform .1s, background .1s; }
+  .icon-btn:active { transform: scale(.92); background: rgba(247,238,220,.24); }
+  .icon-btn:focus-visible, button:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+  .icon-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .icon-btn[aria-pressed="true"] svg { fill: currentColor; }
+
+  /* linen sheet with the menu */
+  .sheet { position: relative; z-index: 2; background: var(--sheet); color: var(--ink); border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+           min-height: 700px; padding-bottom: calc(var(--safe-bottom) + 96px); }
+  .chips { position: sticky; top: calc(var(--safe-top) + 48px); z-index: 5; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
+           padding: 14px var(--s4) 10px; background: var(--sheet); border-radius: var(--r-sheet) var(--r-sheet) 0 0; }
+  .chips.stuck { border-radius: 0; box-shadow: 0 1px 0 var(--line); }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { position: relative; flex: none; height: 36px; padding: 0 16px; border-radius: 18px; border: 1px solid var(--line);
+          background: transparent; color: var(--ink); font: 500 15px/1 var(--font); cursor: pointer; }
+  .chip::after { content: ""; position: absolute; inset: -4px 0; } /* 44pt hit area */
+  .chip[aria-selected="true"] { background: var(--ink); color: var(--sheet); border-color: var(--ink); }
+  .chip:active { opacity: .7; }
+
+  .section { padding: 20px 0 4px; scroll-margin-top: calc(var(--safe-top) + 48px + 60px); }
+  .section h2 { margin: 0 var(--s4); font-family: var(--display); font-weight: 600; font-size: 24px; line-height: 1.1; font-variation-settings: "SOFT" 100; }
+  .section .note { margin: 4px var(--s4) 6px; font-size: 14px; line-height: 18px; color: var(--ink-2); }
+
+  .dish { position: relative; display: flex; gap: 14px; align-items: flex-start; padding: 14px var(--s4); }
+  .dish + .dish::before { content: ""; position: absolute; top: 0; left: calc(var(--s4) + 78px); right: 0; height: 1px; background: var(--line); transform: scaleY(.5); }
+  .plate { position: relative; flex: none; width: 64px; height: 64px; }
+  .plate svg { width: 64px; height: 64px; display: block; filter: drop-shadow(0 2px 2px rgba(43,26,28,.18)); }
+  .qty { position: absolute; top: -4px; right: -6px; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 12px; background: var(--action);
+         color: var(--on-action); font: 700 13px/24px var(--font); text-align: center; font-variant-numeric: tabular-nums; box-shadow: 0 0 0 2px var(--sheet); }
+  .dish .body { flex: 1; min-width: 0; }
+  .dish h3 { margin: 0; font-size: 17px; line-height: 22px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dish p { margin: 2px 0 0; font-size: 15px; line-height: 20px; color: var(--ink-2);
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .dish .meta { margin-top: 6px; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+  .price { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .allergen { font-size: 13px; color: var(--ink-2); }
+  .add { flex: none; align-self: center; width: 44px; height: 44px; border-radius: 22px; border: 1.5px solid var(--action); background: transparent;
+         color: var(--action); display: grid; place-items: center; cursor: pointer; transition: transform .1s, background .1s; }
+  [data-theme="dark"] .add { border-color: var(--ink-2); color: var(--ink); }
+  .add svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+  .add:active { transform: scale(.9); background: rgba(106,31,51,.10); }
+  .dish.soldout .plate, .dish.soldout h3, .dish.soldout p { opacity: .5; }
+  .soldtag { align-self: center; font-size: 13px; font-weight: 600; color: var(--ink-2); text-align: right; width: 64px; line-height: 16px; }
+
+  .banner { margin: 6px var(--s4) 4px; padding: 14px 16px; border-radius: var(--r-container); background: var(--sheet-2); font-size: 15px; line-height: 20px; }
+  .banner strong { display: block; font-size: 16px; }
+  .banner button { margin-top: 10px; }
+  .skel { background: var(--skeleton); border-radius: 6px; animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .55 } }
+
+  /* cart bar */
+  .cartbar { position: absolute; left: var(--s4); right: var(--s4); bottom: calc(var(--safe-bottom) + 6px); z-index: 20; height: 64px;
+             display: flex; align-items: center; gap: 12px; padding: 0 18px 0 10px; border: 0; border-radius: var(--r-container); cursor: pointer;
+             background: var(--action); color: var(--on-action); text-align: left; font-family: var(--font);
+             box-shadow: 0 10px 24px rgba(40,8,18,.32), 0 2px 6px rgba(40,8,18,.2);
+             transform: translateY(120px); transition: transform .45s var(--spring); }
+  .cartbar.show { transform: none; }
+  .cartbar:active { filter: brightness(1.08); }
+  .cartbar .mini { position: relative; width: 44px; height: 44px; flex: none; }
+  .cartbar .mini b { position: absolute; inset: 0; display: grid; place-items: center; font: 700 15px/1 var(--font); color: #3A2709; font-variant-numeric: tabular-nums; }
+  .cartbar .lbl { flex: 1; min-width: 0; }
+  .cartbar .lbl strong { display: block; font-size: 17px; line-height: 22px; }
+  .cartbar .lbl span { font-size: 13px; line-height: 16px; color: var(--on-field-2); white-space: nowrap; }
+  .cartbar .sum { font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* cart sheet */
+  .scrim { position: absolute; inset: 0; z-index: 50; background: rgba(25,6,12,.45); opacity: 0; pointer-events: none; transition: opacity .3s; }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+  .cart { position: absolute; left: 0; right: 0; bottom: 0; z-index: 51; max-height: 760px; display: flex; flex-direction: column;
+          background: var(--sheet); color: var(--ink); border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+          transform: translateY(105%); transition: transform .42s var(--ease-out); box-shadow: 0 -8px 30px rgba(25,6,12,.25); }
+  .cart.open { transform: none; }
+  .grab { width: 36px; height: 5px; border-radius: 3px; background: var(--line); margin: 6px auto 0; }
+  .grabzone { height: 20px; touch-action: none; cursor: grab; }
+  .cart header { display: flex; align-items: flex-start; padding: 0 8px 4px var(--s4); }
+  .cart header div { flex: 1; }
+  .cart h2 { margin: 6px 0 0; font-family: var(--display); font-weight: 600; font-size: 28px; line-height: 1.1; font-variation-settings: "SOFT" 100; }
+  .cart header p { margin: 2px 0 0; font-size: 14px; color: var(--ink-2); }
+  .cart .close { background: var(--sheet-2); color: var(--ink); }
+  .cart .lines { overflow-y: auto; padding: 4px 0; }
+  .line { display: flex; align-items: center; gap: 12px; padding: 10px var(--s4); }
+  .line .plate, .line .plate svg { width: 48px; height: 48px; }
+  .line .nm { flex: 1; min-width: 0; font-size: 16px; font-weight: 600; line-height: 20px; }
+  .line .nm span { display: block; font-size: 14px; font-weight: 400; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .stepper { display: flex; align-items: center; border-radius: 22px; background: var(--sheet-2); }
+  .stepper button { width: 44px; height: 44px; border: 0; background: transparent; color: var(--ink); display: grid; place-items: center; cursor: pointer; border-radius: 22px; }
+  .stepper button:active { background: var(--line); }
+  .stepper svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2.2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .stepper output { min-width: 18px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .bill { margin: 6px var(--s4) 0; padding: 12px 0 0; border-top: 1px solid var(--line); }
+  .bill div { display: flex; justify-content: space-between; font-size: 15px; line-height: 26px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .bill div.t { color: var(--ink); font-size: 17px; font-weight: 700; line-height: 30px; margin-top: 2px; }
+  .deliver { margin: 10px var(--s4) 0; font-size: 14px; line-height: 18px; color: var(--ink-2); }
+  .deliver b { color: var(--ink); font-weight: 600; }
+  .primary { display: block; width: calc(100% - 32px); margin: 14px var(--s4) calc(var(--safe-bottom) + 8px); height: 54px; border: 0; border-radius: 27px;
+             background: var(--action); color: var(--on-action); font: 600 17px/1 var(--font); cursor: pointer; font-variant-numeric: tabular-nums; }
+  .primary:active { filter: brightness(1.1); transform: scale(.985); }
+  .primary.small { display: inline-block; width: auto; height: 44px; padding: 0 20px; margin: 10px 0 0; border-radius: 22px; font-size: 16px; }
+  .cart .emptycart { padding: 24px var(--s4); text-align: center; color: var(--ink-2); font-size: 15px; }
+
+  .toast { position: absolute; left: var(--s4); right: var(--s4); bottom: calc(var(--safe-bottom) + 80px); z-index: 60;
+           display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 6px 0 16px; border-radius: 14px;
+           background: #2B1A1C; color: #F7EEDC; font-size: 15px; opacity: 0; transform: translateY(10px); pointer-events: none; transition: opacity .2s, transform .2s; }
+  .toast.show { opacity: 1; transform: none; pointer-events: auto; }
+  .toast span { flex: 1; }
+  .toast button { height: 44px; padding: 0 12px; border: 0; background: transparent; color: var(--brass-hi); font: 600 15px/1 var(--font); cursor: pointer; }
+  .flyer { position: absolute; z-index: 25; width: 64px; height: 64px; pointer-events: none; }
+  .flyer svg { width: 100%; height: 100%; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+  /* entrance: cloth, then name, then tray rises, then sheet, then rows */
+  .intro .kicker, .intro .name, .intro .ledger { animation: up .5s var(--ease-out) both; }
+  .intro .name { animation-delay: .08s } .intro .ledger { animation-delay: .16s }
+  .intro .tray, .intro .readout { animation: rise .7s var(--spring) .25s both; }
+  .intro .sheet { animation: sheetup .6s var(--ease-out) .45s both; }
+  .intro .dish { animation: up .4s var(--ease-out) both; }
+  @keyframes up { from { opacity: 0; transform: translateY(10px) } }
+  @keyframes rise { from { opacity: 0; transform: translateY(60px) } }
+  @keyframes sheetup { from { transform: translateY(120px) } }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; }
+    .steam { display: none; }
+  }
+</style>
+</head>
+<body>
+  <!-- shared art: gradients for brass and plates -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <radialGradient id="brass" cx="38%" cy="22%" r="85%">
+        <stop offset="0" stop-color="#F3DFA8"/><stop offset=".35" stop-color="#D4AE68"/><stop offset=".75" stop-color="#B08840"/><stop offset="1" stop-color="#7E5D25"/>
+      </radialGradient>
+      <radialGradient id="gloss" cx="30%" cy="25%" r="75%">
+        <stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="copper" cx="35%" cy="28%" r="80%">
+        <stop offset="0" stop-color="#E7A276"/><stop offset=".6" stop-color="#B8683A"/><stop offset="1" stop-color="#7E3B1A"/>
+      </radialGradient>
+      <radialGradient id="clay" cx="35%" cy="28%" r="80%">
+        <stop offset="0" stop-color="#B8643A"/><stop offset="1" stop-color="#6A2E17"/>
+      </radialGradient>
+    </defs>
+  </svg>
+
+  <div class="statusbar">
+    <span>9:41</span>
+    <svg viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen" class="intro">
+    <div id="scroll">
+      <header class="hero">
+        <p class="kicker">Home-style lokanta · Moda, Kadıköy · <svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true" style="fill:var(--brass);vertical-align:-1px"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.5 1.3 6.5L12 17l-5.9 3.3 1.3-6.5-4.9-4.5 6.6-.8z"/></svg> <b>4.7</b> <span class="sr">rating,</span>(1,240)</p>
+        <h1 class="name" id="rname">Hatice Hanım Lokantası</h1>
+        <ul class="ledger" id="ledger">
+          <li><strong id="eta">25–35 min</strong><span>to your door</span></li>
+          <li><strong>₺29.90</strong><span>delivery</span></li>
+          <li><strong>₺14.90</strong><span>service fee</span></li>
+        </ul>
+        <svg class="tray" id="tray" viewBox="0 0 393 200" aria-hidden="true">
+          <g transform="translate(196.5 190)">
+            <circle r="170" fill="url(#brass)"/>
+            <circle r="168" fill="none" stroke="#FCEBC0" stroke-opacity=".6" stroke-width="1.5"/>
+            <circle r="161" fill="none" stroke="var(--engrave)" stroke-opacity=".55" stroke-width="1"/>
+            <circle r="154" fill="none" stroke="var(--engrave)" stroke-opacity=".45" stroke-width="7" stroke-dasharray="1.2 4.6"/>
+            <circle r="147" fill="none" stroke="var(--engrave)" stroke-opacity=".55" stroke-width="1"/>
+            <circle r="78" fill="none" stroke="var(--engrave)" stroke-opacity=".28" stroke-width="1"/>
+            <circle r="72" fill="none" stroke="var(--engrave)" stroke-opacity=".22" stroke-width="5" stroke-dasharray="6 5"/>
+            <path d="M-120 -112 A165 165 0 0 1 40 -164" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/>
+            <g id="slots"></g>
+          </g>
+        </svg>
+        <div class="readout" id="readout" aria-live="polite"></div>
+      </header>
+
+      <section class="sheet" id="sheet" aria-label="Menu"></section>
+    </div>
+
+    <div class="navbar" id="navbar">
+      <button class="icon-btn" aria-label="Back to restaurants" data-toast="Back goes to the restaurant list (not in this prototype)">
+        <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div class="title">Hatice Hanım Lokantası</div>
+      <button class="icon-btn" aria-label="Search this menu" data-toast="Menu search is not in this prototype">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg></button>
+      <button class="icon-btn" id="fav" aria-label="Save restaurant" aria-pressed="false">
+        <svg viewBox="0 0 24 24"><path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.4 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"/></svg></button>
+    </div>
+
+    <button class="cartbar" id="cartbar" aria-label="Review your order" tabindex="-1">
+      <span class="mini"><svg viewBox="-24 -24 48 48" width="44" height="44" aria-hidden="true"><circle r="22" fill="url(#brass)"/><circle r="18" fill="none" stroke="#6E5020" stroke-opacity=".45" stroke-width="3" stroke-dasharray="1 2.6"/></svg><b id="barcount">0</b></span>
+      <span class="lbl"><strong>Review your sofra</strong><span id="barfees">incl. ₺44.80 delivery and service</span></span>
+      <span class="sum" id="barsum">₺0.00</span>
+    </button>
+
+    <div class="scrim" id="scrim"></div>
+    <div class="cart" id="cart" role="dialog" aria-modal="true" aria-labelledby="carttitle" aria-hidden="true">
+      <div class="grabzone" id="grab"><div class="grab"></div></div>
+      <header>
+        <div><h2 id="carttitle">Your sofra</h2><p>Hatice Hanım Lokantası · arrives in 25–35 min</p></div>
+        <button class="icon-btn close" id="closecart" aria-label="Close order"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </header>
+      <div class="lines" id="lines"></div>
+      <div class="bill" id="bill"></div>
+      <p class="deliver">Deliver to <b>İskele Sk. 12, Moda</b> · Change at checkout</p>
+      <button class="primary" id="checkout"></button>
+    </div>
+
+    <div class="toast" id="toast" role="status"><span id="toastmsg"></span><button id="toastbtn" hidden>Undo</button></div>
+    <div class="sr" id="announce" aria-live="polite"></div>
+  </main>
+
+  <div class="home-indicator"></div>
+
+<script>
+// ---------- sample data (not real prices or ratings) ----------
+const FEES = { delivery: 29.90, service: 14.90 };
+const MENU = [
+  { id: 'soups', title: 'Soups', note: 'With lemon and fresh bread', items: [
+    { id: 'mercimek', name: 'Mercimek çorbası', desc: 'Red lentil soup with chilli butter and a lemon wedge', price: 165, allergens: 'Contains dairy', art: 'mercimek' },
+    { id: 'ezogelin', name: 'Ezogelin çorbası', desc: 'Lentil and bulgur soup with dried mint and pul biber', price: 165, allergens: 'Contains gluten', art: 'ezogelin' } ] },
+  { id: 'stews', title: 'Tencere stews', note: 'Cooked each morning, served until the pot is empty', items: [
+    { id: 'hunkar', name: 'Hünkâr beğendi', desc: 'Slow-braised lamb on smoked aubergine and kaşar purée', price: 545, allergens: 'Contains dairy, gluten', art: 'hunkar' },
+    { id: 'fasulye', name: 'Kuru fasulye with butter pilav', desc: 'White beans in tomato and pepper paste, rice on the side', price: 320, allergens: 'Contains dairy', art: 'fasulye' },
+    { id: 'karniyarik', name: 'Karnıyarık', desc: 'Aubergine split and filled with spiced minced beef', price: 390, allergens: 'No listed allergens', art: 'karniyarik', soldout: true } ] },
+  { id: 'grill', title: 'From the grill', note: 'Charcoal, about 10 minutes longer', items: [
+    { id: 'adana', name: 'Adana kebap', desc: 'Hand-minced lamb on a flat skewer, sumac onions, lavaş', price: 480, allergens: 'Contains gluten', art: 'adana' },
+    { id: 'tavuk', name: 'Tavuk şiş', desc: 'Chicken thigh in yoghurt and pepper paste, bulgur pilav', price: 395, allergens: 'Contains dairy, gluten', art: 'tavuk' } ] },
+  { id: 'meze', title: 'Meze', items: [
+    { id: 'haydari', name: 'Haydari', desc: 'Strained yoghurt with dill, garlic and mint', price: 140, allergens: 'Contains dairy', art: 'haydari' },
+    { id: 'ezme', name: 'Acılı ezme', desc: 'Chopped tomato, pepper and pomegranate molasses', price: 130, allergens: 'Vegan', art: 'ezme' } ] },
+  { id: 'sweets', title: 'Desserts', items: [
+    { id: 'sutlac', name: 'Fırın sütlaç', desc: 'Baked rice pudding with a caramelised top', price: 150, allergens: 'Contains dairy', art: 'sutlac' } ] },
+  { id: 'drinks', title: 'Drinks', items: [
+    { id: 'ayran', name: 'Ayran', desc: 'Salted yoghurt drink, 300 ml', price: 45, allergens: 'Contains dairy', art: 'ayran' } ] },
+];
+const DISH = Object.fromEntries(MENU.flatMap(s => s.items).map(d => [d.id, d]));
+
+// ---------- top-down dish art (viewBox -32 -32 64 64) ----------
+const V = {
+  porcelain: '<circle r="31" fill="#FBF6EC"/><circle r="31" fill="none" stroke="#3C1E14" stroke-opacity=".14"/><circle r="23.5" fill="none" stroke="#3C1E14" stroke-opacity=".08"/>',
+  copper: '<circle r="31" fill="url(#copper)"/><circle r="26" fill="#8E4A24"/><circle r="31" fill="none" stroke="#5E2A10" stroke-opacity=".5"/>',
+  clay: '<circle r="30" fill="url(#clay)"/><circle r="25" fill="#5A2412"/>',
+  glass: '<circle r="22" fill="#E9E4DA"/><circle r="22" fill="none" stroke="#3C1E14" stroke-opacity=".18" stroke-width="1.5"/>',
+};
+const ART = {
+  mercimek: ['copper', '<circle r="23" fill="#E39A3B"/><path d="M-9 -4c4-6 12-5 13 1s-6 9-10 5" fill="none" stroke="#B5321E" stroke-width="3" stroke-linecap="round"/><path d="M14 10a8 8 0 0 1-12 6z" fill="#F3D35A" stroke="#C9A12E"/>'],
+  ezogelin: ['copper', '<circle r="23" fill="#C9652F"/><g fill="#6E8B3D"><circle cx="-6" cy="-5" r="1.6"/><circle cx="4" cy="-8" r="1.4"/><circle cx="7" cy="3" r="1.6"/><circle cx="-3" cy="6" r="1.4"/><circle cx="-10" cy="3" r="1.2"/></g><g fill="#8E1E12"><circle cx="1" cy="-1" r="1"/><circle cx="-7" cy="-11" r=".9"/><circle cx="10" cy="-4" r=".9"/></g>'],
+  hunkar: ['porcelain', '<circle r="21" fill="#E6D2A6"/><circle r="21" fill="none" stroke="#C7AE7A" stroke-width="2"/><g fill="#7A3B1E"><circle cx="-4" cy="-3" r="5.5"/><circle cx="5" cy="-1" r="5"/><circle cx="0" cy="6" r="4.8"/><circle cx="-7" cy="5" r="3.5"/></g><g fill="#A9552B"><circle cx="-5" cy="-5" r="2"/><circle cx="4" cy="-3" r="1.8"/></g><g fill="#4F7A2E"><circle cx="8" cy="7" r="1.2"/><circle cx="-1" cy="-9" r="1.1"/></g>'],
+  fasulye: ['clay', '<circle r="22" fill="#A8442A"/><g fill="#F2E6CF"><ellipse cx="-8" cy="-6" rx="3.4" ry="2.2" transform="rotate(25 -8 -6)"/><ellipse cx="2" cy="-9" rx="3.4" ry="2.2"/><ellipse cx="9" cy="-1" rx="3.4" ry="2.2" transform="rotate(-30 9 -1)"/><ellipse cx="-2" cy="1" rx="3.4" ry="2.2" transform="rotate(60 -2 1)"/><ellipse cx="-10" cy="6" rx="3.4" ry="2.2"/><ellipse cx="5" cy="9" rx="3.4" ry="2.2" transform="rotate(20 5 9)"/></g><circle cx="-1" cy="-2" r="3" fill="#D86A3A" opacity=".7"/>'],
+  karniyarik: ['porcelain', '<ellipse rx="22" ry="11" transform="rotate(-30)" fill="#3E1F3A"/><ellipse rx="15" ry="5.5" transform="rotate(-30)" fill="#8F3B22"/><g fill="#5C8A34"><path d="M6 -14c4 1 6 3 7 6" stroke="#5C8A34" stroke-width="3" fill="none" stroke-linecap="round"/></g><circle cx="-6" cy="5" r="2.4" fill="#D8442A"/>'],
+  adana: ['porcelain', '<rect x="-24" y="-5" width="48" height="10" rx="5" transform="rotate(-28)" fill="#8E3E1E"/><g stroke="#4F1C0B" stroke-width="1.6" transform="rotate(-28)"><path d="M-14 -4v8M-4 -4v8M6 -4v8M16 -4v8"/></g><path d="M-18 14c8 4 18 3 24-3" stroke="#5C8A34" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="14" cy="12" r="5" fill="#D8442A"/><g fill="#8E3A6A"><circle cx="-14" cy="-14" r="1.6"/><circle cx="-9" cy="-17" r="1.4"/><circle cx="-17" cy="-9" r="1.4"/></g>'],
+  tavuk: ['porcelain', '<circle cx="-6" cy="8" r="11" fill="#D9BE7E"/><g fill="#C7863E"><circle cx="-2" cy="-10" r="5.2"/><circle cx="7" cy="-6" r="5.2"/><circle cx="13" cy="2" r="5"/></g><g fill="#7A3B1E" opacity=".55"><circle cx="-1" cy="-11" r="1.6"/><circle cx="8" cy="-7" r="1.5"/><circle cx="14" cy="1" r="1.5"/></g><path d="M-9 -16c-2 6-2 10 0 14" stroke="#5C8A34" stroke-width="3.5" fill="none" stroke-linecap="round"/>'],
+  haydari: ['porcelain', '<circle r="17" fill="#F4F1E6"/><circle r="17" fill="none" stroke="#DAD3C0"/><g fill="#6F8F3F"><circle cx="-5" cy="-4" r="1.3"/><circle cx="3" cy="-7" r="1.1"/><circle cx="6" cy="3" r="1.3"/><circle cx="-2" cy="6" r="1.1"/><circle cx="-8" cy="3" r="1"/></g><path d="M-3 -1c3-2 5 0 6 2" stroke="#B5432A" stroke-width="1.6" fill="none" stroke-linecap="round"/>'],
+  ezme: ['porcelain', '<circle r="18" fill="#C2361F"/><g fill="#E8613E"><circle cx="-6" cy="-5" r="2.5"/><circle cx="5" cy="-6" r="2.2"/><circle cx="6" cy="5" r="2.5"/><circle cx="-4" cy="6" r="2.2"/></g><g fill="#5C8A34"><circle cx="0" cy="0" r="1.6"/><circle cx="-10" cy="1" r="1.3"/><circle cx="10" cy="-1" r="1.3"/></g>'],
+  sutlac: ['clay', '<circle r="21" fill="#F1E3C6"/><circle r="15" fill="#C47A3A" opacity=".75"/><circle cx="-3" cy="-3" r="7" fill="#A8592A" opacity=".7"/>'],
+  ayran: ['glass', '<circle r="17" fill="#FBF9F3"/><g fill="#EFEADF"><circle cx="-5" cy="-4" r="3"/><circle cx="4" cy="-6" r="2.4"/><circle cx="6" cy="4" r="3"/><circle cx="-3" cy="6" r="2.2"/></g>'],
+};
+const art = (id, size = 64) => {
+  const [v, food] = ART[id];
+  return `<svg viewBox="-32 -32 64 64" width="${size}" height="${size}" aria-hidden="true">${V[v]}${food}<circle r="31" fill="url(#gloss)"/></svg>`;
+};
+
+// ---------- state ----------
+const flags = location.hash.slice(1).split(',');
+if (flags.includes('dark') || (!flags.includes('light') && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.dataset.theme = 'dark';
+const mode = ['closed', 'loading', 'error'].find(f => flags.includes(f)) || 'open';
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let cart = [];   // [{id, qty}] in the order dishes were added
+const $ = s => document.querySelector(s);
+const money = n => '₺' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const count = () => cart.reduce((a, l) => a + l.qty, 0);
+const food = () => cart.reduce((a, l) => a + l.qty * DISH[l.id].price, 0);
+const total = () => count() ? food() + FEES.delivery + FEES.service : 0;
+
+// ---------- menu sheet ----------
+const plus = '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>';
+function dishRow(d) {
+  const line = cart.find(l => l.id === d.id);
+  const closed = mode === 'closed';
+  const action = d.soldout ? '<span class="soldtag">Sold out today</span>'
+    : closed ? '' : `<button class="add" data-add="${d.id}" aria-label="Add ${d.name}, ${money(d.price)}">${plus}</button>`;
+  return `<article class="dish${d.soldout ? ' soldout' : ''}" id="d-${d.id}">
+    <div class="plate">${art(d.art)}${line ? `<span class="qty" aria-label="${line.qty} in order">${line.qty}</span>` : ''}</div>
+    <div class="body"><h3>${d.name}</h3><p>${d.desc}</p>
+      <div class="meta"><span class="price">${money(d.price)}</span><span class="allergen">${d.allergens}</span></div></div>
+    ${action}</article>`;
+}
+function renderSheet() {
+  const sheet = $('#sheet');
+  if (mode === 'loading') {
+    const row = '<div class="dish"><div class="plate skel" style="border-radius:32px"></div><div class="body"><div class="skel" style="height:18px;width:60%"></div><div class="skel" style="height:14px;width:90%;margin-top:8px"></div><div class="skel" style="height:14px;width:40%;margin-top:8px"></div></div></div>';
+    sheet.innerHTML = `<div class="chips">${[72, 96, 80, 64].map(w => `<div class="skel" style="flex:none;height:36px;width:${w}px;border-radius:18px"></div>`).join('')}</div>
+      <div class="section" aria-busy="true"><div class="skel" style="height:24px;width:120px;margin:0 16px 12px"></div>${row.repeat(4)}</div>`;
+    return;
+  }
+  if (mode === 'error') {
+    sheet.innerHTML = `<div style="height:20px"></div><div class="banner" role="alert"><strong>The menu didn't load</strong>Check your connection, then try again. Your sofra is kept.<br><button class="primary small" id="retry">Try again</button></div>`;
+    $('#retry').onclick = () => { location.hash = ''; location.reload(); };
+    return;
+  }
+  const chips = MENU.map((s, i) => `<button class="chip" role="tab" data-sec="${s.id}" aria-selected="${i === 0}">${s.title}</button>`).join('');
+  const banner = mode === 'closed' ? '<div class="banner"><strong>Closed now · opens 11:30 tomorrow</strong>You can browse the menu. Ordering opens when the kitchen does.</div>' : '';
+  sheet.innerHTML = `<div class="chips" role="tablist" aria-label="Menu sections">${chips}</div>${banner}` +
+    MENU.map(s => `<section class="section" id="s-${s.id}"><h2>${s.title}</h2>${s.note ? `<p class="note">${s.note}</p>` : ''}${s.items.map(dishRow).join('')}</section>`).join('');
+  sheet.querySelectorAll('.dish').forEach((el, i) => el.style.animationDelay = (0.55 + Math.min(i, 6) * 0.06) + 's');
+}
+
+// ---------- tray (hero) ----------
+const R = 125, ANG = [270, 248, 292, 226, 314, 205, 335];
+const slot = i => { const a = ANG[i % ANG.length] * Math.PI / 180; return [R * Math.cos(a), R * Math.sin(a)]; };
+function units() { return cart.flatMap(l => Array(l.qty).fill(l.id)).slice(0, ANG.length); } // shortcut: tray shows up to 7 plates; the count says the rest
+function renderTray(landing) {
+  $('#slots').innerHTML = units().map((id, i) => {
+    const [x, y] = slot(i);
+    const steam = `<g class="steam"><path d="M-6 -24c-4 -6 4 -10 0 -16" style="animation-delay:${i * .9}s"/><path d="M6 -22c-4 -6 4 -10 0 -16" style="animation-delay:${i * .9 + 2.6}s"/></g>`;
+    return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><g class="${i === landing ? 'landing' : ''}"><circle r="25" cy="3" fill="#3A2709" opacity=".25"/>
+      <g transform="scale(.8)">${V[ART[DISH[id].art][0]]}${ART[DISH[id].art][1]}<circle r="31" fill="url(#gloss)"/></g>${steam}</g></g>`;
+  }).join('');
+  const ro = $('#readout');
+  if (mode === 'closed') { ro.innerHTML = '<div class="empty">Closed for today</div><div class="sub">Opens 11:30 tomorrow</div>'; return; }
+  if (!count()) { ro.innerHTML = '<div class="empty">An empty sofra</div><div class="sub">Dishes you add are laid here</div>'; return; }
+  const [int, dec] = money(total()).slice(1).split('.');
+  ro.innerHTML = `<div class="total tick"><small>₺</small>${int}<span class="dec">.${dec}</span></div><div class="sub">${count()} ${count() === 1 ? 'dish' : 'dishes'} · total with fees</div>`;
+}
+
+// ---------- cart bar and cart sheet ----------
+function renderCart() {
+  const n = count(), bar = $('#cartbar');
+  bar.classList.toggle('show', n > 0); bar.tabIndex = n ? 0 : -1;
+  $('#barcount').textContent = n; $('#barsum').textContent = money(total());
+  $('#lines').innerHTML = n ? cart.map(l => { const d = DISH[l.id]; return `<div class="line"><div class="plate">${art(d.art, 48)}</div>
+    <div class="nm">${d.name}<span>${money(d.price)} each · ${money(d.price * l.qty)}</span></div>
+    <div class="stepper"><button data-dec="${l.id}" aria-label="${l.qty === 1 ? 'Remove' : 'One fewer'} ${d.name}">${l.qty === 1
+      ? '<svg viewBox="0 0 24 24"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/></svg>' : '<svg viewBox="0 0 24 24"><path d="M6 12h12"/></svg>'}</button>
+    <output aria-label="Quantity">${l.qty}</output><button data-inc="${l.id}" aria-label="One more ${d.name}"><svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></button></div></div>`; }).join('')
+    : '<div class="emptycart">Nothing on your sofra yet.</div>';
+  $('#bill').innerHTML = `<div><span>Food</span><span>${money(food())}</span></div><div><span>Delivery</span><span>${money(n ? FEES.delivery : 0)}</span></div>
+    <div><span>Service fee</span><span>${money(n ? FEES.service : 0)}</span></div><div class="t"><span>Total</span><span>${money(total())}</span></div>`;
+  const co = $('#checkout'); co.textContent = n ? `Go to checkout · ${money(total())}` : 'Add a dish to order'; co.disabled = !n; co.style.opacity = n ? 1 : .45;
+}
+function renderAll(landing) { renderTray(landing); renderCart();
+  document.querySelectorAll('.dish').forEach(el => { const d = DISH[el.id.slice(2)]; if (d) el.outerHTML = dishRow(d); }); }
+
+function change(id, delta, fromEl) {
+  let line = cart.find(l => l.id === id);
+  if (!line && delta > 0) cart.push(line = { id, qty: 0 });
+  if (!line) return;
+  line.qty += delta;
+  const removed = line.qty <= 0;
+  if (removed) cart = cart.filter(l => l !== line);
+  const idx = removed ? -1 : units().lastIndexOf(id);
+  if (delta > 0 && fromEl && !reduce) fly(fromEl, id, idx, () => renderAll(idx)); else renderAll(delta > 0 ? idx : -1);
+  $('#announce').textContent = `${removed ? 'Removed' : delta > 0 ? 'Added' : 'One fewer'} ${DISH[id].name}. ${count()} in order, total ${money(total())}.`;
+  if (removed) toast(`Removed ${DISH[id].name}`, () => change(id, 1));
+}
+
+// the plate travels from the menu row onto the tray (or into the cart bar when the tray is scrolled away)
+function fly(fromEl, id, idx, done) {
+  const scr = $('#screen').getBoundingClientRect(), a = fromEl.getBoundingClientRect(), tray = $('#tray').getBoundingClientRect();
+  let tx, ty, size = 42;
+  const [sx, sy] = idx >= 0 ? slot(idx) : [0, 0];
+  if (idx >= 0 && tray.top + 190 + sy - scr.top > 120) { tx = tray.left + 196.5 + sx - scr.left; ty = tray.top + 190 + sy - scr.top; }
+  else { const b = $('#cartbar').getBoundingClientRect(); tx = b.left + 32 - scr.left; ty = b.top + 32 - scr.top; size = 30; }
+  const el = document.createElement('div'); el.className = 'flyer'; el.innerHTML = art(DISH[id].art);
+  const x0 = a.left - scr.left, y0 = a.top - scr.top; el.style.left = x0 + 'px'; el.style.top = y0 + 'px';
+  $('#screen').appendChild(el);
+  const dx = tx - 32 - x0, dy = ty - 32 - y0, s = size / 64;
+  el.animate([{ transform: 'translate(0,0) scale(1)' }, { transform: `translate(${dx * .5}px, ${dy * .5 - 60}px) scale(${(1 + s) / 2 + .1})`, offset: .5 },
+    { transform: `translate(${dx}px, ${dy}px) scale(${s})` }], { duration: 520, easing: 'cubic-bezier(.4,0,.2,1)' }).onfinish = () => { el.remove(); done(); };
+}
+
+let toastTimer;
+function toast(msg, undo) {
+  $('#toastmsg').textContent = msg; const b = $('#toastbtn'); b.hidden = !undo;
+  b.onclick = () => { $('#toast').classList.remove('show'); undo && undo(); };
+  $('#toast').classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 4000);
+}
+
+// ---------- sheet open / close (button, scrim, Escape, drag down) ----------
+let lastFocus;
+function openCart() { lastFocus = document.activeElement; renderCart(); $('#scrim').classList.add('open'); const c = $('#cart'); c.classList.add('open'); c.setAttribute('aria-hidden', 'false'); $('#closecart').focus({ focusVisible: false }); }
+function closeCart() { $('#scrim').classList.remove('open'); const c = $('#cart'); c.classList.remove('open'); c.style.transform = ''; c.setAttribute('aria-hidden', 'true'); lastFocus && lastFocus.focus && lastFocus.focus(); }
+$('#cartbar').onclick = openCart; $('#closecart').onclick = closeCart; $('#scrim').onclick = closeCart;
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCart(); });
+let dragY = null;
+$('#grab').onpointerdown = e => { dragY = e.clientY; $('#cart').style.transition = 'none'; e.target.setPointerCapture(e.pointerId); };
+$('#grab').onpointermove = e => { if (dragY !== null) $('#cart').style.transform = `translateY(${Math.max(0, e.clientY - dragY)}px)`; };
+$('#grab').onpointerup = e => { const d = e.clientY - dragY; dragY = null; $('#cart').style.transition = ''; if (d > 90) closeCart(); else $('#cart').style.transform = ''; };
+$('#checkout').onclick = () => toast('Checkout is the next screen (not in this prototype)');
+
+// ---------- taps ----------
+document.addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.add) change(t.dataset.add, 1, t.closest('.dish').querySelector('.plate'));
+  else if (t.dataset.inc) change(t.dataset.inc, 1);
+  else if (t.dataset.dec) change(t.dataset.dec, -1);
+  else if (t.dataset.toast) toast(t.dataset.toast);
+  else if (t.dataset.sec) $('#s-' + t.dataset.sec).scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' });
+});
+$('#fav').onclick = function () { const on = this.getAttribute('aria-pressed') !== 'true'; this.setAttribute('aria-pressed', on); toast(on ? 'Saved to your restaurants' : 'Removed from saved'); };
+
+// ---------- scroll: condense the bar, stick the chips, follow the section ----------
+$('#scroll').addEventListener('scroll', () => {
+  const y = $('#scroll').scrollTop;
+  $('#navbar').classList.toggle('solid', y > 260);
+  const chips = $('.chips'); if (chips) chips.classList.toggle('stuck', y > 340);
+  let cur = MENU[0].id;
+  MENU.forEach(s => { const el = $('#s-' + s.id); if (el && el.getBoundingClientRect().top < 220) cur = s.id; });
+  document.querySelectorAll('.chip').forEach(c => { const on = c.dataset.sec === cur; if ((c.getAttribute('aria-selected') === 'true') !== on) { c.setAttribute('aria-selected', on); on && c.scrollIntoView({ inline: 'nearest', block: 'nearest' }); } });
+}, { passive: true });
+
+// ---------- boot ----------
+if (mode === 'closed') { $('#eta').textContent = 'Closed'; $('#eta').nextElementSibling.textContent = 'opens 11:30'; }
+renderSheet(); renderTray(); renderCart();
+setTimeout(() => $('#screen').classList.remove('intro'), 1600); // rows re-rendered later must not replay the entrance
+// self-check: totals are food + both fees, and zero with an empty cart
+console.assert(total() === 0, 'empty total');
+cart = [{ id: 'mercimek', qty: 1 }, { id: 'hunkar', qty: 1 }]; console.assert(Math.abs(total() - 754.80) < 1e-9, 'total 754.80'); cart = [];
+// run the main interaction once so the screen explains itself
+if (mode === 'open' && !reduce) {
+  setTimeout(() => { const b = document.querySelector('[data-add="mercimek"]'); b && b.click(); }, 2200);
+  setTimeout(() => { const b = document.querySelector('[data-add="hunkar"]'); b && b.click(); }, 3000);
+}
+</script>
+</body>
+</html>

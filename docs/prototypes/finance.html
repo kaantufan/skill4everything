@@ -1,0 +1,458 @@
+<!doctype html>
+<!-- Pano home, HTML mockup at 393x852 (iPhone 15/16 class). Sample data throughout.
+     URL options: ?theme=dark  ?state=empty|offline|loading  -->
+<html lang="en" data-platform="ios" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pano home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px;
+    --font: -apple-system, "SF Pro Text", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+    --chrome: #000;
+  }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--screen-bg); color: var(--screen-fg); }
+  .statusbar {
+    position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 10;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none;
+  }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  .home-indicator {
+    position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 10;
+    width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none;
+  }
+  #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+</style>
+<style>
+  /* ── PANO TOKENS ─────────────────────────────────────────────
+     Source: the freelancer's tax envelope (kraft), the pay slip (paper),
+     the pink carbon copy you keep for the tax office, and ballpoint ink. */
+  :root {
+    --field: #CFAE7B;        /* kraft envelope: the ground */
+    --field-ink: #2A2216;
+    --field-ink-2: #4E3B22;
+    --paper: #FBF7EE;        /* what is still yours */
+    --paper-used: #EEE8DB;   /* already spoken for */
+    --ink: #1C2238;
+    --ink-2: #5B5F70;
+    --perf: #B9AE98;
+    --carbon: #F3CBD0;       /* tax stub */
+    --carbon-ink: #5A1F2B;
+    --carbon-ink-2: #7A3542;
+    --accent: #2443B8;       /* ballpoint: actions only */
+    --on-accent: #FFFFFF;
+    --hatch: rgba(36,67,184,.20);
+    --sheet: #FBF7EE;
+    --sep: #DCD3C2;
+    --gain: #2D6A3E;
+    --shadow: rgba(60,40,10,.28);
+    --grain-op: .10;
+
+    --display: "Archivo", var(--font);
+    --r-control: 10px; --r-paper: 4px; --r-sheet: 16px;
+    --gutter: 20px;
+    --t-fast: 120ms; --t-move: 620ms; --ease: cubic-bezier(.2,.8,.2,1);
+    --screen-bg: var(--field); --screen-fg: var(--field-ink);
+  }
+  [data-theme="dark"] {
+    --field: #2B2318; --field-ink: #EFE4D0; --field-ink-2: #BFAE92;
+    --paper: #37312A; --paper-used: #2F2A24; --ink: #F1EADC; --ink-2: #B8AE9E; --perf: #5E554A;
+    --carbon: #5B3036; --carbon-ink: #FBE3E6; --carbon-ink-2: #E5B9BF;
+    --accent: #9DB0FF; --on-accent: #10172F; --hatch: rgba(157,176,255,.22);
+    --sheet: #24201B; --sep: #463F36; --gain: #8FD3A0; --shadow: rgba(0,0,0,.5); --grain-op: .06;
+  }
+
+  .num { font-family: var(--display); font-stretch: 78%; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* kraft fibre grain, fixed so painted notches line up with the field */
+  .grain { background-color: var(--field); background-image: var(--grain); background-attachment: fixed; }
+
+  /* ── nav ─────────────────────────────────────────────── */
+  .nav { padding: calc(var(--safe-top) + 6px) var(--gutter) 0; display: flex; align-items: flex-start; justify-content: space-between; height: 126px; flex: none; }
+  .nav h1 { margin: 0; font-family: var(--display); font-stretch: 78%; font-weight: 750; font-size: 32px; line-height: 36px; letter-spacing: -.01em; }
+  .nav p { margin: 2px 0 0; font-size: 13px; line-height: 18px; color: var(--field-ink-2); display: flex; align-items: center; gap: 6px; }
+  .nav p .dot { width: 6px; height: 6px; border-radius: 3px; background: currentColor; display: none; }
+  [data-state="offline"] .nav p .dot { display: inline-block; }
+  .icon-btn { width: 44px; height: 44px; border-radius: 22px; display: grid; place-items: center; color: var(--field-ink); background: color-mix(in srgb, var(--field-ink) 8%, transparent); transition: transform var(--t-fast), background var(--t-fast); }
+  .icon-btn:active { transform: scale(.94); background: color-mix(in srgb, var(--field-ink) 16%, transparent); }
+  .icon-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ── hero: the month's slip ──────────────────────────── */
+  .hero { position: relative; flex: none; height: 458px; padding: 0 var(--gutter); }
+  .came-in { display: flex; align-items: baseline; justify-content: space-between; height: 30px; color: var(--field-ink); }
+  .came-in span:first-child { font-size: 15px; font-weight: 600; }
+  .came-in .num { font-size: 22px; font-weight: 700; }
+  .paper { position: relative; margin-top: 4px; filter: drop-shadow(0 6px 10px var(--shadow)) drop-shadow(0 1px 1px var(--shadow)); }
+  .slip { position: relative; background: var(--paper); border-radius: var(--r-paper) var(--r-paper) 0 0; color: var(--ink);
+    /* torn bottom edge: the stub below was ripped off along the perforation */
+    -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 8px 100%;
+            mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 8px 100%; }
+  .sec { position: relative; overflow: hidden; height: 0; transition: height var(--t-move) var(--ease), background var(--t-fast); }
+  .sec + .sec::before { /* perforation */
+    content: ""; position: absolute; left: 14px; right: 14px; top: 0; height: 3px; z-index: 2;
+    background: radial-gradient(circle, var(--perf) 1.1px, transparent 1.5px) 0 50% / 7px 3px repeat-x; }
+  .notch { position: absolute; width: 14px; height: 14px; border-radius: 7px; z-index: 3; transform: translateY(-50%); transition: top var(--t-move) var(--ease); }
+  .notch.l { left: -7px; } .notch.r { right: -7px; }
+  .row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 10px 16px 0; }
+  .lbl { font-size: 15px; line-height: 18px; font-weight: 600; }
+  .sub { font-size: 13px; line-height: 18px; color: var(--ink-2); }
+  .amt-s { font-size: 20px; font-weight: 650; white-space: nowrap; }
+
+  .s-new { background:
+      repeating-linear-gradient(-45deg, var(--hatch) 0 1.5px, transparent 1.5px 7px), var(--paper); }
+  .s-new .row { padding-top: 9px; }
+  .s-new .lbl { color: var(--accent); }
+  .s-new .halves { position: absolute; inset: 0; display: flex; flex-direction: column; }
+  .s-new .halves i { display: block; transition: background 160ms; }
+  .s-new .halves i:first-child { flex: 72; } .s-new .halves i:last-child { flex: 28; position: relative; }
+  .s-new .zip { position: absolute; left: 14px; right: 14px; top: 0; height: 3px; transform: translateY(-50%);
+    background: radial-gradient(circle, var(--accent) 1.2px, transparent 1.6px) 0 50% / 7px 3px repeat-x; clip-path: inset(0 100% 0 0); }
+  .s-new.zipping .zip { transition: clip-path 300ms linear; clip-path: inset(0 0 0 0); }
+  .s-new.splitting { background: var(--paper); }
+  .s-new.splitting .halves i:last-child { background: var(--carbon); }
+  .s-new.splitting .row { opacity: 0; transition: opacity 120ms; }
+
+  .s-safe .big { padding: 2px 14px 0 14px; color: var(--ink); line-height: 1; font-weight: 760; letter-spacing: -.02em; transition: font-size var(--t-move) var(--ease); white-space: nowrap; }
+  .big .cur, .big .dec { font-size: .48em; font-weight: 650; color: var(--ink-2); letter-spacing: 0; }
+  .big .cur { vertical-align: .62em; margin-right: 2px; }
+  .s-safe .row { padding-top: 9px; }
+  .s-spent, .s-bills { background: var(--paper-used); }
+  .s-bills .row { padding-top: 9px; }
+
+  .stub { position: relative; margin-top: 7px; height: 0; background: var(--carbon); color: var(--carbon-ink); border-radius: 0 0 var(--r-paper) var(--r-paper);
+    transform-origin: 85% 0; transform: rotate(-1.3deg) translateX(-2px); transition: height var(--t-move) var(--ease), transform var(--t-move) var(--ease);
+    -webkit-mask: conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) 50% / 8px 100%;
+            mask: conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) 50% / 8px 100%; }
+  .stub.tug { transform: rotate(-2.6deg) translate(-3px, 3px); }
+  .stub .row { padding-top: 14px; }
+  .stub .sub { color: var(--carbon-ink-2); }
+  .stub .amt-s { font-size: 26px; font-weight: 720; }
+  .rate { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 6px; border: 1px solid currentColor; font-size: 12px; font-weight: 650; vertical-align: 1px; }
+
+  /* ── sheet ───────────────────────────────────────────── */
+  .sheet { position: relative; flex: 1; min-height: 0; margin-top: -2px; background: var(--sheet); color: var(--ink); border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+    box-shadow: 0 -6px 18px rgba(40,25,5,.16); display: flex; flex-direction: column; }
+  .grabber { width: 36px; height: 5px; border-radius: 3px; background: var(--sep); margin: 6px auto 0; flex: none; }
+  .scroll { overflow-y: auto; flex: 1; padding: 0 var(--gutter) 12px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .pending { padding: 12px 0 14px; border-bottom: 1px solid var(--sep); }
+  .pending .top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .pending .t { font-size: 17px; font-weight: 600; line-height: 22px; }
+  .pending .a { font-size: 20px; font-weight: 700; color: var(--gain); white-space: nowrap; }
+  .primary { margin-top: 12px; width: 100%; height: 50px; border-radius: var(--r-control); background: var(--accent); color: var(--on-accent); font-size: 17px; font-weight: 600;
+    transition: transform var(--t-fast), filter var(--t-fast); }
+  .primary:active, .primary.pressed { transform: scale(.97); filter: brightness(.92); }
+  .primary:disabled { background: var(--paper-used); color: var(--ink-2); transform: none; cursor: default; }
+  .fine { margin-top: 8px; font-size: 13px; line-height: 18px; color: var(--ink-2); }
+  .collapse { overflow: hidden; transition: max-height 420ms var(--ease), opacity 200ms; max-height: 240px; }
+  .collapse.gone { max-height: 0; opacity: 0; }
+  h2 { margin: 18px 0 2px; font-size: 13px; font-weight: 600; color: var(--ink-2); letter-spacing: .02em; }
+  .tx { display: flex; align-items: center; gap: 12px; min-height: 58px; }
+  .tx + .tx .tx-body { border-top: 1px solid var(--sep); }
+  .tx-body { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 58px; }
+  .tx .ico { width: 32px; height: 32px; border-radius: 8px; flex: none; display: grid; place-items: center; background: var(--paper-used); color: var(--ink-2); }
+  .tx .ico svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .tx .n { font-size: 16px; line-height: 21px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 190px; }
+  .tx .m { font-size: 13px; line-height: 18px; color: var(--ink-2); }
+  .tx .v { font-size: 17px; font-weight: 600; white-space: nowrap; text-align: right; }
+  .tx .v.gain { color: var(--gain); }
+  .tx .v.sched { color: var(--ink-2); }
+  .tx.is-new .m { color: var(--accent); }
+
+  /* ── tab bar ─────────────────────────────────────────── */
+  .tabbar { flex: none; height: calc(49px + var(--safe-bottom)); padding-bottom: var(--safe-bottom); display: flex; background: var(--sheet); border-top: 1px solid var(--sep); }
+  .tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--ink-2); font-size: 10px; font-weight: 600; min-height: 49px; }
+  .tab svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .tab[aria-current="page"] { color: var(--accent); }
+  .tab[aria-current="page"] svg .fillable { fill: currentColor; fill-opacity: .14; }
+  .tab:active { opacity: .6; }
+
+  /* ── toast ───────────────────────────────────────────── */
+  .toast { position: absolute; left: 12px; right: 12px; bottom: calc(49px + var(--safe-bottom) + 10px); z-index: 20; min-height: 50px; border-radius: 12px; padding: 0 6px 0 16px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--ink); color: var(--paper); font-size: 15px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.25); transform: translateY(16px); opacity: 0; pointer-events: none; transition: transform 300ms var(--ease), opacity 200ms; }
+  .toast.show { transform: none; opacity: 1; pointer-events: auto; }
+  .toast button { min-width: 64px; height: 44px; border-radius: 8px; font-weight: 650; color: var(--paper); text-decoration: underline; text-underline-offset: 3px; }
+
+  /* ── states ──────────────────────────────────────────── */
+  .empty-slip { display: none; margin-top: 4px; height: 404px; border: 1.5px dashed var(--field-ink-2); border-radius: var(--r-paper); place-content: center; text-align: center; padding: 0 40px; color: var(--field-ink); }
+  .empty-slip strong { display: block; font-family: var(--display); font-stretch: 78%; font-size: 26px; line-height: 30px; margin-bottom: 8px; }
+  .empty-slip span { font-size: 15px; line-height: 21px; color: var(--field-ink-2); }
+  [data-state="empty"] .paper { display: none; }
+  [data-state="empty"] .empty-slip { display: grid; }
+  [data-state="empty"] .pending { display: none; }
+  [data-state="loading"] .slip .sec > *, [data-state="loading"] .stub > * { visibility: hidden; }
+  [data-state="loading"] .slip, [data-state="loading"] .stub { background: var(--paper-used); }
+  [data-state="loading"] .num.ld, [data-state="loading"] .tx-body > *, [data-state="loading"] .pending > * { color: transparent !important; background: var(--paper-used); border-radius: 4px; }
+  [data-state="loading"] .came-in .num { background: color-mix(in srgb, var(--field-ink) 12%, transparent); color: transparent; border-radius: 4px; }
+
+  /* ── entrance: field is there, then the slip comes out of the envelope ── */
+  @keyframes rise { from { opacity: 0; transform: translateY(26px); } }
+  @keyframes fade { from { opacity: 0; } }
+  @keyframes sheetUp { from { transform: translateY(70px); } }
+  .nav { animation: fade 300ms var(--ease) both; }
+  .came-in { animation: fade 300ms 120ms var(--ease) both; }
+  .paper, .empty-slip { animation: rise 560ms 180ms var(--ease) both; }
+  .sheet { animation: sheetUp 520ms 620ms var(--ease) both; }
+  .tx, .pending { animation: fade 280ms var(--ease) both; }
+  .pending { animation-delay: 820ms; }
+  .tx:nth-of-type(1) { animation-delay: 900ms; } .tx:nth-of-type(2) { animation-delay: 950ms; } .tx:nth-of-type(3) { animation-delay: 1000ms; } .tx:nth-of-type(n+4) { animation-delay: 1050ms; }
+  .tabbar { animation: fade 260ms 1000ms var(--ease) both; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition-duration: 1ms !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="statusbar">
+    <span>9:41</span>
+    <svg class="ios" viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" stroke="currentColor" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen" class="grain">
+    <header class="nav">
+      <div>
+        <h1>November</h1>
+        <p id="fresh"><span class="dot"></span><span id="freshText">Day 10 of 30 · updated 9:38</span></p>
+      </div>
+      <button class="icon-btn" id="hideBtn" aria-pressed="false" aria-label="Hide amounts">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path id="eyePath" d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle id="eyeDot" cx="12" cy="12" r="3"/><path id="eyeSlash" d="M4 4l16 16" style="display:none"/></svg>
+      </button>
+    </header>
+
+    <section class="hero" aria-label="This month's money">
+      <div class="came-in"><span>Came in this month</span><span class="num ld" data-amt="in"></span></div>
+
+      <div class="paper" id="paper">
+        <div class="slip" id="slip">
+          <div class="sec s-new" id="sNew" role="group">
+            <div class="halves" aria-hidden="true"><i></i><i><span class="zip"></span></i></div>
+            <div class="row"><span class="lbl">New · not split yet</span><span class="amt-s num" data-amt="new"></span></div>
+          </div>
+          <div class="sec s-safe" id="sSafe" role="group">
+            <div class="row"><span class="lbl">Safe to spend</span><span class="sub" id="perDay"></span></div>
+            <div class="big num" id="bigSafe"></div>
+          </div>
+          <div class="sec s-spent" id="sSpent" role="group">
+            <div class="row"><span class="lbl">Spent so far</span><span class="amt-s num" data-amt="spent"></span></div>
+            <div class="row" style="padding-top:2px"><span class="sub">37 payments · biggest: laptop repair $380.00</span></div>
+          </div>
+          <div class="sec s-bills" id="sBills" role="group">
+            <div class="row"><span class="lbl">Bills before Nov 30</span><span class="amt-s num" data-amt="bills"></span></div>
+          </div>
+        </div>
+        <div class="stub" id="sTax" role="group">
+          <div class="row"><span class="lbl">Set aside for taxes<span class="rate">28%</span></span><span class="amt-s num" data-amt="tax"></span></div>
+          <div class="row" style="padding-top:2px"><span class="sub">In your tax pot · next payment Jan 15</span></div>
+        </div>
+      </div>
+      <div class="empty-slip">
+        <div><strong>Nothing has come in yet</strong><span>When a client pays you, Pano tears off the tax share here and shows what is left to spend.</span></div>
+      </div>
+    </section>
+
+    <section class="sheet" aria-label="Activity">
+      <div class="grabber" aria-hidden="true"></div>
+      <div class="scroll">
+        <div class="collapse" id="pendingWrap">
+          <div class="pending">
+            <div class="top"><span class="t">Halvorsen Studio paid you</span><span class="a num" data-amt="pay" data-sign="+"></span></div>
+            <div class="fine" style="margin-top:2px">Invoice 0142 · 2 min ago</div>
+            <button class="primary" id="splitBtn">Set aside $336 for taxes</button>
+            <div class="fine" id="splitNote">28% of $1,200.00. The other $864.00 joins safe to spend.</div>
+          </div>
+        </div>
+        <h2>Recent</h2>
+        <div class="tx is-new" id="txNew">
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v10m-4-4 4 4 4-4"/><path d="M5 19h14"/></svg></span>
+          <div class="tx-body"><div><div class="n">Halvorsen Studio</div><div class="m" id="txNewMeta">Not split yet</div></div><div class="v gain num" data-amt="pay" data-sign="+"></div></div>
+        </div>
+        <div class="tx">
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v10m-4-4 4 4 4-4"/><path d="M5 19h14"/></svg></span>
+          <div class="tx-body"><div><div class="n">Mercer &amp; Lane Architects</div><div class="m">Nov 6 · $672.00 to taxes</div></div><div class="v gain num">+$2,400.00</div></div>
+        </div>
+        <div class="tx">
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4h12v16l-3-2-3 2-3-2-3 2z"/><path d="M9 9h6M9 13h4"/></svg></span>
+          <div class="tx-body"><div><div class="n">Coworking day pass</div><div class="m">Nov 9 · Card</div></div><div class="v num">−$24.50</div></div>
+        </div>
+        <div class="tx">
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></span>
+          <div class="tx-body"><div><div class="n">Studio rent</div><div class="m">Due Nov 28 · scheduled</div></div><div class="v sched num">$640.00</div></div>
+        </div>
+        <div class="tx">
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v10m-4-4 4 4 4-4"/><path d="M5 19h14"/></svg></span>
+          <div class="tx-body"><div><div class="n">Ozturk Packaging Co.</div><div class="m">Nov 3 · $907.20 to taxes</div></div><div class="v gain num">+$3,240.00</div></div>
+        </div>
+      </div>
+    </section>
+
+    <nav class="tabbar" aria-label="Main">
+      <button class="tab" aria-current="page"><svg viewBox="0 0 26 26" aria-hidden="true"><path class="fillable" d="M6 3.5h14a1 1 0 0 1 1 1v13H5v-13a1 1 0 0 1 1-1z"/><path d="M5 20.5h16" stroke-dasharray="1.6 2.4"/></svg>Home</button>
+      <button class="tab" data-soon="Income"><svg viewBox="0 0 26 26" aria-hidden="true"><path d="M13 4v11m-4.5-4.5L13 15l4.5-4.5"/><path d="M4.5 15.5v3a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-3"/></svg>Income</button>
+      <button class="tab" data-soon="Taxes"><svg viewBox="0 0 26 26" aria-hidden="true"><path d="M6 8.5 8 7l2 1.5L12 7l2 1.5L16 7l2 1.5L20 7v13.5H6z"/><path d="M9.5 13h7M9.5 16.5h4.5"/></svg>Taxes</button>
+      <button class="tab" data-soon="Bills"><svg viewBox="0 0 26 26" aria-hidden="true"><rect x="4.5" y="5.5" width="17" height="15.5" rx="2"/><path d="M4.5 10.5h17M9.5 3.5v4M16.5 3.5v4"/></svg>Bills</button>
+    </nav>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastText"></span><button id="undoBtn">Undo</button></div>
+  </main>
+
+  <div class="home-indicator"></div>
+
+<script>
+(() => {
+  // Sample data. Every section of the slip is drawn to scale: the whole slip is what came in.
+  const MONEY_PX = 404, RATE = 0.28, DAYS_LEFT = 20;
+  const before = { in: 6840, new: 1200, safe: 1311, spent: 2110, bills: 640, tax: 1579, pay: 1200 };
+  const taxCut = Math.round(before.new * RATE);                     // 336
+  const after = { ...before, new: 0, safe: before.safe + before.new - taxCut, tax: before.tax + taxCut };
+  const sum = s => s.new + s.safe + s.spent + s.bills + s.tax;
+  console.assert(sum(before) === before.in && sum(after) === after.in, "slip sections must add up to what came in");
+
+  const q = new URLSearchParams(location.search);
+  const root = document.documentElement;
+  if (q.get("theme") === "dark" || (!q.get("theme") && matchMedia("(prefers-color-scheme: dark)").matches)) root.dataset.theme = "dark";
+  const state = q.get("state") || "content";
+  root.dataset.state = state;
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // grain texture for the kraft field
+  const g = `<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .3  0 0 0 0 .2  0 0 0 0 .05  0 0 0 VAR 0'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>`;
+  root.style.setProperty("--grain", `url("data:image/svg+xml,${encodeURIComponent(g.replace("VAR", getComputedStyle(root).getPropertyValue("--grain-op").trim() || ".1"))}")`);
+
+  let hidden = false, cur = { ...before };
+  if (state === "empty") cur = { in: 0, new: 0, safe: 0, spent: 0, bills: 0, tax: 0 };
+
+  const money = (n, sign = "") => hidden ? "$ ••••" : sign + "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const words = n => `${Math.floor(n).toLocaleString("en-US")} dollars${n % 1 ? " " + Math.round((n % 1) * 100) + " cents" : ""}`;
+  const $ = id => document.getElementById(id);
+  const secs = { new: $("sNew"), safe: $("sSafe"), spent: $("sSpent"), bills: $("sBills"), tax: $("sTax") };
+  const names = { new: "New, not split yet", safe: "Safe to spend", spent: "Spent so far", bills: "Bills before November 30", tax: "Set aside for taxes, 28 percent" };
+
+  // painted notches at each perforation (left + right), coloured like the field
+  const notches = [0, 1, 2].map(() => ["l", "r"].map(side => { const n = document.createElement("span"); n.className = `notch ${side} grain`; $("slip").appendChild(n); return n; }));
+
+  function render(s, shownSafe = s.safe, shownTax = s.tax) {
+    document.querySelectorAll("[data-amt]").forEach(el => {
+      const k = el.dataset.amt, v = k === "tax" ? shownTax : s[k] ?? before[k];
+      el.textContent = money(v, el.dataset.sign || "");
+    });
+    const [int, dec] = shownSafe.toFixed(2).split(".");
+    $("bigSafe").innerHTML = hidden ? `<span class="cur">$</span>••••` : `<span class="cur">$</span>${(+int).toLocaleString("en-US")}<span class="dec">.${dec}</span>`;
+    $("perDay").textContent = hidden ? "" : `about $${Math.floor(s.safe / DAYS_LEFT)} a day · ${DAYS_LEFT} days left`;
+    for (const k in secs) secs[k].setAttribute("aria-label", hidden ? `${names[k]}, hidden` : `${names[k]}, ${words(k === "safe" ? s.safe : s[k])}`);
+  }
+
+  function layout(s) {
+    const px = v => s.in ? v / s.in * MONEY_PX : 0;
+    const h = { new: px(s.new), safe: px(s.safe), spent: px(s.spent), bills: px(s.bills), tax: px(s.tax) };
+    for (const k in h) secs[k].style.height = h[k] + "px";
+    // hero numerals grow with the share that is actually yours
+    $("bigSafe").style.fontSize = Math.max(48, Math.min(76, h.safe - 34)) + "px";
+    const cuts = [h.new, h.new + h.safe, h.new + h.safe + h.spent];
+    notches.forEach((pair, i) => pair.forEach(n => { n.style.top = cuts[i] + "px"; n.style.display = (i === 0 && !h.new) ? "none" : ""; }));
+  }
+
+  function tween(from, to, ms, fn) {
+    if (reduce) return fn(1);
+    const t0 = performance.now();
+    const step = t => { const p = Math.min(1, (t - t0) / ms), e = 1 - Math.pow(1 - p, 3); fn(e); if (p < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  }
+
+  let toastTimer;
+  function toast(text, undo) {
+    $("toastText").textContent = text;
+    $("undoBtn").style.display = undo ? "" : "none";
+    $("toast").classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => $("toast").classList.remove("show"), 5000);
+  }
+
+  let split = false;
+  function doSplit() {
+    if (split || state !== "content") return;
+    split = true;
+    navigator.vibrate?.(10); // native: UINotificationFeedbackGenerator .success when the stub lands
+    const n = $("sNew");
+    n.classList.add("zipping");                                   // 1. perforation runs across the new payment
+    setTimeout(() => n.classList.add("splitting"), reduce ? 0 : 300);  // 2. its two shares take their colours
+    setTimeout(() => {                                            // 3. shares join safe-to-spend and the tax stub
+      cur = { ...after };
+      layout(cur);
+      $("sTax").classList.add("tug");
+      setTimeout(() => $("sTax").classList.remove("tug"), 380);
+      tween(0, 1, 620, e => render(cur, before.safe + (after.safe - before.safe) * e, before.tax + (after.tax - before.tax) * e));
+      $("pendingWrap").classList.add("gone");
+      $("txNewMeta").textContent = `Just now · $${taxCut}.00 to taxes`;
+      $("txNew").classList.remove("is-new");
+      toast(`$${taxCut}.00 set aside for taxes`, true);
+    }, reduce ? 0 : 480);
+  }
+  function undoSplit() {
+    if (!split) return;
+    split = false;
+    cur = { ...before };
+    const n = $("sNew"); n.classList.remove("zipping", "splitting");
+    layout(cur); render(cur);
+    $("pendingWrap").classList.remove("gone");
+    $("txNewMeta").textContent = "Not split yet";
+    $("txNew").classList.add("is-new");
+    toast("Back to not split", false);
+  }
+
+  $("splitBtn").addEventListener("click", doSplit);
+  $("undoBtn").addEventListener("click", undoSplit);
+  $("hideBtn").addEventListener("click", () => {
+    hidden = !hidden;
+    $("hideBtn").setAttribute("aria-pressed", hidden);
+    $("hideBtn").setAttribute("aria-label", hidden ? "Show amounts" : "Hide amounts");
+    $("eyeSlash").style.display = hidden ? "" : "none";
+    render(cur);
+  });
+  document.querySelectorAll("[data-soon]").forEach(b => b.addEventListener("click", () => toast(`${b.dataset.soon} is not in this prototype`, false)));
+
+  if (state === "offline") {
+    $("freshText").textContent = "Offline · showing 9:12";
+    $("splitBtn").disabled = true;
+    $("splitNote").textContent = "You are offline. Reconnect to set this aside.";
+  }
+  if (state === "empty") {
+    $("freshText").textContent = "Day 1 of 30 · updated 9:38";
+    document.querySelectorAll(".tx").forEach(t => t.remove());
+    document.querySelector("h2").insertAdjacentHTML("afterend", `<p class="fine" style="font-size:15px;line-height:21px">Payments into your business account show up here, already split.</p>`);
+  }
+
+  // first paint: sections grow into place and the safe figure counts up once
+  layout({ in: cur.in || 1, new: 0, safe: 0, spent: 0, bills: 0, tax: 0 });
+  render(cur, 0, 0);
+  setTimeout(() => {
+    layout(cur);
+    tween(0, 1, 700, e => render(cur, cur.safe * e, cur.tax * e));
+  }, reduce ? 0 : 260);
+
+  // demo: run the main interaction once so the screen explains itself
+  if (!reduce && state === "content") setTimeout(() => {
+    $("splitBtn").classList.add("pressed");
+    setTimeout(() => { $("splitBtn").classList.remove("pressed"); doSplit(); }, 140);
+  }, 3400);
+})();
+</script>
+</body>
+</html>

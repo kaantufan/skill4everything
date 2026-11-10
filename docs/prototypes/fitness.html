@@ -1,0 +1,425 @@
+<!doctype html>
+<!-- Kadans · post-run summary · HTML prototype (393x852, iOS). Hash options: #dark, #splits (scrolled), #nogps (no-route state). -->
+<html lang="en" data-platform="ios" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kadans · Run summary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px;
+    --font: -apple-system, "SF Pro Text", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+    --chrome: #fff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  /* body is the device: headless browsers can enforce a wider minimum window, so nothing may depend on the viewport */
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--field); color: var(--ink); }
+  .statusbar {
+    position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 10;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none;
+  }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  .home-indicator {
+    position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 30;
+    width: 134px; height: 5px; border-radius: 3px; background: var(--ink); opacity: .9; pointer-events: none;
+  }
+  #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+</style>
+<style>
+  /* ---------- PRODUCT TOKENS: Kadans. Source: an athletics track (tartan rubber, lane paint, relay marks) ---------- */
+  :root {
+    --field: #B03A25;          /* tartan rubber: the ground of the hero */
+    --field-lit: #C24A31;      /* same rubber where the light falls (top-left) */
+    --paint: #FFF5EB;          /* lane paint: route, primary text on the field */
+    --on-field-2: #FBE3D8;     /* secondary text on the field (4.9:1) */
+    --mark: #F5C842;           /* relay-zone yellow: the selected split, nothing else */
+    --sheet: #F7F0E8;          /* infield sheet */
+    --ink: #2A1813;
+    --ink-2: #6E5A52;          /* 5.7:1 on sheet */
+    --hair: rgba(42,24,19,.13);
+    --press: rgba(176,58,37,.08);
+    --selected: rgba(245,200,66,.30);
+    --faster: #B03A25;
+    --slower: #9A867C;         /* 3:1 on sheet */
+    --btn: #B03A25; --on-btn: #FFF5EB;
+    --display: "Barlow Condensed", "DIN Condensed", "Arial Narrow", sans-serif;
+    --r-control: 16px; --r-row: 12px; --r-sheet: 28px;
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
+    --t-quick: 160ms; --ease-out: cubic-bezier(.2,.8,.2,1); --spring: cubic-bezier(.25,1.25,.4,1);
+  }
+  [data-theme="dark"] {
+    color-scheme: dark;
+    --field: #7C2717; --field-lit: #8E3020;
+    --paint: #FBEDE2; --on-field-2: #F0CFC2;
+    --mark: #E9BE45;
+    --sheet: #1C1411; --ink: #F4EAE2; --ink-2: #B9A69C;
+    --hair: rgba(244,234,226,.12); --press: rgba(244,234,226,.06); --selected: rgba(233,190,69,.20);
+    --faster: #E0654B; --slower: #7F6B62;
+    --btn: #E0654B; --on-btn: #1C1411;
+  }
+
+  /* ---------- layout ---------- */
+  .scroll { position: absolute; inset: 0; overflow-y: auto; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  .field {
+    position: relative; height: 452px; padding-top: var(--safe-top);
+    background:
+      radial-gradient(120% 80% at 15% 0%, var(--field-lit) 0%, transparent 60%),
+      var(--field);
+    color: var(--paint); overflow: hidden;
+  }
+  /* rubber grain, very low contrast */
+  .field::before {
+    content: ""; position: absolute; inset: 0; opacity: .22; mix-blend-mode: soft-light; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .lanes { position: absolute; right: -120px; bottom: -150px; width: 420px; height: 420px; pointer-events: none; opacity: .10; }
+
+  .nav { position: relative; z-index: 2; height: 52px; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--s2); }
+  .nav-title { position: absolute; left: 0; right: 0; text-align: center; pointer-events: none; line-height: 1.15; }
+  .nav-title b { display: block; font-size: 16px; font-weight: 600; }
+  .nav-title span { font-size: 13px; color: var(--on-field-2); }
+  .text-btn {
+    min-width: 44px; min-height: 44px; padding: 0 var(--s2); border: 0; background: none; color: var(--paint);
+    font: 500 16px var(--font); border-radius: var(--r-row); cursor: pointer; position: relative; z-index: 1;
+  }
+  .text-btn:active { background: rgba(255,245,235,.14); }
+  .text-btn:focus-visible, .split:focus-visible, .primary:focus-visible { outline: 3px solid var(--mark); outline-offset: 2px; }
+
+  .route { position: absolute; left: 0; top: 104px; width: 393px; height: 236px; }
+  .route .base { fill: none; stroke: var(--paint); stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round;
+                 stroke-dasharray: 1000; stroke-dashoffset: 0; transition: opacity var(--t-quick); }
+  .route .shadow { fill: none; stroke: rgba(60,12,4,.35); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; transform: translate(1.5px, 2.5px); }
+  .route.has-sel .base { opacity: .55; }
+  .route .seg { fill: none; stroke: var(--mark); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; opacity: 0;
+                transition: stroke-dashoffset 380ms var(--spring), stroke-dasharray 380ms var(--spring), opacity var(--t-quick); }
+  .route.has-sel .seg { opacity: 1; }
+  .route .sweep { fill: none; stroke: #fff; stroke-width: 9; stroke-linecap: round; opacity: 0; filter: blur(2px); }
+  .route .km circle { fill: var(--paint); }
+  .route .km text { font: 700 11px var(--display); fill: var(--field); text-anchor: middle; dominant-baseline: central; }
+  .route .km.on circle { fill: var(--mark); }
+  .route .km.on text { fill: #3A1A0C; }
+  .route .finish { stroke: var(--paint); stroke-width: 3; stroke-linecap: round; }
+  .route .ghost { fill: var(--paint); }
+  .route .ghost-halo { fill: var(--paint); opacity: .25; }
+  .callout { opacity: 0; transition: opacity var(--t-quick); pointer-events: none; }
+  .route.has-sel .callout { opacity: 1; }
+  .callout rect { fill: #2A1006; opacity: .82; }
+  .callout text { font: 600 14px var(--display); fill: var(--paint); text-anchor: middle; dominant-baseline: central; letter-spacing: .02em; }
+
+  .nogps-note { display: none; position: absolute; left: var(--s5); right: var(--s5); top: 150px; font-size: 15px; line-height: 1.4; color: var(--on-field-2); }
+  .nogps-note b { display: block; color: var(--paint); font-size: 17px; font-weight: 600; margin-bottom: var(--s1); }
+
+  .distance { position: absolute; left: var(--s5); bottom: 52px; display: flex; align-items: baseline; gap: var(--s2);
+              font-family: var(--display); font-variant-numeric: tabular-nums; line-height: .8; }
+  .distance .int { font-size: 120px; font-weight: 700; letter-spacing: -.01em; }
+  .distance .dec { font-size: 76px; font-weight: 600; margin-left: -6px; color: var(--paint); }
+  .distance .unit { font-size: 28px; font-weight: 600; color: var(--on-field-2); letter-spacing: .04em; text-transform: uppercase; }
+
+  .sheet { position: relative; margin-top: -28px; background: var(--sheet); border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+           padding: var(--s5) var(--s4) 132px; min-height: 480px; }
+
+  .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 0 var(--s2); }
+  .stat + .stat { border-left: 1px solid var(--hair); padding-left: var(--s4); }
+  .stat .v { font: 600 34px/1 var(--display); font-variant-numeric: tabular-nums; }
+  .stat .v small { font-size: 17px; font-weight: 500; color: var(--ink-2); margin-left: 2px; }
+  .stat .l { font-size: 13px; color: var(--ink-2); margin-top: var(--s1); }
+
+  .insight { display: flex; gap: var(--s3); align-items: flex-start; margin: var(--s5) var(--s2) 0; font-size: 15px; line-height: 1.4; }
+  .insight svg { flex: none; width: 22px; height: 22px; margin-top: 1px; color: var(--faster); }
+
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; margin: var(--s6) var(--s2) var(--s2); }
+  .section-head h2 { margin: 0; font: 600 24px var(--display); letter-spacing: .02em; text-transform: uppercase; }
+  .section-head span { font-size: 13px; color: var(--ink-2); }
+
+  .axis { display: grid; grid-template-columns: 40px 52px 1fr 44px; gap: var(--s2); padding: 0 var(--s2) var(--s1); font-size: 12px; color: var(--ink-2); }
+  .axis .mid { text-align: center; }
+
+  .split {
+    display: grid; grid-template-columns: 40px 52px 1fr 44px; gap: var(--s2); align-items: center;
+    width: 100%; min-height: 52px; padding: 0 var(--s2); border: 0; border-radius: var(--r-row);
+    background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer;
+    transition: background var(--t-quick);
+  }
+  .split:active { background: var(--press); }
+  .split[aria-pressed="true"] { background: var(--selected); }
+  .split + .split { margin-top: 2px; }
+  .split .k { font: 600 20px var(--display); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .split .p { font: 600 22px var(--display); font-variant-numeric: tabular-nums; }
+  .split .d { font-size: 13px; color: var(--ink-2); text-align: right; font-variant-numeric: tabular-nums; }
+  .bar { position: relative; height: 12px; }
+  .bar::before { content: ""; position: absolute; left: 50%; top: -6px; bottom: -6px; width: 1px; background: var(--hair); }
+  .bar i { position: absolute; top: 0; height: 12px; border-radius: 3px; }
+  .bar i.fast { left: 50%; background: var(--faster); border-radius: 0 3px 3px 0; }
+  .bar i.slow { right: 50%; background: var(--slower); border-radius: 3px 0 0 3px; }
+  .tag { display: block; margin-top: 2px; font: 700 11px var(--font); letter-spacing: .04em; text-transform: uppercase; color: var(--faster); }
+
+  /* once the field scrolls away, a sheet-coloured bar keeps the status bar readable */
+  .topbar { position: absolute; inset: 0 0 auto 0; z-index: 9; height: calc(var(--safe-top) + 40px); padding-top: var(--safe-top);
+            background: color-mix(in srgb, var(--sheet) 92%, transparent); backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--hair); text-align: center; font-size: 15px; font-weight: 600;
+            opacity: 0; transition: opacity var(--t-quick); pointer-events: none; }
+  .scrolled .topbar { opacity: 1; }
+  .scrolled { --chrome: var(--ink); }
+
+  .source { margin: var(--s5) var(--s2) 0; font-size: 13px; line-height: 1.45; color: var(--ink-2); display: flex; gap: var(--s2); }
+  .source svg { flex: none; width: 16px; height: 16px; margin-top: 1px; }
+
+  .dock { position: absolute; left: 0; right: 0; bottom: 0; z-index: 20; padding: var(--s6) var(--s4) calc(var(--safe-bottom) + var(--s2));
+          background: linear-gradient(to bottom, transparent, var(--sheet) 34%); }
+  .primary {
+    width: 100%; height: 56px; border: 0; border-radius: var(--r-control); background: var(--btn); color: var(--on-btn);
+    font: 600 17px var(--font); display: flex; align-items: center; justify-content: center; gap: var(--s2); cursor: pointer;
+    transition: transform 120ms var(--ease-out), filter 120ms;
+  }
+  .primary:active { transform: scale(.97); filter: brightness(.92); }
+  .primary[aria-disabled="true"] { pointer-events: none; }
+  .primary svg { width: 20px; height: 20px; }
+  .dock-note { text-align: center; font-size: 13px; color: var(--ink-2); margin-top: var(--s2); min-height: 18px; }
+
+  /* alert */
+  .scrim { position: absolute; inset: 0; z-index: 40; background: rgba(20,8,4,.42); display: none; align-items: center; justify-content: center; }
+  .scrim.open { display: flex; }
+  .alert { width: 270px; border-radius: 14px; background: rgba(250,246,242,.97); color: #1d120e; text-align: center; overflow: hidden; }
+  [data-theme="dark"] .alert { background: rgba(44,36,33,.97); color: #f4eae2; }
+  .alert h3 { margin: 20px 16px 4px; font-size: 17px; font-weight: 600; }
+  .alert p { margin: 0 16px 18px; font-size: 13px; line-height: 1.4; }
+  .alert .row { display: flex; border-top: 1px solid var(--hair); }
+  .alert button { flex: 1; min-height: 44px; border: 0; background: none; font: 400 17px var(--font); color: #0a6fe0; cursor: pointer; }
+  .alert button + button { border-left: 1px solid var(--hair); }
+  .alert .destroy { color: #d7301f; }
+  .alert .keep { font-weight: 600; }
+
+  /* ---------- states ---------- */
+  .nogps .route { display: none; }
+  .nogps .nogps-note { display: block; }
+  .nogps .split { pointer-events: none; }
+
+  /* ---------- entrance: field, route draws, number, sheet, rows, dock (~1.2 s) ---------- */
+  @keyframes draw { from { stroke-dashoffset: 1000; } to { stroke-dashoffset: 0; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+  @keyframes sheetIn { from { transform: translateY(80px); } to { transform: none; } }
+  @keyframes pop { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
+  @keyframes sweep { 0% { opacity: .9; stroke-dashoffset: 1000; } 85% { opacity: .9; } 100% { opacity: 0; stroke-dashoffset: 0; } }
+  .route .base, .route .shadow { animation: draw 900ms var(--ease-out) 120ms both; }
+  .route .km { animation: pop 260ms var(--spring) both; }
+  .distance { animation: rise 420ms var(--ease-out) 380ms both; }
+  .nav { animation: rise 300ms var(--ease-out) 60ms both; }
+  .sheet { animation: sheetIn 560ms var(--spring) 520ms both; }
+  .sheet > * { animation: rise 380ms var(--ease-out) both; }
+  .dock { animation: rise 360ms var(--ease-out) 1000ms both; }
+  .route .sweep.go { animation: sweep 700ms var(--ease-out) both; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .route .ghost, .route .ghost-halo { display: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="statusbar" aria-hidden="true">
+    <span>9:41</span>
+    <svg viewBox="0 0 66 12">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen">
+    <div class="scroll" id="scroll">
+      <section class="field" aria-label="Run overview">
+        <svg class="lanes" viewBox="0 0 420 420" aria-hidden="true" fill="none" stroke="#fff" stroke-width="2">
+          <circle cx="420" cy="420" r="150"/><circle cx="420" cy="420" r="190"/><circle cx="420" cy="420" r="230"/>
+          <circle cx="420" cy="420" r="270"/><circle cx="420" cy="420" r="310"/><circle cx="420" cy="420" r="350"/>
+        </svg>
+
+        <div class="nav">
+          <button class="text-btn" id="discard">Discard</button>
+          <div class="nav-title"><b>Morning run</b><span>Tue 10 Nov · 07:12</span></div>
+          <span style="width:44px" aria-hidden="true"></span>
+        </div>
+
+        <svg class="route" id="route" viewBox="0 0 393 236" role="img" aria-label="Route map: an 8.42 kilometre loop that starts and finishes at the same corner. Select a split below to find that kilometre on the map.">
+          <path class="shadow" pathLength="1000" d="M84 196 C 66 160, 74 128, 112 114 C 150 100, 164 70, 200 50 C 238 29, 300 22, 334 48 C 366 73, 360 116, 326 136 C 296 154, 306 182, 274 198 C 242 214, 206 206, 182 190 C 158 174, 130 200, 106 208 C 94 212, 88 206, 92 200"/>
+          <path class="base" id="path" pathLength="1000" d="M84 196 C 66 160, 74 128, 112 114 C 150 100, 164 70, 200 50 C 238 29, 300 22, 334 48 C 366 73, 360 116, 326 136 C 296 154, 306 182, 274 198 C 242 214, 206 206, 182 190 C 158 174, 130 200, 106 208 C 94 212, 88 206, 92 200"/>
+          <path class="seg" id="seg" pathLength="1000" d="M84 196 C 66 160, 74 128, 112 114 C 150 100, 164 70, 200 50 C 238 29, 300 22, 334 48 C 366 73, 360 116, 326 136 C 296 154, 306 182, 274 198 C 242 214, 206 206, 182 190 C 158 174, 130 200, 106 208 C 94 212, 88 206, 92 200"/>
+          <path class="sweep" id="sweep" pathLength="1000" stroke-dasharray="60 1000" d="M84 196 C 66 160, 74 128, 112 114 C 150 100, 164 70, 200 50 C 238 29, 300 22, 334 48 C 366 73, 360 116, 326 136 C 296 154, 306 182, 274 198 C 242 214, 206 206, 182 190 C 158 174, 130 200, 106 208 C 94 212, 88 206, 92 200"/>
+          <g id="marks"></g>
+          <circle class="ghost-halo" id="ghostHalo" r="9" cx="-20" cy="-20"/>
+          <circle class="ghost" id="ghost" r="4" cx="-20" cy="-20"/>
+          <g class="callout" id="callout"><rect x="-44" y="-15" width="88" height="30" rx="8"/><text id="calloutText">KM 8 · 5:18</text></g>
+        </svg>
+
+        <p class="nogps-note"><b>No route for this run</b>GPS never got a fix, so the distance and splits are estimated from Apple Watch motion.</p>
+
+        <div class="distance" aria-label="Distance 8.42 kilometres">
+          <span class="int" aria-hidden="true">8</span><span class="dec" aria-hidden="true">.42</span><span class="unit" aria-hidden="true">km</span>
+        </div>
+      </section>
+
+      <section class="sheet">
+        <div class="stats" style="animation-delay:640ms">
+          <div class="stat"><div class="v">47:18</div><div class="l">Time</div></div>
+          <div class="stat"><div class="v">5:37<small>/km</small></div><div class="l">Avg pace</div></div>
+          <div class="stat"><div class="v">5:18<small>/km</small></div><div class="l">Fastest · km 8</div></div>
+        </div>
+
+        <p class="insight" style="animation-delay:700ms">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>
+          <span>Negative split. Km 5–8 took 21:46, which is 1:06 less than km 1–4.</span>
+        </p>
+
+        <div class="section-head" id="splitsHead" style="animation-delay:760ms">
+          <h2>Splits</h2><span id="hint">Tap a km to find it on the map</span>
+        </div>
+        <div class="axis" aria-hidden="true" style="animation-delay:780ms"><span>Km</span><span>Pace</span><span class="mid">slower · avg 5:37 · faster</span><span></span></div>
+        <div id="splits" role="group" aria-label="Splits per kilometre"></div>
+
+        <p class="source">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="7" y="5" width="10" height="14" rx="3"/><path d="M9 5l1-3h4l1 3M9 19l1 3h4l1-3"/></svg>
+          <span id="sourceText">Recorded on Apple Watch with GPS. Saving keeps it in your log only; you choose later whether to share it.</span>
+        </p>
+      </section>
+    </div>
+
+    <div class="topbar" aria-hidden="true">Morning run · 8.42 km</div>
+
+    <div class="dock">
+      <button class="primary" id="save">Save run</button>
+      <div class="dock-note" id="dockNote" aria-live="polite"></div>
+    </div>
+
+    <div class="scrim" id="scrim">
+      <div class="alert" role="alertdialog" aria-modal="true" aria-labelledby="aTitle" aria-describedby="aBody">
+        <h3 id="aTitle">Discard this run?</h3>
+        <p id="aBody">8.42 km and its route will be deleted from this phone and your watch. This can't be undone.</p>
+        <div class="row"><button class="destroy" id="aDiscard">Discard</button><button class="keep" id="aKeep">Keep run</button></div>
+      </div>
+    </div>
+  </main>
+
+  <div class="home-indicator"></div>
+
+<script>
+  // Sample data: 8.42 km in 47:18. Splits in seconds; the last is the 0.42 km remainder.
+  const KM = 8.42;
+  const splits = [352, 341, 335, 344, 329, 333, 326, 318, 160];
+  const total = splits.reduce((a, b) => a + b, 0);            // 2838 s = 47:18
+  const avg = total / KM;                                       // 337 s/km = 5:37
+  const paceOf = (s, i) => i === 8 ? s / (KM - 8) : s;          // per-km pace
+  const fmt = s => `${Math.floor(Math.round(s) / 60)}:${String(Math.round(s) % 60).padStart(2, "0")}`;
+  console.assert(total === 2838 && fmt(avg) === "5:37" && fmt(paceOf(160, 8)) === "6:21", "sample data out of sync");
+
+  const opts = location.hash.slice(1).split(",");
+  if (opts.includes("dark")) document.documentElement.dataset.theme = "dark";
+  if (opts.includes("nogps")) {
+    document.body.classList.add("nogps");
+    document.getElementById("hint").textContent = "Estimated from motion";
+    document.getElementById("sourceText").textContent = "Recorded on Apple Watch without GPS. Distance is an estimate; saving keeps it in your log only.";
+  }
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const path = document.getElementById("path"), seg = document.getElementById("seg"), route = document.getElementById("route");
+  const L = path.getTotalLength(), at = f => path.getPointAtLength(L * f);
+
+  // km markers and finish line
+  const marks = document.getElementById("marks"), ns = "http://www.w3.org/2000/svg";
+  for (let k = 1; k <= 8; k++) {
+    const p = at(k / KM), g = document.createElementNS(ns, "g");
+    g.setAttribute("class", "km"); g.dataset.k = k;
+    g.style.animationDelay = `${120 + 900 * (k / KM)}ms`;
+    g.innerHTML = `<circle cx="${p.x}" cy="${p.y}" r="9"/><text x="${p.x}" y="${p.y + .5}">${k}</text>`;
+    marks.appendChild(g);
+  }
+  const s = at(0), f = at(1), f2 = at(.995), ang = Math.atan2(f.y - f2.y, f.x - f2.x) + Math.PI / 2;
+  marks.insertAdjacentHTML("afterbegin",
+    `<circle cx="${s.x}" cy="${s.y}" r="6" fill="none" stroke="var(--paint)" stroke-width="3"/>` +
+    `<line class="finish" x1="${f.x - 9 * Math.cos(ang)}" y1="${f.y - 9 * Math.sin(ang)}" x2="${f.x + 9 * Math.cos(ang)}" y2="${f.y + 9 * Math.sin(ang)}"/>`);
+
+  // split rows
+  const list = document.getElementById("splits");
+  const fastest = splits.slice(0, 8).indexOf(Math.min(...splits.slice(0, 8)));
+  splits.forEach((t, i) => {
+    const pace = paceOf(t, i), d = Math.round(pace - avg), w = Math.min(Math.abs(d) / 45, 1) * 50;
+    const b = document.createElement("button");
+    b.className = "split"; b.setAttribute("aria-pressed", "false"); b.dataset.i = i;
+    b.style.animationDelay = `${820 + i * 40}ms`;
+    const label = i === 8 ? "0.42" : i + 1;
+    b.setAttribute("aria-label", `Kilometre ${label}, ${fmt(pace)} per kilometre, ${Math.abs(d)} seconds ${d <= 0 ? "faster" : "slower"} than average${i === fastest ? ", fastest" : ""}`);
+    b.innerHTML = `<span class="k">${label}</span><span class="p">${fmt(pace)}</span>` +
+      `<span class="bar"><i class="${d <= 0 ? "fast" : "slow"}" style="width:${w}%"></i></span>` +
+      `<span class="d">${d === 0 ? "avg" : (d < 0 ? "−" : "+") + Math.abs(d) + "s"}</span>`;
+    list.appendChild(b);
+  });
+  list.children[fastest].querySelector(".p").insertAdjacentHTML("beforeend", '<span class="tag">Fastest</span>');
+
+  const scroller = document.getElementById("scroll");
+  scroller.addEventListener("scroll", () => document.body.classList.toggle("scrolled", scroller.scrollTop > 330));
+
+  // selecting a split lights that stretch of the route in relay-zone yellow
+  const callout = document.getElementById("callout"), calloutText = document.getElementById("calloutText");
+  let sel = -1;
+  function select(i) {
+    sel = sel === i ? -1 : i;
+    [...list.children].forEach((r, j) => r.setAttribute("aria-pressed", String(j === sel)));
+    [...marks.querySelectorAll(".km")].forEach(m => m.classList.toggle("on", +m.dataset.k === sel + 1));
+    route.classList.toggle("has-sel", sel >= 0);
+    if (sel < 0) return;
+    const a = sel / KM, b = Math.min((sel + 1) / KM, 1);
+    seg.style.strokeDasharray = `${(b - a) * 1000} 1000`;
+    seg.style.strokeDashoffset = `${-a * 1000}`;
+    const m = at((a + b) / 2), x = Math.max(48, Math.min(345, m.x)), y = m.y < 40 ? m.y + 28 : m.y - 28;
+    callout.setAttribute("transform", `translate(${x} ${y})`);
+    calloutText.textContent = `KM ${sel === 8 ? "0.42" : sel + 1} · ${fmt(paceOf(splits[sel], sel))}`;
+  }
+  list.addEventListener("click", e => { const r = e.target.closest(".split"); if (r) select(+r.dataset.i); });
+
+  // living loop: a ghost runner retraces the route every 9 s (rAF pauses when the tab is hidden)
+  if (!reduce) {
+    const ghost = document.getElementById("ghost"), halo = document.getElementById("ghostHalo"), t0 = performance.now() + 1100;
+    (function tick(now) {
+      const t = Math.max(0, now - t0) / 9000 % 1, p = at(t);
+      ghost.setAttribute("cx", p.x); ghost.setAttribute("cy", p.y);
+      halo.setAttribute("cx", p.x); halo.setAttribute("cy", p.y);
+      halo.setAttribute("r", 7 + 3 * Math.sin(now / 300));
+      requestAnimationFrame(tick);
+    })(performance.now());
+  }
+
+  // primary action: save paints one bright pass along the route, then the button becomes Done
+  const save = document.getElementById("save"), note = document.getElementById("dockNote"), sweep = document.getElementById("sweep");
+  const check = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  let saved = false;
+  save.addEventListener("click", () => {
+    if (saved) { location.reload(); return; }   // prototype: "Done" leaves the screen, here it replays the demo
+    saved = true;
+    sweep.classList.remove("go"); void sweep.getBoundingClientRect(); sweep.classList.add("go");
+    save.innerHTML = check + "Saved"; save.setAttribute("aria-disabled", "true");
+    document.getElementById("discard").hidden = true;
+    note.textContent = "In your log · only you can see it";
+    setTimeout(() => { save.textContent = "Done"; save.removeAttribute("aria-disabled"); }, reduce ? 0 : 1100);
+  });
+
+  // discard is kept apart from save and always asks
+  const scrim = document.getElementById("scrim");
+  document.getElementById("discard").addEventListener("click", () => { scrim.classList.add("open"); document.getElementById("aKeep").focus(); });
+  document.getElementById("aKeep").addEventListener("click", () => scrim.classList.remove("open"));
+  document.getElementById("aDiscard").addEventListener("click", () => { scrim.classList.remove("open"); note.textContent = "Run discarded"; save.setAttribute("aria-disabled", "true"); });
+  addEventListener("keydown", e => { if (e.key === "Escape") scrim.classList.remove("open"); });
+
+  if (opts.includes("splits")) { scroller.scrollTop = 420; document.body.classList.add("scrolled"); }
+  // demo: after the entrance, point at the fastest km once so the link between list and map explains itself
+  if (!reduce && !opts.includes("nogps")) setTimeout(() => sel < 0 && select(fastest), 2600);
+  if (opts.includes("sel")) select(fastest);
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: fitness-run-summary
+expected_outcome: |
+  A single-file animated HTML prototype whose first screen is built around one concept from the product's own world, with a hero that carries the main value, an identity that belongs to this product, working motion, and a short report of the concept and of what was not verified.
