@@ -4,43 +4,61 @@ Kişisel kullanım için AI ajan skill'leri. Açık standart olan `SKILL.md` bi�
 
 | Skill | Ne yapar |
 |---|---|
-| [`mobile-ui-craft`](skills/mobile-ui-craft/SKILL.md) | Mobil uygulama arayüzünü tasarlar, yazar, yeniden stillendirir ve inceler: her uygulamaya kendine ait, akılda kalan bir kimlik verir |
+| [`mobile-ui-craft`](skills/mobile-ui-craft/SKILL.md) | Mobil uygulama arayüzünü tasarlar, yazar, yeniden stillendirir ve inceler: her uygulamaya kendine ait, AI yapımı gibi görünmeyen bir görünüm verir |
 
 ## mobile-ui-craft
 
 iOS (SwiftUI, UIKit), Android (Jetpack Compose), Flutter ve React Native / Expo için.
 
-AI yapımı arayüzün sorunu yanlış olması değil, hiçbir şeyin seçilmemiş olmasıdır: nötr bir zemin, içinde büyük bir sayı olan yuvarlak bir kart, bir liste, bir sekme çubuğu. Bu skill her ekranı tek bir fikre bağlar:
+AI yapımı arayüzü ele veren tek şey "seçilmemiş" görünmesi değil; modelin kendi zevki de tanınıyor. Aynı birkaç font (Fraunces, Inter), vektörle elle çizilmiş resim ve ikonlar, renkli bir alan üstüne alttan yükselen yuvarlak köşeli bir kart, yumuşak parıltılar, orta noktayla dizilmiş künyeler, her şeyi anlatan cümleler. Bunlara bakmaya alışmış biri ekranı bir saniyede tanır.
 
-1. **Tek fikir.** Ürünün kendi dünyasından gelen bir kavram: bir dil uygulaması için dolan çay bardağı, bir serbest çalışan uygulaması için koçanı yırtılan fatura.
-2. **Merkez öğe.** Ekranın asıl verisini taşıyan, çizilmiş, derinliği olan, yaşayan bir nesne. Kart içinde sayı değil.
-3. **Kendine ait yüzey.** Ürünün dünyasından türetilmiş renk, karakterli bir başlık fontu, tek bir malzeme hikâyesi.
-4. **Kimlik olarak hareket.** Bir giriş koreografisi, merkez öğede yaşayan bir döngü, ana eylemin merkez öğede fiziksel bir sonucu.
-5. **Taban.** Dokunma hedefleri, metin ölçekleme, kontrast, durumlar, geri hareketi, karanlık kalıpların reddi. Cesur tasarım bunlardan muaf değil.
+Bu yüzden skill, zevkin göründüğü kararları modelden alır:
 
-Skill bilerek **palet, hex kodu ya da font listesi içermez**: "iyi seçenekler" menüsü bir sonraki varsayılana dönüşür.
+1. **Kartlar dağıtılır.** `scripts/deal.mjs` ürün adından tohumlanan bir el dağıtır: yazı tipi (90 aile; modellerin sık seçtiği 21 aile yasak), ikon seti (gerçek setler: Phosphor, Tabler, Remix, Material Symbols, Bootstrap), yerleşim iskeleti (15 tür), gezinme, köşe ailesi, zemin, palet yapısı, efekt bütçesi (yarısı tamamen düz), metin sesi, merkez öğe türü, renk tonu aralığı ve ilk görünüm. Aynı ürün hep aynı eli alır; iki ürün aynı eli almaz. El bağlayıcıdır, gerekçesi yazılmak şartıyla bir kez yeniden dağıtılabilir.
+2. **Model malzeme üretmez.** İkon çizmez, resim çizmez. Fotoğraf, kapak ya da harita gereken yerde içinde yazı olmayan düz bir alan bırakır ve raporda ne konacağını söyler.
+3. **Metin anlatmaz, etiketler.** Ekran başına en fazla bir açıklama cümlesi, kısa etiketler, sıradan örnek veri ("Morning Run", sıradan müşteri adları), ekranda yapım notu yok.
+4. **Fikir hâlâ ürünün.** Ürünün kendi dünyasından tek bir fikir; artık resimle değil yapıyla, veriyle ve sözcüklerle görünür.
+5. **Taban.** Dokunma hedefleri, metin ölçekleme, kontrast, durumlar, geri hareketi, karanlık kalıpların reddi.
 
 ### Ne üretiyor
 
-Aşağıdaki sekiz ekranın her biri tek bir istekle, **Claude Opus 5.5 (high)** tarafından, skill yüklüyken üretildi. Hiçbiri elle düzeltilmedi.
+Aşağıdaki sekiz ekranın her biri tek bir istekle, **Claude Opus 5.5 (high)** tarafından, skill (3.1) yüklüyken üretildi. Hiçbiri elle düzeltilmedi. Gri alanlar gerçek fotoğrafın, kapağın ya da haritanın geleceği yerler.
 
-![mobile-ui-craft ile](docs/previews/bench-with-skill.png)
+![mobile-ui-craft 3 ile](docs/previews/v3-with-skill.png)
 
 Aynı sekiz istek, aynı model, skill olmadan:
 
-![Skill olmadan](docs/previews/bench-without-skill.png)
+![Skill olmadan](docs/previews/v3-without-skill.png)
 
-Ekranlar durağan görsel değil, hareketli ve dokunulabilir HTML prototipleridir. Dördünün kaydı:
+Prototipler [`docs/prototypes/v3/`](docs/prototypes/v3) klasöründe; tarayıcıda açıp dokunabilirsin. Bunlar native ekran değil, HTML prototiplerdir; fontlar ve kontroller native karşılıklarının yaklaşık halidir.
+
+### Ölçüm: kör AI tespit testi
+
+Soru "güzel mi" değil, "bunu AI mı yaptı, anlaşılıyor mu" idi. Sekiz nişte dört ekran karışık sırayla, AI arayüzlerini her gün gören bir uzman rolündeki iki bağımsız hakeme (Opus 5.5, high) gösterildi: skill 3.1, skill 3.0, skill'siz ve o nişin çok satan gerçek uygulaması. Hakemler kaçının AI olduğunu bilmiyordu; her ekrana "AI yaptı" olasılığı (0-100) ve gerekçe yazdılar. Ayrıca iki hakem her yapımcının sekiz ekranını tek sayfada görüp yapımcıyı değerlendirdi.
+
+| | Ortalama AI olasılığı | "En AI" seçilme (16 karar) | Sekiz ekranlık sayfa (iki hakem) |
+|---|---|---|---|
+| Skill 3.1 | **80** | **0** | **82, 75** |
+| Skill 3.0 | 85 | 3 | 88, 85 |
+| Skill'siz | 88 | 13 | 85, 85 |
+| Gerçek uygulama | 4 | 0 | |
+
+Bu sonuçlar okunurken:
+
+- **Skill'in kendi izi silindi.** Skill'siz çıktıların sekizde yedisi Inter, beşte dördü serif başlık, sekizde yedisi gradyan kullanıyor; hakemlerin tarifi "krem zemin, kiremit düğme, serif başlık: bugünün varsayılan AI görünümü". Skill 3 çıktılarında Fraunces, Inter, gradyan, elle çizilmiş ikon, orta nokta dizisi: sıfır.
+- **Ama hâlâ yakalanıyor.** 80, "anlaşılmıyor" demek değil. Gerçek uygulama 4 alıyor; ama bunun büyük kısmı gerçek fotoğraf ve marka içeriğinden geliyor, karşılaştırma bu yüzden adil değil. Kalan işaretler: her ekranda dev bir sayının yanında küçük gri birim, bazı nişlerde ürüne özel grafik biçimleri, aynı brief'ten gelen aynı isimler. İlk ikisi ölçümden sonra kurala çevrildi; yeniden ölçülmedi.
+- **Bir tur nasıl işledi.** 3.0'ı hakemler en çok ekrana sızmış yapım notlarından ("Map tiles here (MapKit in the build)"), veriyi anlatan cümlelerden ve özenli uydurma verilerden ("Moda'dan Fenerbahçe fenerine") yakaladı. 3.1 bunları kural yaptı, renk tonunu ve ilk görünümü de dağıtıma ekledi; ortalama 85'ten 80'e indi, "en AI" seçilmesi 3'ten 0'a.
+- **Sınırlar.** Niş başına tek koşu, hakemler üreticiyle aynı model ailesinden, yalnızca durağan ilk kare değerlendirildi. Bir insan uzmanın gözü farklı şeyleri yakalayabilir.
+
+### Sürüm 2 ölçümü: 8 niş, kör puanlama
+
+Aşağıdaki ölçüm ve görseller 2.0 sürümüne aittir; 2.0 kimliği merkez öğe çizimiyle ve karakterli fontla kuruyordu. Kimlikte büyük kazanç sağladı ama AI tespit testinde en kolay yakalanan oydu (ortalama 92).
+
+![mobile-ui-craft 2 ile](docs/previews/bench-with-skill.png)
 
 | Söz (dil) | Pano (finans) | Sofra (yemek) | Kumbara (bütçe) |
 |---|---|---|---|
 | ![Söz](docs/previews/language.gif) | ![Pano](docs/previews/finance.gif) | ![Sofra](docs/previews/food.gif) | ![Kumbara](docs/previews/kumbara.gif) |
-
-Prototiplerin kendisi [`docs/prototypes/`](docs/prototypes) klasöründe; tarayıcıda açıp dokunabilirsin. Kumbara, yönü belirlemek için elle yazılmış ilk örnektir; diğer sekizi skill'in çıktısıdır.
-
-Bunlar native ekran değil, skill'in "kod yazmadan önce gör" modunun ürettiği prototiplerdir; fontlar, malzemeler ve kontroller native karşılıklarının yaklaşık halidir.
-
-### Ölçüm: 8 niş, kör puanlama
 
 Sekiz niş için aynı istek iki kez koşuldu: skill ile ve skill olmadan, ikisi de Opus 5.5 (high). Her nişte iki bağımsız puanlayıcı (yine Opus 5.5, high) üç adayı beş ölçütte 1-10 arası puanladı: A ve B (hangisinin skill'li olduğunu bilmeden, sıraları iki puanlayıcıda ters) ve referans olarak o nişin çok satan gerçek bir uygulamasının App Store ekran görüntüleri.
 
@@ -132,9 +150,9 @@ Dört kadran soyut sıfatları ölçülebilir seçimlere çevirir:
 - **D Yoğunluk** (1 ferah, 5 sıkı): satır yükseklikleri, bölüm aralıkları, merkez öğenin kapladığı alan.
 - **E Enerji** (1 sakin, 5 ifadeli): renk, hareket, kutlama.
 - **W Sıcaklık** (1 resmî ve keskin, 5 samimi ve yuvarlak): köşeler, metin sesi, karakter.
-- **X İfade** (1 sistem bileşenleri ve platform görünümü, 5 her şey ürüne özel): varsayılan 4. Saha, kurumsal, kamu ve klinik araçlarda ya da sade bir sonuç istendiğinde 1-2'ye iner.
+- **X İfade** (1 sistem bileşenleri ve platform görünümü, 5 her şey ürüne özel): varsayılan 3. Saha, kurumsal, kamu ve klinik araçlarda ya da sade bir sonuç istendiğinde 1-2'ye iner.
 
-Ajan kod yazmadan önce kısa bir brief doldurur (ürün, niş, kadranlar, fikir, merkez öğe, renklerin kaynağı, font, hareket, kaçınılan klişe, reddedilen karanlık kalıplar), planı altı testle sınar, önce merkez öğeyi kurar, sonra render alıp bakar.
+Ajan kod yazmadan önce eli dağıtır ve kısa bir brief doldurur (ürün, niş, kadranlar, fikir, dağıtılan el, merkez öğe, renk tonunun kaynağı, hareket, kaçınılan klişe, reddedilen karanlık kalıplar), planı altı testle sınar, önce dağıtılan iskeleti kurar, sonra render alıp on soruluk parmak izi kontrolünü yapar.
 
 Nişler davranışı belirler (kullanıcının o andaki hali, güven sinyalleri, tasarlanacak durumlar, reddedilecek kalıplar); yüzeyin ne kadar cesur olacağını İfade kadranı belirler.
 
@@ -144,7 +162,7 @@ Nişler davranışı belirler (kullanıcının o andaki hali, güven sinyalleri,
 skills/mobile-ui-craft/
   SKILL.md              iş akışı, yönlendirme tabloları, dört kadran, 13 maddelik taban, niş dizini
   references/
-    signature.md        fikir, merkez öğe, yüzey, hareket, "wow" testi
+    signature.md        eli dağıtma, merkez öğe, yazı, renk, ikon, metin, parmak izi kontrolü
     ios.md android.md flutter.md react-native.md cross-platform.md
     craft.md slop-tells.md motion-haptics.md ux-flows.md preview.md review.md
     niche-*.md          24 niş dosyası
@@ -152,6 +170,7 @@ skills/mobile-ui-craft/
     always-on.md        CLAUDE.md / AGENTS.md için on satırlık kural bloğu
     phone-frame.html    HTML prototip için telefon çerçevesi (iOS ve Android)
   scripts/
+    deal.mjs            ürün adından yazı tipi, ikon seti, iskelet, renk aralığı ve efekt bütçesini dağıtır
     capture.mjs         prototipi gerçek telefon boyutunda, gerçek zamanlı, birkaç anda yakalar
     slop-scan.mjs       Swift, Kotlin, Dart, TSX ve HTML kaynağında seçilmemiş varsayılanları sayar
   evals/                dokuz test senaryosu
@@ -161,10 +180,14 @@ docs/prototypes/        açıp dokunabileceğin prototipler
 RESEARCH.md             araştırma özeti ve eleştiri -> tasarım kararı tablosu
 ```
 
-İki script de bağımlılıksızdır (Node 18+) ve tek başına kullanılabilir:
+Script'ler bağımlılıksızdır (Node 18+) ve tek başına kullanılabilir:
 
 ```bash
-node skills/mobile-ui-craft/scripts/capture.mjs docs/prototypes/language.html shots/soz --at 1200,3000,6500
+node skills/mobile-ui-craft/scripts/deal.mjs --seed "Pano" --platform ios
+```
+
+```bash
+node skills/mobile-ui-craft/scripts/capture.mjs docs/prototypes/v3/language.html shots/soz --at 1200,3000,6500
 ```
 
 ```bash
@@ -182,6 +205,10 @@ node skills/mobile-ui-craft/scripts/slop-scan.mjs --self-test
 ```
 
 ```bash
+node skills/mobile-ui-craft/scripts/deal.mjs --self-test
+```
+
+```bash
 claude plugin validate .
 ```
 
@@ -194,7 +221,8 @@ cd skills/mobile-ui-craft && claude plugin eval . --allow-tools Write,Edit,Bash 
 ### Sürüm geçmişi
 
 - **1.0** platforma uygunluk ve AI işaretlerinin temizlenmesi üzerine kuruluydu. Sonnet ile yapılan iddia tabanlı testte skill'li koşular 46/47, skill'siz koşular 27/47 aldı; ama çıktılar "daha temiz" olmaktan öteye geçmiyordu.
-- **2.0** bu geri bildirim üzerine yeniden yazıldı: fikir ve merkez öğe zorunlu, İfade kadranı eklendi, hareketli prototip ve gerçek zamanlı yakalama geldi. Yukarıdaki sekiz nişlik ölçüm bu sürüme aittir.
+- **2.0** bu geri bildirim üzerine yeniden yazıldı: fikir ve merkez öğe zorunlu, İfade kadranı eklendi, hareketli prototip ve gerçek zamanlı yakalama geldi. Yukarıdaki "Sürüm 2 ölçümü" bu sürüme aittir.
+- **3.0** "hâlâ AI-slop duruyor" geri bildirimi üzerine: yazı tipi, ikon, iskelet ve efekt artık modelin değil dağıtım script'inin seçimi; model resim ve ikon çizmiyor. **3.1** ilk AI tespit testinin bulduklarını ekledi: ekranda yapım notu yok, metin anlatmıyor, sıradan örnek veri, dağıtılan renk aralığı ve ilk görünüm, yakalamada açık mod sabit.
 
 ### Araştırma
 

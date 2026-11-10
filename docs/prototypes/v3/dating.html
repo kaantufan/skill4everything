@@ -1,0 +1,430 @@
+<!doctype html>
+<!-- Kıvılcım, discovery screen. HTML mockup of a native iOS screen: fonts, controls and scrolling are approximations.
+     Sample data only. States: ?state=loading | offline | empty, ?theme=light, ?static (no auto demo). -->
+<html lang="tr" data-platform="ios" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kıvılcım Keşfet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&display=swap&subset=latin-ext" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<style>
+  :root {
+    --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px;
+    --chrome: #000;
+  }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--bg); color: var(--fg); }
+  .statusbar {
+    position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 30;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none;
+    font-family: -apple-system, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  .home-indicator {
+    position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 30;
+    width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none;
+  }
+  #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+</style>
+<style>
+  /* PRODUCT TOKENS. Hue: a spark cooling to ash, muted orange 26-38deg. Photos carry the colour; chrome stays neutral. */
+  :root {
+    --font: "Urbanist", -apple-system, system-ui, sans-serif;
+    --r-control: 16px; --r-container: 20px; --r-sheet: 20px;
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
+    --t-fast: 160ms; --t-base: 220ms;
+  }
+  [data-theme="dark"] {
+    --bg: #1a1816; --surface: #252220; --slot: #34302c; --line: #3a3532;
+    --fg: #f4f0ec; --fg2: #bdb4ac; --fg3: #9a918a;
+    --accent: #c8a084;      /* hue ~34: action (like, selected tab) */
+    --on-accent: #241612;
+    --accent-2: #d9ab98;    /* hue ~22: what you share */
+    --danger: #f0a39a;
+    --scrim: rgba(0,0,0,.55);
+  }
+  [data-theme="light"] {
+    --bg: #f2f2f1; --surface: #ffffff; --slot: #e0e0de; --line: #d9d9d7;
+    --fg: #1c1b1a; --fg2: #575553; --fg3: #6b6866;
+    --accent: #87604f; --on-accent: #ffffff;
+    --accent-2: #85562f;
+    --danger: #b3261e;
+    --scrim: rgba(0,0,0,.35);
+  }
+
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  button:focus-visible, [role="tab"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .ph { font-size: 24px; line-height: 1; }
+
+  /* top bar */
+  .topbar { padding: var(--safe-top) var(--s2) 0 var(--s4); height: calc(var(--safe-top) + 52px); display: flex; align-items: center; justify-content: space-between; flex: none; }
+  .wordmark { font-size: 1.375rem; font-weight: 700; letter-spacing: -.01em; }
+  .icon-btn { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 22px; color: var(--fg); }
+  .icon-btn:active { background: var(--surface); }
+
+  /* interest pager tabs */
+  .tabs { display: flex; gap: var(--s5); overflow-x: auto; padding: 0 var(--s4); flex: none; scrollbar-width: none; border-bottom: 1px solid var(--line); }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { flex: none; height: 44px; font-size: 1rem; font-weight: 600; color: var(--fg3); position: relative; white-space: nowrap; }
+  .tab[aria-selected="true"] { color: var(--fg); }
+  .tab[aria-selected="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; border-radius: 1px; background: var(--accent); }
+  .tab:last-child { margin-right: var(--s4); }
+
+  /* page */
+  .pager { flex: 1; min-height: 0; position: relative; touch-action: pan-y; }
+  .page { position: absolute; inset: 0; overflow-y: auto; padding: var(--s3) var(--s4) var(--s5); scrollbar-width: none; }
+  .page::-webkit-scrollbar { display: none; }
+  .page.out { opacity: 0; transform: translateY(-8px); transition: opacity var(--t-fast) ease-in, transform var(--t-fast) ease-in; }
+  .page.in { animation: rise var(--t-base) ease-out; }
+  .page.slide-l { animation: fromRight var(--t-base) ease-out; }
+  .page.slide-r { animation: fromLeft var(--t-base) ease-out; }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+  @keyframes fromRight { from { opacity: 0; transform: translateX(28px); } }
+  @keyframes fromLeft { from { opacity: 0; transform: translateX(-28px); } }
+
+  .photo { position: relative; height: 296px; border-radius: var(--r-container); background: var(--slot); overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
+  .photo button { position: absolute; top: 0; bottom: 0; width: 50%; }
+  .photo .prev { left: 0; } .photo .next { right: 0; }
+  .dots { display: flex; gap: var(--s1); margin-top: var(--s2); }
+  .dots i { flex: 1; height: 3px; border-radius: 2px; background: var(--line); }
+  .dots i.on { background: var(--fg2); }
+
+  .who { display: flex; align-items: flex-start; gap: var(--s2); margin-top: var(--s4); }
+  .who .text { flex: 1; min-width: 0; }
+  .name { font-size: 1.75rem; font-weight: 700; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; }
+  .meta { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s3); margin-top: var(--s1); font-size: .9375rem; font-weight: 500; color: var(--fg2); }
+  .meta span { display: inline-flex; align-items: center; gap: var(--s1); }
+  .meta .ph { font-size: 18px; }
+  .who .icon-btn { margin-right: -10px; color: var(--fg2); }
+
+  /* hero: the count of what you share, set large */
+  .hero { display: flex; align-items: center; gap: var(--s4); margin-top: var(--s4); padding: var(--s3) 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .figure { font-size: 5.5rem; font-weight: 600; line-height: .86; letter-spacing: -.04em; font-variant-numeric: tabular-nums; color: var(--fg); min-width: 56px; text-align: center; }
+  .figure.tick { animation: tick var(--t-base) ease-out; }
+  @keyframes tick { from { opacity: 0; transform: translateY(14px); } }
+  .hero .label { font-size: .9375rem; font-weight: 500; color: var(--fg2); }
+  .hero .shared { font-size: 1.125rem; font-weight: 600; line-height: 1.3; color: var(--accent-2); margin-top: 2px; }
+
+  .prompts { display: flex; flex-direction: column; gap: var(--s3); margin-top: var(--s5); }
+  .prompt { background: var(--surface); border-radius: var(--r-container); padding: var(--s4) var(--s4) 18px; }
+  .prompt .q { font-size: .9375rem; font-weight: 500; color: var(--fg2); }
+  .prompt .a { font-size: 1.3125rem; font-weight: 500; line-height: 1.3; margin-top: 6px; }
+
+  .section { margin-top: var(--s6); }
+  .section h3 { font-size: 1.0625rem; font-weight: 700; margin: 0 0 var(--s2); }
+  .ilist { list-style: none; margin: 0; padding: 0; }
+  .ilist li { display: flex; align-items: center; justify-content: space-between; min-height: 48px; font-size: 1.0625rem; font-weight: 500; border-bottom: 1px solid var(--line); }
+  .ilist li:last-child { border-bottom: 0; }
+  .ilist .tag { display: inline-flex; align-items: center; gap: var(--s1); font-size: .9375rem; color: var(--accent-2); }
+  .ilist .tag .ph { font-size: 18px; }
+
+  /* skeleton, empty, offline */
+  .sk { background: var(--surface); border-radius: var(--r-container); }
+  .state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 var(--s6) 40px; }
+  .state .ph { font-size: 40px; color: var(--fg3); }
+  .state h2 { font-size: 1.375rem; font-weight: 700; margin: var(--s4) 0 var(--s1); }
+  .state p { font-size: 1rem; color: var(--fg2); margin: 0 0 var(--s5); }
+  .btn-text { min-height: 48px; padding: 0 var(--s5); border-radius: var(--r-control); background: var(--surface); font-weight: 600; font-size: 1rem; }
+  .btn-text:active { transform: scale(.97); }
+
+  /* action bar: sits under the scroller, never over it */
+  .actions { flex: none; display: flex; gap: var(--s3); padding: var(--s3) var(--s4) calc(var(--safe-bottom) + var(--s2)); border-top: 1px solid var(--line); background: var(--bg); }
+  .act { flex: 1; height: 56px; border-radius: var(--r-control); display: flex; align-items: center; justify-content: center; gap: var(--s2); font-size: 1.0625rem; font-weight: 700; transition: transform 90ms ease-out, opacity var(--t-fast); }
+  .act:active, .act.pressed { transform: scale(.96); }
+  .actions[hidden] { display: none; }
+  .act:disabled { opacity: .4; cursor: default; transform: none; }
+  .pass { background: var(--surface); color: var(--fg); }
+  .like { background: var(--accent); color: var(--on-accent); }
+  .like .ph { font-size: 22px; }
+
+  /* toast: in the layout flow above the bar, so the scroller shrinks instead of being covered */
+  .toast-slot { flex: none; max-height: 0; overflow: hidden; padding: 0 var(--s4); transition: max-height var(--t-base) ease-out; }
+  .toast-slot.show { max-height: 68px; }
+  .toast { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); min-height: 52px; margin: var(--s2) 0; padding: 0 var(--s2) 0 var(--s4); border-radius: var(--r-control); background: var(--fg); color: var(--bg); font-weight: 600; font-size: .9375rem; }
+  .toast button { min-height: 44px; padding: 0 var(--s3); font-weight: 700; color: var(--bg); text-decoration: underline; text-underline-offset: 3px; }
+
+  /* sheet */
+  .backdrop { position: absolute; inset: 0; z-index: 20; background: var(--scrim); opacity: 0; pointer-events: none; transition: opacity var(--t-base); }
+  .backdrop.show { opacity: 1; pointer-events: auto; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 21; background: var(--surface); border-radius: var(--r-sheet) var(--r-sheet) 0 0; padding: var(--s2) var(--s4) calc(var(--safe-bottom) + var(--s3)); transform: translateY(100%); transition: transform var(--t-base) ease-out; }
+  .sheet.show { transform: none; }
+  .grabber { width: 36px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto var(--s3); }
+  .sheet h2 { font-size: 1.0625rem; font-weight: 700; margin: 0 0 var(--s2); color: var(--fg2); }
+  .sheet .row { width: 100%; min-height: 52px; display: flex; align-items: center; gap: var(--s3); font-size: 1.0625rem; font-weight: 600; border-bottom: 1px solid var(--line); text-align: left; }
+  .sheet .row.danger { color: var(--danger); }
+  .sheet .row:active { opacity: .6; }
+  .sheet .cancel { margin-top: var(--s3); width: 100%; min-height: 52px; border-radius: var(--r-control); background: var(--slot); font-weight: 700; font-size: 1.0625rem; }
+
+  /* pushed chats page */
+  .push { position: absolute; inset: 0; z-index: 18; background: var(--bg); transform: translateX(100%); transition: transform 300ms cubic-bezier(.2,.8,.2,1); display: flex; flex-direction: column; }
+  .push.show { transform: none; }
+  .navbar { padding-top: var(--safe-top); height: calc(var(--safe-top) + 52px); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding-left: var(--s1); flex: none; }
+  .back { display: inline-flex; align-items: center; min-height: 44px; padding-right: var(--s2); font-size: 1.0625rem; font-weight: 500; color: var(--accent); }
+  .navbar .title { font-size: 1.0625rem; font-weight: 700; }
+
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition-duration: 1ms !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="statusbar">
+    <span id="clock">10:08</span>
+    <svg class="ios" viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" stroke="currentColor" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen">
+    <header class="topbar">
+      <span class="wordmark">Kıvılcım</span>
+      <button class="icon-btn" id="openChats" aria-label="Sohbetler"><i class="ph ph-chat-circle"></i></button>
+    </header>
+    <nav class="tabs" role="tablist" aria-label="İlgilerin" id="tabs"></nav>
+    <div class="pager" id="pager"><div class="page" id="page" role="tabpanel"></div></div>
+    <div class="toast-slot" id="toastSlot" role="status" aria-live="polite"><div class="toast"><span id="toastText"></span><button id="undo">Geri al</button></div></div>
+    <div class="actions">
+      <button class="act pass" id="pass"><i class="ph ph-x"></i>Geç</button>
+      <button class="act like" id="like"><i class="ph ph-heart"></i>Beğen</button>
+    </div>
+  </main>
+
+
+  <div class="backdrop" id="backdrop"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="grabber"></div>
+    <h2 id="sheetTitle"></h2>
+    <button class="row" id="report"><i class="ph ph-flag"></i>Şikâyet et</button>
+    <button class="row danger" id="block"><i class="ph ph-prohibit"></i>Engelle</button>
+    <button class="cancel" id="cancel">Vazgeç</button>
+  </div>
+
+  <section class="push" id="chats" aria-label="Sohbetler" aria-hidden="true">
+    <div class="navbar">
+      <button class="back" id="back"><i class="ph ph-caret-left"></i>Keşfet</button>
+      <span class="title">Sohbetler</span><span></span>
+    </div>
+    <div class="state">
+      <i class="ph ph-chat-circle"></i>
+      <h2>Henüz sohbet yok</h2>
+      <p>Karşılıklı beğenide sohbet açılır.</p>
+    </div>
+  </section>
+
+  <div class="home-indicator"></div>
+<script>
+document.getElementById('clock').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, '');
+
+const params = new URLSearchParams(location.search);
+if (params.get('theme') === 'light') document.documentElement.dataset.theme = 'light';
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Sample data. The viewer's own interests become the pager tabs.
+const MINE = ['Tırmanış', 'Analog fotoğraf', 'Caz', 'Ev yemeği'];
+const PEOPLE = [
+  { id: 1, name: 'Deniz', age: 29, place: 'Kadıköy, 3 km', verified: true, photos: 4,
+    interests: ['Tırmanış', 'Analog fotoğraf', 'Caz', 'Seramik'],
+    prompts: [['Hafta sonu', 'Cumartesi salon, pazar karanlık oda.'],
+              ['Son çektiğim kare', 'Annemin balkonu. Portra 400, pozlama biraz kaçık.'],
+              ['İlk buluşma', 'Kahve, sonra plakçı.']] },
+  { id: 2, name: 'Ekin Su', age: 31, place: 'Beşiktaş, 7 km', verified: false, photos: 2,
+    interests: ['Caz', 'Bisiklet', 'Yüzme'],
+    prompts: [['Bu ara dinlediğim', 'Bill Evans, Sunday at the Village Vanguard.'],
+              ['Pazar', 'Sarıyer’e kadar bisiklet.']] },
+  { id: 3, name: 'İlkin', age: 27, place: 'Üsküdar, 12 km', verified: true, photos: 5,
+    interests: ['Ev yemeği', 'Tırmanış', 'Analog fotoğraf', 'Caz', 'Koşu'],
+    prompts: [['Beni en iyi anlatan', 'Her yemeğe fazla sarımsak koyarım.'],
+              ['Aradığım', 'Salona birlikte gidecek biri.'],
+              ['Hafta içi akşam', 'Yemek, film, erken yatmak.']] },
+  { id: 4, name: 'Nilüfer Gülizar', age: 34, place: 'Şişli', verified: true, photos: 3,
+    interests: ['Analog fotoğraf', 'Kitap', 'Tiyatro'],
+    prompts: [['Şu an okuduğum', 'Tutunamayanlar, üçüncü deneme.'],
+              ['Benimle anlaşırsın, eğer', 'Sessiz sinemaya katlanabiliyorsan.']] },
+];
+const TABS = ['Hepsi', ...MINE];
+
+const state = { tab: 0, gone: new Map(), passed: [], photo: 0, last: null, mode: params.get('state') || 'content' };
+const $ = id => document.getElementById(id);
+const page = $('page'), figureNow = { v: null };
+
+const sharedOf = p => p.interests.filter(i => MINE.includes(i));
+const queue = () => PEOPLE.filter(p => !state.gone.has(p.id) && (state.tab === 0 || p.interests.includes(TABS[state.tab])));
+const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function renderTabs() {
+  $('tabs').innerHTML = TABS.map((t, i) =>
+    `<button class="tab" role="tab" aria-selected="${i === state.tab}" tabindex="${i === state.tab ? 0 : -1}" data-i="${i}">${esc(t)}</button>`).join('');
+}
+
+function renderPage(anim) {
+  const q = queue();
+  const p = q[0];
+  const busy = state.mode !== 'content' || !p;
+  $('like').disabled = $('pass').disabled = busy;
+  $('like').parentElement.hidden = busy && state.mode !== 'loading';
+  page.className = 'page' + (anim ? ' ' + anim : '');
+  page.scrollTop = 0;
+
+  if (state.mode === 'loading') {
+    page.setAttribute('aria-busy', 'true');
+    page.innerHTML = `<div class="sk" style="height:296px"></div>
+      <div class="sk" style="height:30px;width:55%;margin-top:28px;border-radius:8px"></div>
+      <div class="sk" style="height:18px;width:40%;margin-top:10px;border-radius:6px"></div>
+      <div class="sk" style="height:96px;margin-top:24px"></div>`;
+    figureNow.v = null; return;
+  }
+  page.removeAttribute('aria-busy');
+  if (state.mode === 'offline') {
+    page.innerHTML = `<div class="state"><i class="ph ph-wifi-slash"></i><h2>Bağlantı yok</h2>
+      <p>Profiller yüklenemedi.</p><button class="btn-text" id="retry">Tekrar dene</button></div>`;
+    $('retry').onclick = () => { state.mode = 'loading'; renderPage(); setTimeout(() => { state.mode = 'content'; renderPage('in'); }, 500); };
+    return;
+  }
+  if (!p) {
+    const passedHere = state.passed.filter(x => state.tab === 0 || x.interests.includes(TABS[state.tab]));
+    page.innerHTML = `<div class="state"><i class="ph ph-users"></i>
+      <h2>${state.tab === 0 ? 'Yakında yeni profil yok' : esc(TABS[state.tab]) + ': yakında yeni profil yok'}</h2>
+      <p>Mesafe 15 km</p>
+      ${passedHere.length ? `<button class="btn-text" id="again">Geçtiklerini yeniden gör (${passedHere.length})</button>`
+        : state.tab !== 0 ? `<button class="btn-text" id="all">Hepsi</button>` : ''}</div>`;
+    if ($('again')) $('again').onclick = () => { passedHere.forEach(x => state.gone.delete(x.id)); state.passed = state.passed.filter(x => !passedHere.includes(x)); renderPage('in'); };
+    if ($('all')) $('all').onclick = () => setTab(0);
+    figureNow.v = null; return;
+  }
+
+  const shared = sharedOf(p);
+  const others = p.interests.filter(i => !shared.includes(i));
+  page.setAttribute('aria-label', `${p.name}, ${p.age}`);
+  page.innerHTML = `
+    <div class="photo" role="img" aria-label="${esc(p.name)}, fotoğraf ${state.photo + 1} / ${p.photos}">
+      <button class="prev" aria-label="Önceki fotoğraf"></button><button class="next" aria-label="Sonraki fotoğraf"></button>
+    </div>
+    <div class="dots" aria-hidden="true">${Array.from({ length: p.photos }, (_, i) => `<i class="${i === state.photo ? 'on' : ''}"></i>`).join('')}</div>
+    <div class="who">
+      <div class="text">
+        <h1 class="name">${esc(p.name)}, ${p.age}</h1>
+        <div class="meta"><span>${esc(p.place)}</span>${p.verified ? '<span><i class="ph ph-seal-check" aria-hidden="true"></i>Doğrulandı</span>' : ''}</div>
+      </div>
+      <button class="icon-btn" id="more" aria-label="${esc(p.name)} için şikâyet et veya engelle"><i class="ph ph-flag"></i></button>
+    </div>
+    <div class="hero">
+      <div class="figure" id="figure" aria-hidden="true">${shared.length}</div>
+      <div><div class="label">ortak ilgi</div><div class="shared">${esc(shared.join(', '))}</div></div>
+      <span class="sr">${shared.length} ortak ilgi: ${esc(shared.join(', '))}</span>
+    </div>
+    <div class="prompts">${p.prompts.map(([q, a]) => `<div class="prompt"><div class="q">${esc(q)}</div><div class="a">${esc(a)}</div></div>`).join('')}</div>
+    <div class="section"><h3>İlgileri</h3><ul class="ilist">
+      ${shared.map(i => `<li>${esc(i)}<span class="tag"><i class="ph ph-check" aria-hidden="true"></i>Sende de var</span></li>`).join('')}
+      ${others.map(i => `<li>${esc(i)}</li>`).join('')}
+    </ul></div>`;
+  const fig = $('figure');
+  if (figureNow.v !== null && figureNow.v !== shared.length) fig.classList.add('tick');
+  figureNow.v = shared.length;
+  page.querySelector('.prev').onclick = () => { state.photo = Math.max(0, state.photo - 1); renderPage(); };
+  page.querySelector('.next').onclick = () => { state.photo = Math.min(p.photos - 1, state.photo + 1); renderPage(); };
+  $('more').onclick = () => openSheet(p);
+}
+
+function decide(kind) {
+  const p = queue()[0]; if (!p) return;
+  state.gone.set(p.id, kind);
+  if (kind === 'pass') state.passed.push(p);
+  state.last = { p, kind };
+  state.photo = 0;
+  toast(kind === 'like' ? `Beğenildi: ${p.name}` : `Geçildi: ${p.name}`, true);
+  if (reduce) return renderPage();
+  page.classList.add('out');
+  setTimeout(() => renderPage('in'), 160);
+}
+
+let toastTimer;
+function toast(text, undoable) {
+  $('toastText').textContent = text;
+  $('undo').style.display = undoable ? '' : 'none';
+  $('toastSlot').classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $('toastSlot').classList.remove('show'), 4000);
+}
+$('undo').onclick = () => {
+  const l = state.last; if (!l) return;
+  state.gone.delete(l.p.id); state.passed = state.passed.filter(x => x !== l.p); state.last = null;
+  $('toastSlot').classList.remove('show');
+  renderPage('in');
+};
+
+function setTab(i, dir) {
+  if (i < 0 || i >= TABS.length || i === state.tab) return;
+  const from = state.tab; state.tab = i; state.photo = 0;
+  renderTabs();
+  $('tabs').children[i].scrollIntoView({ inline: 'nearest', block: 'nearest' });
+  renderPage(reduce ? '' : (i > from ? 'slide-l' : 'slide-r'));
+}
+$('tabs').addEventListener('click', e => { const b = e.target.closest('.tab'); if (b) setTab(+b.dataset.i); });
+$('tabs').addEventListener('keydown', e => {
+  const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+  if (d) { setTab(state.tab + d); $('tabs').children[state.tab].focus(); }
+});
+
+// horizontal swipe on the page changes interest; the card itself is never tossed
+let sx = 0, sy = 0;
+$('pager').addEventListener('pointerdown', e => { sx = e.clientX; sy = e.clientY; });
+$('pager').addEventListener('pointerup', e => {
+  const dx = e.clientX - sx, dy = e.clientY - sy;
+  if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) setTab(state.tab + (dx < 0 ? 1 : -1));
+});
+
+$('like').onclick = () => decide('like');
+$('pass').onclick = () => decide('pass');
+
+let sheetFor = null, lastFocus = null;
+function openSheet(p) {
+  sheetFor = p; lastFocus = document.activeElement;
+  $('sheetTitle').textContent = p.name;
+  $('backdrop').classList.add('show'); $('sheet').classList.add('show');
+  $('report').focus();
+}
+function closeSheet() { $('backdrop').classList.remove('show'); $('sheet').classList.remove('show'); lastFocus && lastFocus.focus(); }
+$('cancel').onclick = closeSheet; $('backdrop').onclick = closeSheet;
+$('report').onclick = () => { remove(sheetFor, 'report'); toast('Şikâyet alındı', false); };
+$('block').onclick = () => { remove(sheetFor, 'block'); toast(`Engellendi: ${sheetFor.name}`, false); };
+function remove(p, kind) { state.gone.set(p.id, kind); state.photo = 0; closeSheet(); renderPage('in'); }
+
+function openChats(show) {
+  $('chats').classList.toggle('show', show);
+  $('chats').setAttribute('aria-hidden', String(!show));
+  (show ? $('back') : $('openChats')).focus();
+}
+$('openChats').onclick = () => openChats(true);
+$('back').onclick = () => openChats(false);
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if ($('sheet').classList.contains('show')) closeSheet(); else if ($('chats').classList.contains('show')) openChats(false);
+});
+
+if (state.mode === 'empty') { PEOPLE.forEach(p => { state.gone.set(p.id, 'pass'); state.passed.push(p); }); state.mode = 'content'; }
+renderTabs();
+renderPage();
+
+// Self-check: everyone on an interest page shares that interest, and nobody is shown with zero in common.
+console.assert(TABS.slice(1).every(t => PEOPLE.filter(p => p.interests.includes(t)).every(p => sharedOf(p).includes(t))) && PEOPLE.every(p => sharedOf(p).length > 0), 'interest pages');
+
+// Rest for three seconds, then show the main interaction once.
+if (!reduce && state.mode === 'content' && !params.has('static')) {
+  setTimeout(() => { $('like').classList.add('pressed'); }, 3000);
+  setTimeout(() => { $('like').classList.remove('pressed'); decide('like'); }, 3180);
+}
+</script>
+</body>
+</html>

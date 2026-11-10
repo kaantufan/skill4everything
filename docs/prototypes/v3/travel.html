@@ -1,0 +1,487 @@
+<!doctype html>
+<!-- Rota, listing page. HTML prototype of a native iOS screen at 393x852.
+     Built on the skill's phone frame. Sample data throughout. ?theme=light, ?state=loading|error, ?text=1.3 -->
+<html lang="en" data-platform="ios" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rota, listing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ysabeau:wght@400;600;700&display=swap">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<script>
+  // theme and text size before first paint; dark is the designed first appearance
+  const q = new URLSearchParams(location.search);
+  document.documentElement.dataset.theme = q.get('theme') === 'light' ? 'light' : 'dark';
+  document.documentElement.style.setProperty('--ts', Number(q.get('text')) || 1);
+</script>
+<style>
+  :root {
+    --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px;
+    --chrome: #000;
+  }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html { font-size: calc(16px * var(--ts, 1)); }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--bg); color: var(--text); }
+  .statusbar {
+    position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 30;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 28px 10px; font: 600 16px/1 -apple-system, "SF Pro Text", "Segoe UI", system-ui, sans-serif; color: var(--chrome); pointer-events: none;
+  }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  .home-indicator {
+    position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 30;
+    width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none;
+  }
+  #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+</style>
+<style>
+  /* ROTA TOKENS. One family (Ysabeau), Phosphor regular icons, radii 10 control / 12 container and sheet, flat. */
+  :root {
+    --font: "Ysabeau", -apple-system, "Segoe UI", sans-serif;
+    --r-control: 10px; --r-container: 12px;
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px;
+    --t-title: 1.75rem; --t-head: 1.25rem; --t-body: 1.0625rem; --t-sub: .9375rem; --t-cap: .8125rem;
+    --ease: cubic-bezier(.2, .8, .2, 1); --dur: 260ms;
+    --col: 48px; /* one night in the price chart: 44 target + 4 gap */
+  }
+  [data-theme="dark"] {
+    --bg: #121615; --surface: #1b2120; --surface-2: #252c2a; --sep: #323b39;
+    --text: #eef2f1; --text-2: #a7b3b0; --text-3: #7d8986;
+    --slot-a: #2b3130; --slot-b: #343a39; --slot-c: #272c2b;
+    --bar: #56635f;
+    --accent: #3fc4ae; --on-accent: #06211c;      /* hue A 171: selection and the primary action */
+    --mine: #6cc1d0; --on-mine: #062026;          /* hue B 189: what you have reserved */
+    --scrim: rgba(0, 0, 0, .55);
+  }
+  [data-theme="light"] {
+    --chrome: #000;
+    --bg: #f5f7f6; --surface: #ffffff; --surface-2: #e9eeec; --sep: #d5dcda;
+    --text: #13201e; --text-2: #52605c; --text-3: #5d6a66;
+    --slot-a: #d3d9d7; --slot-b: #c8cfcd; --slot-c: #dce1df;
+    --bar: #a3afab;
+    --accent: #0d7a69; --on-accent: #ffffff;
+    --mine: #10738a; --on-mine: #ffffff;
+    --scrim: rgba(0, 0, 0, .35);
+  }
+  @media (prefers-reduced-motion: reduce) { :root { --dur: 0ms; } }
+
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  body { font-variant-numeric: lining-nums; }
+  .num { font-variant-numeric: lining-nums tabular-nums; }
+  #dates-icon:empty { display: none; }
+  i.ph, i.ph-fill { font-size: 22px; line-height: 1; }
+
+  .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* canvas: the photos fill the top of the screen, controls sit over them at the edges */
+  .gallery-wrap { position: relative; height: 300px; }
+  .gallery { display: flex; height: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+  .gallery::-webkit-scrollbar { display: none; }
+  .slot { flex: 0 0 100%; height: 100%; scroll-snap-align: start; background: var(--slot-a); }
+  .slot:nth-child(3n+2) { background: var(--slot-b); }
+  .slot:nth-child(3n) { background: var(--slot-c); }
+  .count {
+    position: absolute; right: var(--s4); bottom: var(--s3); padding: 5px 10px; border-radius: var(--r-control);
+    background: var(--bg); color: var(--text); font-size: var(--t-cap); font-weight: 600;
+  }
+  .navbar {
+    position: absolute; inset: 0 0 auto 0; height: calc(var(--safe-top) + 52px); z-index: 20;
+    background: var(--bg); border-bottom: 1px solid var(--sep);
+    display: flex; align-items: center; justify-content: center; padding: var(--safe-top) 120px 0;
+    font-size: var(--t-body); font-weight: 700; opacity: 0; transition: opacity 160ms linear; pointer-events: none;
+  }
+  .navbar span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .navbar.on { opacity: 1; }
+  .hud { position: absolute; top: calc(var(--safe-top) + 4px); left: var(--s4); right: var(--s4); z-index: 25; display: flex; justify-content: space-between; pointer-events: none; }
+  .hud > div { display: flex; gap: var(--s2); }
+  .hud button {
+    pointer-events: auto; width: 44px; height: 44px; border-radius: var(--r-container);
+    background: var(--bg); color: var(--text); display: grid; place-items: center; transition: transform 100ms;
+  }
+  .hud button:active { transform: scale(.94); }
+  .hud button[aria-pressed="true"] { color: var(--accent); }
+
+  .content { padding: var(--s5) var(--s4) var(--s6); }
+  h1 { font-size: var(--t-title); line-height: 1.1; font-weight: 700; margin: 0; letter-spacing: -.01em; }
+  .meta { margin: var(--s2) 0 0; font-size: var(--t-sub); color: var(--text-2); line-height: 1.4; }
+
+  /* hero: nightly price as a bar chart, one column per night */
+  .dates { margin-top: var(--s6); }
+  .dates-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s3); }
+  .dates-head h2 { display: flex; align-items: center; gap: 6px; }
+  h2 { font-size: var(--t-head); font-weight: 700; margin: 0; }
+  .month { font-size: var(--t-sub); color: var(--text-2); }
+  .status { margin: var(--s1) 0 0; font-size: var(--t-sub); color: var(--text-2); min-height: 1.4em; }
+  .status b { color: var(--text); font-weight: 600; }
+  .strip { display: flex; gap: 4px; overflow-x: auto; margin: var(--s3) calc(-1 * var(--s4)) 0; padding: 0 var(--s4); scrollbar-width: none; scroll-padding: 0 var(--s4); }
+  .strip::-webkit-scrollbar { display: none; }
+  .night {
+    flex: 0 0 44px; min-height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    padding-top: var(--s1); border-radius: var(--r-control); transition: background var(--dur);
+  }
+  .night .p { font-size: var(--t-cap); color: var(--text-2); font-weight: 600; margin-bottom: 4px; }
+  .night .bar { width: 28px; border-radius: 6px 6px 2px 2px; background: var(--bar); transition: height var(--dur) var(--ease), background var(--dur); }
+  .night .wd { margin-top: 6px; font-size: var(--t-cap); color: var(--text-3); }
+  .night .d { font-size: var(--t-sub); font-weight: 600; padding-bottom: 6px; }
+  .night.sel .bar { background: var(--accent); }
+  .night.sel .p { color: var(--text); }
+  .night.sel { background: var(--surface); }
+  .night.mine .bar { background: var(--mine); }
+  .night:disabled { cursor: default; }
+  .night.taken .p { color: var(--text-3); }
+  .night.taken .bar { background: transparent; border: 1px dashed var(--text-3); }
+  .night.taken .d { color: var(--text-3); text-decoration: line-through; }
+  .night:active:not(:disabled) { background: var(--surface-2); }
+
+  .special { margin-top: var(--s6); }
+  .rows { list-style: none; margin: var(--s2) 0 0; padding: 0; }
+  .rows li { display: grid; grid-template-columns: 40px 1fr; align-items: center; min-height: 64px; position: relative; }
+  .rows li + li::before { content: ""; position: absolute; top: 0; left: 40px; right: 0; height: 1px; background: var(--sep); }
+  .rows i { color: var(--text-2); font-size: 24px; }
+  .rows .t { font-size: var(--t-body); font-weight: 600; }
+  .rows .s { font-size: var(--t-sub); color: var(--text-2); margin-top: 2px; }
+  .rows .r { padding: var(--s3) 0; }
+
+  .block { margin-top: var(--s6); }
+  .block p { margin: var(--s2) 0 0; font-size: var(--t-sub); color: var(--text-2); line-height: 1.45; }
+  .host { display: flex; align-items: center; gap: var(--s3); margin-top: var(--s3); }
+  .avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--surface-2); display: grid; place-items: center; font-weight: 700; color: var(--text-2); }
+
+  /* reserve bar and tab bar sit below the scroll area, so nothing scrolls under them */
+  .reserve { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); padding: var(--s3) var(--s4); background: var(--surface); border-top: 1px solid var(--sep); }
+  .total { font-size: 1.375rem; font-weight: 700; line-height: 1.1; }
+  .total-sub { font-size: var(--t-cap); color: var(--text-2); margin-top: 2px; }
+  .primary {
+    min-height: 50px; padding: 0 var(--s5); border-radius: var(--r-container); background: var(--accent); color: var(--on-accent);
+    font-size: var(--t-body); font-weight: 700; display: inline-flex; align-items: center; gap: 6px; transition: transform 100ms, opacity 120ms; white-space: nowrap;
+  }
+  .primary:active:not(:disabled) { transform: scale(.97); }
+  .primary:disabled { opacity: .4; cursor: default; }
+  .primary.done { background: var(--mine); color: var(--on-mine); opacity: 1; }
+  .tabbar { display: flex; background: var(--surface); border-top: 1px solid var(--sep); padding-bottom: var(--safe-bottom); }
+  .tab { flex: 1; min-height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--text-3); font-size: .6875rem; font-weight: 600; }
+  .tab i { font-size: 24px; }
+  .tab[aria-current="page"] { color: var(--accent); }
+
+  /* sheet */
+  .sheet-layer { position: absolute; inset: 0; z-index: 40; visibility: hidden; }
+  .sheet-layer.open { visibility: visible; }
+  .scrim { position: absolute; inset: 0; background: var(--scrim); opacity: 0; transition: opacity var(--dur); }
+  .open .scrim { opacity: 1; }
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0; background: var(--surface); border-radius: var(--r-container) var(--r-container) 0 0;
+    padding: var(--s2) var(--s4) calc(var(--safe-bottom) + var(--s4)); transform: translateY(100%); transition: transform var(--dur) var(--ease);
+  }
+  .open .sheet { transform: none; }
+  .sheet-head { display: flex; align-items: center; justify-content: space-between; min-height: 52px; }
+  .icon-btn { width: 44px; height: 44px; display: grid; place-items: center; border-radius: var(--r-control); margin-right: -10px; }
+  .icon-btn:active { background: var(--surface-2); }
+  .lines { margin: var(--s2) 0 0; }
+  .line { display: flex; justify-content: space-between; gap: var(--s3); padding: 6px 0; font-size: var(--t-body); }
+  .line span:first-child { color: var(--text-2); }
+  .line.sum { border-top: 1px solid var(--sep); margin-top: var(--s2); padding-top: var(--s3); font-weight: 700; }
+  .line.sum span:first-child { color: var(--text); }
+  .cancel { display: flex; gap: var(--s3); align-items: flex-start; margin: var(--s4) 0 var(--s5); padding: var(--s3); background: var(--surface-2); border-radius: var(--r-control); font-size: var(--t-sub); line-height: 1.4; }
+  .cancel i { color: var(--accent); margin-top: 1px; }
+  .sheet .primary { width: 100%; justify-content: center; }
+
+  .toast { position: absolute; top: calc(var(--safe-top) + 56px); left: var(--s4); right: var(--s4); z-index: 35; padding: var(--s3) var(--s4); border-radius: var(--r-control); background: var(--text); color: var(--bg); font-size: var(--t-sub); font-weight: 600; opacity: 0; transition: opacity 160ms; pointer-events: none; }
+  .toast.on { opacity: 1; }
+
+  /* states */
+  .sk { background: var(--surface-2); border-radius: var(--r-control); }
+  .state-msg { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 var(--s6); gap: var(--s2); }
+  .state-msg i { font-size: 40px; color: var(--text-2); }
+  .state-msg p { margin: 0; color: var(--text-2); font-size: var(--t-sub); }
+  .ghost { margin-top: var(--s3); min-height: 44px; padding: 0 var(--s5); border-radius: var(--r-container); background: var(--surface-2); font-weight: 700; }
+</style>
+</head>
+<body>
+  <div class="statusbar">
+    <span id="clock">10:08</span>
+    <svg viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen">
+    <div class="navbar" id="navbar" aria-hidden="true"><span>Cave house in Ürgüp</span></div>
+    <div class="hud">
+      <button aria-label="Back" onclick="history.back()"><i class="ph ph-caret-left"></i></button>
+      <div>
+        <button aria-label="Share" id="share"><i class="ph ph-export"></i></button>
+        <button aria-label="Save" aria-pressed="false" id="save"><i class="ph ph-heart"></i></button>
+      </div>
+    </div>
+
+    <div class="scroll" id="scroll">
+      <div class="gallery-wrap">
+        <div class="gallery" id="gallery">
+          <div class="slot" role="img" aria-label="Photo 1 of 8: the house from the street"></div>
+          <div class="slot" role="img" aria-label="Photo 2 of 8: main room"></div>
+          <div class="slot" role="img" aria-label="Photo 3 of 8: bedroom"></div>
+          <div class="slot" role="img" aria-label="Photo 4 of 8: roof terrace"></div>
+          <div class="slot" role="img" aria-label="Photo 5 of 8: kitchen"></div>
+          <div class="slot" role="img" aria-label="Photo 6 of 8: bathroom"></div>
+          <div class="slot" role="img" aria-label="Photo 7 of 8: steps to the door"></div>
+          <div class="slot" role="img" aria-label="Photo 8 of 8: view from the terrace"></div>
+        </div>
+        <div class="count num" id="count" aria-hidden="true">1 / 8</div>
+      </div>
+
+      <div class="content">
+        <h1>Cave house in Ürgüp</h1>
+        <p class="meta">Entire place in Nevşehir, Türkiye<br>2 guests, 1 bedroom, 1 bath</p>
+
+        <section class="dates" aria-labelledby="dates-title">
+          <div class="dates-head">
+            <h2 id="dates-title"><span id="dates-icon"></span><span id="dates-label">Your dates</span></h2>
+            <span class="month">March 2027</span>
+          </div>
+          <p class="status" id="status" aria-live="polite"></p>
+          <div class="strip num" id="strip" role="group" aria-label="Price per night, March 2027"></div>
+        </section>
+
+        <section class="special" aria-labelledby="special-title">
+          <h2 id="special-title">What makes it special</h2>
+          <ul class="rows">
+            <li><i class="ph ph-mountains"></i><div class="r"><div class="t">Carved into the rock</div><div class="s">Three rooms cut into soft tuff</div></div></li>
+            <li><i class="ph ph-thermometer-simple"></i><div class="r"><div class="t">Cool without air conditioning</div><div class="s num">Around 16 °C inside in July</div></div></li>
+            <li><i class="ph ph-sun-horizon"></i><div class="r"><div class="t">Roof terrace</div><div class="s">Faces east, over the valley</div></div></li>
+            <li><i class="ph ph-fire"></i><div class="r"><div class="t">Wood stove</div><div class="s">Heats the main room from November to April</div></div></li>
+            <li><i class="ph ph-stairs"></i><div class="r"><div class="t">22 steps to the door</div><div class="s">No step-free access</div></div></li>
+            <li><i class="ph ph-wifi-slash"></i><div class="r"><div class="t">No Wi-Fi</div><div class="s">Mobile signal only</div></div></li>
+          </ul>
+        </section>
+
+        <section class="block">
+          <h2>Location</h2>
+          <p>Ürgüp, Nevşehir, Türkiye. You get the exact address after you book.</p>
+        </section>
+
+        <section class="block">
+          <h2>Host</h2>
+          <div class="host"><div class="avatar" aria-hidden="true">M</div><div><div style="font-weight:600">Melike</div><div class="meta" style="margin:0">Hosting on Rota since 2025</div></div></div>
+        </section>
+
+        <section class="block">
+          <h2>Reviews</h2>
+          <p>No reviews yet. This place is new on Rota.</p>
+        </section>
+      </div>
+    </div>
+
+    <div class="reserve" id="reserve">
+      <div>
+        <div class="total num" id="total">€0</div>
+        <div class="total-sub" id="total-sub"></div>
+      </div>
+      <button class="primary" id="reserve-btn">Reserve</button>
+    </div>
+
+    <nav class="tabbar" aria-label="Tabs">
+      <button class="tab" aria-current="page"><i class="ph-fill ph-magnifying-glass"></i>Explore</button>
+      <button class="tab"><i class="ph ph-heart"></i>Saved</button>
+      <button class="tab"><i class="ph ph-suitcase-rolling"></i>Trips</button>
+      <button class="tab"><i class="ph ph-chat-circle"></i>Inbox</button>
+      <button class="tab"><i class="ph ph-user-circle"></i>Profile</button>
+    </nav>
+
+    <div class="toast" id="toast" role="status"></div>
+
+    <div class="sheet-layer" id="sheet" aria-hidden="true">
+      <div class="scrim" data-close></div>
+      <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+        <div class="sheet-head">
+          <h2 id="sheet-title">Check your trip</h2>
+          <button class="icon-btn" aria-label="Close" data-close id="sheet-close"><i class="ph ph-x"></i></button>
+        </div>
+        <div class="lines num" id="lines"></div>
+        <div class="cancel"><i class="ph ph-calendar-check"></i><span id="cancel-text"></span></div>
+        <button class="primary" id="confirm-btn"></button>
+      </div>
+    </div>
+  </main>
+
+  <div class="home-indicator"></div>
+
+<script>
+document.getElementById('clock').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, '');
+
+// SAMPLE DATA: nightly prices for March 2027 (1 Mar is a Monday). null = already booked.
+const PRICES = [112,109,114,121,143,null,null,112,109,114,118,139,146,124,112,109,116,121,143,null,null,112,109,114,121,152,158,131,112,null,109];
+const CLEANING = 35, FEE_RATE = 0.12, LONG_STAY_NIGHTS = 5, LONG_STAY_OFF = 0.08;
+const WD = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const eur = (n) => (n < 0 ? '−€' : '€') + Math.abs(n).toLocaleString('en-GB');
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// pure price logic, checked by the asserts at the bottom
+function quote(start, end) {
+  const nights = end - start + 1;
+  const sum = PRICES.slice(start - 1, end).reduce((a, b) => a + b, 0);
+  const discount = nights >= LONG_STAY_NIGHTS ? Math.round(sum * LONG_STAY_OFF) : 0;
+  const fee = Math.round((sum - discount) * FEE_RATE);
+  return { nights, sum, discount, fee, total: sum - discount + CLEANING + fee };
+}
+const rangeFree = (a, b) => PRICES.slice(a - 1, b).every((p) => p !== null);
+const dayLabel = (d) => `${d} Mar`;
+
+let sel = { start: 12, end: 15 }; // nights 12 to 15, check-out 16 Mar
+let pending = null, reserved = false, shownTotal = 0;
+
+const strip = document.getElementById('strip');
+const cols = PRICES.map((p, i) => {
+  const d = i + 1, wd = WD[i % 7];
+  const b = document.createElement('button');
+  b.className = 'night' + (p === null ? ' taken' : '');
+  b.disabled = p === null;
+  b.setAttribute('aria-label', p === null ? `${wd} ${d} March, booked` : `${wd} ${d} March, ${eur(p)} a night`);
+  b.innerHTML = `<span class="p">${p === null ? '—' : eur(p)}</span><span class="bar" style="height:${p === null ? 20 : Math.round(24 + (p - 100) * 1.3)}px"></span><span class="wd">${wd}</span><span class="d">${d}</span>`;
+  b.addEventListener('click', () => pick(d));
+  strip.appendChild(b);
+  return b;
+});
+
+function pick(d) {
+  if (reserved) return;
+  if (pending === null || d < pending || !rangeFree(pending, d)) { pending = d; sel = null; }
+  else { sel = { start: pending, end: d }; pending = null; }
+  render();
+}
+
+function tweenTotal(to) {
+  const el = document.getElementById('total'), from = shownTotal;
+  shownTotal = to;
+  if (reduce || from === 0) { el.textContent = eur(to); return; }
+  const t0 = performance.now();
+  const step = (t) => { const k = Math.min(1, (t - t0) / 320); el.textContent = eur(Math.round(from + (to - from) * (1 - (1 - k) ** 3))); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+
+function render() {
+  cols.forEach((c, i) => {
+    const d = i + 1;
+    const on = sel ? d >= sel.start && d <= sel.end : d === pending;
+    c.classList.toggle('sel', on);
+    c.classList.toggle('mine', on && reserved);
+    c.setAttribute('aria-pressed', on);
+    if (reserved && PRICES[i] !== null) c.disabled = true;
+  });
+  const status = document.getElementById('status'), btn = document.getElementById('reserve-btn'), sub = document.getElementById('total-sub');
+  if (sel) {
+    const q = quote(sel.start, sel.end);
+    const range = `${sel.start}–${sel.end + 1} Mar`;
+    status.innerHTML = `<b>${range}</b>, ${q.nights} night${q.nights > 1 ? 's' : ''}, 2 guests`;
+    tweenTotal(q.total);
+    sub.textContent = `${q.nights} night${q.nights > 1 ? 's' : ''}, fees included`;
+    btn.disabled = reserved;
+  } else {
+    status.innerHTML = `From <b>${dayLabel(pending)}</b>. Now pick your last night.`;
+    document.getElementById('total').textContent = '—'; shownTotal = 0;
+    sub.textContent = 'Pick your last night';
+    btn.disabled = true;
+  }
+  if (reserved) {
+    document.getElementById('dates-icon').innerHTML = '<i class="ph-fill ph-check-circle" style="color:var(--mine)"></i>';
+    document.getElementById('dates-label').textContent = 'Reserved';
+    btn.innerHTML = '<i class="ph ph-check"></i>Reserved';
+    btn.classList.add('done');
+  }
+}
+
+// gallery counter
+const gallery = document.getElementById('gallery');
+gallery.addEventListener('scroll', () => { document.getElementById('count').textContent = `${Math.round(gallery.scrollLeft / gallery.clientWidth) + 1} / 8`; }, { passive: true });
+
+// solid nav bar once the photos have scrolled away, so nothing passes under the buttons
+const scroller = document.getElementById('scroll');
+scroller.addEventListener('scroll', () => document.getElementById('navbar').classList.toggle('on', scroller.scrollTop > 300 - 59 - 52), { passive: true });
+
+// save and share
+const save = document.getElementById('save');
+save.addEventListener('click', () => {
+  const on = save.getAttribute('aria-pressed') !== 'true';
+  save.setAttribute('aria-pressed', on);
+  save.innerHTML = `<i class="${on ? 'ph-fill' : 'ph'} ph-heart"></i>`;
+});
+document.getElementById('share').addEventListener('click', async () => {
+  try { if (navigator.share) { await navigator.share({ title: 'Cave house in Ürgüp', url: location.href }); return; } } catch (e) { return; }
+  try { await navigator.clipboard.writeText(location.href); toast('Link copied'); } catch (e) { toast('Could not copy the link'); }
+});
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 2200);
+}
+
+// reserve sheet: full price with fees and the cancellation terms come before the pay button
+const sheet = document.getElementById('sheet');
+let lastFocus = null;
+function openSheet() {
+  const q = quote(sel.start, sel.end);
+  const rows = [[`${q.nights} night${q.nights > 1 ? 's' : ''}, ${sel.start}–${sel.end + 1} Mar`, eur(q.sum)]];
+  if (q.discount) rows.push([`Stay of ${LONG_STAY_NIGHTS}+ nights, 8% off`, eur(-q.discount)]);
+  rows.push(['Cleaning', eur(CLEANING)], ['Rota service fee', eur(q.fee)]);
+  document.getElementById('lines').innerHTML = rows.map(([a, b]) => `<div class="line"><span>${a}</span><span>${b}</span></div>`).join('')
+    + `<div class="line sum"><span>Total</span><span>${eur(q.total)}</span></div>`;
+  document.getElementById('cancel-text').textContent = `Free cancellation until ${dayLabel(sel.start - 7)}. After that you get half back until ${dayLabel(sel.start - 1)}.`;
+  document.getElementById('confirm-btn').textContent = `Reserve and pay ${eur(q.total)}`;
+  lastFocus = document.activeElement;
+  sheet.classList.add('open'); sheet.setAttribute('aria-hidden', 'false');
+  document.getElementById('sheet-close').focus();
+}
+function closeSheet() { sheet.classList.remove('open'); sheet.setAttribute('aria-hidden', 'true'); lastFocus && lastFocus.focus(); }
+document.getElementById('reserve-btn').addEventListener('click', openSheet);
+sheet.querySelectorAll('[data-close]').forEach((el) => el.addEventListener('click', closeSheet));
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && sheet.classList.contains('open')) closeSheet(); });
+document.getElementById('confirm-btn').addEventListener('click', () => { reserved = true; closeSheet(); render(); });
+
+// states: ?state=loading shows the skeleton, ?state=error the failure screen
+function showState(kind) {
+  const sc = document.getElementById('scroll');
+  document.getElementById('reserve').style.display = 'none';
+  if (kind === 'loading') {
+    sc.innerHTML = `<div class="sk" style="height:300px;border-radius:0"></div><div class="content">
+      <div class="sk" style="height:30px;width:72%"></div><div class="sk" style="height:16px;width:58%;margin-top:12px"></div>
+      <div class="sk" style="height:22px;width:40%;margin-top:32px"></div>
+      <div style="display:flex;gap:4px;margin-top:16px;align-items:flex-end">${'<div class="sk" style="flex:0 0 44px;height:120px"></div>'.repeat(8)}</div></div>`;
+    document.getElementById('reserve').style.display = '';
+    document.getElementById('total').textContent = ''; document.getElementById('total').className = 'sk'; document.getElementById('total').style.cssText = 'width:80px;height:24px';
+    document.getElementById('reserve-btn').disabled = true;
+  } else {
+    sc.outerHTML = `<div class="state-msg" style="padding-top:var(--safe-top)"><i class="ph ph-cloud-slash"></i><h2>We couldn’t load this place</h2>
+      <p>Check your connection and try again.</p><button class="ghost" onclick="location.search=''">Try again</button></div>`;
+    document.querySelector('.hud > div').style.display = 'none';
+  }
+}
+
+// self-check of the money logic (sample rates)
+console.assert(quote(12, 15).total === 521 + 35 + 63, 'four nights');
+console.assert(quote(12, 16).discount === 50 && quote(12, 16).total === 630 - 50 + 35 + 70, 'five nights with long-stay discount');
+console.assert(!rangeFree(5, 8) && rangeFree(8, 19), 'booked nights block a range');
+
+const state = q.get('state');
+if (state === 'loading' || state === 'error') showState(state);
+else {
+  render();
+  strip.scrollLeft = 9 * 48; // open on the selected week
+  // after the resting state, show the main interaction once: add a night and watch the price follow
+  if (!reduce && !q.has('still')) {
+    setTimeout(() => pick(12), 3000);
+    setTimeout(() => pick(16), 3800);
+  }
+}
+</script>
+</body>
+</html>

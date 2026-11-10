@@ -62,7 +62,8 @@ try {
 
   await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: scale, mobile: true });
   await send('Emulation.setTouchEmulationEnabled', { enabled: true });
-  if (dark) await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'dark' }] });
+  // pin the scheme: otherwise a host in dark mode silently captures every page dark
+  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: dark ? 'dark' : 'light' }] });
   await send('Page.enable');
   await send('Page.navigate', { url: pathToFileURL(resolve(html)).href });
   for (let i = 0; i < 100 && !events.includes('Page.loadEventFired'); i++) await sleep(100);

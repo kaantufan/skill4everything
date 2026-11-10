@@ -3,7 +3,7 @@
 For any work on mobile screens, load the `mobile-ui-craft` skill first and follow its workflow. Whether or not it loads, these hold:
 
 1. Every key screen has one concept from the product's own world and a hero that shows the screen's main value. A neutral background with rounded cards is not a design.
-2. Colour, type, material and motion are chosen for this product and carried across screens. No template colours, no emoji as icons, no invented metrics, ratings or testimonials.
+2. Typeface, icon set, layout and effects come from the skill's dealing script, not from preference. Icons come from a real icon set and pictures are real files or labelled slots: draw neither. No emoji as icons, no invented metrics, ratings or testimonials.
 3. Touch targets are at least 44×44 pt on iOS and 48×48 dp on Android.
 4. Text follows the user's text size, custom fonts included. Nothing essential clips at the largest size.
 5. Safe areas and keyboard insets come from system APIs, never from hard-coded numbers.

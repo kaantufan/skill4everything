@@ -45,7 +45,7 @@ Use this file once the structure of a screen stands. Every rule here is checkabl
 ## Typography
 
 - Use the platform text styles and let them scale. The default body size on both platforms is already tuned; do not shrink body text to fit more.
-- A display face with a voice is one of the strongest identity tools. Use it for hero numerals and titles. Keep body text and controls in a quiet, legible face; the system font is a good one, and its own rounded, serif and mono variants are worth a look first.
+- Follow the dealt type scheme. Most hands give the system font or a single family; do not add a second face for contrast.
 - **Tabular figures** for every number that changes or lines up: prices, timers, counters, tables. Otherwise digits jitter.
 - For big numbers, make the unit and the decimals quieter than the integer part.
 - **Truncation is designed.** Names and titles: one line, tail ellipsis. Paths, IDs and file names: middle truncation. Descriptions: two or three lines with a way to expand. Money, times and codes never truncate.

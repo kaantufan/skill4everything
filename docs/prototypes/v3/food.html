@@ -1,0 +1,470 @@
+<!doctype html>
+<!-- Sofra, restaurant page. HTML mockup of an iOS screen at 393x852.
+     Hash options: #light #dark (default follows the system, dark first), #closed #loading #error #xl (larger text). -->
+<html lang="en" data-platform="ios" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sofra, restaurant page</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<script>
+  // dark is the designed appearance; light follows the system, or a #light / #dark hash
+  (function () {
+    var h = location.hash, root = document.documentElement;
+    root.dataset.theme = /light/.test(h) ? 'light' : /dark/.test(h) ? 'dark'
+      : matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    if (/xl/.test(h)) root.style.fontSize = '22px'; // stands in for the largest Dynamic Type step
+  })();
+</script>
+<style>
+  :root {
+    --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px;
+    --font: -apple-system, "SF Pro Text", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+    --chrome: #000;
+  }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--bg); color: var(--label); }
+  .statusbar {
+    position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 30;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none;
+  }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  .home-indicator {
+    position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 30;
+    width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none;
+  }
+  #screen { position: absolute; inset: 0; overflow: hidden; }
+</style>
+<style>
+  /* ---------- Sofra tokens ---------- */
+  :root {
+    /* ground: iOS system background; colour lives in content and one action tint */
+    --bg: #ffffff; --bg2: #f2f2f7; --slot: #e3e3e8; --elev: #ffffff;
+    --label: #0b0b0f; --label2: rgba(60, 60, 67, .78); --label3: rgba(60, 60, 67, .5);
+    --sep: rgba(60, 60, 67, .29);
+    /* hue: şalgam, the purple-magenta turnip juice served with lahmacun and kebab */
+    --tint: oklch(0.49 0.22 322); --tint-text: oklch(0.49 0.22 322); --on-tint: #fff;
+    --shadow: 0 2px 10px rgba(0, 0, 0, .16);   /* the one elevation level */
+    --scrim: rgba(0, 0, 0, .32);
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
+    --r-sheet: 12px;        /* system sheet; every other container is square */
+    --t-quick: 180ms; --t-move: 320ms; --ease: cubic-bezier(.2, .8, .2, 1);
+  }
+  [data-theme="dark"] {
+    --bg: #000000; --bg2: #1c1c1e; --slot: #1c1c1e; --elev: #3a3a3c;
+    --label: #f5f5f7; --label2: rgba(235, 235, 245, .66); --label3: rgba(235, 235, 245, .4);
+    --sep: rgba(84, 84, 88, .65);
+    --tint: oklch(0.55 0.21 322); --tint-text: oklch(0.76 0.15 322); --on-tint: #fff;
+    --shadow: 0 2px 10px rgba(0, 0, 0, .5);
+    --scrim: rgba(0, 0, 0, .55);
+  }
+
+  /* type roles (rem so text follows the size setting) */
+  .t-title { font-size: 1.75rem; line-height: 1.15; font-weight: 700; letter-spacing: -.01em; }
+  .t-head  { font-size: 1.375rem; line-height: 1.2; font-weight: 700; }
+  .t-body  { font-size: 1.0625rem; line-height: 1.3; }
+  .t-sub   { font-size: .9375rem; line-height: 1.33; color: var(--label2); }
+  .t-cap   { font-size: .8125rem; line-height: 1.3; color: var(--label2); }
+  .num     { font-variant-numeric: tabular-nums; }
+
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  button:focus-visible { outline: 2px solid var(--tint-text); outline-offset: 2px; }
+  .ti { font-size: 22px; line-height: 1; }
+
+  .scroll { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding-bottom: calc(var(--safe-bottom) + 120px); }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* canvas: the restaurant's own photo runs under the status bar */
+  .cover { height: 184px; background: var(--slot); }
+
+  /* HUD: round controls at the edges */
+  .hud { position: absolute; top: calc(var(--safe-top) + 2px); z-index: 25; width: 44px; height: 44px; border-radius: 50%;
+         background: var(--elev); box-shadow: var(--shadow); display: grid; place-items: center; transition: transform var(--t-quick) var(--ease), box-shadow var(--t-quick); }
+  .hud:active { transform: scale(.92); }
+  .hud.left { left: 16px; } .hud.right { right: 16px; }
+  .hud[aria-pressed="true"] .ti { color: var(--tint-text); }
+  .compact-on .hud { box-shadow: none; background: var(--bg2); }
+
+  .info { padding: var(--s4) var(--s4) 0; }
+  .info h1 { margin: 0 0 var(--s2); }
+  .info p { margin: 0; }
+  .info p + p { margin-top: 2px; }
+
+  /* hero: the arrival figure itself */
+  .hero { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--s3) var(--s4); padding: 20px var(--s4) var(--s3); }
+  .hero .fee { margin-left: auto; }
+  .fig { font-size: 3.75rem; line-height: .95; font-weight: 700; letter-spacing: -.035em; white-space: nowrap; }
+  .fig .unit { font-size: 1.375rem; font-weight: 600; letter-spacing: 0; color: var(--label2); margin-left: 6px; }
+  .fig2 { font-size: 2.125rem; line-height: 1; font-weight: 700; letter-spacing: -.02em; text-align: right; white-space: nowrap; }
+  .hero .t-sub { margin-top: var(--s2); }
+  .hero .fee .t-sub { text-align: right; }
+  .closed .eta .fig { font-size: 2.75rem; }
+
+  .fees { margin: 0 0 0 var(--s4); padding: 0; }
+  .fees > div { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s3); padding: 8px var(--s4) 8px 0; border-top: .5px solid var(--sep); }
+  .fees dt, .fees dd { margin: 0; }
+  .fees dd { white-space: nowrap; }
+  .fees .t-cap { display: block; margin-top: 2px; }
+
+  /* sections */
+  .chips { display: flex; gap: var(--s2); overflow-x: auto; scrollbar-width: none; padding: 0 var(--s4); }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { flex: none; height: 44px; display: flex; align-items: center; }
+  .chip span { display: block; padding: 7px 14px; border-radius: 999px; background: var(--bg2); font-size: .9375rem; font-weight: 600; white-space: nowrap; transition: background var(--t-quick), color var(--t-quick); }
+  .chip[aria-selected="true"] span { background: var(--label); color: var(--bg); }
+  .chip:active span { opacity: .7; }
+  .inline-chips { padding-top: var(--s3); }
+
+  .section h2 { margin: 0; padding: var(--s5) var(--s4) 0; }
+  .dish { display: grid; grid-template-columns: 1fr 96px; gap: var(--s3); padding: var(--s4) var(--s4) var(--s4) 0; margin-left: var(--s4); border-bottom: .5px solid var(--sep); min-height: 128px; }
+  .dish:last-child { border-bottom: 0; }
+  .dish.nophoto { grid-template-columns: 1fr auto; }
+  .dish h3 { margin: 0; font-size: 1.0625rem; line-height: 1.3; font-weight: 600; }
+  .dish .desc { margin: 2px 0 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .dish .allergen { margin: 4px 0 0; }
+  .dish .price { margin: var(--s2) 0 0; font-weight: 600; }
+  .dish.soldout h3, .dish.soldout .price, .dish.soldout .desc { color: var(--label3); }
+  .dish.soldout .state { color: var(--label); font-weight: 600; }
+  .side { position: relative; width: 96px; height: 96px; }
+  .nophoto .side { width: auto; min-width: 44px; height: auto; display: flex; align-items: flex-end; }
+  .thumb { width: 96px; height: 96px; background: var(--slot); }
+  .soldout .thumb { opacity: .45; }
+
+  .add { position: absolute; right: -8px; bottom: -8px; width: 44px; height: 44px; display: grid; place-items: center; }
+  .nophoto .add, .nophoto .stepper { position: static; }
+  .add .dot { width: 36px; height: 36px; border-radius: 50%; background: var(--elev); box-shadow: var(--shadow); display: grid; place-items: center; color: var(--tint-text); transition: transform var(--t-quick) var(--ease); }
+  .add:active .dot { transform: scale(.88); }
+  .stepper { position: absolute; right: -8px; bottom: -4px; height: 36px; border-radius: 999px; background: var(--elev); box-shadow: var(--shadow); display: flex; align-items: center; }
+  .stepper button { width: 40px; height: 44px; margin: -4px 0; display: grid; place-items: center; color: var(--tint-text); }
+  .stepper button:active { opacity: .6; }
+  .stepper .n { min-width: 18px; text-align: center; font-weight: 700; }
+  .stepper .ti, .add .ti { font-size: 20px; }
+
+  /* compact bar after the header scrolls away */
+  .compact { position: absolute; inset: 0 0 auto 0; z-index: 20; background: var(--bg); padding-top: var(--safe-top); border-bottom: .5px solid var(--sep);
+             opacity: 0; pointer-events: none; transition: opacity var(--t-quick); }
+  .compact-on .compact { opacity: 1; pointer-events: auto; }
+  .compact .bar { height: 48px; display: flex; align-items: center; justify-content: center; padding: 0 72px; }
+  .compact .bar strong { font-size: 1.0625rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .compact .chips { padding-bottom: 4px; }
+
+  /* cart: a floating round control */
+  .cartbar { position: absolute; z-index: 22; left: 16px; right: 16px; bottom: calc(var(--safe-bottom) + 8px); min-height: 56px; border-radius: 999px;
+             background: var(--tint); color: var(--on-tint); box-shadow: var(--shadow); display: flex; align-items: center; gap: var(--s3); padding: 0 22px 0 8px;
+             transition: transform var(--t-move) var(--ease), opacity var(--t-move); }
+  .cartbar.hidden { transform: translateY(120px); opacity: 0; pointer-events: none; }
+  .cartbar:active { transform: scale(.98); }
+  .cartbar .count { min-width: 40px; height: 40px; border-radius: 999px; background: rgba(255, 255, 255, .2); display: grid; place-items: center; font-weight: 700; font-size: 1.0625rem; padding: 0 8px; }
+  .cartbar .lbl { flex: 1; text-align: left; font-weight: 600; font-size: 1.0625rem; }
+  .cartbar .tot { font-weight: 700; font-size: 1.0625rem; }
+
+  /* sheet */
+  .scrim { position: absolute; inset: 0; z-index: 40; background: var(--scrim); opacity: 0; pointer-events: none; transition: opacity var(--t-move); }
+  .sheet { position: absolute; z-index: 41; left: 0; right: 0; bottom: 0; max-height: 700px; background: var(--bg2); border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+           box-shadow: var(--shadow); display: flex; flex-direction: column; transform: translateY(105%); transition: transform var(--t-move) var(--ease); }
+  [data-theme="light"] .sheet { background: var(--bg); }
+  .open .scrim { opacity: 1; pointer-events: auto; }
+  .open .sheet { transform: none; }
+  .grabber { width: 36px; height: 5px; border-radius: 3px; background: var(--label3); margin: 6px auto 0; }
+  .sheet header { display: flex; align-items: flex-start; justify-content: space-between; padding: var(--s3) var(--s3) var(--s2) var(--s4); }
+  .sheet header h2 { margin: 6px 0 2px; }
+  .close { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; }
+  .close span { width: 30px; height: 30px; border-radius: 50%; background: var(--elev); display: grid; place-items: center; }
+  .close .ti { font-size: 18px; color: var(--label2); }
+  .sheet .body { flex: 1; overflow-y: auto; padding: 0 0 var(--s4); }
+  .line { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: var(--s3); padding: var(--s3) var(--s4) var(--s3) 0; margin-left: var(--s4); border-bottom: .5px solid var(--sep); min-height: 68px; }
+  .line .stepper { position: static; box-shadow: none; }
+  .line .tot { min-width: 76px; text-align: right; font-weight: 600; }
+  .line.removed { grid-template-columns: 1fr auto; color: var(--label2); }
+  .undo { min-height: 44px; padding: 0 var(--s2); color: var(--tint-text); font-weight: 600; }
+  .sum { margin: var(--s5) 0 0 var(--s4); padding: 0; }
+  .sum > div { display: flex; justify-content: space-between; gap: var(--s3); padding: 6px var(--s4) 6px 0; }
+  .sum dt, .sum dd { margin: 0; }
+  .sum .total { border-top: .5px solid var(--sep); margin-top: 6px; padding-top: 12px; font-size: 1.25rem; font-weight: 700; }
+  .note { margin: var(--s3) var(--s4) 0; }
+  .sheet footer { padding: var(--s3) var(--s4) calc(var(--safe-bottom) + 8px); }
+  .primary { width: 100%; min-height: 54px; border-radius: 999px; background: var(--tint); color: var(--on-tint); font-weight: 600; font-size: 1.0625rem; display: flex; align-items: center; justify-content: center; gap: var(--s2); }
+  .primary:active { opacity: .85; }
+  .secondary { min-height: 44px; padding: 0 var(--s5); border-radius: 999px; background: var(--elev); font-weight: 600; color: var(--tint-text); }
+  .empty { padding: 96px var(--s5) 0; text-align: center; }
+  .empty p { margin: 0 0 var(--s4); }
+
+  /* loading and error */
+  .sk { background: var(--bg2); }
+  [data-theme="light"] .sk { background: var(--slot); }
+  .skrow { display: grid; grid-template-columns: 1fr 96px; gap: var(--s3); padding: var(--s4); min-height: 128px; }
+  .skrow i { display: block; height: 14px; margin-bottom: 10px; }
+  .fail { padding: 64px var(--s5); text-align: center; }
+  .fail p { margin: 0 0 var(--s4); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: 1ms !important; }
+    .cartbar.hidden { transform: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="statusbar">
+    <span id="clock">10:08</span>
+    <svg viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen">
+    <div class="scroll" id="scroll">
+      <div class="cover" role="img" aria-label="Photo: lahmacun coming out of the wood oven at Kardeşler"></div>
+
+      <section class="info">
+        <h1 class="t-title" id="rname">Kardeşler Lahmacun &amp; Kebap</h1>
+        <p class="t-sub">Lahmacun, kebab, pide</p>
+        <p class="t-sub">Moda Cd. 34, Kadıköy, 1.8 km</p>
+        <p class="t-sub" id="openline">Open until 23:30, rated 4.6 from 1,240 orders</p>
+      </section>
+
+      <div class="hero" id="hero">
+        <div class="eta">
+          <div class="fig num" id="etaFig" aria-label="Delivery in 25 to 35 minutes">25–35<span class="unit">min</span></div>
+          <div class="t-sub num" id="etaClock">At your door 20:41–20:51</div>
+        </div>
+        <div class="fee">
+          <div class="fig2 num" id="feeFig" aria-live="polite">₺39.90</div>
+          <div class="t-sub">Fees</div>
+        </div>
+      </div>
+      <dl class="fees t-body">
+        <div><dt>Delivery</dt><dd class="num">₺24.90</dd></div>
+        <div><dt>Small-order fee<span class="t-cap" id="smallNote">Under ₺250 of food</span></dt><dd class="num" id="smallFee">₺15.00</dd></div>
+      </dl>
+
+      <div class="chips inline-chips" role="tablist" aria-label="Menu sections" id="chipsInline"></div>
+      <div id="menu"></div>
+    </div>
+
+    <div class="compact" id="compact" aria-hidden="true">
+      <div class="bar"><strong id="ctitle">Kardeşler Lahmacun &amp; Kebap</strong></div>
+      <div class="chips" role="tablist" aria-label="Menu sections" id="chipsCompact"></div>
+    </div>
+
+    <button class="hud left" aria-label="Back to restaurants"><i class="ti ti-chevron-left"></i></button>
+    <button class="hud right" id="fav" aria-label="Save restaurant" aria-pressed="false"><i class="ti ti-heart"></i></button>
+
+    <button class="cartbar hidden" id="cartbar" aria-label="Open your sofra">
+      <span class="count num" id="cbCount">0</span>
+      <span class="lbl">Your sofra</span>
+      <span class="tot num" id="cbTotal" aria-live="polite">₺0.00</span>
+    </button>
+
+    <div class="scrim" id="scrim"></div>
+    <section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" aria-hidden="true">
+      <div class="grabber"></div>
+      <header>
+        <div><h2 class="t-head" id="sheetTitle">Your sofra</h2><div class="t-sub">From Kardeşler Lahmacun &amp; Kebap</div></div>
+        <button class="close" id="close" aria-label="Close your sofra"><span><i class="ti ti-x"></i></span></button>
+      </header>
+      <div class="body" id="sheetBody"></div>
+      <footer id="sheetFoot"><button class="primary num" id="checkout">Go to checkout, ₺0.00</button></footer>
+    </section>
+  </main>
+
+  <div class="home-indicator"></div>
+
+<script>
+// Sample menu: names, prices, fees and rating are placeholders until the restaurant's real data arrives.
+const MENU = [
+  { id: 'lp', title: 'Lahmacun & pide', items: [
+    { id: 'lahmacun', name: 'Lahmacun', desc: 'Thin dough with minced lamb, onion and pepper. Parsley, lemon and sumac on the side.', al: 'Contains gluten', price: 145, photo: 'lahmacun on a wooden board' },
+    { id: 'findik', name: 'Fındık lahmacun, 3 pieces', desc: 'Small and crisp, a little spicier.', al: 'Contains gluten', price: 190, photo: 'three small lahmacun' },
+    { id: 'kiymali', name: 'Kıymalı pide', desc: 'Minced beef, tomato and green pepper.', al: 'Contains gluten, milk', price: 285, photo: 'kıymalı pide, sliced' },
+    { id: 'karadeniz', name: 'Kuşbaşılı kaşarlı Karadeniz pidesi, tereyağlı', desc: 'Diced lamb and kaşar cheese in a closed pide, brushed with butter.', al: 'Contains gluten, milk, egg', price: 345, photo: 'closed Karadeniz pide' },
+  ]},
+  { id: 'kb', title: 'Kebabs', items: [
+    { id: 'adana', name: 'Adana kebap, 1.5 portion', desc: 'Hand-minced lamb with red pepper, on lavash with grilled tomato and pepper.', al: 'Contains gluten', price: 420, photo: 'Adana kebap on lavash' },
+    { id: 'urfa', name: 'Urfa kebap', desc: 'Like Adana, without the heat.', al: 'Contains gluten', price: 395, photo: 'Urfa kebap', soldOut: true },
+    { id: 'tavuk', name: 'Tavuk şiş', desc: 'Marinated chicken thigh with bulgur pilav and salad.', al: 'Contains gluten, milk', price: 310, photo: 'tavuk şiş skewers' },
+  ]},
+  { id: 'mz', title: 'Meze', items: [
+    { id: 'ezme', name: 'Ezme', desc: 'Tomato, pepper and onion with pomegranate molasses.', al: 'Vegan', price: 85 },
+    { id: 'haydari', name: 'Haydari', desc: 'Strained yoghurt with garlic, dill and mint.', al: 'Contains milk', price: 90, photo: 'haydari in a bowl' },
+    { id: 'humus', name: 'Humus', desc: 'Tahini, lemon, cumin and olive oil.', al: 'Vegan. Contains sesame', price: 95, photo: 'humus in a bowl' },
+  ]},
+  { id: 'ds', title: 'Desserts', items: [
+    { id: 'kunefe', name: 'Künefe', desc: 'Kadayıf and unsalted cheese, baked to order.', al: 'Contains gluten, milk', price: 185, photo: 'künefe in a copper pan' },
+    { id: 'katmer', name: 'Fıstıklı katmer', desc: 'Thin pastry with pistachio and kaymak.', al: 'Contains gluten, milk, nuts', price: 240, photo: 'katmer, cut in squares' },
+  ]},
+  { id: 'dr', title: 'Drinks', items: [
+    { id: 'ayran', name: 'Ayran, 300 ml', al: 'Contains milk', price: 40, photo: 'ayran in a glass' },
+    { id: 'salgam', name: 'Şalgam, spicy, 300 ml', desc: 'Fermented purple carrot juice.', al: 'Vegan', price: 45, photo: 'şalgam in a glass' },
+    { id: 'water', name: 'Water, 500 ml', price: 15 },
+  ]},
+];
+const DELIVERY = 24.90, SMALL_FEE = 15, SMALL_UNDER = 250, ETA = [25, 35];
+
+const $ = (s) => document.querySelector(s);
+const tl = (n) => '₺' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const items = Object.fromEntries(MENU.flatMap((s) => s.items).map((i) => [i.id, i]));
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const state = new Set(location.hash.slice(1).split(','));
+const cart = new Map();            // id -> qty, in the order dishes were added
+let removed = null;                // { id, qty, timer } for undo in the sheet
+
+function totals() {
+  let food = 0, count = 0;
+  for (const [id, q] of cart) { food += items[id].price * q; count += q; }
+  const small = food > 0 && food < SMALL_UNDER ? SMALL_FEE : food === 0 ? SMALL_FEE : 0;
+  return { food, count, small, fees: DELIVERY + small, total: food + DELIVERY + (food ? small : 0) };
+}
+console.assert(tl(1234.5) === '₺1,234.50', 'price format');
+cart.set('lahmacun', 2); console.assert(totals().total === 314.9, 'fee drops over ₺250'); cart.clear();
+cart.set('lahmacun', 1); console.assert(Math.abs(totals().total - 184.9) < 1e-9, 'small-order fee applies'); cart.clear();
+
+// ---------- menu ----------
+function dishHTML(d) {
+  const q = cart.get(d.id) || 0, label = d.name.replace(/"/g, '');
+  const control = d.soldOut || state.has('closed') ? '' : q
+    ? `<div class="stepper"><button data-dec="${d.id}" aria-label="One less ${label}"><i class="ti ti-minus"></i></button><span class="n num" aria-label="${q} in your sofra">${q}</span><button data-inc="${d.id}" aria-label="One more ${label}"><i class="ti ti-plus"></i></button></div>`
+    : `<button class="add" data-inc="${d.id}" aria-label="Add ${label}, ${tl(d.price)}"><span class="dot"><i class="ti ti-plus"></i></span></button>`;
+  return `<article class="dish${d.photo ? '' : ' nophoto'}${d.soldOut ? ' soldout' : ''}" id="d-${d.id}">
+    <div><h3>${d.name}</h3>${d.desc ? `<p class="desc t-sub">${d.desc}</p>` : ''}${d.al ? `<p class="allergen t-cap">${d.al}</p>` : ''}
+      <p class="price t-body num">${d.soldOut ? '<span class="state">Sold out today</span>' : tl(d.price)}</p></div>
+    <div class="side">${d.photo ? `<div class="thumb" role="img" aria-label="Photo: ${d.photo}"></div>` : ''}${control}</div></article>`;
+}
+function renderMenu() {
+  if (state.has('loading')) {
+    $('#menu').innerHTML = Array.from({ length: 4 }, () => `<div class="skrow" aria-hidden="true"><div><i class="sk" style="width:60%"></i><i class="sk" style="width:90%"></i><i class="sk" style="width:40%"></i></div><div class="sk"></div></div>`).join('') + '<span class="t-sub" style="position:absolute;left:-9999px" role="status">Loading the menu</span>';
+    return;
+  }
+  if (state.has('error')) {
+    $('#menu').innerHTML = `<div class="fail"><p class="t-head">The menu didn't load</p><button class="secondary" id="retry">Try again</button></div>`;
+    return;
+  }
+  $('#menu').innerHTML = MENU.map((s) => `<section class="section" id="s-${s.id}" aria-labelledby="h-${s.id}"><h2 class="t-head" id="h-${s.id}">${s.title}</h2>${s.items.map(dishHTML).join('')}</section>`).join('');
+}
+function renderDish(id) { const el = $('#d-' + id); if (el) el.outerHTML = dishHTML(items[id]); }
+function renderChips() {
+  const html = MENU.map((s, i) => `<button class="chip" role="tab" data-sec="${s.id}" aria-selected="${i === 0}"><span>${s.title}</span></button>`).join('');
+  $('#chipsInline').innerHTML = html; $('#chipsCompact').innerHTML = html;
+}
+
+// ---------- hero and cart bar ----------
+let shownFee = DELIVERY + SMALL_FEE;
+function tweenFee(to) {
+  const from = shownFee; shownFee = to;
+  if (reduce || from === to) { $('#feeFig').textContent = tl(to); return; }
+  const t0 = performance.now();
+  const step = (t) => { const k = Math.min(1, (t - t0) / 320), e = 1 - Math.pow(1 - k, 3);
+    $('#feeFig').textContent = tl(from + (to - from) * e); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+function renderTotals() {
+  const t = totals();
+  tweenFee(t.fees);
+  $('#smallFee').textContent = tl(t.small);
+  $('#smallNote').textContent = t.small === 0 ? `None over ${tl(SMALL_UNDER).replace('.00', '')} of food`
+    : t.food > 0 ? `${tl(SMALL_UNDER - t.food)} more food removes it` : `Under ${tl(SMALL_UNDER).replace('.00', '')} of food`;
+  $('#cbCount').textContent = t.count;
+  $('#cbTotal').textContent = tl(t.total);
+  $('#cartbar').setAttribute('aria-label', `Open your sofra, ${t.count} ${t.count === 1 ? 'dish' : 'dishes'}, ${tl(t.total)} all in`);
+  $('#cartbar').classList.toggle('hidden', t.count === 0);
+  if ($('#screen').classList.contains('open')) renderSheet();
+}
+function change(id, d) {
+  const q = Math.max(0, (cart.get(id) || 0) + d);
+  if (q) cart.set(id, q); else cart.delete(id);
+  renderDish(id); renderTotals();
+  // keep the control just touched clear of the floating cart bar
+  const row = $('#d-' + id), sc = $('#scroll');
+  if (row && q) { const over = row.getBoundingClientRect().bottom - $('#cartbar').offsetTop + 8;
+    if (over > 0) sc.scrollBy({ top: over, behavior: reduce ? 'auto' : 'smooth' }); }
+}
+
+// ---------- sheet ----------
+function renderSheet() {
+  const t = totals();
+  if (!t.count && !removed) {
+    $('#sheetBody').innerHTML = `<div class="empty"><p class="t-head">Your sofra is empty</p><button class="secondary" data-close>Back to the menu</button></div>`;
+    $('#sheetFoot').hidden = true; return;
+  }
+  $('#sheetFoot').hidden = false;
+  const lines = [...cart].map(([id, q]) => { const d = items[id];
+    return `<div class="line"><div><div class="t-body">${d.name}</div><div class="t-cap num">${tl(d.price)} each</div></div>
+      <div class="stepper"><button data-dec="${id}" aria-label="One less ${d.name}"><i class="ti ti-${q === 1 ? 'trash' : 'minus'}"></i></button><span class="n num">${q}</span><button data-inc="${id}" aria-label="One more ${d.name}"><i class="ti ti-plus"></i></button></div>
+      <div class="tot t-body num">${tl(d.price * q)}</div></div>`; }).join('');
+  const undo = removed ? `<div class="line removed"><div class="t-body">${items[removed.id].name} removed</div><button class="undo" data-undo>Undo</button></div>` : '';
+  $('#sheetBody').innerHTML = lines + undo + `
+    <dl class="sum t-body num">
+      <div><dt>Food</dt><dd>${tl(t.food)}</dd></div>
+      <div><dt>Delivery</dt><dd>${tl(DELIVERY)}</dd></div>
+      <div><dt>Small-order fee</dt><dd>${tl(t.food ? t.small : 0)}</dd></div>
+      <div class="total"><dt>Total</dt><dd>${tl(t.total)}</dd></div>
+    </dl>
+    <p class="note t-cap">Prices include VAT. A tip is optional, and you choose it at checkout.</p>`;
+  $('#checkout').textContent = `Go to checkout, ${tl(t.total)}`;
+  $('#checkout').disabled = !t.count;
+}
+function openSheet() { removed = null; renderSheet(); $('#screen').classList.add('open'); $('#sheet').setAttribute('aria-hidden', 'false'); $('#close').focus({ preventScroll: true }); }
+function closeSheet() { $('#screen').classList.remove('open'); $('#sheet').setAttribute('aria-hidden', 'true'); $('#cartbar').focus({ preventScroll: true }); }
+
+// ---------- events ----------
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  const inSheet = !!b.closest('#sheet');
+  if (b.dataset.inc) change(b.dataset.inc, 1);
+  else if (b.dataset.dec) {
+    const id = b.dataset.dec;
+    if (inSheet && cart.get(id) === 1) { clearTimeout(removed?.timer); removed = { id, qty: 1, timer: setTimeout(() => { removed = null; renderSheet(); }, 5000) }; }
+    change(id, -1);
+  }
+  else if ('undo' in b.dataset && removed) { clearTimeout(removed.timer); const r = removed; removed = null; change(r.id, r.qty); }
+  else if (b.id === 'cartbar') openSheet();
+  else if (b.id === 'close' || 'close' in b.dataset) closeSheet();
+  else if (b.id === 'fav') { const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', on); b.querySelector('.ti').className = 'ti ' + (on ? 'ti-heart-filled' : 'ti-heart'); b.setAttribute('aria-label', on ? 'Saved restaurant' : 'Save restaurant'); }
+  else if (b.dataset.sec) { const top = $('#s-' + b.dataset.sec).offsetTop - compactH() + 1; $('#scroll').scrollTo({ top, behavior: reduce ? 'auto' : 'smooth' }); }
+  else if (b.id === 'retry') { state.delete('error'); renderMenu(); }
+  else if (b.id === 'checkout') { b.textContent = 'Opening checkout'; setTimeout(renderSheet, 1200); }
+});
+$('#scrim').addEventListener('click', closeSheet);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
+
+const compactH = () => $('#compact').offsetHeight;
+$('#scroll').addEventListener('scroll', () => {
+  const y = $('#scroll').scrollTop, chipsTop = $('#chipsInline').offsetTop;
+  const on = y > chipsTop - compactH() + 44;
+  $('#screen').classList.toggle('compact-on', on);
+  $('#compact').setAttribute('aria-hidden', !on);
+  let cur = MENU[0].id;
+  for (const s of MENU) { const el = $('#s-' + s.id); if (el && el.offsetTop - compactH() - 8 <= y) cur = s.id; }
+  document.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-selected', c.dataset.sec === cur));
+  const act = $('#chipsCompact [aria-selected="true"]'); if (on && act) act.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+}, { passive: true });
+
+// ---------- live arrival window and states ----------
+function clockLine() {
+  const hm = (m) => new Date(Date.now() + m * 60000).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  $('#etaClock').textContent = `At your door ${hm(ETA[0])}–${hm(ETA[1])}`;
+}
+document.getElementById('clock').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, '');
+if (state.has('closed')) {
+  $('#hero').classList.add('closed');
+  $('#etaFig').innerHTML = 'Closed'; $('#etaFig').removeAttribute('aria-label');
+  $('#etaClock').textContent = 'Opens tomorrow at 11:00';
+  $('#openline').textContent = 'Closed now, rated 4.6 from 1,240 orders';
+} else { clockLine(); setInterval(clockLine, 30000); }
+
+renderChips(); renderMenu(); renderTotals();
+
+// the screen explains itself once: two lahmacun go on the table and the small-order fee drops away
+if (!reduce && !state.has('closed') && !state.has('loading') && !state.has('error') && !state.has('still')) {
+  setTimeout(() => change('lahmacun', 1), 3200);
+  setTimeout(() => change('lahmacun', 1), 4700);
+}
+</script>
+</body>
+</html>

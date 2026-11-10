@@ -45,7 +45,7 @@
 </head>
 <body>
   <div class="statusbar">
-    <span>9:41</span>
+    <span id="clock">10:08</span>
     <svg class="android" viewBox="0 -2 46 14" aria-hidden="true">
       <path d="M8 12 0.6 3.4a11 11 0 0 1 14.8 0z"/><path d="M20 12h12V0z"/>
       <rect x="38" y="0" width="7" height="12" rx="1.6"/><rect x="40" y="-1.6" width="3" height="2" rx=".6"/>
@@ -65,5 +65,7 @@
   </main>
 
   <div class="home-indicator"></div>
+  <!-- the real time: a frozen 9:41 marks every mockup as a mockup -->
+  <script>document.getElementById('clock').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, '');</script>
 </body>
 </html>

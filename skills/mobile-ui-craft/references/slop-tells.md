@@ -2,7 +2,7 @@
 
 A tell is a default nobody chose. It is not proof of who wrote the code, and most tells existed before language models did. What people actually object to is sameness: surveys of complaint threads put "it all looks the same" far ahead of any single feature such as purple or gradients. So the fix is never "remove the tell". The fix is "make the decision the tell was hiding".
 
-A bold move is not a tell. Strong colour, a display typeface, a custom dock, glass, a spring that overshoots: these are the generated look when nobody chose them, and they are the identity when they come from the product's concept and are finished. The deepest tell is the opposite of boldness: a screen with no idea, a neutral background with rounded cards and one accent colour, which could belong to any app.
+The hardest tells are the model's own taste. Measured over this skill's earlier output: one serif display face on five screens of eight, a web font on every screen, every icon drawn by hand from vector paths, metadata chained with middle dots on every screen, a radial gradient used as lighting on seven of eight. None of these is wrong. Together they say who made the screen. The cure is not a better choice by the same chooser: the typeface, icon set, layout and effects are dealt by `scripts/deal.mjs`, and pictures are real files or labelled slots.
 
 How to use this file: find hits (by eye, or with `scripts/slop-scan.mjs`), and for each one ask whether it was chosen for this product. If yes and you can say why, keep it. If not, apply the replacement.
 
@@ -73,7 +73,7 @@ Inverting a tell lands in one of these clusters. Do not invert; derive the choic
 
 Do not "fix" these:
 
-- Bold colour, a display typeface, custom navigation, glass and overshoot, when they come from the concept and are finished.
+- Anything the dealt hand or an existing brand specifies.
 - The platform system font, tab bars, large titles, and the large corner radius of system sheets. They are the platform.
 - Coloured glyph tiles in a settings-style list, when they form one consistent system.
 - A card, a gradient, a serif or a cream background that the brief or the subject calls for. Judge combinations and intent, never a single hit.
@@ -91,6 +91,10 @@ Signals for review, never automatic failures. `scripts/slop-scan.mjs` runs these
 | Emoji in UI source | emoji code points inside string literals |
 | Placeholder data | `Lorem`, `John Doe`, `Jane Smith`, `Item 1`, `pravatar`, `dicebear`, `picsum` |
 | Filler and fake-life copy | `seamless`, `effortless`, `supercharge`, `Welcome back`, `Good morning`, `Oops`, `Something went wrong` |
+| Typeface models reach for | `Inter`, `Fraunces`, `Instrument Serif`, `Space Grotesk`, `DM Sans`, `Bricolage Grotesque`, `Manrope`, `Poppins` and the rest of the list in `scripts/deal.mjs` |
+| Middle-dot chains | ` · ` four or more times in a file |
+| Hand-drawn icons (prototypes) | many inline `<svg` elements instead of a real icon set |
+| Lighting effects (prototypes) | `filter: blur(` with a large radius, repeated `radial-gradient(`, `feTurbulence` grain |
 
 **SwiftUI / Swift**
 

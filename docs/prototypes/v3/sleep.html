@@ -1,0 +1,444 @@
+<!doctype html>
+<!-- Dusk / Tonight. HTML mockup built on the mobile-ui-craft phone frame (iOS, 393x852).
+     Query options: ?theme=light  ?page=breathe|sound|log  ?state=empty|error (log page) -->
+<html lang="en" data-platform="ios" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dusk, Tonight</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css">
+<style>
+  :root {
+    --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px;
+    --font: -apple-system, "SF Pro Text", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+    --chrome: #000;
+  }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--bg); color: var(--text); }
+  .statusbar {
+    position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 10;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none;
+  }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  .home-indicator {
+    position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 10;
+    width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none;
+  }
+  #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+</style>
+<style>
+  /* PRODUCT TOKENS. Source: the blue hour after sunset, muted blue (hue ~218) and its neighbour (~240). */
+  :root, [data-theme="dark"] {
+    --bg: #11151b; --surface: #181d25; --surface-2: #232a35; --sep: #2c3441;
+    --text: #e6e9ee; --text-2: #9aa3b0; --text-3: #7a8391;
+    --breath: #8fa6c8; --on-breath: #0f141b;   /* job: the breath hero and primary actions */
+    --breath-fill: #263449; --breath-ring: #5a6880;
+    --night: #a3a3d6; --night-dim: #3a4250;    /* job: logged sleep */
+    --radius-control: 2px; --radius-container: 0;
+    --dur-press: 90ms;
+  }
+  [data-theme="light"] {
+    --chrome: #000; color-scheme: light;
+    --bg: #edf0f4; --surface: #f8f9fb; --surface-2: #e1e6ed; --sep: #c9d0da;
+    --text: #161b22; --text-2: #485261; --text-3: #5f6977;
+    --breath: #34527c; --on-breath: #f5f7fa;
+    --breath-fill: #d3dcea; --breath-ring: #7d8aa0;
+    --night: #4f4f93; --night-dim: #c3cad6;
+  }
+
+  body { font-size: 17px; line-height: 1.35; }
+  .num { font-variant-numeric: tabular-nums; }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  button:focus-visible, [tabindex]:focus-visible, input:focus-visible { outline: 2px solid var(--breath); outline-offset: 2px; }
+
+  /* Header */
+  header { padding: calc(var(--safe-top) + 6px) 20px 10px; flex: none; }
+  h1 { margin: 0; font-size: 34px; line-height: 41px; font-weight: 700; letter-spacing: .2px; }
+  .sub { margin-top: 2px; color: var(--text-2); font-size: 15px; display: flex; align-items: center; gap: 6px; }
+  .sub i { font-size: 16px; }
+
+  /* Top tabs */
+  .toptabs { display: flex; flex: none; padding: 0 12px; border-bottom: 1px solid var(--sep); }
+  .toptabs button { flex: 1; height: 44px; color: var(--text-2); font-size: 15px; font-weight: 600; position: relative; }
+  .toptabs button[aria-selected="true"] { color: var(--text); }
+  .toptabs button[aria-selected="true"]::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: -1px; height: 2px; background: var(--breath); }
+  .toptabs button:active { color: var(--text); }
+
+  /* Pager */
+  .pager { flex: 1; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; }
+  .pager::-webkit-scrollbar, .page::-webkit-scrollbar { display: none; }
+  .page { flex: none; width: var(--w); height: 100%; overflow-y: auto; scroll-snap-align: start; padding: 0 20px 24px; scrollbar-width: none; }
+  .pane { display: none; flex: 1; overflow-y: auto; padding: 8px 20px 24px; }
+
+  h2 { margin: 0; font-size: 20px; line-height: 25px; font-weight: 600; }
+  h3 { margin: 32px 0 8px; font-size: 15px; font-weight: 600; color: var(--text-2); }
+  .meta { color: var(--text-2); font-size: 15px; }
+
+  /* Controls */
+  .primary { width: 100%; height: 52px; border-radius: var(--radius-control); background: var(--breath); color: var(--on-breath);
+             font-size: 17px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;
+             transition: transform var(--dur-press) ease-out, opacity var(--dur-press); }
+  .primary:active { transform: scale(.98); opacity: .88; }
+  .primary i { font-size: 20px; margin-left: -4px; }
+  .secondary { height: 52px; padding: 0 20px; border-radius: var(--radius-control); border: 1px solid var(--sep); color: var(--text); font-weight: 600; }
+  .secondary:active { background: var(--surface-2); }
+  .row-actions { display: flex; gap: 8px; }
+  .seg { display: flex; border: 1px solid var(--sep); border-radius: var(--radius-control); }
+  .seg button { flex: 1; height: 44px; font-size: 15px; color: var(--text-2); font-weight: 500; }
+  .seg button + button { border-left: 1px solid var(--sep); }
+  .seg button[aria-checked="true"] { background: var(--surface-2); color: var(--text); }
+  .seg button:active { background: var(--surface-2); }
+  .seg button:disabled { color: var(--text-3); cursor: default; }
+  .seg button[aria-checked="true"]:disabled { color: var(--text-2); }
+
+  /* Breathe */
+  .breath { position: relative; height: 292px; display: grid; place-items: center; margin-top: 4px; }
+  .ring { position: absolute; width: 264px; height: 264px; border-radius: 50%; border: 1px solid var(--breath-ring); }
+  .lung { position: absolute; width: 264px; height: 264px; border-radius: 50%; background: var(--breath-fill); transform: scale(.55); will-change: transform; }
+  .breath-label { position: relative; text-align: center; }
+  .phase { font-size: 17px; font-weight: 600; color: var(--text-2); min-height: 22px; }
+  .count { font-size: 56px; line-height: 64px; font-weight: 600; }
+  .progress { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--text-2); margin: 4px 0 24px; }
+  .track { flex: 1; height: 2px; background: var(--surface-2); position: relative; }
+  .track > span { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--breath); }
+  .spec { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
+
+  /* Sound */
+  .timer-hero { padding: 16px 0 20px; }
+  .big { font-size: 56px; line-height: 64px; font-weight: 600; }
+  .big small { font-size: 22px; font-weight: 500; color: var(--text-2); margin-left: 4px; }
+  .volume { display: flex; align-items: center; gap: 12px; height: 44px; margin-top: 12px; color: var(--text-2); }
+  .volume i { font-size: 20px; }
+  input[type=range] { flex: 1; height: 44px; margin: 0; background: none; -webkit-appearance: none; appearance: none; }
+  input[type=range]::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: linear-gradient(to right, var(--breath) var(--v, 40%), var(--surface-2) var(--v, 40%)); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; margin-top: -10px; border-radius: 50%; background: var(--text); border: 0; }
+  .list { border-top: 1px solid var(--sep); }
+  .item { display: flex; align-items: center; width: 100%; min-height: 60px; text-align: left; border-bottom: 1px solid var(--sep); padding: 8px 0; }
+  .item:active { background: var(--surface); }
+  .item .t { flex: 1; }
+  .item .t span { display: block; font-size: 13px; color: var(--text-2); }
+  .item i { font-size: 22px; color: var(--breath); visibility: hidden; }
+  .item[aria-checked="true"] i { visibility: visible; }
+
+  /* Log */
+  .log-hero { padding: 16px 0 4px; }
+  .night { position: relative; height: 16px; background: var(--surface-2); margin: 16px 0 6px; }
+  .night > span { position: absolute; top: 0; bottom: 0; background: var(--night); }
+  .ticks { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-3); }
+  .pair { display: flex; gap: 32px; margin-top: 16px; }
+  .pair div span { display: block; font-size: 13px; color: var(--text-2); }
+  .pair div b { font-size: 20px; font-weight: 600; }
+  .tonight-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; }
+  .chart { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; align-items: end; height: 156px; }
+  .bar { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; font-size: 12px; color: var(--text-2); }
+  .bar b { display: block; width: 100%; background: var(--night-dim); }
+  .bar.now b { background: var(--night); }
+  .bar.now .v { color: var(--text); }
+  .bar .v { margin-bottom: 4px; }
+  .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; font-size: 12px; color: var(--text-2); margin-top: 6px; border-top: 1px solid var(--sep); padding-top: 6px; }
+  .state-box { text-align: center; padding: 48px 12px 32px; }
+  .state-box p { margin: 8px 0 20px; color: var(--text-2); font-size: 15px; }
+  [data-log="content"] .log-empty, [data-log="content"] .log-error,
+  [data-log="empty"] .log-content, [data-log="empty"] .log-error,
+  [data-log="error"] .log-content, [data-log="error"] .log-empty, [data-log="error"] .log-tonight { display: none; }
+
+  /* Tab bar: solid, flat, in flow so nothing sits under it */
+  .tabbar { flex: none; display: flex; background: var(--surface); border-top: 1px solid var(--sep); padding: 0 8px var(--safe-bottom); }
+  .tabbar button { flex: 1; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 10px; font-weight: 500; color: var(--text-3); }
+  .tabbar button i { font-size: 24px; line-height: 26px; }
+  .tabbar button[aria-selected="true"] { color: var(--breath); }
+  .tabbar button:active { opacity: .7; }
+  .plain { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--sep); }
+  .plain li { display: flex; justify-content: space-between; min-height: 52px; align-items: center; border-bottom: 1px solid var(--sep); }
+  .plain li span:last-child { color: var(--text-2); }
+
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+</head>
+<body>
+  <div class="statusbar">
+    <span id="clock">23:04</span>
+    <svg class="ios" viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" stroke="currentColor" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen">
+    <header>
+      <h1 id="title">Tonight</h1>
+      <div class="sub" id="alarmLine"><i class="ri-alarm-line" aria-hidden="true"></i><span>Alarm 06:45, in <span class="num" id="toAlarm">7 h 41 min</span></span></div>
+    </header>
+
+    <!-- Tonight: three steps in the order they are done -->
+    <div class="toptabs" role="tablist" aria-label="Tonight" id="toptabs">
+      <button role="tab" aria-selected="true" aria-controls="p-breathe" data-i="0">Breathe</button>
+      <button role="tab" aria-selected="false" aria-controls="p-sound" data-i="1">Sound</button>
+      <button role="tab" aria-selected="false" aria-controls="p-log" data-i="2">Log</button>
+    </div>
+
+    <div class="pager" id="pager">
+      <!-- 1. Breathe -->
+      <section class="page" id="p-breathe" role="tabpanel" aria-label="Breathe">
+        <div class="breath" role="img" aria-label="Breathing guide" id="breathFig">
+          <div class="ring"></div>
+          <div class="lung" id="lung"></div>
+          <div class="breath-label">
+            <div class="phase" id="phase" aria-live="polite">Ready</div>
+            <div class="count num" id="count">5:00</div>
+          </div>
+        </div>
+        <div class="progress num"><span id="elapsed">0:00</span><div class="track"><span id="bar"></span></div><span id="breaths">0 of 30</span></div>
+        <div class="spec">
+          <h2>Slow breathing</h2>
+          <span class="meta">In 4 s, out 6 s</span>
+        </div>
+        <div class="seg" role="radiogroup" aria-label="Length" id="lenSeg" style="margin-bottom:16px">
+          <button role="radio" aria-checked="false" data-min="3">3 min</button>
+          <button role="radio" aria-checked="true" data-min="5">5 min</button>
+          <button role="radio" aria-checked="false" data-min="10">10 min</button>
+        </div>
+        <div class="row-actions">
+          <button class="primary" id="breathBtn"><i class="ri-play-line" aria-hidden="true"></i><span>Begin</span></button>
+          <button class="secondary" id="endBtn" hidden>End</button>
+        </div>
+      </section>
+
+      <!-- 2. Sound -->
+      <section class="page" id="p-sound" role="tabpanel" aria-label="Sound">
+        <div class="timer-hero">
+          <div class="big num" id="soundLeft">30:00</div>
+          <div class="meta" id="soundMeta">Brown noise, stops <span class="num">23:34</span></div>
+        </div>
+        <button class="primary" id="soundBtn"><i class="ri-play-line" aria-hidden="true"></i><span>Play</span></button>
+        <div class="volume"><i class="ri-volume-down-line" aria-hidden="true"></i><input type="range" min="0" max="100" value="40" id="vol" aria-label="Volume"><i class="ri-volume-up-line" aria-hidden="true"></i></div>
+        <h3>Timer</h3>
+        <div class="seg" role="radiogroup" aria-label="Timer" id="timerSeg">
+          <button role="radio" aria-checked="false" data-min="15">15 min</button>
+          <button role="radio" aria-checked="true" data-min="30">30 min</button>
+          <button role="radio" aria-checked="false" data-min="60">60 min</button>
+          <button role="radio" aria-checked="false" data-min="alarm">Alarm</button>
+        </div>
+        <div class="meta" style="margin-top:8px;font-size:13px">Fades out over the last 2 min.</div>
+        <h3>Sounds</h3>
+        <div class="list" role="radiogroup" aria-label="Sound" id="soundList">
+          <button class="item" role="radio" aria-checked="true" data-s="brown"><span class="t">Brown noise<span>Low</span></span><i class="ri-check-line" aria-hidden="true"></i></button>
+          <button class="item" role="radio" aria-checked="false" data-s="pink"><span class="t">Pink noise<span>Even</span></span><i class="ri-check-line" aria-hidden="true"></i></button>
+          <button class="item" role="radio" aria-checked="false" data-s="rain"><span class="t">Rain<span>Steady</span></span><i class="ri-check-line" aria-hidden="true"></i></button>
+          <button class="item" role="radio" aria-checked="false" data-s="fan"><span class="t">Fan<span>Low hum</span></span><i class="ri-check-line" aria-hidden="true"></i></button>
+        </div>
+      </section>
+
+      <!-- 3. Log -->
+      <section class="page" id="p-log" role="tabpanel" aria-label="Log" data-log="content">
+        <div class="log-tonight">
+          <h3 style="margin-top:20px">Tonight</h3>
+          <div class="tonight-row">
+            <div><b id="loText">Not logged</b><div class="meta" id="loSub">Lights out records the time.</div></div>
+            <button class="secondary" id="undoBtn" hidden>Undo</button>
+          </div>
+          <button class="primary" id="loBtn" style="margin-top:12px"><i class="ri-moon-line" aria-hidden="true"></i><span>Lights out</span></button>
+        </div>
+
+        <div class="log-content">
+          <h3>Last night, Mon 9 Nov</h3>
+          <div class="big num">7<small>h</small> 12<small>min</small></div>
+          <div class="night" role="img" aria-label="Asleep from 23:38 to 06:50"><span style="left:16.33%;width:72%"></span></div>
+          <div class="ticks num"><span>22:00</span><span>00:00</span><span>02:00</span><span>04:00</span><span>06:00</span><span>08:00</span></div>
+          <div class="pair num"><div><span>In bed</span><b>23:38</b></div><div><span>Up</span><b>06:50</b></div></div>
+
+          <h3>Last 7 nights</h3>
+          <div class="chart num" id="chart" role="img" aria-label="Hours asleep, last 7 nights. Average 7 h 08 min over 6 logged nights."></div>
+          <div class="days" id="days"></div>
+          <div class="meta" style="margin-top:12px">Average <span class="num">7 h 08 min</span>, 6 of 7 nights logged</div>
+        </div>
+
+        <div class="log-empty state-box">
+          <h2>No nights logged</h2>
+          <p>Nights appear here after the first Lights out.</p>
+        </div>
+        <div class="log-error state-box">
+          <h2>Log could not be read</h2>
+          <p>No entries were changed.</p>
+          <button class="secondary" id="retryBtn"><i class="ri-refresh-line" aria-hidden="true"></i> Try again</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- Other tabs: plain reference pages -->
+    <section class="pane" id="pane-library" aria-label="Library">
+      <h3 style="margin-top:8px">Breathing</h3>
+      <ul class="plain"><li><span>Slow breathing</span><span>In 4, out 6</span></li><li><span>Box breathing</span><span>4, 4, 4, 4</span></li><li><span>4-7-8</span><span>In 4, hold 7, out 8</span></li></ul>
+      <h3>Sounds</h3>
+      <ul class="plain"><li><span>Brown noise</span><span>Low</span></li><li><span>Pink noise</span><span>Even</span></li><li><span>Rain</span><span>Steady</span></li><li><span>Fan</span><span>Low hum</span></li></ul>
+    </section>
+    <section class="pane" id="pane-settings" aria-label="Settings">
+      <ul class="plain" style="margin-top:8px"><li><span>Alarm</span><span class="num">06:45</span></li><li><span>Sound fade-out</span><span>2 min</span></li><li><span>Breath haptics</span><span>On</span></li><li><span>Motion</span><span>Follows system</span></li></ul>
+    </section>
+
+    <nav class="tabbar" role="tablist" aria-label="Main" id="tabbar">
+      <button role="tab" aria-selected="true" data-tab="tonight"><i class="ri-moon-fill" aria-hidden="true"></i>Tonight</button>
+      <button role="tab" aria-selected="false" data-tab="library"><i class="ri-stack-line" aria-hidden="true"></i>Library</button>
+      <button role="tab" aria-selected="false" data-tab="settings"><i class="ri-settings-3-line" aria-hidden="true"></i>Settings</button>
+    </nav>
+  </main>
+
+  <div class="home-indicator"></div>
+
+<script>
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const q = new URLSearchParams(location.search);
+if (q.get('theme') === 'light') document.documentElement.dataset.theme = 'light';
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const pad = n => String(n).padStart(2, '0');
+const hm = d => pad(d.getHours()) + ':' + pad(d.getMinutes());
+const mmss = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), r = s % 60; return (h ? h + ':' + pad(m) : m) + ':' + pad(r); };
+// The scene is 23:04 in bed: the clock starts there and runs in real time, so every figure agrees. ?real uses the device time.
+const SHIFT = q.has('real') ? 0 : (() => { const a = new Date(), t = a.getTime(); a.setHours(23, 4, 0, 0); return a.getTime() - t; })();
+function nowMs() { return Date.now() + SHIFT; }
+const ALARM = { h: 6, m: 45 };
+function msToAlarm(now = new Date(nowMs())) { const a = new Date(now); a.setHours(ALARM.h, ALARM.m, 0, 0); if (a <= now) a.setDate(a.getDate() + 1); return a - now; }
+
+/* Clock and alarm line */
+function tickClock() {
+  const now = new Date(nowMs());
+  $('#clock').textContent = now.getHours() + ':' + pad(now.getMinutes());
+  const mins = Math.floor(msToAlarm(now) / 60000);
+  $('#toAlarm').textContent = Math.floor(mins / 60) + ' h ' + (mins % 60) + ' min';
+  if (!sound.on) renderSoundIdle();
+}
+
+/* Top tabs and pager */
+const pager = $('#pager'), topBtns = $$('#toptabs button');
+function selectTop(i) { topBtns.forEach((b, j) => b.setAttribute('aria-selected', j === i)); }
+topBtns.forEach(b => b.onclick = () => { const i = +b.dataset.i; pager.scrollTo({ left: i * pager.clientWidth, behavior: reduced ? 'auto' : 'smooth' }); selectTop(i); });
+pager.addEventListener('scroll', () => selectTop(Math.round(pager.scrollLeft / pager.clientWidth)), { passive: true });
+
+/* Bottom tabs */
+$$('#tabbar button').forEach(b => b.onclick = () => {
+  const t = b.dataset.tab;
+  $$('#tabbar button').forEach(x => { const on = x === b; x.setAttribute('aria-selected', on); const i = x.querySelector('i'); i.className = i.className.replace(on ? '-line' : '-fill', on ? '-fill' : '-line'); });
+  $('#title').textContent = b.textContent.trim();
+  const tonight = t === 'tonight';
+  $('#toptabs').style.display = pager.style.display = tonight ? '' : 'none';
+  $('#alarmLine').style.visibility = tonight ? '' : 'hidden';
+  $('#pane-library').style.display = t === 'library' ? 'block' : 'none';
+  $('#pane-settings').style.display = t === 'settings' ? 'block' : 'none';
+});
+
+/* Single-select segmented controls */
+function radios(sel, cb) { $$(sel + ' [role=radio]').forEach(b => b.onclick = () => { if (b.disabled) return; $$(sel + ' [role=radio]').forEach(x => x.setAttribute('aria-checked', x === b)); cb(b); }); }
+
+/* ---------- Breathe: in 4 s, out 6 s ---------- */
+const IN = 4000, OUT = 6000, CYCLE = IN + OUT, REST = .55;
+const br = { min: 5, state: 'idle', start: 0, pausedAt: 0, raf: 0 };
+const ease = t => .5 - Math.cos(Math.PI * t) / 2;
+radios('#lenSeg', b => { br.min = +b.dataset.min; renderBreath(0); });
+function total() { return br.min * 60000; }
+function setBtn(icon, label) { $('#breathBtn').innerHTML = `<i class="${icon}" aria-hidden="true"></i><span>${label}</span>`; }
+function renderBreath(el) {
+  const T = total(), lung = $('#lung'), running = br.state !== 'idle' && br.state !== 'done';
+  let phase = br.state === 'done' ? 'Complete' : 'Ready', count = mmss(T - el), lvl = REST;
+  if (running) {
+    const t = el % CYCLE, inhale = t < IN;
+    phase = br.state === 'paused' ? 'Paused' : (inhale ? 'In' : 'Out');
+    count = String(Math.ceil(((inhale ? IN : CYCLE) - t) / 1000));
+    lvl = inhale ? REST + (1 - REST) * ease(t / IN) : 1 - (1 - REST) * ease((t - IN) / OUT);
+  }
+  if (reduced) { lung.style.transform = 'scale(1)'; lung.style.opacity = (.35 + .65 * (lvl - REST) / (1 - REST)).toFixed(2); }
+  else lung.style.transform = `scale(${lvl.toFixed(4)})`;
+  if ($('#phase').textContent !== phase) $('#phase').textContent = phase;
+  $('#count').textContent = count;
+  $('#elapsed').textContent = mmss(el);
+  $('#bar').style.width = (100 * el / T).toFixed(2) + '%';
+  $('#breaths').textContent = (br.state === 'done' ? T / CYCLE : running ? Math.min(T / CYCLE, Math.floor(el / CYCLE) + 1) : 0) + ' of ' + T / CYCLE;
+}
+function loop() {
+  const el = performance.now() - br.start;
+  if (el >= total()) { br.state = 'done'; renderBreath(total()); setBtn('ri-arrow-right-line', 'Continue to Sound'); $('#endBtn').hidden = true; lockLen(false); return; }
+  renderBreath(el); br.raf = requestAnimationFrame(loop);
+}
+function lockLen(on) { $$('#lenSeg button').forEach(b => b.disabled = on); }
+function beginBreath() { br.state = 'running'; br.start = performance.now(); setBtn('ri-pause-line', 'Pause'); $('#endBtn').hidden = false; lockLen(true); loop(); }
+$('#breathBtn').onclick = () => {
+  touched = true;
+  if (br.state === 'idle') beginBreath();
+  else if (br.state === 'running') { br.state = 'paused'; br.pausedAt = performance.now(); cancelAnimationFrame(br.raf); renderBreath(br.pausedAt - br.start); setBtn('ri-play-line', 'Resume'); }
+  else if (br.state === 'paused') { br.start += performance.now() - br.pausedAt; br.state = 'running'; setBtn('ri-pause-line', 'Pause'); loop(); }
+  else { br.state = 'idle'; renderBreath(0); setBtn('ri-play-line', 'Begin'); topBtns[1].click(); }
+};
+$('#endBtn').onclick = () => { cancelAnimationFrame(br.raf); br.state = 'idle'; renderBreath(0); setBtn('ri-play-line', 'Begin'); $('#endBtn').hidden = true; lockLen(false); };
+
+/* ---------- Sound: generated on device in this prototype ---------- */
+const sound = { kind: 'brown', min: 30, on: false, ends: 0, ctx: null, src: null, gain: null, t: 0 };
+const NAMES = { brown: 'Brown noise', pink: 'Pink noise', rain: 'Rain', fan: 'Fan' };
+function timerMs() { return sound.min === 'alarm' ? msToAlarm() : sound.min * 60000; }
+function renderSoundIdle() { const ms = timerMs(); $('#soundLeft').textContent = mmss(ms); $('#soundMeta').innerHTML = `${NAMES[sound.kind]}, stops <span class="num">${hm(new Date(nowMs() + ms))}</span>`; }
+function noise(ctx, kind) {
+  // shortcut: rain and fan are filtered noise stand-ins; the native build plays recorded loops.
+  const len = ctx.sampleRate * 4, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
+  let last = 0, b0 = 0, b1 = 0, b2 = 0;
+  for (let i = 0; i < len; i++) {
+    const w = Math.random() * 2 - 1;
+    if (kind === 'brown' || kind === 'fan') { last = (last + .02 * w) / 1.02; d[i] = last * 3.5; }
+    else { b0 = .99765 * b0 + w * .099; b1 = .963 * b1 + w * .2965; b2 = .57 * b2 + w * 1.0526; d[i] = (b0 + b1 + b2 + w * .1848) * .11; }
+  }
+  const s = ctx.createBufferSource(); s.buffer = buf; s.loop = true;
+  const f = ctx.createBiquadFilter(); f.type = kind === 'rain' ? 'highpass' : 'lowpass'; f.frequency.value = { brown: 900, pink: 6000, rain: 700, fan: 380 }[kind];
+  s.connect(f); return { s, out: f };
+}
+function volume() { return ($('#vol').value / 100) ** 2 * .8; }
+function startSound() {
+  sound.ctx = sound.ctx || new (window.AudioContext || window.webkitAudioContext)();
+  sound.ctx.resume();
+  const { s, out } = noise(sound.ctx, sound.kind), g = sound.ctx.createGain();
+  const ms = timerMs(), now = sound.ctx.currentTime, end = now + ms / 1000, fade = Math.min(120, ms / 1000 / 2);
+  g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(volume(), now + 3);
+  g.gain.setValueAtTime(volume(), end - fade); g.gain.linearRampToValueAtTime(0, end);
+  out.connect(g).connect(sound.ctx.destination); s.start(); s.stop(end + .1);
+  Object.assign(sound, { src: s, gain: g, on: true, ends: nowMs() + ms });
+  s.onended = () => { if (sound.src === s) stopSound(); };
+  $('#soundBtn').innerHTML = '<i class="ri-pause-line" aria-hidden="true"></i><span>Pause</span>';
+  $('#soundMeta').innerHTML = `${NAMES[sound.kind]}, stops <span class="num">${hm(new Date(sound.ends))}</span>`;
+  sound.t = setInterval(() => $('#soundLeft').textContent = mmss(sound.ends - nowMs()), 250);
+}
+function stopSound() {
+  if (sound.src) { const g = sound.gain, c = sound.ctx.currentTime; g.gain.cancelScheduledValues(c); g.gain.setValueAtTime(g.gain.value, c); g.gain.linearRampToValueAtTime(0, c + .6); sound.src.stop(c + .7); }
+  clearInterval(sound.t); sound.src = null; sound.on = false;
+  $('#soundBtn').innerHTML = '<i class="ri-play-line" aria-hidden="true"></i><span>Play</span>';
+  renderSoundIdle();
+}
+$('#soundBtn').onclick = () => { touched = true; sound.on ? stopSound() : startSound(); };
+radios('#timerSeg', b => { sound.min = b.dataset.min === 'alarm' ? 'alarm' : +b.dataset.min; if (sound.on) { stopSound(); startSound(); } else renderSoundIdle(); });
+radios('#soundList', b => { sound.kind = b.dataset.s; if (sound.on) { stopSound(); startSound(); } else renderSoundIdle(); });
+$('#vol').oninput = e => { e.target.style.setProperty('--v', e.target.value + '%'); if (sound.on && sound.gain) { const c = sound.ctx.currentTime; sound.gain.gain.cancelScheduledValues(c); sound.gain.gain.setTargetAtTime(volume(), c, .1); const end = c + (sound.ends - nowMs()) / 1000, fade = Math.min(120, (end - c) / 2); sound.gain.gain.setValueAtTime(volume(), Math.max(c + .5, end - fade)); sound.gain.gain.linearRampToValueAtTime(0, end); } };
+
+/* ---------- Log (sample data) ---------- */
+const NIGHTS = [['Tue', 408], ['Wed', 425], ['Thu', null], ['Fri', 352], ['Sat', 500], ['Sun', 451], ['Mon', 432]];
+const MAX = 540; // 9 h at full chart height
+$('#chart').innerHTML = NIGHTS.map(([d, m], i) => m == null
+  ? `<div class="bar"><span class="v">None</span></div>`
+  : `<div class="bar${i === 6 ? ' now' : ''}"><span class="v">${Math.floor(m / 60)}:${pad(m % 60)}</span><b style="height:${(120 * m / MAX).toFixed(1)}px"></b></div>`).join('');
+$('#days').innerHTML = NIGHTS.map(([d]) => `<span>${d}</span>`).join('');
+const logPage = $('#p-log');
+if (['empty', 'error'].includes(q.get('state'))) logPage.dataset.log = q.get('state');
+$('#retryBtn').onclick = () => logPage.dataset.log = 'content';
+$('#loBtn').onclick = () => { touched = true; const t = hm(new Date(nowMs())); $('#loText').innerHTML = `Lights out <span class="num">${t}</span>`; $('#loSub').textContent = 'Wake time is added from the alarm.'; $('#loBtn').hidden = true; $('#undoBtn').hidden = false; };
+$('#undoBtn').onclick = () => { $('#loText').textContent = 'Not logged'; $('#loSub').textContent = 'Lights out records the time.'; $('#loBtn').hidden = false; $('#undoBtn').hidden = true; };
+
+/* ---------- Start ---------- */
+let touched = false;
+renderBreath(0); renderSoundIdle(); tickClock(); setInterval(tickClock, 15000);
+const start = { sound: 1, log: 2 }[q.get('page')];
+if (start) { pager.scrollLeft = start * pager.clientWidth; selectTop(start); }
+// Show the resting screen for 3 s, then run the main interaction once so the prototype explains itself.
+if (!reduced && !start) setTimeout(() => { if (!touched && br.state === 'idle') beginBreath(); }, 3000);
+</script>
+</body>
+</html>

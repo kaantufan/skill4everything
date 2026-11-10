@@ -1,10 +1,10 @@
 ---
 name: mobile-ui-craft
 description: >-
-  Design, build, restyle and review mobile app UI and UX for iOS (SwiftUI, UIKit), Android (Jetpack Compose, Kotlin), Flutter and React Native or Expo, so each app gets a memorable identity of its own: one concept, a hero the user can see and touch, bold colour and type, motion with character, and none of the generated-app look. Use this skill whenever the task touches a mobile screen, flow, component, theme, navigation, onboarding, paywall, animation, haptics, icon set or app mockup or prototype, or the user says an app looks generic, plain, off, cheap or boring, even if they never say "design". Not for websites or desktop apps.
+  Design, build, restyle and review mobile app UI and UX for iOS (SwiftUI, UIKit), Android (Jetpack Compose, Kotlin), Flutter and React Native or Expo, so each app gets a look of its own that does not read as AI-generated: one concept, a data-carrying hero, and typeface, icons, layout and colour that are dealt and derived instead of left to a model's taste. Use this skill whenever the task touches a mobile screen, flow, component, theme, navigation, onboarding, paywall, animation, haptics, icon set or app mockup or prototype, or the user says an app looks generic, plain, off, cheap or AI-made, even if they never say "design". Not for websites or desktop apps.
 license: MIT
 metadata:
-  version: "2.0.0"
+  version: "3.1.0"
   baseline: "2026-11"
 ---
 
@@ -12,7 +12,7 @@ metadata:
 
 A mobile screen is remembered when it has an idea: one concept from the product's own world, built into a hero the user can see and touch, on a surface with a point of view. Generated UI fails in the opposite way. Nothing on it is wrong, but nothing was chosen: a neutral background, a rounded card with a big number, a list, a tab bar. It looks like every other app, so nobody says anything about it.
 
-This skill pushes every screen toward a signature and keeps the floor that makes it usable.
+There is a second failure. A model's own taste is recognisable: the same few typefaces, hand-drawn vector pictures and icons, the same coloured field with a rounded sheet, the same glow. A trained eye spots it at once. So this skill gives every screen one idea, takes the taste decisions out of your hands by dealing them from a script, replaces what you would draw with real material, and keeps the floor that makes the result usable.
 
 Two rules outrank everything else here:
 
@@ -61,6 +61,8 @@ Keep the reading budget: one platform file, one niche file, two task files. Load
 
 ## 2. Write the brief
 
+**Deal the hand first.** Run `node scripts/deal.mjs --seed "<product name>" --platform ios` (or `android`, `both`) from this skill's folder. It fixes the typeface, icon set, layout skeleton, navigation, shape, ground, palette structure, effects budget, voice, hero type, hue sector and first appearance. The hand is binding: `references/signature.md` says how to use it and when one reroll is allowed.
+
 Before any UI code, write this brief. It is the mechanism that makes a banking app and a meditation app come out different, so do not skip it and do not fill it with adjectives. "Clean", "modern" and "premium" describe every generated app; replace each with a choice someone could check.
 
 ```
@@ -69,10 +71,10 @@ Platform:   stack, minimum OS, existing design system (yes / no)
 Niche:      primary niche -> stakes (trust 1-5), vulnerable users?, session (glance / short / immersive)
 Dials:      D_ E_ W_ X_  (niche preset, then what you changed and why)
 Concept:    the one idea, in a sentence with no interface words
-Hero:       what fills the top of the first screen, and which real value it shows
-Source:     what in the product's own world the colours, shapes and materials come from
-Type:       display face and why it fits the concept; text face
-Motion:     the entrance, the hero's living loop, and what the primary action does to the hero
+Hand:       the dealt cards, one line each; any reroll and the reason
+Hero:       the dealt hero type, and which real value it shows
+Source:     what in the product's own world the hue and the wording come from
+Motion:     what the primary action does to the hero
 Avoiding:   the niche cliché AND the over-correction (both are in the niche file)
 Refusing:   dark patterns this niche tempts that will not be built
 ```
@@ -84,15 +86,15 @@ Refusing:   dark patterns this niche tempts that will not be built
 | **D Density** | One job per screen. Rows 64+ tall, 32-40 between sections | Rows 52-60, 24 between sections | Rows at the platform minimum, 16 between sections, dividers instead of cards |
 | **E Energy** | Near-monochrome, fades, no overshoot, no celebration | Strong colour with jobs, springs, one authored moment | Several hues, overshoot on what a finger started, celebration at real milestones |
 | **W Warmth** | Small radii (4-8), hairlines, precise neutral copy | Medium radii (10-14), plain friendly copy | Large radii (20-28), conversational copy, a character with a job |
-| **X Expression** | System components and the platform's look. Identity only in tint and content | Native skeleton, bold surface: drenched colour, a display face, a drawn hero | Bespoke everything: custom navigation and controls, an illustrated or physical hero, choreographed motion |
+| **X Expression** | System components and the platform's look. Only the hue and the content are the product's | Native skeleton with the dealt hand applied in full | Custom navigation and controls built for the product, a custom data-driven hero, choreographed motion |
 
 Values 2 and 4 sit between the columns. Sizes are in pt on iOS and dp on Android.
 
-**Expression defaults to 4.** Drop to 1 or 2 only when the brief asks for a quiet or strictly native result, or the product is a work tool where speed matters more than feeling (field work, enterprise, civic, clinical). From Expression 3 up, a concept and a hero are required, not optional.
+**Expression defaults to 3.** Go to 4 or 5 only when the brief asks for a fully bespoke product, and drop to 1 or 2 when the brief asks for a quiet or strictly native result, or the product is a work tool where speed matters more than feeling (field work, enterprise, civic, clinical). From Expression 3 up, a concept is required, not optional.
 
-**Derive, do not pick.** Take the concept, colour, shape and material from the product's own world: its objects, places, instruments, printed matter, even its name. This is why the skill ships no palettes and no font lists. A menu of "good" choices becomes the next default.
+**Deal what taste would decide; derive the rest.** The hand settles typeface, icons, layout and effects, because left to choose you return to the same few. The concept, the hue and the words come from the product's own world: its objects, places, instruments, printed matter, even its name.
 
-**One idea, carried everywhere.** The concept decides the hero, the palette, the icons, the motion and the copy. Do not reuse the concept of another product, and do not reuse the previous project's.
+**One idea, carried everywhere.** The concept decides what the hero measures, the hue, what things are called, the order they come in and the copy. Do not reuse the concept of another product, and do not reuse the previous project's.
 
 For Full direction work, save the brief as `DESIGN.md` in the project root (or add it to the existing design doc) so later sessions inherit the direction instead of deriving a different one. Ask first if the user did not ask for files.
 
@@ -100,7 +102,7 @@ For Full direction work, save the brief as `DESIGN.md` in the project root (or a
 
 Before building, answer these in one line each and revise the brief if any answer is "no":
 
-1. **One-sentence test.** Can you describe the first screen without naming an interface component? "A tide line climbing a harbour wall at dusk" passes. "A card with the balance and a list" does not.
+1. **One-sentence test.** Can you describe the first screen without naming an interface component? "This month as a statement that ends in what is safe to spend" passes. "A card with the balance and a list" does not.
 2. **Thumbnail test.** Shrunk among ten competing apps' screenshots, would yours be the one a person can pick out?
 3. **Any-app test.** Would this plan come out the same for a different product in this niche? Name three choices that exist only because of this product.
 4. **Cliché test.** Does it match the niche cliché, or the over-correction, from the niche file?
@@ -109,9 +111,9 @@ Before building, answer these in one line each and revise the brief if any answe
 
 ## 4. Build
 
-Hero first, then the surface, then everything else.
+The dealt skeleton first, then the hero, then everything else.
 
-1. **Build the hero before anything else** and look at it alone. If the hero does not carry the screen, no amount of polish on the list will.
+1. **Lay out the dealt skeleton and its hero before anything else** and look at them alone, with the dealt typeface and icon set already loaded. If that does not carry the screen, no amount of polish on the list will.
 2. **Tokens in one place.** Colour roles, type roles, spacing steps, radii by role and motion timings live in one theme file in the stack's own idiom. Screens import tokens; they contain no raw colours or one-off sizes.
 3. **Real states and real content** while building, not after.
 
@@ -134,7 +136,7 @@ Hero first, then the surface, then everything else.
 ## 5. Verify, then report
 
 1. **Render it.** Build and screenshot in a simulator or emulator when you can. Otherwise use the stack's preview tool, and otherwise an animated HTML prototype. `references/preview.md` has the commands. Look at several moments of the motion, not one frame.
-2. **Run the wow test** in `references/signature.md`: thumbnail, one sentence, removal, stillness, share, truth, brief, floor.
+2. **Run the fingerprint check** in `references/signature.md`: ten questions about whether anything on the screen is there because you like it, talks to a builder, or shows off.
 3. **Stress the content.** A 40-character name, an empty list, a thousand items, a zero and a negative number, text 40% longer than English, the largest text size.
 4. **Scan the source.** Run `node scripts/slop-scan.mjs <source-dir>` from this skill's folder. Each hit is a prompt to check intent, not an automatic failure. Without Node, grep the signatures listed in `references/slop-tells.md`.
 5. **Stop after three fix rounds** and report what remains instead of looping.
@@ -152,11 +154,12 @@ Open:          <facts or assets needed from the user>
 
 ## Gotchas
 
-- **Timid is the default failure.** A card with a large number is not a hero. If the first screen can be described as "cards on a background", go back to the concept.
-- **The same move is a template or a signature depending on where it came from.** A gradient, a glow, glass, a floating dock, a bounce: unchosen, they are the generated look; derived from the concept and finished, they are the identity.
+- **There are two failures, not one.** Timid: identical cards on a neutral background, which any app could own. Decorated: a drawn scene, a glow and a display face, which any model could have made. The way out of both is the dealt hand plus the product's own data and words.
+- **Your favourites are the tell.** The typeface you would reach for, the picture you would draw, the glow you would add: other people have seen them a thousand times. Use the hand, use real icons, draw nothing pictorial.
+- **An honest slot beats a drawn stand-in.** Where a photo or artwork belongs, a labelled neutral frame reads as unfinished; a gradient or a vector scene in its place reads as generated.
 - **A hero shows data.** An illustration beside a number is decoration. The level, angle or length is the value.
 - **Bold costs clarity unless you pay it back.** In blind judging, screens built with this skill won on identity and impact and lost on clarity whenever the hero crowded out what the brief asked for or a floating control covered content. Size the hero by the Density dial and check the brief test.
-- **Check the glyphs.** A display face must contain every character the product needs, including currency signs and letters such as ğ, ş, ı and İ. A fallback glyph in the middle of a headline ruins it.
+- **Check the glyphs.** The dealt face must contain every character the product needs, including currency signs and letters such as ğ, ş, ı and İ. A fallback glyph in the middle of a headline ruins it.
 - **A phone-sized web page is not an app.** Hero banners with marketing copy, max-width wrappers, hover states and footers inside an app are still the strongest generated tell.
 - **Models invent API names.** If an API named in a reference does not exist in the project's SDK, trust the SDK and its documentation.
 - **References carry a baseline date.** When the project targets something newer than `metadata.baseline`, prefer current platform documentation where it disagrees.

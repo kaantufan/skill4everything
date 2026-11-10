@@ -2,7 +2,7 @@
 
 Motion on a phone is felt more than seen. The right answer for most interactions is the platform default or nothing; a small number of moments deserve design. This file is platform-neutral: it gives the decisions and the numbers. API names for your stack are in the platform file.
 
-At Expression 4 and 5 the hero and the signature interaction are designed motion: an entrance, a living loop, a physical consequence for the main action. The gates below still decide everything else on the screen, and Reduce Motion applies to all of it.
+The primary action gets one designed consequence on the hero. Entrance choreography and perpetual loops need both the dealt effects budget and Energy 4 or 5. The gates below decide everything else on the screen, and Reduce Motion applies to all of it.
 
 ## Contents
 

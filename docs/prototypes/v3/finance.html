@@ -1,0 +1,438 @@
+﻿<!doctype html>
+<!-- Pano, Home. HTML mockup of a native iOS screen, built on the mobile-ui-craft phone frame.
+     States: open with #loading, #empty or #offline to see them. Reduce Motion skips the autoplay and the tweens. -->
+<html lang="en" data-platform="ios" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pano - Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Encode+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+  :root {
+    --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px;
+    --font: -apple-system, "SF Pro Text", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+    --chrome: #000;
+  }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--screen-bg); color: var(--screen-fg); }
+  .statusbar {
+    position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 10;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none;
+  }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  .home-indicator {
+    position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 10;
+    width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none;
+  }
+  #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+</style>
+<style>
+  /* PANO TOKENS. Hue 222: the blue of ballpoint ink on a carbon-copy invoice book. */
+  :root {
+    --screen-bg: #edf0f6;      /* ground: low-chroma tint of the ink hue */
+    --screen-fg: #141821;
+    --surface: #fafbfd;
+    --fg-2: #535b6b;
+    --fg-3: #646c7c;
+    --sep: rgba(52, 62, 84, .16);
+    --accent: #1b55e0;         /* the one vivid colour: safe money and the action */
+    --on-accent: #ffffff;
+    --seg-tax: #343c4c;
+    --seg-bills: #a7aebc;
+    --ok: #1d7444;
+    --warn: #8a5300;
+    --skel: #dfe3eb;
+    --bar-material: rgba(246, 248, 252, .78);
+    --pressed: rgba(20, 24, 33, .06);
+
+    --font-app: "Encode Sans", var(--font);
+    --t-title: 2.125rem;       /* large title 34 */
+    --t-hero: 2.75rem;         /* 44 */
+    --t-figure: 1.5rem;        /* 24 */
+    --t-body: 1.0625rem;       /* 17 */
+    --t-sub: .9375rem;         /* 15 */
+    --t-cap: .8125rem;         /* 13 */
+    --t-tab: .625rem;          /* 10 */
+
+    --r-tile: 14px; --r-bar: 6px;
+    --gutter: 16px; --gap: 8px; --section: 24px;
+    --tabbar-h: 49px;
+    --ease: cubic-bezier(.2, .7, .2, 1); --dur: 420ms;
+  }
+  [data-theme="dark"] {
+    --screen-bg: #0d1016; --screen-fg: #eef1f6; --surface: #181c25;
+    --fg-2: #a6aebd; --fg-3: #959daf; --sep: rgba(200, 210, 230, .16);
+    --accent: #5c8dff; --on-accent: #0b1020;
+    --seg-tax: #d3d8e2; --seg-bills: #59627a;
+    --ok: #5fcf8e; --warn: #f0b35a; --skel: #252a35;
+    --bar-material: rgba(22, 26, 34, .78); --pressed: rgba(255, 255, 255, .07);
+  }
+
+  [hidden] { display: none !important; }
+  #screen { font-family: var(--font-app); }
+  .scroll { flex: 1; overflow-y: auto; scrollbar-width: none; padding: 0 var(--gutter) calc(var(--tabbar-h) + var(--safe-bottom) + var(--section)); }
+  .scroll::-webkit-scrollbar { display: none; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* navigation bar, large title */
+  .nav { padding-top: var(--safe-top); }
+  .nav-row { height: 44px; display: flex; justify-content: flex-end; margin-right: -8px; }
+  .icon-btn { width: 44px; height: 44px; border: 0; border-radius: 22px; background: none; color: var(--accent); font-size: 24px; display: grid; place-items: center; cursor: pointer; }
+  .icon-btn:active { background: var(--pressed); }
+  .icon-btn:focus-visible, .btn:focus-visible, .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  h1 { font-size: var(--t-title); font-weight: 700; letter-spacing: -.01em; margin: 0 0 16px; line-height: 1.15; }
+  h1 span { color: var(--fg-3); font-weight: 500; }
+
+  .notice { display: flex; gap: 8px; align-items: center; font-size: var(--t-sub); color: var(--warn); margin: -8px 0 12px; }
+  .notice i { font-size: 18px; }
+
+  /* uneven grid: importance sets the tile size */
+  /* two columns at default text size, one column when large text would break a figure */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10.5rem), 1fr)); gap: var(--gap); }
+  .tile { background: var(--surface); border-radius: var(--r-tile); padding: 14px 16px 16px; min-width: 0; }
+  .wide { grid-column: 1 / -1; }
+  .topcover { position: absolute; inset: 0 0 auto 0; height: var(--safe-top); background: var(--screen-bg); z-index: 4; }
+  .label { font-size: var(--t-sub); color: var(--fg-2); font-weight: 500; margin: 0; }
+  .sub { font-size: var(--t-cap); color: var(--fg-3); margin: 4px 0 0; line-height: 1.35; }
+  .fig { font-size: var(--t-figure); font-weight: 600; margin: 6px 0 0; letter-spacing: -.01em; line-height: 1.2; white-space: nowrap; }
+  .fig .q, .hero-fig .q { color: var(--fg-3); font-weight: 500; }
+  .fig.small { font-size: 1.1875rem; }
+
+  /* hero: safe to spend + the month's income as one track */
+  .hero { padding: 16px 16px 18px; }
+  .hero-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .hero-fig { font-size: var(--t-hero); font-weight: 600; letter-spacing: -.02em; line-height: 1.1; margin: 8px 0 4px; white-space: nowrap; }
+  .hero-fig .q { font-size: .55em; vertical-align: .62em; margin-right: 1px; }
+  .hero-fig .q.dec { vertical-align: 0; font-size: .5em; margin-left: 1px; }
+  .hero-fig.neg { color: var(--screen-fg); }
+  .track { display: flex; gap: 2px; height: 14px; margin-top: 16px; border-radius: var(--r-bar); overflow: hidden; background: var(--skel); }
+  .seg { height: 100%; transition: flex-basis var(--dur) var(--ease); flex: 0 0 0%; }
+  .seg.tax { background: var(--seg-tax); } .seg.bills { background: var(--seg-bills); } .seg.safe { background: var(--accent); }
+  .legend { display: flex; gap: 16px; margin: 10px 0 0; padding: 0; list-style: none; font-size: var(--t-cap); color: var(--fg-2); flex-wrap: wrap; }
+  .legend li { display: flex; align-items: center; gap: 6px; }
+  .legend b { font-weight: 600; color: var(--screen-fg); }
+  .sw { width: 10px; height: 10px; border-radius: 3px; }
+  .note { font-size: var(--t-sub); color: var(--fg-2); margin: 8px 0 0; }
+
+  /* new payment, the action */
+  .incoming-head { display: flex; gap: 12px; align-items: flex-start; }
+  .glyph { width: 36px; height: 36px; border-radius: 18px; background: var(--screen-bg); color: var(--screen-fg); display: grid; place-items: center; font-size: 20px; flex: none; }
+  .glyph.ok { color: var(--ok); }
+  .grow { flex: 1; min-width: 0; }
+  .name { font-size: var(--t-body); font-weight: 500; margin: 0; line-height: 1.3; }
+  .amt { font-size: var(--t-body); font-weight: 600; white-space: nowrap; text-align: right; margin: 0; line-height: 1.3; }
+  .split { display: grid; grid-template-columns: 1fr auto; row-gap: 4px; font-size: var(--t-sub); color: var(--fg-2); margin: 12px 0 14px; padding-left: 48px; }
+  .split .num { text-align: right; color: var(--screen-fg); }
+  .btn { width: 100%; min-height: 50px; border: 0; border-radius: 25px; background: var(--accent); color: var(--on-accent); font: 600 var(--t-body) var(--font-app); cursor: pointer; transition: transform 120ms, opacity 120ms; }
+  .btn:active, .btn.pressed { transform: scale(.97); opacity: .85; }
+  .btn:disabled { opacity: .45; cursor: default; transform: none; }
+  .text-btn { min-height: 44px; min-width: 44px; padding: 0 4px; border: 0; background: none; color: var(--accent); font: 600 var(--t-sub) var(--font-app); cursor: pointer; }
+  .done-row { display: flex; gap: 12px; align-items: center; }
+
+  /* payment list */
+  h2 { font-size: 1.25rem; font-weight: 600; margin: var(--section) 0 8px; }
+  .list { background: var(--surface); border-radius: var(--r-tile); margin: 0; padding: 0; list-style: none; overflow: hidden; }
+  .row { display: flex; gap: 12px; align-items: center; padding: 0 16px; min-height: 60px; position: relative; }
+  .row + .row::before { content: ""; position: absolute; top: 0; left: 64px; right: 0; height: 1px; transform: scaleY(.5); transform-origin: top; background: var(--sep); }
+  .row .grow { padding: 10px 0; }
+  .row .name { font-size: var(--t-sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .amt { font-size: var(--t-sub); }
+  .row.enter { animation: rowIn var(--dur) var(--ease); }
+  @keyframes rowIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+
+  .skel { color: transparent !important; background: var(--skel); border-radius: 6px; }
+  .skel * { visibility: hidden; }
+
+  /* tab bar: the one system material */
+  .tabbar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 5; padding-bottom: var(--safe-bottom);
+    background: var(--bar-material); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+    border-top: .5px solid var(--sep); display: flex; }
+  .tab { flex: 1; height: var(--tabbar-h); border: 0; background: none; color: var(--fg-3); font: 500 var(--t-tab) var(--font-app);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; }
+  .tab i { font-size: 25px; }
+  .tab[aria-current="page"] { color: var(--accent); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .seg, .btn { transition: none; }
+    .row.enter { animation: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="statusbar">
+    <span id="clock">10:08</span>
+    <svg viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen">
+    <div class="topcover" aria-hidden="true"></div>
+    <div class="scroll" id="scroll">
+      <header class="nav">
+        <div class="nav-row">
+          <button class="icon-btn" id="hideBtn" aria-label="Hide amounts" aria-pressed="false"><i class="ti ti-eye-off" aria-hidden="true"></i></button>
+        </div>
+        <h1>November <span>so far</span></h1>
+      </header>
+
+      <p class="notice" id="offlineNote" hidden><i class="ti ti-cloud-off" aria-hidden="true"></i><span>Offline. Figures from <span id="cachedAt">08:41</span>.</span></p>
+
+      <section class="grid" aria-label="This month">
+        <article class="tile wide hero" aria-labelledby="safeLabel">
+          <div class="hero-top">
+            <p class="label" id="safeLabel">Safe to spend</p>
+            <p class="sub" id="updated" style="margin:0">Updated 10:08</p>
+          </div>
+          <p class="hero-fig num" id="safeFig" data-k="safe"></p>
+          <div class="track" role="img" id="track">
+            <div class="seg tax" id="segTax"></div>
+            <div class="seg bills" id="segBills"></div>
+            <div class="seg safe" id="segSafe"></div>
+          </div>
+          <ul class="legend" id="legend">
+            <li><span class="sw" style="background:var(--seg-tax)"></span>Tax <b class="num" id="pTax"></b></li>
+            <li><span class="sw" style="background:var(--seg-bills)"></span>Bills <b class="num" id="pBills"></b></li>
+            <li><span class="sw" style="background:var(--accent)"></span>Safe <b class="num" id="pSafe"></b></li>
+          </ul>
+          <p class="note" id="emptyNote" hidden>Bills due are more than what came in so far.</p>
+        </article>
+
+        <article class="tile">
+          <p class="label">Came in</p>
+          <p class="fig num" data-k="in"></p>
+          <p class="sub" id="inSub"></p>
+        </article>
+        <article class="tile">
+          <p class="label">Set aside for tax</p>
+          <p class="fig num" data-k="tax"></p>
+          <p class="sub" id="rateSub"></p>
+        </article>
+
+        <article class="tile wide" id="incoming" aria-live="polite"></article>
+
+        <article class="tile">
+          <p class="label">Bills left</p>
+          <p class="fig small num" data-k="bills"></p>
+          <p class="sub">Due by Nov 30</p>
+        </article>
+        <article class="tile">
+          <p class="label">Next tax payment</p>
+          <p class="fig small">Jan 15</p>
+          <p class="sub">Quarterly estimate</p>
+        </article>
+
+        <article class="tile wide">
+          <div class="incoming-head">
+            <div class="grow">
+              <p class="label">Waiting on clients</p>
+              <p class="sub">2 invoices, none overdue</p>
+              <p class="sub">Not counted until paid</p>
+            </div>
+            <p class="fig small num" data-k="waiting" style="margin:0"></p>
+          </div>
+        </article>
+      </section>
+
+      <h2 id="payHead">Payments this month</h2>
+      <ul class="list" id="list" aria-labelledby="payHead"></ul>
+    </div>
+
+    <nav class="tabbar" aria-label="Tabs">
+      <button class="tab" aria-current="page"><i class="ti ti-home" aria-hidden="true"></i>Home</button>
+      <button class="tab"><i class="ti ti-arrows-exchange" aria-hidden="true"></i>Payments</button>
+      <button class="tab"><i class="ti ti-file-invoice" aria-hidden="true"></i>Invoices</button>
+      <button class="tab"><i class="ti ti-receipt-tax" aria-hidden="true"></i>Tax</button>
+      <button class="tab"><i class="ti ti-settings" aria-hidden="true"></i>Settings</button>
+    </nav>
+  </main>
+
+  <div class="home-indicator"></div>
+
+<script>
+  // light first; dark follows the system
+  if (matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.dataset.theme = 'dark';
+  const now = new Date();
+  const hhmm = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, '');
+  document.getElementById('clock').textContent = hhmm;
+  document.getElementById('updated').textContent = 'Updated ' + hhmm;
+
+  // Sample data, in cents. Tax is the user's own rate, taken off each payment.
+  const RATE = 0.28;
+  const PAID = [
+    { who: 'Riverside Dental', day: 'Nov 3', c: 240000 },
+    { who: 'Greenfield Property Management Inc.', day: 'Nov 6', c: 315000 },
+    { who: 'Daniel Okafor', day: 'Nov 7', c: 48000 },
+    { who: 'Refund to Daniel Okafor', day: 'Nov 8', c: -12000 },
+  ];
+  const NEW = { who: 'Herrera Landscaping', day: 'Today', c: 125000 };
+  const state = {
+    payments: PAID.slice(), bills: 138500, waiting: 190000,
+    pending: NEW, justSplit: null, hidden: false, mode: location.hash.slice(1),
+  };
+  if (state.mode === 'empty') { state.payments = []; }
+
+  const taxOf = c => Math.round(c * RATE);
+  function totals() {
+    const inC = state.payments.reduce((s, p) => s + p.c, 0);
+    const tax = state.payments.reduce((s, p) => s + taxOf(p.c), 0);
+    return { in: inC, tax, bills: state.bills, safe: inC - tax - state.bills, waiting: state.waiting };
+  }
+
+  const fmt = c => (c < 0 ? '−' : '') + '$' + (Math.abs(c) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const spoken = c => { const a = Math.abs(c); return (c < 0 ? 'minus ' : '') + Math.floor(a / 100).toLocaleString('en-US') + ' dollars' + (a % 100 ? ' ' + (a % 100) + ' cents' : ''); };
+  const MASK = '$••••';
+  // integer loud, currency sign and cents quiet
+  function heroHTML(c) {
+    if (state.hidden) return MASK;
+    const s = fmt(c), i = s.indexOf('$'), d = s.lastIndexOf('.');
+    return s.slice(0, i) + '<span class="q">$</span>' + s.slice(i + 1, d) + '<span class="q dec">' + s.slice(d) + '</span>';
+  }
+  function figHTML(c) {
+    if (state.hidden) return MASK;
+    const s = fmt(c), d = s.lastIndexOf('.');
+    return s.slice(0, d) + '<span class="q">' + s.slice(d) + '</span>';
+  }
+
+  const shown = {};   // last drawn value per key, for the count-up
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function setFig(el, k, v) {
+    const isHero = k === 'safe', html = isHero ? heroHTML : figHTML;
+    el.setAttribute('aria-label', state.hidden ? 'Hidden' : spoken(v));
+    el.classList.toggle('neg', v < 0);
+    const from = shown[k];
+    shown[k] = v;
+    if (from === undefined || from === v || reduce || state.hidden) { el.innerHTML = html(v); return; }
+    const t0 = performance.now(), D = 420;
+    (function step(t) {
+      const p = Math.min(1, (t - t0) / D), e = 1 - Math.pow(1 - p, 3);
+      el.innerHTML = html(Math.round(from + (v - from) * e));
+      if (p < 1) requestAnimationFrame(step);
+    })(t0);
+  }
+
+  function render() {
+    const t = totals();
+    console.assert(t.safe + t.tax + t.bills === t.in, 'split does not add up');
+    document.querySelectorAll('[data-k]').forEach(el => setFig(el, el.dataset.k, t[el.dataset.k]));
+
+    // the track is the month's income: tax, bills, then what is safe
+    const base = Math.max(t.in, 1), pos = t.safe > 0;
+    const pct = v => Math.max(0, Math.round(v / base * 100));
+    const pT = t.in > 0 ? pct(t.tax) : 0, pB = t.in > 0 ? Math.min(100 - pT, pct(t.bills)) : 0, pS = pos ? 100 - pT - pB : 0;
+    document.getElementById('segTax').style.flexBasis = pT + '%';
+    document.getElementById('segBills').style.flexBasis = pB + '%';
+    document.getElementById('segSafe').style.flexBasis = pS + '%';
+    document.getElementById('pTax').textContent = pT + '%';
+    document.getElementById('pBills').textContent = pB + '%';
+    document.getElementById('pSafe').textContent = pS + '%';
+    document.getElementById('track').setAttribute('aria-label', `This month's income: ${pT} percent tax, ${pB} percent bills, ${pS} percent safe to spend`);
+    document.getElementById('emptyNote').hidden = t.safe >= 0;
+    document.getElementById('legend').hidden = t.in <= 0;
+
+    const nPay = state.payments.filter(p => p.c > 0).length, nRef = state.payments.length - nPay;
+    document.getElementById('inSub').textContent = nPay === 0 ? 'No payments yet' : `${nPay} payment${nPay > 1 ? 's' : ''}` + (nRef ? `, ${nRef} refund` : '');
+    document.getElementById('rateSub').textContent = Math.round(RATE * 100) + '% of each payment';
+
+    renderIncoming();
+    renderList();
+  }
+
+  function renderIncoming() {
+    const box = document.getElementById('incoming');
+    const offline = state.mode === 'offline';
+    if (state.pending) {
+      const p = state.pending, tx = taxOf(p.c);
+      box.hidden = false;
+      box.innerHTML = `
+        <div class="incoming-head">
+          <div class="glyph"><i class="ti ti-arrow-down-left" aria-hidden="true"></i></div>
+          <div class="grow"><p class="name">${p.who}</p><p class="sub">New payment, ${p.day.toLowerCase()} 9:52</p></div>
+          <p class="amt num" aria-label="${spoken(p.c)}">${state.hidden ? MASK : fmt(p.c)}</p>
+        </div>
+        <div class="split">
+          <span>To tax</span><span class="num">${state.hidden ? MASK : fmt(tx)}</span>
+          <span>Safe to spend</span><span class="num">${state.hidden ? MASK : fmt(p.c - tx)}</span>
+        </div>
+        <button class="btn" id="splitBtn" ${offline ? 'disabled' : ''}>${offline ? 'Set aside when online' : 'Set aside ' + fmt(tx)}</button>`;
+      document.getElementById('splitBtn').onclick = commit;
+    } else if (state.justSplit) {
+      const p = state.justSplit;
+      box.innerHTML = `
+        <div class="done-row">
+          <div class="glyph ok"><i class="ti ti-circle-check" aria-hidden="true"></i></div>
+          <div class="grow"><p class="name">${state.hidden ? 'Tax set aside' : fmt(taxOf(p.c)) + ' set aside'}</p><p class="sub">From ${p.who}</p></div>
+          <button class="text-btn" id="undoBtn">Undo</button>
+        </div>`;
+      document.getElementById('undoBtn').onclick = undo;
+    } else { box.hidden = true; }
+  }
+
+  function renderList() {
+    const ul = document.getElementById('list');
+    if (!state.payments.length) {
+      ul.innerHTML = '<li class="row"><div class="grow"><p class="name">No payments yet</p><p class="sub">Payments into your account show up here.</p></div></li>';
+      return;
+    }
+    ul.innerHTML = state.payments.slice().reverse().map(p => {
+      const tx = taxOf(p.c), out = p.c < 0;
+      return `<li class="row${p === state.justSplit && !reduce ? ' enter' : ''}">
+        <div class="glyph"><i class="ti ${out ? 'ti-arrow-up-right' : 'ti-arrow-down-left'}" aria-hidden="true"></i></div>
+        <div class="grow"><p class="name">${p.who}</p>
+          <p class="sub num">${p.day}, ${state.hidden ? 'tax hidden' : fmt(Math.abs(tx)) + (out ? ' back from tax' : ' to tax')}</p></div>
+        <p class="amt num" aria-label="${spoken(p.c)}">${state.hidden ? MASK : fmt(p.c)}</p></li>`;
+    }).join('');
+  }
+
+  let touched = false;
+  function commit() {
+    touched = true;
+    if (!state.pending) return;
+    state.payments.push(state.pending);
+    state.justSplit = state.pending; state.pending = null;
+    render();
+  }
+  function undo() {
+    touched = true;
+    state.payments = state.payments.filter(p => p !== state.justSplit);
+    state.pending = state.justSplit; state.justSplit = null;
+    render();
+  }
+  document.getElementById('hideBtn').onclick = function () {
+    touched = true;
+    state.hidden = !state.hidden;
+    this.setAttribute('aria-pressed', state.hidden);
+    this.setAttribute('aria-label', state.hidden ? 'Show amounts' : 'Hide amounts');
+    this.firstElementChild.className = 'ti ' + (state.hidden ? 'ti-eye' : 'ti-eye-off');
+    Object.keys(shown).forEach(k => delete shown[k]);
+    render();
+  };
+
+  // states for review: #loading, #empty, #offline
+  if (state.mode === 'offline') { document.getElementById('offlineNote').hidden = false; document.getElementById('updated').textContent = 'Updated 08:41'; }
+  if (state.mode === 'loading') {
+    render();
+    document.querySelectorAll('.fig, .hero-fig, .sub, .legend, #list .row .grow, #incoming').forEach(el => el.classList.add('skel'));
+    document.getElementById('track').style.opacity = 0;
+  } else {
+    render();
+    // explain the screen once: rest for three seconds, then press the action
+    if (!reduce && !state.mode) setTimeout(() => {
+      const b = document.getElementById('splitBtn');
+      if (touched || !b) return;
+      b.classList.add('pressed');
+      setTimeout(() => { b.classList.remove('pressed'); if (!touched) commit(); }, 160);
+    }, 3200);
+  }
+</script>
+</body>
+</html>

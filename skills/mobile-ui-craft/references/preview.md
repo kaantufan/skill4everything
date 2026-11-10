@@ -61,7 +61,7 @@ Use a mockup when there is no project yet, no toolchain to build with, or the us
 
 1. Copy `assets/phone-frame.html` from this skill. It provides the screen size, status bar, home indicator, safe-area variables and the platform system font stack, and nothing else. Set `data-platform` to `ios` or `android` and `data-theme` to `light` or `dark`.
 2. Put the product's tokens in the marked style block and the screen's markup inside `#screen`.
-3. Make it a prototype, not a picture: the entrance plays, the hero has its living loop, and the primary action works and changes the hero. The first three seconds show the resting state a user sees on opening. After that, run the main interaction once automatically so the screen explains itself, and skip that under `prefers-reduced-motion`. A display face may be loaded from a web font service in a prototype; say that the native build must bundle and license it. Do not add marketing sections, hover states or anything a phone app would not have.
+3. Make it a prototype, not a picture: the primary action works and changes the hero. The first three seconds show the resting state a user sees on opening. After that, run the main interaction once automatically so the screen explains itself, and skip that under `prefers-reduced-motion`. The dealt typeface may be loaded from a web font service in a prototype; say that the native build must bundle and license it. Load the dealt typeface and the dealt icon set; draw no icons and no pictures yourself. Do not add marketing sections, hover states or anything a phone app would not have.
 4. Capture it in real time with the bundled script, which drives a local Chrome or Edge at a true phone viewport and writes one image per moment:
 
 ```

@@ -1,0 +1,512 @@
+<!doctype html>
+<!-- Plak, Now Playing. HTML mockup of a native iOS screen: fonts, materials, controls and scrolling approximate the native ones. -->
+<html lang="en" data-platform="ios" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plak, Now Playing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css">
+<style>
+  :root {
+    --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px;
+    --font: -apple-system, "SF Pro Text", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+    --chrome: #000;
+  }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--screen-bg); color: var(--screen-fg); }
+  .statusbar {
+    position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 10;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none;
+  }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  [data-platform="ios"] .statusbar .android { display: none; }
+  .home-indicator {
+    position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 10;
+    width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none;
+  }
+  #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+</style>
+<style>
+  /* PLAK TOKENS. One hue (rose 342, from a coloured vinyl pressing) plus neutrals. */
+  :root {
+    --font: "Source Sans 3", -apple-system, system-ui, sans-serif;
+    /* Now Playing: deep ground in the light appearance */
+    --ground: hsl(342 48% 22%);
+    --surface: hsl(342 40% 28%);
+    --ink: hsl(342 30% 97%);
+    --ink-2: hsl(342 30% 97% / .76);
+    --ink-3: hsl(342 30% 97% / .6);
+    --accent: hsl(342 85% 81%);
+    --accent-weak: hsl(342 85% 81% / .2);
+    --line: hsl(342 30% 97% / .28);
+    --slot: hsl(340 7% 52%);
+    --btn: hsl(342 30% 97%);
+    --btn-ink: hsl(342 48% 22%);
+    --scrim: hsl(342 40% 6% / .5);
+    /* the app shell behind the sheet */
+    --shell: hsl(342 18% 96%);
+    --shell-ink: hsl(342 25% 14%);
+    --shell-ink-2: hsl(342 10% 36%);
+    --mini: hsl(0 0% 100%);
+    --mini-slot: hsl(340 6% 78%);
+    --float: 0 6px 20px hsl(342 50% 8% / .28); /* the one elevation */
+    /* type */
+    --t-title: 600 24px/30px var(--font);
+    --t-body: 400 17px/22px var(--font);
+    --t-row: 400 15px/20px var(--font);
+    --t-cap: 400 13px/17px var(--font);
+    /* radii by role: control, container, sheet */
+    --r-control: 4px; --r-container: 6px; --r-sheet: 6px;
+    /* layout */
+    --spine: 30px; --lead: 56px; --trail: 20px;
+    --ease: cubic-bezier(.2,.7,.2,1);
+    --screen-bg: var(--shell); --screen-fg: var(--shell-ink);
+  }
+  [data-theme="dark"] {
+    --ground: hsl(342 22% 9%);
+    --surface: hsl(342 18% 15%);
+    --ink: hsl(342 20% 94%);
+    --ink-2: hsl(342 20% 94% / .74);
+    --ink-3: hsl(342 20% 94% / .58);
+    --accent: hsl(342 70% 77%);
+    --accent-weak: hsl(342 70% 77% / .18);
+    --line: hsl(342 20% 94% / .22);
+    --slot: hsl(340 5% 34%);
+    --btn: hsl(342 20% 94%);
+    --btn-ink: hsl(342 22% 9%);
+    --shell: hsl(342 12% 7%);
+    --shell-ink: hsl(342 15% 94%);
+    --shell-ink-2: hsl(342 8% 70%);
+    --mini: hsl(342 14% 15%);
+    --mini-slot: hsl(340 5% 30%);
+    --float: 0 6px 20px hsl(0 0% 0% / .5);
+  }
+  body.np-open { --chrome: var(--ink); }
+
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  button:disabled { cursor: default; opacity: .38; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--r-control); }
+  .num { font-variant-numeric: tabular-nums; }
+  .one-line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+
+  /* ---------- Now Playing sheet ---------- */
+  .np {
+    position: absolute; inset: 0; z-index: 2; background: var(--ground); color: var(--ink);
+    display: flex; flex-direction: column;
+    padding: var(--safe-top) var(--trail) var(--safe-bottom) 0;
+    transition: transform 380ms var(--ease);
+  }
+  .np.down { transform: translateY(100%); }
+  .np-head { display: flex; align-items: center; height: 44px; }
+  .icon-btn { width: 44px; height: 44px; display: grid; place-items: center; border-radius: var(--r-control); font-size: 24px; flex: none; }
+  .icon-btn:active { background: var(--accent-weak); }
+  .dismiss { margin-left: calc(var(--spine) - 22px); font-size: 28px; }
+  .source { margin-left: calc(var(--lead) - var(--spine) - 22px); display: flex; flex-direction: column; min-width: 0; }
+  .source .cap { font: var(--t-cap); color: var(--ink-3); }
+  .source .name { font: 600 15px/20px var(--font); }
+
+  /* the spine: what played, what is playing, what comes next, top to bottom */
+  .timeline { position: relative; flex: 1; display: flex; flex-direction: column; margin-top: 4px; }
+  .timeline::before { content: ""; position: absolute; left: var(--spine); top: 22px; bottom: 22px; width: 1px; background: var(--line); }
+  .node { position: absolute; left: calc(var(--spine) - 4px); width: 9px; height: 9px; border-radius: 2px; border: 1.5px solid var(--ink-2); background: var(--ground); }
+  .entry { position: relative; display: flex; align-items: center; min-height: 44px; padding-left: var(--lead); text-align: left; width: 100%; border-radius: var(--r-control); }
+  .entry > .node { top: calc(50% - 4.5px); }
+  .entry .stack { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+  .entry .lbl { font: var(--t-cap); color: var(--ink-3); }
+  .entry .what { font: var(--t-row); color: var(--ink-2); }
+  .entry .what b { font-weight: 600; color: var(--ink); }
+  button.entry:active { background: var(--accent-weak); }
+  .entry:disabled { opacity: 1; } /* it still states a fact: start or end of the queue */
+
+  .now { padding-left: var(--lead); margin-top: auto; position: relative; }
+  .art {
+    width: 100%; aspect-ratio: 1; background: var(--slot); border-radius: var(--r-container);
+    box-shadow: inset 0 0 0 1px hsl(0 0% 100% / .1);
+    transform-origin: 0 50%; transition: transform 320ms var(--ease), opacity 160ms linear;
+  }
+  .np.paused .art { transform: scale(.88); }
+  .meta { position: relative; display: flex; align-items: center; gap: 8px; margin-top: 20px; }
+  .meta > .node { left: calc(var(--spine) - var(--lead) - 5px); width: 11px; height: 11px; border: 0; background: var(--accent); top: calc(50% - 5.5px); }
+  .titles { flex: 1; min-width: 0; transition: opacity 160ms linear; }
+  .titles h1 { margin: 0; font: var(--t-title); }
+  .titles p { margin: 2px 0 0; font: var(--t-body); color: var(--ink-2); }
+  .np.swap .art, .np.swap .titles { opacity: 0; }
+  .like { margin-right: -10px; }
+  .like[aria-pressed="true"] { color: var(--accent); }
+
+  .scrub { position: relative; height: 28px; margin-top: 14px; touch-action: none; cursor: pointer; display: flex; align-items: center; }
+  .scrub .track { position: relative; width: 100%; height: 4px; border-radius: 2px; background: var(--line); }
+  .scrub .fill { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 2px; }
+  .scrub .knob { position: absolute; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 3px; background: var(--ink); transition: transform 120ms var(--ease); }
+  .scrub.dragging .knob { transform: scale(1.5); }
+  .times { display: flex; justify-content: space-between; font: var(--t-cap); color: var(--ink-2); height: 18px; }
+  .err { display: flex; align-items: center; gap: 8px; font: var(--t-cap); color: var(--ink); height: 18px; }
+  .err i { font-size: 16px; color: var(--accent); }
+  .err button { margin-left: auto; font-weight: 600; color: var(--accent); min-height: 44px; padding: 0 2px; }
+  [hidden] { display: none !important; }
+
+  .transport { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; }
+  .transport .icon-btn { width: 56px; height: 56px; font-size: 32px; }
+  .transport .mode { width: 44px; height: 44px; font-size: 22px; }
+  .mode[aria-pressed="true"], .mode[data-on="true"] { background: var(--accent-weak); color: var(--accent); }
+  .play { width: 72px !important; height: 72px !important; background: var(--btn); color: var(--btn-ink); font-size: 36px !important; transition: transform 100ms var(--ease); }
+  .play:active { transform: scale(.94); background: var(--btn); }
+  .play i { margin-left: 0; }
+  .play .ri-play-line { margin-left: 3px; }
+  .spin { animation: spin 900ms linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .next-row { margin-top: auto; display: flex; align-items: center; gap: 4px; }
+  .next-row .entry { flex: 1; min-width: 0; }
+  .queue-btn { display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 10px; border-radius: var(--r-control); font: 600 15px/20px var(--font); color: var(--ink); margin-right: -10px; flex: none; }
+  .queue-btn i { font-size: 20px; }
+  .queue-btn:active { background: var(--accent-weak); }
+
+  /* ---------- Queue sheet ---------- */
+  .scrim { position: absolute; inset: 0; z-index: 3; background: var(--scrim); opacity: 0; transition: opacity 240ms linear; }
+  .scrim.on { opacity: 1; }
+  .qsheet {
+    position: absolute; left: 0; right: 0; bottom: 0; top: 112px; z-index: 4;
+    background: var(--surface); color: var(--ink); border-radius: var(--r-sheet) var(--r-sheet) 0 0; box-shadow: var(--float);
+    display: flex; flex-direction: column; transform: translateY(100%); transition: transform 320ms var(--ease);
+  }
+  .qsheet.on { transform: none; }
+  .grab { width: 36px; height: 5px; border-radius: 3px; background: var(--line); margin: 6px auto 0; flex: none; }
+  .qhead { display: flex; align-items: center; height: 48px; padding: 0 var(--trail) 0 var(--lead); flex: none; }
+  .qhead h2 { margin: 0; flex: 1; font: 600 20px/26px var(--font); }
+  .text-btn { min-height: 44px; padding: 0 10px; margin-right: -10px; font: 600 17px/22px var(--font); color: var(--accent); border-radius: var(--r-control); }
+  .qlist { position: relative; flex: 1; overflow-y: auto; padding: 4px var(--trail) calc(var(--safe-bottom) + 24px) 0; scrollbar-width: none; }
+  .qlist::before { content: ""; position: absolute; left: var(--spine); top: 0; bottom: 0; width: 1px; background: var(--line); }
+  .qlist .node { background: var(--surface); }
+  .qsec { position: relative; padding: 20px 0 6px var(--lead); font: 600 13px/17px var(--font); color: var(--ink-2); }
+  .qsec:first-child { padding-top: 8px; }
+  .qrow { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding-left: var(--lead); text-align: left; border-radius: var(--r-control); }
+  .qrow > .node { top: calc(50% - 4.5px); }
+  .qrow.cur > .node { width: 11px; height: 11px; left: calc(var(--spine) - 5px); top: calc(50% - 5.5px); border: 0; background: var(--accent); }
+  button.qrow:active { background: var(--accent-weak); }
+  .thumb { width: 40px; height: 40px; border-radius: var(--r-control); background: var(--slot); flex: none; box-shadow: inset 0 0 0 1px hsl(0 0% 100% / .1); }
+  .qrow .stack { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .qrow .t { font: 600 15px/20px var(--font); }
+  .qrow .a { font: var(--t-cap); color: var(--ink-2); }
+  .qrow .d { font: var(--t-cap); color: var(--ink-2); }
+  .qrow.past .t { font-weight: 400; color: var(--ink-2); }
+  .qrow.blocked { opacity: 1; }
+  .qrow.blocked .t, .qrow.blocked .d { color: var(--ink-2); font-weight: 400; }
+  .qempty { padding: 6px 0 0 var(--lead); font: var(--t-row); color: var(--ink-2); }
+
+  /* ---------- the app shell behind, shown when the sheet is closed ---------- */
+  .mini {
+    position: absolute; left: 8px; right: 8px; bottom: calc(var(--safe-bottom) + 8px); z-index: 1; height: 64px;
+    display: flex; align-items: center; gap: 4px; padding: 0 6px 0 8px;
+    background: var(--mini); color: var(--shell-ink); border-radius: var(--r-container); box-shadow: var(--float);
+  }
+  .mini .open { flex: 1; display: flex; align-items: center; gap: 12px; min-width: 0; min-height: 52px; text-align: left; border-radius: var(--r-control); }
+  .mini .thumb { background: var(--mini-slot); }
+  .mini .stack { display: flex; flex-direction: column; min-width: 0; }
+  .mini .t { font: 600 15px/20px var(--font); }
+  .mini .a { font: var(--t-cap); color: var(--shell-ink-2); }
+  .mini .icon-btn:active { background: hsl(342 30% 50% / .14); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .np, .qsheet, .scrim, .knob, .play { transition: none !important; }
+    .art { transition: opacity 160ms linear; }
+    .np.paused .art { transform: none; opacity: .72; }
+    .spin { animation: none; }
+  }
+</style>
+</head>
+<body class="np-open">
+  <div class="statusbar">
+    <span id="clock">10:08</span>
+    <svg class="android" viewBox="0 -2 46 14" aria-hidden="true">
+      <path d="M8 12 0.6 3.4a11 11 0 0 1 14.8 0z"/><path d="M20 12h12V0z"/>
+      <rect x="38" y="0" width="7" height="12" rx="1.6"/><rect x="40" y="-1.6" width="3" height="2" rx=".6"/>
+    </svg>
+    <svg class="ios" viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" stroke="currentColor" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen">
+    <!-- mini-player: what the sheet collapses to -->
+    <div class="mini" aria-label="Mini player">
+      <button class="open" id="miniOpen" aria-label="Open Now Playing">
+        <span class="thumb" aria-hidden="true"></span>
+        <span class="stack"><span class="t one-line" id="miniTitle"></span><span class="a one-line" id="miniArtist"></span></span>
+      </button>
+      <button class="icon-btn" id="miniPlay"><i></i></button>
+      <button class="icon-btn" id="miniNext" aria-label="Next track"><i class="ri-skip-forward-line"></i></button>
+    </div>
+
+    <section class="np" id="np" aria-label="Now Playing">
+      <header class="np-head">
+        <button class="icon-btn dismiss" id="dismiss" aria-label="Close Now Playing"><i class="ri-arrow-down-s-line"></i></button>
+        <div class="source"><span class="cap">Playing from playlist</span><span class="name one-line">Pazar sabahı</span></div>
+      </header>
+
+      <div class="timeline">
+        <button class="entry" id="pastEntry">
+          <span class="node" aria-hidden="true"></span>
+          <span class="stack"><span class="lbl">Played</span><span class="what one-line" id="pastWhat"></span></span>
+        </button>
+
+        <div class="now">
+          <div class="art" id="art" role="img"></div>
+          <div class="meta">
+            <span class="node" aria-hidden="true"></span>
+            <div class="titles" aria-live="polite"><h1 class="one-line" id="title"></h1><p class="one-line" id="artist"></p></div>
+            <button class="icon-btn like" id="like" aria-pressed="false"><i class="ri-heart-3-line"></i></button>
+          </div>
+          <div class="scrub" id="scrub" role="slider" tabindex="0" aria-label="Playback position" aria-valuemin="0">
+            <div class="track"><div class="fill" id="fill"></div><div class="knob" id="knob"></div></div>
+          </div>
+          <div class="times num" id="times"><span id="elapsed">0:00</span><span id="remain">−0:00</span></div>
+          <div class="err" id="err" role="alert" hidden><i class="ri-error-warning-line" aria-hidden="true"></i><span>This track didn't load.</span><button id="retry">Try again</button></div>
+          <div class="transport">
+            <button class="icon-btn mode" id="shuffle" aria-label="Shuffle" aria-pressed="false"><i class="ri-shuffle-line"></i></button>
+            <button class="icon-btn" id="prev" aria-label="Previous track"><i class="ri-skip-back-line"></i></button>
+            <button class="icon-btn play" id="play"><i></i></button>
+            <button class="icon-btn" id="next" aria-label="Next track"><i class="ri-skip-forward-line"></i></button>
+            <button class="icon-btn mode" id="repeat"><i class="ri-repeat-2-line"></i></button>
+          </div>
+        </div>
+
+        <div class="next-row">
+          <button class="entry" id="nextEntry">
+            <span class="node" aria-hidden="true"></span>
+            <span class="stack"><span class="lbl">Up next</span><span class="what one-line" id="nextWhat"></span></span>
+          </button>
+          <button class="queue-btn" id="openQueue" aria-haspopup="dialog"><i class="ri-play-list-2-line" aria-hidden="true"></i>Queue</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="scrim" id="scrim" hidden></div>
+    <section class="qsheet" id="queue" role="dialog" aria-modal="true" aria-labelledby="qTitle" hidden>
+      <div class="grab" aria-hidden="true"></div>
+      <header class="qhead"><h2 id="qTitle">Queue</h2><button class="text-btn" id="qDone">Done</button></header>
+      <div class="qlist" id="qlist"></div>
+    </section>
+  </main>
+
+  <div class="home-indicator"></div>
+<script>
+document.getElementById('clock').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, '');
+
+// Sample data, not real catalogue entries.
+const tracks = [
+  { t: 'Sabah Erken', a: 'Deniz Aksoy', d: 192 },
+  { t: 'Kıyıda', a: 'Deniz Aksoy', d: 231 },
+  { t: 'Gece Treni', a: 'Elif Şahin', d: 247 },
+  { t: 'Bir Şarkı Daha Söyle Bana, Sonra Gidersin Belki', a: 'İlkay Doğan, Sena Uçar', d: 338 },
+  { t: 'Untitled 7', a: 'Mert Güneş', d: 166, failOnce: true },
+  { t: 'Liman', a: 'Elif Şahin', d: 58, blocked: true },
+  { t: 'Ağustos', a: 'Deniz Aksoy', d: 209 },
+];
+const base = tracks.map((_, i) => i);
+const S = { order: base.slice(), pos: 1, t: 84, playing: true, buffering: false, error: false, shuffle: false, repeat: 'off', liked: new Set() };
+const startAt = Number((location.hash.match(/track=(\d+)/) || [])[1]);
+if (startAt >= 0 && startAt < tracks.length && !tracks[startAt].blocked) { S.pos = startAt; S.t = 0; }
+
+const $ = (id) => document.getElementById(id);
+const np = $('np');
+const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+const dark = matchMedia('(prefers-color-scheme: dark)');
+const applyTheme = () => document.documentElement.dataset.theme = dark.matches ? 'dark' : 'light';
+applyTheme(); dark.addEventListener('change', applyTheme);
+
+const cur = () => tracks[S.order[S.pos]];
+const fmt = (s) => { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+const words = (s) => { s = Math.round(s); const m = Math.floor(s / 60), r = s % 60; return (m ? m + (m === 1 ? ' minute ' : ' minutes ') : '') + r + (r === 1 ? ' second' : ' seconds'); };
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const playable = (p) => p >= 0 && p < S.order.length && !tracks[S.order[p]].blocked;
+function nextPos() {
+  for (let p = S.pos + 1; p < S.order.length; p++) if (playable(p)) return p;
+  if (S.repeat === 'all') for (let p = 0; p < S.pos; p++) if (playable(p)) return p;
+  return -1;
+}
+function prevPos() { for (let p = S.pos - 1; p >= 0; p--) if (playable(p)) return p; return -1; }
+
+function setPlayIcon(btn, small) {
+  const i = btn.firstElementChild;
+  if (S.buffering) { i.className = 'ri-loader-4-line spin'; btn.setAttribute('aria-label', 'Loading'); return; }
+  i.className = S.playing ? 'ri-pause-line' : 'ri-play-line';
+  btn.setAttribute('aria-label', S.error ? 'Try again' : S.playing ? 'Pause' : 'Play');
+}
+
+function renderTime() {
+  const d = cur().d, t = Math.min(S.t, d), pct = (t / d) * 100;
+  $('fill').style.width = pct + '%';
+  $('knob').style.left = pct + '%';
+  $('elapsed').textContent = fmt(t);
+  $('remain').textContent = '−' + fmt(d - t);
+  const sc = $('scrub');
+  sc.setAttribute('aria-valuemax', d); sc.setAttribute('aria-valuenow', Math.round(t));
+  sc.setAttribute('aria-valuetext', words(t) + ' of ' + words(d));
+}
+
+function render() {
+  const tr = cur();
+  $('title').textContent = tr.t; $('title').title = tr.t;
+  $('artist').textContent = tr.a;
+  $('art').setAttribute('aria-label', 'Artwork for ' + tr.t + ' by ' + tr.a);
+  const pp = prevPos(), nx = nextPos();
+  $('pastWhat').innerHTML = pp < 0 ? 'Start of queue' : '<b>' + esc(tracks[S.order[pp]].t) + '</b> ' + esc(tracks[S.order[pp]].a);
+  $('pastEntry').disabled = pp < 0;
+  $('pastEntry').setAttribute('aria-label', pp < 0 ? 'Start of queue' : 'Played: ' + tracks[S.order[pp]].t + '. Play again');
+  $('nextWhat').innerHTML = nx < 0 ? 'Nothing queued' : '<b>' + esc(tracks[S.order[nx]].t) + '</b> ' + esc(tracks[S.order[nx]].a);
+  $('nextEntry').disabled = nx < 0;
+  $('nextEntry').setAttribute('aria-label', nx < 0 ? 'Nothing queued' : 'Up next: ' + tracks[S.order[nx]].t + '. Play now');
+  $('next').disabled = nx < 0;
+  $('miniNext').disabled = nx < 0;
+  np.classList.toggle('paused', !S.playing);
+  setPlayIcon($('play')); setPlayIcon($('miniPlay'));
+  $('err').hidden = !S.error; $('times').hidden = S.error;
+  const liked = S.liked.has(S.order[S.pos]);
+  $('like').setAttribute('aria-pressed', liked);
+  $('like').setAttribute('aria-label', liked ? 'Liked' : 'Like');
+  $('like').firstElementChild.className = liked ? 'ri-heart-3-fill' : 'ri-heart-3-line';
+  $('shuffle').setAttribute('aria-pressed', S.shuffle);
+  const rp = $('repeat');
+  rp.dataset.on = S.repeat !== 'off';
+  rp.firstElementChild.className = S.repeat === 'one' ? 'ri-repeat-one-line' : 'ri-repeat-2-line';
+  rp.setAttribute('aria-label', 'Repeat: ' + { off: 'off', all: 'all', one: 'this track' }[S.repeat]);
+  $('miniTitle').textContent = tr.t; $('miniArtist').textContent = tr.a;
+  renderTime();
+  if (!$('queue').hidden) renderQueue();
+}
+
+function renderQueue() {
+  const row = (p, cls) => {
+    const tr = tracks[S.order[p]];
+    const sub = tr.blocked ? 'Not available in your region' : esc(tr.a);
+    const tag = tr.blocked || cls === 'cur' ? 'div' : 'button';
+    return `<${tag} class="qrow ${cls}${tr.blocked ? ' blocked' : ''}" data-p="${p}"${tag === 'button' ? ` aria-label="Play ${esc(tr.t)} by ${esc(tr.a)}"` : ''}>
+      <span class="node" aria-hidden="true"></span><span class="thumb" aria-hidden="true"></span>
+      <span class="stack"><span class="t one-line">${esc(tr.t)}</span><span class="a one-line">${sub}</span></span>
+      <span class="d num">${fmt(tr.d)}</span></${tag}>`;
+  };
+  let h = '';
+  if (S.pos > 0) { h += '<div class="qsec">Played</div>'; for (let p = 0; p < S.pos; p++) h += row(p, 'past'); }
+  h += '<div class="qsec">Now playing</div>' + row(S.pos, 'cur');
+  h += '<div class="qsec">Up next</div>';
+  if (S.pos === S.order.length - 1) h += '<p class="qempty">That\'s the end of your queue.</p>';
+  for (let p = S.pos + 1; p < S.order.length; p++) h += row(p, '');
+  $('qlist').innerHTML = h;
+}
+
+let loadTimer;
+function goTo(p) {
+  S.pos = p; S.t = 0; S.error = false; S.buffering = true; S.playing = true;
+  np.classList.add('swap');
+  setTimeout(() => { np.classList.remove('swap'); render(); }, 160);
+  render();
+  clearTimeout(loadTimer);
+  loadTimer = setTimeout(() => {
+    S.buffering = false;
+    const tr = cur();
+    if (tr.failOnce && !tr.failed) { tr.failed = true; S.error = true; S.playing = false; }
+    render();
+  }, 650);
+}
+function togglePlay() {
+  if (S.buffering) return;
+  if (S.error) { goTo(S.pos); return; }
+  S.playing = !S.playing; render();
+}
+function next() { const p = nextPos(); if (p >= 0) goTo(p); }
+function prev() {
+  const p = prevPos();
+  if (S.t > 3 || p < 0) { S.t = 0; renderTime(); } else goTo(p);
+}
+function onEnd() {
+  if (S.repeat === 'one') { S.t = 0; return; }
+  const p = nextPos();
+  if (p >= 0) goTo(p); else { S.t = cur().d; S.playing = false; render(); }
+}
+function setShuffle(on) {
+  const id = S.order[S.pos];
+  if (on) {
+    const rest = S.order.slice(S.pos + 1);
+    for (let i = rest.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [rest[i], rest[j]] = [rest[j], rest[i]]; }
+    S.order = S.order.slice(0, S.pos + 1).concat(rest);
+  } else { S.order = base.slice(); S.pos = S.order.indexOf(id); }
+  S.shuffle = on; render();
+}
+
+setInterval(() => {
+  if (!S.playing || S.buffering || S.error || dragging) return;
+  S.t += 0.25;
+  if (S.t >= cur().d) onEnd(); else renderTime();
+}, 250);
+
+// scrubbing
+const scrub = $('scrub'); let dragging = false;
+const seekTo = (x) => { const r = scrub.getBoundingClientRect(); S.t = Math.min(1, Math.max(0, (x - r.left) / r.width)) * cur().d; renderTime(); };
+scrub.addEventListener('pointerdown', (e) => { if (S.error) return; dragging = true; scrub.classList.add('dragging'); scrub.setPointerCapture(e.pointerId); seekTo(e.clientX); });
+scrub.addEventListener('pointermove', (e) => { if (dragging) seekTo(e.clientX); });
+const endDrag = () => { dragging = false; scrub.classList.remove('dragging'); };
+scrub.addEventListener('pointerup', endDrag); scrub.addEventListener('pointercancel', endDrag);
+scrub.addEventListener('keydown', (e) => {
+  const d = cur().d, step = { ArrowLeft: -5, ArrowDown: -5, ArrowRight: 5, ArrowUp: 5 }[e.key];
+  if (step) S.t = Math.min(d, Math.max(0, S.t + step)); else if (e.key === 'Home') S.t = 0; else if (e.key === 'End') S.t = d - 1; else return;
+  e.preventDefault(); renderTime();
+});
+
+// queue sheet
+let lastFocus;
+function openQueue() {
+  lastFocus = document.activeElement;
+  $('scrim').hidden = false; $('queue').hidden = false; renderQueue();
+  requestAnimationFrame(() => requestAnimationFrame(() => { $('scrim').classList.add('on'); $('queue').classList.add('on'); $('qDone').focus({ preventScroll: true }); }));
+}
+function closeQueue() {
+  $('scrim').classList.remove('on'); $('queue').classList.remove('on');
+  setTimeout(() => { $('scrim').hidden = true; $('queue').hidden = true; }, reduced.matches ? 0 : 320);
+  if (lastFocus) lastFocus.focus({ preventScroll: true });
+}
+$('qlist').addEventListener('click', (e) => { const b = e.target.closest('button.qrow'); if (b) goTo(Number(b.dataset.p)); });
+
+// sheet dismiss and reopen
+function setSheet(open) {
+  np.classList.toggle('down', !open);
+  document.body.classList.toggle('np-open', open);
+  np.inert = !open; document.querySelector('.mini').inert = open;
+  (open ? $('dismiss') : $('miniOpen')).focus({ preventScroll: true });
+}
+document.querySelector('.mini').inert = true;
+
+$('play').onclick = togglePlay; $('miniPlay').onclick = togglePlay;
+$('next').onclick = next; $('miniNext').onclick = next; $('nextEntry').onclick = next;
+$('prev').onclick = prev;
+$('pastEntry').onclick = () => { const p = prevPos(); if (p >= 0) goTo(p); };
+$('retry').onclick = () => goTo(S.pos);
+$('like').onclick = () => { const id = S.order[S.pos]; S.liked.has(id) ? S.liked.delete(id) : S.liked.add(id); render(); };
+$('shuffle').onclick = () => setShuffle(!S.shuffle);
+$('repeat').onclick = () => { S.repeat = { off: 'all', all: 'one', one: 'off' }[S.repeat]; render(); };
+$('openQueue').onclick = openQueue; $('qDone').onclick = closeQueue; $('scrim').onclick = closeQueue;
+$('dismiss').onclick = () => setSheet(false); $('miniOpen').onclick = () => setSheet(true);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (!$('queue').hidden) closeQueue(); else if (np.classList.contains('down') === false) setSheet(false); } });
+
+render();
+
+// After three seconds at rest, run the main interaction once: pause, play, skip, glance at the queue.
+if (!reduced.matches && !location.hash) {
+  const steps = [[3200, togglePlay], [4600, togglePlay], [5800, next], [8000, openQueue], [10800, closeQueue]];
+  const timers = steps.map(([ms, fn]) => setTimeout(fn, ms));
+  const stop = (e) => { if (e.isTrusted) { timers.forEach(clearTimeout); removeEventListener('pointerdown', stop, true); removeEventListener('keydown', stop, true); } };
+  addEventListener('pointerdown', stop, true); addEventListener('keydown', stop, true);
+}
+</script>
+</body>
+</html>

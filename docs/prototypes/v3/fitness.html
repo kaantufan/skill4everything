@@ -1,0 +1,390 @@
+<!doctype html>
+<!-- Kadans, post-run summary. HTML mockup of a native iOS screen: fonts, controls and scrolling approximate the native ones.
+     Dark appearance is shown first; open with ?theme=light for light, ?state=loading or ?state=offline for those states. -->
+<html lang="en" data-platform="ios" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kadans, run summary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Brygada+1918:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<style>
+  :root {
+    --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px;
+    --chrome: #000;
+  }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--bg); color: var(--fg); }
+  .statusbar {
+    position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 10;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none;
+    font-family: -apple-system, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  .home-indicator {
+    position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 30;
+    width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none;
+  }
+  #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+</style>
+<style>
+  /* PRODUCT TOKENS. Hue 318: the magenta of a GPS course line, inside the dealt magenta sector. */
+  :root {
+    --font: "Brygada 1918", Georgia, serif;
+    --bg: #fdfcfd; --fg: #1b171c; --fg-2: #645d69; --fg-3: #8d8592;
+    --sep: rgba(45, 20, 50, .16); --fill: #ece8ee; --fill-press: #e2dde5; --bar: #c9c2cd;
+    --accent: oklch(0.50 0.19 318); --accent-soft: oklch(0.50 0.19 318 / .10); --on-accent: #fff;
+    --scrim: rgba(20, 10, 22, .32);
+    --r-control: 4px; --r-container: 4px; --r-sheet: 6px;
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
+    --t-fast: 160ms;
+    --tabbar: calc(49px + var(--safe-bottom));
+  }
+  [data-theme="dark"] {
+    --bg: #0c0b0d; --fg: #f4f0f5; --fg-2: #a59ea9; --fg-3: #7d7681;
+    --sep: rgba(240, 225, 245, .15); --fill: #1d1b1f; --fill-press: #29262c; --bar: #4a4550;
+    --accent: oklch(0.73 0.16 318); --accent-soft: oklch(0.73 0.16 318 / .16); --on-accent: #1b0f1d;
+    --scrim: rgba(0, 0, 0, .55);
+  }
+  @media (prefers-reduced-motion: reduce) { :root { --t-fast: 0ms; } }
+
+  .tnum { font-variant-numeric: tabular-nums lining-nums; }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .ph { font-size: 22px; line-height: 1; }
+
+  /* Navigation bar */
+  .navbar { padding-top: var(--safe-top); background: var(--bg); position: relative; z-index: 5; flex: none; }
+  .navbar.scrolled { box-shadow: inset 0 -0.5px 0 var(--sep); }
+  .navrow { height: 44px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 var(--s2); }
+  .navbtn { min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; gap: 2px; color: var(--accent); font-size: 17px; border-radius: var(--r-control); }
+  .navbtn:active { opacity: .45; }
+  .navbtn.back .ph { font-size: 24px; }
+  .navbtn.share { justify-self: end; justify-content: center; }
+  .navtitle { font-size: 17px; font-weight: 600; opacity: 0; transition: opacity var(--t-fast); }
+  .navbar.scrolled .navtitle { opacity: 1; }
+
+  /* Scroll content */
+  .scroll { flex: 1; overflow-y: auto; scrollbar-width: none; padding-bottom: calc(var(--tabbar) + var(--s6)); }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* Key figures: the first row group */
+  .head { padding: var(--s1) var(--s4) var(--s5); }
+  .head h1 { margin: 0; font-size: 30px; font-weight: 700; letter-spacing: -.2px; line-height: 1.15; }
+  .meta { margin-top: var(--s1); font-size: 15px; color: var(--fg-2); line-height: 1.35; }
+  .meta div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .distance { margin-top: var(--s4); display: flex; align-items: baseline; gap: 6px; }
+  .distance .num { font-size: 68px; font-weight: 600; line-height: .95; letter-spacing: -1.5px; }
+  .distance .unit { font-size: 24px; font-weight: 500; color: var(--fg-2); }
+  .figs { margin-top: var(--s4); display: grid; grid-template-columns: repeat(3, 1fr); }
+  .fig + .fig { padding-left: var(--s3); box-shadow: inset 0.5px 0 0 var(--sep); }
+  .fig dt { font-size: 13px; color: var(--fg-2); }
+  .fig dd { margin: 2px 0 0; font-size: 26px; font-weight: 600; line-height: 1.1; }
+  .fig dd small { font-size: 14px; font-weight: 500; color: var(--fg-2); margin-left: 2px; }
+  dl { margin: 0; }
+  .notice { margin-top: var(--s4); display: flex; gap: var(--s2); align-items: flex-start; font-size: 15px; color: var(--fg-2); line-height: 1.35; }
+  .notice .ph { font-size: 20px; color: var(--fg); margin-top: 1px; }
+  .notice[hidden] { display: none; }
+  .navbtn:disabled { color: var(--fg-3); }
+
+  /* Route: the hero */
+  .route { position: relative; height: 224px; background: var(--fill); box-shadow: inset 0 0.5px 0 var(--sep), inset 0 -0.5px 0 var(--sep); }
+  .route svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .seg { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; transition: stroke var(--t-fast), stroke-width var(--t-fast); }
+  .route.picking .seg { stroke: var(--bar); stroke-width: 3; }
+  .route.picking .seg.on { stroke: var(--accent); stroke-width: 6; }
+  .kmdot { fill: var(--bg); stroke: var(--fg-2); stroke-width: 1.5; }
+  .start { fill: var(--bg); stroke: var(--fg); stroke-width: 3; }
+  .finish { fill: var(--fg); stroke: var(--bg); stroke-width: 2; }
+  .tag { position: absolute; padding: 4px 8px; background: var(--bg); border-radius: var(--r-control); box-shadow: 0 0 0 0.5px var(--sep); font-size: 13px; line-height: 1.25; pointer-events: none; white-space: nowrap; opacity: 0; transition: opacity var(--t-fast); }
+  .tag b { font-weight: 600; }
+  .tag.show { opacity: 1; }
+
+  /* Lists */
+  .section-title { margin: 0; padding: var(--s6) var(--s4) var(--s2); font-size: 22px; font-weight: 700; }
+  .cols, .split { display: grid; grid-template-columns: 56px 1fr 72px 64px; align-items: center; column-gap: var(--s3); padding: 0 var(--s4); }
+  .cols { font-size: 13px; color: var(--fg-2); padding-bottom: var(--s1); }
+  .cols span:nth-child(n+3), .split .pace, .split .cad { text-align: right; }
+  .split { width: 100%; min-height: 52px; text-align: left; position: relative; transition: background var(--t-fast); }
+  .split::after, .row::after { content: ""; position: absolute; left: var(--s4); right: 0; top: 0; height: 0.5px; background: var(--sep); }
+  .split:active { background: var(--fill-press); }
+  .split[aria-pressed="true"] { background: var(--accent-soft); }
+  .split .km { font-size: 17px; font-weight: 600; }
+  .split .km small { display: block; font-size: 12px; font-weight: 500; color: var(--accent); line-height: 1.1; }
+  .split .track { height: 8px; position: relative; }
+  .split .track i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: var(--bar); transition: background var(--t-fast); }
+  .split[aria-pressed="true"] .track i { background: var(--accent); }
+  .split .pace { font-size: 17px; font-weight: 500; }
+  .split .cad { font-size: 15px; color: var(--fg-2); }
+  .listend { height: 0.5px; background: var(--sep); }
+
+  .row { position: relative; display: flex; align-items: center; justify-content: space-between; gap: var(--s4); min-height: 52px; padding: 0 var(--s4); font-size: 17px; }
+  .row .v { color: var(--fg-2); text-align: right; }
+  .row.select { cursor: pointer; }
+  .row.select:active { background: var(--fill-press); }
+  .row.select .v { display: inline-flex; align-items: center; gap: 4px; }
+  .row.select .v .ph { font-size: 16px; }
+  .row select { position: absolute; inset: 0; opacity: 0; width: 100%; font-size: 17px; cursor: pointer; }
+
+  /* Tab bar */
+  .tabbar { position: absolute; left: 0; right: 0; bottom: 0; height: var(--tabbar); padding-bottom: var(--safe-bottom); background: var(--bg); box-shadow: inset 0 0.5px 0 var(--sep); display: grid; grid-template-columns: repeat(4, 1fr); z-index: 6; }
+  .tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--fg-3); font-size: 11px; font-weight: 500; min-height: 49px; }
+  .tab .ph, .tab .ph-fill { font-size: 25px; }
+  .tab[aria-current="page"] { color: var(--accent); }
+  .tab:active { opacity: .6; }
+
+  /* Share sheet and toast */
+  .scrim { position: absolute; inset: 0; background: var(--scrim); z-index: 20; opacity: 0; pointer-events: none; transition: opacity 200ms; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 21; background: var(--bg); border-radius: var(--r-sheet) var(--r-sheet) 0 0; padding: var(--s2) 0 calc(var(--safe-bottom) + var(--s2)); transform: translateY(100%); transition: transform 260ms cubic-bezier(.2,.8,.2,1); }
+  .open .scrim { opacity: 1; pointer-events: auto; }
+  .open .sheet { transform: none; }
+  .sheet .grab { width: 36px; height: 5px; border-radius: 3px; background: var(--bar); margin: 0 auto var(--s2); }
+  .sheet h2 { margin: 0; padding: var(--s2) var(--s4) var(--s3); font-size: 20px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+  .sheet h2 button { color: var(--accent); font-size: 17px; font-weight: 500; min-height: 44px; min-width: 44px; text-align: right; }
+  .sheet .opt { position: relative; width: 100%; display: flex; align-items: center; gap: var(--s3); min-height: 52px; padding: 0 var(--s4); font-size: 17px; text-align: left; }
+  .sheet .opt::after { content: ""; position: absolute; left: 52px; right: 0; bottom: 0; height: .5px; background: var(--sep); }
+  .sheet .opt:active { background: var(--fill-press); }
+  .sheet .opt .ph { color: var(--accent); }
+  .sheet .note { padding: var(--s3) var(--s4) 0; font-size: 13px; color: var(--fg-2); }
+  @media (prefers-reduced-motion: reduce) { .sheet, .scrim { transition: none; } }
+  .toast { position: absolute; left: var(--s4); right: var(--s4); bottom: calc(var(--tabbar) + var(--s2)); z-index: 22; background: var(--fg); color: var(--bg); border-radius: var(--r-container); padding: var(--s3) var(--s4); font-size: 15px; display: flex; gap: var(--s2); align-items: center; opacity: 0; pointer-events: none; transition: opacity 200ms; }
+  .toast.show { opacity: 1; }
+
+  /* Loading skeleton */
+  .sk { background: var(--fill); border-radius: var(--r-control); }
+  [data-state="loading"] .loaded, [data-state="ready"] .skeleton, [data-state="offline"] .skeleton { display: none; }
+</style>
+</head>
+<body>
+  <div class="statusbar">
+    <span id="clock">10:08</span>
+    <svg class="ios" viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen" data-state="ready">
+    <header class="navbar" id="navbar">
+      <div class="navrow">
+        <button class="navbtn back" aria-label="Back to Activities"><i class="ph ph-caret-left" aria-hidden="true"></i>Activities</button>
+        <div class="navtitle" aria-hidden="true">Morning Run</div>
+        <button class="navbtn share" id="shareBtn" aria-label="Share run"><i class="ph ph-export" aria-hidden="true"></i></button>
+      </div>
+    </header>
+
+    <div class="scroll" id="scroll">
+      <!-- Loading -->
+      <div class="skeleton" aria-busy="true" aria-label="Loading run">
+        <div class="head">
+          <div class="sk" style="width:180px;height:30px"></div>
+          <div class="sk" style="width:240px;height:15px;margin-top:10px"></div>
+          <div class="sk" style="width:200px;height:64px;margin-top:20px"></div>
+          <div class="sk" style="width:100%;height:46px;margin-top:16px"></div>
+        </div>
+        <div class="sk" style="height:224px;border-radius:0"></div>
+        <div style="padding:32px 16px 0"><div class="sk" style="width:80px;height:24px"></div></div>
+        <div style="padding:16px"><div class="sk" style="height:20px"></div><div class="sk" style="height:20px;margin-top:32px"></div><div class="sk" style="height:20px;margin-top:32px"></div></div>
+      </div>
+
+      <div class="loaded">
+        <section class="head" aria-label="Run summary">
+          <h1>Morning Run</h1>
+          <div class="meta">
+            <div>Today, 07:12</div>
+            <div id="place">Caferağa Mahallesi, Kadıköy, İstanbul</div>
+          </div>
+          <div class="distance tnum" id="distanceLine"><span class="num" id="dist">8.43</span><span class="unit">km</span></div>
+          <dl class="figs tnum">
+            <div class="fig"><dt>Time</dt><dd id="time">47:18</dd></div>
+            <div class="fig"><dt>Avg pace</dt><dd><span id="pace">5:37</span><small>/km</small></dd></div>
+            <div class="fig"><dt>Cadence</dt><dd><span id="cadence">171</span><small>spm</small></dd></div>
+          </dl>
+          <div class="notice" id="offlineNotice" hidden>
+            <i class="ph ph-cloud-slash" aria-hidden="true"></i>
+            <span>Saved on this iPhone. It uploads when you’re back online.</span>
+          </div>
+        </section>
+
+        <div class="route" id="route" role="img">
+          <svg id="routeSvg" viewBox="0 0 393 224" preserveAspectRatio="none" aria-hidden="true"></svg>
+          <div class="tag tnum" id="tag"></div>
+        </div>
+
+        <h2 class="section-title">Splits</h2>
+        <div class="cols" aria-hidden="true"><span>Km</span><span></span><span>Pace</span><span>Cadence</span></div>
+        <div id="splits" role="list"></div>
+        <div class="listend"></div>
+
+        <h2 class="section-title">Details</h2>
+        <div class="row"><span>Elevation gain</span><span class="v tnum">41 m</span></div>
+        <div class="row"><span>Pauses</span><span class="v tnum">0</span></div>
+        <div class="row"><span>Heart rate</span><span class="v">No data</span></div>
+        <div class="row"><span>Recorded with</span><span class="v">iPhone</span></div>
+        <label class="row select">
+          <span>Who can see this</span>
+          <span class="v"><span id="visText">Only you</span><i class="ph ph-caret-up-down" aria-hidden="true"></i></span>
+          <select id="visibility" aria-label="Who can see this run">
+            <option>Only you</option><option>Followers</option><option>Everyone</option>
+          </select>
+        </label>
+        <div class="listend"></div>
+      </div>
+    </div>
+
+    <nav class="tabbar" aria-label="Tabs">
+      <button class="tab"><i class="ph ph-sun-horizon" aria-hidden="true"></i>Today</button>
+      <button class="tab" aria-current="page"><i class="ph-fill ph-sneaker-move" aria-hidden="true"></i>Activities</button>
+      <button class="tab"><i class="ph ph-chart-line" aria-hidden="true"></i>Trends</button>
+      <button class="tab"><i class="ph ph-user-circle" aria-hidden="true"></i>Profile</button>
+    </nav>
+
+    <div class="scrim" id="scrim"></div>
+    <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" inert>
+      <div class="grab" aria-hidden="true"></div>
+      <h2><span id="sheetTitle">Share run</span><button id="sheetClose">Cancel</button></h2>
+      <button class="opt" data-msg="Image saved to Photos"><i class="ph ph-image" aria-hidden="true"></i>Save image of route and splits</button>
+      <button class="opt" data-msg="Splits copied"><i class="ph ph-copy" aria-hidden="true"></i>Copy splits as text</button>
+      <p class="note">Sharing an image doesn’t change who can see the run in Kadans.</p>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"><i class="ph ph-check-circle" aria-hidden="true"></i><span id="toastText"></span></div>
+  </main>
+
+  <div class="home-indicator"></div>
+<script>
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, '');
+  const q = new URLSearchParams(location.search);
+  if (q.get('theme') === 'light') document.documentElement.dataset.theme = 'light';
+  const screen = document.getElementById('screen');
+  const state = q.get('state') || 'ready';
+  screen.dataset.state = state;
+  if (state === 'offline') document.getElementById('offlineNotice').hidden = false;
+  if (state === 'loading') document.getElementById('shareBtn').disabled = true;
+
+  // Sample run. Totals on screen are derived from these rows so they always agree.
+  const SPLITS = [ // [km length, seconds, cadence spm or null]
+    [1, 352, 168], [1, 341, 171], [1, 333, 172], [1, 329, 174], [1, 338, null],
+    [1, 344, 170], [1, 331, 173], [1, 318, 178], [0.43, 152, 166],
+  ];
+  const mmss = s => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
+  const dist = SPLITS.reduce((a, s) => a + s[0], 0);
+  const secs = SPLITS.reduce((a, s) => a + s[1], 0);
+  const withCad = SPLITS.filter(s => s[2] != null);
+  const cad = withCad.reduce((a, s) => a + s[2] * s[1], 0) / withCad.reduce((a, s) => a + s[1], 0);
+  const paces = SPLITS.map(s => s[1] / s[0]);
+  const fastest = paces.indexOf(Math.min(...paces));
+  document.getElementById('dist').textContent = dist.toFixed(2);
+  document.getElementById('time').textContent = mmss(secs);
+  document.getElementById('pace').textContent = mmss(secs / dist);
+  document.getElementById('cadence').textContent = Math.round(cad);
+  console.assert(dist.toFixed(2) === '8.43' && mmss(secs) === '47:18' && mmss(secs / dist) === '5:37', 'sample totals drifted');
+  document.getElementById('distanceLine').setAttribute('aria-label', `Distance ${dist.toFixed(2)} kilometres`);
+
+  // Route in map coordinates (sample GPS track, a loop).
+  const PTS = [[70,192],[66,150],[92,122],[96,72],[138,50],[196,40],[248,54],[298,42],[346,68],[354,108],[330,138],[340,176],[302,200],[252,194],[212,214],[162,204],[122,214],[84,202],[78,196]];
+  const segLen = PTS.slice(1).map((p, i) => Math.hypot(p[0] - PTS[i][0], p[1] - PTS[i][1]));
+  const total = segLen.reduce((a, b) => a + b, 0);
+  function at(d) { // point at distance d along the track
+    for (let i = 0; i < segLen.length; i++) {
+      if (d <= segLen[i] || i === segLen.length - 1) { const t = Math.min(1, d / segLen[i]); return [PTS[i][0] + (PTS[i+1][0] - PTS[i][0]) * t, PTS[i][1] + (PTS[i+1][1] - PTS[i][1]) * t]; }
+      d -= segLen[i];
+    }
+  }
+  function slice(a, b) { // track points between two distances
+    const out = [at(a)]; let acc = 0;
+    for (let i = 0; i < segLen.length; i++) { acc += segLen[i]; if (acc > a && acc < b) out.push(PTS[i + 1]); }
+    out.push(at(b)); return out;
+  }
+  const svg = document.getElementById('routeSvg');
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (n, attrs) => { const e = document.createElementNS(NS, n); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+  let cum = 0; const bounds = [];
+  SPLITS.forEach((s, i) => {
+    const a = cum / dist * total, b = (cum + s[0]) / dist * total; cum += s[0];
+    bounds.push([a, b]);
+    svg.appendChild(el('polyline', { class: 'seg', 'data-i': i, points: slice(a, b).map(p => p.map(v => v.toFixed(1)).join(',')).join(' ') }));
+  });
+  bounds.slice(1).forEach(([a]) => { const [x, y] = at(a); svg.appendChild(el('circle', { class: 'kmdot', cx: x, cy: y, r: 3 })); });
+  const [sx, sy] = PTS[0], [fx, fy] = PTS[PTS.length - 1];
+  svg.appendChild(el('circle', { class: 'start', cx: sx, cy: sy, r: 6 }));
+  svg.appendChild(el('circle', { class: 'finish', cx: fx, cy: fy, r: 5 }));
+  const route = document.getElementById('route');
+  route.setAttribute('aria-label', `Route map, ${dist.toFixed(2)} km loop starting and finishing in Caferağa. Map tiles not yet supplied.`);
+
+  // Splits list
+  const slow = Math.max(...paces), quick = Math.min(...paces);
+  const list = document.getElementById('splits');
+  SPLITS.forEach((s, i) => {
+    const partial = s[0] < 1;
+    const label = partial ? s[0].toFixed(2) : String(i + 1);
+    const w = 35 + 65 * (slow - paces[i]) / (slow - quick);
+    const b = document.createElement('button');
+    b.className = 'split tnum'; b.setAttribute('role', 'listitem'); b.setAttribute('aria-pressed', 'false');
+    b.setAttribute('aria-label', `${partial ? 'Last ' + label + ' km' : 'Kilometre ' + label}, pace ${mmss(paces[i])} per km, cadence ${s[2] ?? 'no data'}${i === fastest ? ', fastest' : ''}. Shows it on the route.`);
+    b.innerHTML = `<span class="km">${label}${i === fastest ? '<small>Fastest</small>' : ''}</span><span class="track"><i style="width:${w.toFixed(0)}%"></i></span><span class="pace">${mmss(paces[i])}</span><span class="cad">${s[2] ?? '–'}</span>`;
+    b.addEventListener('click', () => { touched = true; pick(sel === i ? null : i); });
+    list.appendChild(b);
+  });
+
+  // Primary action: a split lights its stretch of the route.
+  const tag = document.getElementById('tag');
+  let sel = null, touched = false;
+  function pick(i) {
+    sel = i;
+    route.classList.toggle('picking', i !== null);
+    svg.querySelectorAll('.seg').forEach(p => p.classList.toggle('on', +p.dataset.i === i));
+    list.querySelectorAll('.split').forEach((r, j) => r.setAttribute('aria-pressed', String(j === i)));
+    if (i === null) { tag.classList.remove('show'); return; }
+    const on = svg.querySelector(`.seg[data-i="${i}"]`); svg.appendChild(on); // draw selected stretch on top
+    const [a, b] = bounds[i]; const [mx, my] = at((a + b) / 2);
+    const s = SPLITS[i];
+    tag.innerHTML = `<b>${s[0] < 1 ? 'Last ' + s[0].toFixed(2) + ' km' : 'Km ' + (i + 1)}</b><br>${mmss(paces[i])} /km`;
+    const tw = tag.offsetWidth || 80, th = tag.offsetHeight || 40;
+    const left = Math.max(8, Math.min(393 - tw - 8, mx - tw / 2));
+    const top = my - th - 14 < 8 ? my + 14 : my - th - 14;
+    tag.style.left = left + 'px'; tag.style.top = top + 'px';
+    tag.classList.add('show');
+    if (navigator.vibrate) navigator.vibrate(8); // native build: light selection haptic
+  }
+
+  // After three seconds at rest, show the interaction once. Skipped under Reduce Motion.
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduce && state !== 'loading') setTimeout(() => { if (!touched) pick(3); }, 3200);
+
+  // Nav title appears once the large title scrolls away
+  const scroll = document.getElementById('scroll');
+  scroll.addEventListener('scroll', () => document.getElementById('navbar').classList.toggle('scrolled', scroll.scrollTop > 40));
+
+  // Visibility: an explicit choice, Only you by default
+  const vis = document.getElementById('visibility');
+  vis.addEventListener('change', () => { document.getElementById('visText').textContent = vis.value; });
+
+  // Share sheet
+  const sheet = document.getElementById('sheet');
+  const toast = document.getElementById('toast');
+  const opener = document.getElementById('shareBtn');
+  function openSheet(o) {
+    screen.classList.toggle('open', o);
+    sheet.inert = !o;
+    if (o) sheet.querySelector('#sheetClose').focus(); else opener.focus();
+  }
+  opener.addEventListener('click', () => openSheet(true));
+  document.getElementById('sheetClose').addEventListener('click', () => openSheet(false));
+  document.getElementById('scrim').addEventListener('click', () => openSheet(false));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') openSheet(false); });
+  sheet.querySelectorAll('.opt').forEach(o => o.addEventListener('click', () => {
+    openSheet(false);
+    document.getElementById('toastText').textContent = o.dataset.msg;
+    toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 2200);
+  }));
+</script>
+</body>
+</html>

@@ -5,8 +5,8 @@
   "plugins": [
     {
       "name": "mobile-ui-craft",
-      "description": "Design, build, restyle and review mobile app UI and UX that feels native, fits its niche and does not look AI-generated.",
-      "version": "2.0.0",
+      "description": "Design, build, restyle and review mobile app UI and UX with a look of its own: typeface, icons, layout and effects are dealt by a script instead of left to the model's taste.",
+      "version": "3.1.0",
       "source": "./",
       "skills": ["./skills/mobile-ui-craft"],
       "author": { "name": "Kaan Tufan" },

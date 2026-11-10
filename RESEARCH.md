@@ -89,10 +89,22 @@ Sekiz nişlik kör kıyaslamanın (Opus 5.5 high, niş başına iki puanlayıcı
 
 Tetiklenme ölçümü de araştırmadaki Vercel bulgusunu bu kurulumda doğruladı: 800'den fazla skill kuruluyken Claude Code skill açıklamalarının çoğunu göstermiyor, skill gerçek bir projede yaklaşık beş koşudan birinde kendiliğinden yükleniyor; `CLAUDE.md`'ye eklenen on satırlık blokla 20/20.
 
+## Sürüm 3: modelin kendi zevki de bir işaret
+
+Kullanıcı geri bildirimi: 2.0 çıktıları yazı tiplerinden başlayarak hâlâ AI yapımı görünüyor. 17 çıktıda sayım bunu doğruladı: aynı serif başlık (Fraunces) sekiz ekranın beşinde, Google web fontu sekizde sekiz, elle çizilmiş SVG ikonlar sekizde sekiz, orta noktayla dizilmiş künye sekizde yedi, ışık efekti olarak radyal gradyan sekizde yedi. Yasak listesi bunu çözmez: aynı seçici bir sonraki favorisine geçer. Karar, seçimi modelden almak oldu.
+
+- Yazı tipi, ikon seti, iskelet, gezinme, köşe, zemin, palet yapısı, efekt bütçesi, ses, merkez öğe türü, renk tonu aralığı ve ilk görünüm ürün adından tohumlanan bir script ile dağıtılıyor (`scripts/deal.mjs`).
+- Model resim ve ikon çizmiyor; görsel gereken yer yazısız bir alan.
+- Ölçüt, AI tespit testi oldu: kör hakemler her ekrana "AI yaptı" olasılığı verdi.
+
+İlk tespit turunun 3.0 için bulduğu işaretler yazı tipinde değil metindeydi: ekrana sızmış yapım notları, veriyi anlatan cümleler, özenli uydurma yerel veri, ürüne özel grafik gösterişi, siyah zemin üstünde tek pembe vurgu. 3.1 bunları kural yaptı ve bir sonraki turda ortalama AI olasılığı 85'ten 80'e, "en AI" seçilme 16 kararda 3'ten 0'a indi (skill'siz: 88 ve 13). Kalan işaretler (her ekranda dev sayı ve küçük birim, bazı ürüne özel grafikler) kurala çevrildi, yeniden ölçülmedi.
+
 ## Bilinen boşluklar
 
 - Reddit ve X konuları doğrudan okunmadı.
 - AI asistan, B2B/saha, sağlık hizmeti, emlak ve yaratıcı araç nişlerinde nişe özel şikâyet verisi zayıf; o dosyalar daha çok genel bulgulara ve teamüle dayanıyor.
 - Tarayıcı kuralları gerçek, büyük bir mobil kod tabanında yanlış pozitif açısından denenmedi.
-- Ölçümden sonra yapılan netlik düzeltmeleri yeniden ölçülmedi.
+- 2.0 sonrası netlik düzeltmeleri ve 3.1 sonrası son iki kural yeniden ölçülmedi.
+- AI tespit testinde gerçek uygulama görselleri pazarlama görselleridir; gerçek fotoğraf ve marka içeriği onları ayırıyor, bu yüzden "gerçekten ayırt edilemez mi" sorusunu bu test cevaplayamaz.
+- Hakemler üreticiyle aynı model ailesinden; insan bir uzmanla test edilmedi.
 - Hiçbir tasarım simülatörde ya da cihazda native olarak kurulup denenmedi.

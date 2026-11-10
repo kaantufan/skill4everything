@@ -1,129 +1,122 @@
-# Signature: making a screen people remember
+# Signature: an identity that is not the model's
 
-Read this before designing or building any screen at Expression 3 or higher. It is the difference between a screen that is correct and a screen someone shows to a friend. A correct screen is a list of well-spaced cards; a remembered screen has one idea you can see.
+Read this before designing or building any screen. A screen still needs one idea of its own. But a model's taste is itself recognisable, and people who look at generated interfaces every day spot it in a second: the same few typefaces, pictures and icons drawn from vector paths, a coloured field with a rounded sheet rising from the bottom, soft glows, headers with attitude, metadata strung on middle dots. Measured across this skill's own earlier output, one serif display face appeared on five screens out of eight.
+
+So the choices where taste shows are not yours to make. A script deals them, and real material replaces what you would otherwise draw.
 
 ## Contents
 
-- Start from one idea
-- Build the hero
-- Surface: colour, type, material
-- Motion as identity
-- Bespoke navigation and controls
-- Character and illustration
-- The wow test
+- Deal the hand
+- What you still decide
+- The hero
+- Type
+- Colour and effects
+- Icons and imagery
+- Copy
+- Motion
+- The fingerprint check
 - Building it natively
 
-## Start from one idea
+## Deal the hand
 
-Timid is the default failure. Left alone, a model produces a neutral background, a rounded card with a big number, a list and a tab bar. Nothing is wrong and nothing is there.
+```
+node scripts/deal.mjs --seed "<product name>" --platform ios
+```
 
-1. **Name what the user comes for:** the one number, state or object this screen exists to show.
-2. **List the product's physical world:** its objects, materials, places, instruments, rituals, printed matter, even its name. A tide app has water, a harbour wall, a moon, a printed tide table.
-3. **Ask what in that world already shows this kind of value.** The table gives ways the physical world displays common kinds of value. Use it to get unstuck, then replace the generic answer with one from the product's own world.
+Use `android` or `both` as the platform when that applies. The hand fixes the type scheme and family, the icon set, the layout skeleton, the navigation, the shape family, the ground, the palette structure, the effects budget, the voice and the kind of hero. The same product name always gives the same hand, so a product keeps its look across sessions and two products do not share one.
 
-| The screen's main value is | The physical world shows it as |
-|---|---|
-| An amount that goes down or up | A vessel filling or draining, a stack, a flame, a gauge, sand |
-| Progress toward a goal | A path travelled, a climb, something growing, an eclipse closing |
-| A time or a schedule | A sky, a sun arc, a shadow, a dial, a tide |
-| A rhythm (breath, pace, pulse) | A wave, a pendulum, a swell, a metronome |
-| A collection | A shelf, a deck, a wall, a garden, a constellation |
-| A place or a route | Terrain, a line on a map, a horizon, a transit diagram |
-| A choice among people or things | Cards in a hand, a table, a stage, a window display |
-| A conversation or a stream | A thread, a ribbon, a page being written |
+- **The hand is binding.** Do not swap a card for something you prefer. That preference is the fingerprint.
+- **One reroll** (`--reroll 1`) when a card contradicts the brief: a deep ground for a daytime utility, a layout that cannot hold what was asked for or that no leading app in the niche uses for this screen (a timeline spine on a music player), a hero type the data cannot feed. Say which card and why.
+- **A brand or existing design system outranks the hand.** In the Inherited lane, take only the cards the brand leaves open.
+- **Without Node:** open the script; its lists are plain arrays. For each list, take the sum of the character codes of the product name modulo the list length.
 
-4. **Say it in one sentence with no interface words.** "A tide line climbing a harbour wall at dusk" is a concept. "A clean card showing the balance" is not.
-5. **One idea, carried everywhere.** The same concept decides the hero, the palette, the icon style, the motion and the copy. Five ideas on one screen read as none.
+## What you still decide
 
-Do not reuse a concept from another product, and do not take the table's first row as the answer. A tide app shows a tide; a coffee subscription shows a cup going cold.
+- **The concept:** one idea from the product's own world, said in a sentence with no interface words. It now shows through structure, data and words: what the hero measures, what things are called, what order they come in. It does not show through a picture.
+- **The hue,** taken from the product's world, inside the dealt ground and palette structure.
+- **The content:** real, specific and a little uneven.
+- **The behaviour:** everything in the niche file.
 
-## Build the hero
+## The hero
 
-The hero is the concept made visible. It is the first thing the eye lands on and the thing a user would describe to someone else.
+The hero is the largest thing on the first screen and it shows the screen's main value. Its kind comes from the hand.
 
-- **It is the largest thing on the first screen, sized by Density.** At Density 1 and 2 it may take half the screen or more. At Density 3 about 40 percent. At Density 4 and 5 a quarter to a third, and it then has to carry more of the data itself. Never a strip, never a card among cards.
-- **It does not eat the brief.** Everything the user asked for stays on the first screen or one obvious scroll away: at least the first rows of every requested section show above the fold, uncut.
-- **It does not repeat.** If the hero shows a figure that a bar or a row also shows, merge them.
-- **It carries the screen's main data.** The level, angle, length, count or colour is the real value, mapped truthfully. A decorative illustration next to a number is not a hero.
-- **It is drawn, not assembled.** Vector paths, canvas or shaders, built for this product. Rounded rectangles with text inside are layout, not a hero.
-- **The number lives in it,** on it or behind it, not in a label beside it. Keep the exact figure readable; the object gives the feeling, the digits give the fact.
-- **It has depth:** a light direction, a highlight, a shadow, layers that overlap.
-- **It is alive:** a slow loop that never stops the eye from reading (see Motion).
-- **It answers the main action.** When the user does the primary thing, something happens to the hero first.
+- **Conventional unless the hand says otherwise.** When the hand deals the conventional hero, use the form the niche's leading apps use for this value: a route map for a run, a balance figure for money, artwork for music. A clever new chart for a value that already has a familiar form reads as a model showing off. A new form is allowed only when it is the product's core feature and the brief names it.
+- **It is made of data or of real material.** A figure set in type, a chart, a bar, a ring, steps, a route line: geometry the platform's shapes or a charting library would produce. Or a real photo, artwork or map in a designed frame.
+- **You do not draw pictures.** No objects, scenes, landscapes, characters, mascots or decorative shapes built from vector paths. Model-drawn illustration is the most recognisable thing on a generated screen.
+- **When the product needs imagery** (food, places, people, artwork, maps), leave a slot with a flat neutral fill and nothing written in it: no label, no icon, no note. Name what belongs there in the accessibility label and under Open in the report, and use real files when the project has them. A note like "Map tiles here" or "Photo needed" on screen is a builder talking to itself, and it is the first thing a reviewer reads.
+- **Sized by Density.** At Density 1 and 2 up to half the screen, at 3 about 40 percent, at 4 and 5 a quarter to a third.
+- **It does not eat the brief.** Everything the user asked for stays on the first screen or one obvious scroll away, uncut.
+- **It does not repeat** a figure that a bar or a row already shows.
 
-Everything else on the screen gets quieter so the hero can be loud: one content sheet, one list, one set of controls.
+## Type
 
-## Surface: colour, type, material
+- Follow the dealt scheme exactly. Most hands give one family or the system font. Do not add a second face for contrast: a serif headline over a sans body is a reflex, not a decision.
+- Hierarchy comes from size, weight, spacing and position. Three sizes on a screen are usually enough.
+- **Numbers are set as one string.** No dimmed or shrunken decimals, no superscript currency sign, no tiny unit beside a giant figure, unless the platform's own app for this job does it. A giant figure with a small grey unit, repeated across screens, is one of the first habits a reviewer spots.
+- Never use a face from the script's overused list (`--list` prints it), dealt or not.
+- Check that the family has every glyph the product needs, including currency signs and letters such as ğ, ş, ı and İ, and a tabular figure option for numbers that change. Measure it: render "0000" and "1111" and compare widths. A family that fails either check on a screen whose numbers change in place is a reason for the one reroll, not for a second face.
+- In a native app the family is bundled, licensed and follows the user's text size.
 
-**Colour**
-- Drench the screen. A full-bleed coloured field with the hero on it reads as a brand; white with a small accent reads as a template.
-- Two or three strong colours with jobs, plus one neutral family. Take them from the concept's world.
-- Neither white nor near-black is a default ground. Both are what a screen looks like before anyone chose.
-- A gradient is light falling on a surface from one direction, or it is data. It is never a rainbow and never the idea itself.
-- Check contrast where text actually sits: on the gradient, on the liquid, on the photo.
+## Colour and effects
 
-**Type**
-- Pick a display face with a voice that fits the concept, and set the hero numerals and titles in it: large, tight, confident. Hero numerals usually sit between 56 and 96.
-- Requirements for the face: distinctive numerals with a tabular option, every glyph the product's languages and currency need, enough weights or a variable axis to tune.
-- Shortlist three faces from different families and test them with the real words and numbers. Whatever face is fashionable this season is not a reason.
-- Body text and controls stay in a quiet, highly legible face. The system font is a good one.
-- In a native app the font is bundled and licensed, and it follows the user's text size.
+- Ground, palette structure, hue sector, chroma and the default appearance come from the hand; inside the sector, the exact hue comes from the product. Do not move to a neighbouring sector because you prefer it.
+- **The dealt appearance is the one you design and show first.** A dark first appearance with one pink or coral accent on near-black is itself a recognisable generated look.
+- **Some combinations give generated work away whatever the product:** a cream or beige ground with a clay, terracotta or burnt-orange accent; deep navy or near-black with amber or gold; deep teal with coral. If the subject leads you to one, shift the hue or the ground until it is no longer that.
+- **The effects budget is literal.** "Flat" means no gradients, no glow, no blur, no grain, no inner highlights and no decorative shadows. Shipped apps are mostly flat; their depth comes from the system's own bars and sheets.
+- Check contrast where the text actually sits.
 
-**Material**
-- Choose one material story (glass, glazed ceramic, paper, metal, cloth, light) and render every surface in it: the same light direction, the same highlight and shadow logic, the same grain.
-- Stack the screen in layers: field, hero, content sheet, floating controls. Overlap them; a sheet that slides over the field has more depth than two flat halves.
-- Icons belong to the material too: drawn in one style, sitting on tiles or objects that look made of the same stuff.
-- A quiet pattern from the subject can sit in the field at very low contrast.
+## Icons and imagery
 
-## Motion as identity
+- Icons come from the dealt set in a prototype and from the platform set in a native build. Never write the paths of an icon yourself. If the set has no fitting glyph, use the nearest real one or a text label.
+- Render and look: an icon name that does not exist shows as a blank or as raw text.
+- One weight throughout; a filled variant only to mark selection.
+- No sparkle, star-burst or magic-wand glyphs, as decoration or as a sign for anything "smart".
+- Photos, artwork and avatars are real files or labelled slots. No gradient standing in for a photo, no silhouette people, no avatar services.
 
-- **One choreographed entrance,** once: field, then hero, then sheet, then rows, then controls, all within about 1.2 seconds. Not the same fade on every element.
-- **A living loop on the hero:** slow (4 to 8 seconds), small, continuous. Water moves, a flame flickers, a star field drifts. It pauses off screen and under Reduce Motion.
-- **The signature interaction:** the primary action has a physical consequence in the hero within a tenth of a second. A breath starts and the shape swells; a page turns and the stack shifts. The number follows with a small tick, and a haptic lands with it.
-- **Springs with character:** at Expression 4 and 5 the consequence of a tap may overshoot a little. Routine navigation still uses the platform's timing.
-- **Shared elements between screens:** the hero travels into the detail screen instead of being replaced by it.
-- Reduce Motion gets a designed still version, not a broken one.
+## Copy
 
-## Bespoke navigation and controls
+- Write in the dealt voice.
+- **Label, do not narrate.** Shipped apps name things and show figures; they rarely explain them in sentences. At most one explanatory sentence on a screen, and only where a decision depends on it (a fee, a deadline, a consequence). No sentences that retell the data ("You held between 5:24 and 5:31 from km 2 to km 4"), no reassurance ("Fees are in the total below"), no instructions for what the phone will do.
+- **Labels are short.** "Avg pace", not "Average pace against your average"; "Fee", not "Delivery fee for this order".
+- **Sample data is ordinary.** Use what real accounts contain: default names the app itself would generate ("Morning Run", "Tuesday 7:12"), common merchants and clients, everyday places. Crafted micro-stories (a named coastal route to a lighthouse, a fire lookout with 41 steps, a client called Northfold Ltd) are the specificity a model reaches for to look real. Places are named at the level the app would show, a district or a city, not a neighbourhood, street and district in one line.
+- Section titles are the plain nouns people expect: "Reviews", "Splits", "Menu". Not lines with attitude.
+- Do not chain metadata with middle dots. Use what the platform uses: a second line, a column, a comma, a secondary label. One separator in a row at most.
+- Sample data is uneven and locally plausible, and includes one long value, one missing value and one zero.
+- No exclamation marks, no emoji, no tracked uppercase labels above headings.
 
-At Expression 4 and 5 the navigation and controls may be designed for the product: a floating dock, a central action, a dial, a gesture surface. A custom part is allowed when it is finished:
+## Motion
 
-- Every destination is still visible and labelled for assistive technology.
-- Pressed, selected, disabled and focused states exist.
-- Targets meet the size floor and sit clear of the home indicator and screen edges.
-- The system back gesture still works, and every modal still has an exit.
-- A gesture always has a visible alternative.
+- Navigation uses the platform's own transitions.
+- The primary action has one clear consequence on the hero, quick and without overshoot unless Energy is 4 or 5.
+- No entrance choreography and no perpetual decorative loop unless the effects budget and Energy both allow it. A loop is for something that is really in progress.
+- Ship the Reduce Motion variant with the animation.
 
-If you cannot finish a custom control to that standard, use the system one. A half-built custom tab bar is worse than the plain system bar.
+## The fingerprint check
 
-## Character and illustration
+Look at the render, scrolled to the top and to the bottom, and answer each. Any "yes" is fixed before the work is done.
 
-Use a character when Warmth is 4 or 5 or the brand has one. Give it four to six states tied to real app states (idle, happy, waiting, worried, asleep, celebrating), draw it in the screen's material, and let it react to what the user does. A mascot that only decorates is clip art.
+1. Is there a typeface, icon, colour pair or layout here that I chose because I like it, not because the hand or the product gave it?
+2. Did I draw anything pictorial, or any icon?
+3. Is this a coloured field with a large object and a rounded sheet rising under it, when the hand dealt something else?
+4. Is there any glow, blur, grain or gradient beyond the budget?
+5. Are there middle-dot chains, headers with attitude, eyebrow labels or sparkles?
+6. Is there a pill-shaped thing that is neither a control nor a real state?
+7. Placed next to the other screens I have made, does this one share their skeleton, their type pairing or their palette?
+8. Does any text on screen talk to a builder, explain the data in a sentence, or tell a crafted little story where a real account would hold something ordinary?
+9. Is the hero a clever new form for a value that already has a familiar one?
+10. Does any text, row or control run under a bar, a floating button or the home indicator at any scroll position?
 
-## The wow test
-
-Run these before calling a screen done. Fail one and go back to the concept, not to the padding.
-
-1. **Thumbnail:** shrunk among ten competing apps' screenshots, can you pick yours out?
-2. **One sentence:** can you describe it without naming an interface component?
-3. **Removal:** delete the hero in your head. If the screen still looks finished, the hero was decoration.
-4. **Stillness:** pause all motion. Does a single frame still hold?
-5. **Share:** is there one thing here a user would screenshot to show someone? Name it.
-6. **Truth:** does the hero show the real value correctly, and can the exact figure still be read?
-7. **Brief:** is every item the brief asked for still on the screen, uncut and not covered by anything that floats?
-8. **Floor:** do the usability checks in the main workflow still pass?
+Then run `scripts/slop-scan.mjs` on the source, and check the brief test and the floor in the main workflow.
 
 ## Building it natively
 
-A prototype proves the idea; the native build has to keep it. Use what the project already has, and check each API against the project's SDK before relying on it.
+Check each API against the project's SDK before relying on it.
 
 | Need | SwiftUI | Jetpack Compose | Flutter | React Native |
 |---|---|---|---|---|
-| Drawn hero | `Canvas`, custom `Shape` with `animatableData` | `Canvas`, `drawWithCache`, `Path` | `CustomPainter` | A Skia canvas library if the project has one, otherwise SVG |
-| Living loop | `TimelineView(.animation)`, `PhaseAnimator` | `rememberInfiniteTransition` | `AnimationController` with `repeat` | Reanimated shared values on the UI thread |
-| Tap consequence | `withAnimation(.spring)`, `KeyframeAnimator` | `Animatable`, `spring()` | `AnimationController`, `SpringSimulation` | Reanimated `withSpring` |
-| Light, glass, grain | Materials, `MeshGradient`, shader effects | `graphicsLayer`, `RuntimeShader` on recent Android | `FragmentProgram` shaders, `BackdropFilter` | Skia shaders if available |
-| Hero travels between screens | `matchedGeometryEffect`, zoom navigation transition | Shared element transitions if your version has them | `Hero` | The navigation library's shared transition if it has one |
-| Display font | Bundle it, register it, use it through a scaled text style | Bundle it in the font resources, expose it in `Typography` | Declare it in `pubspec.yaml`, expose it in `TextTheme` | Load it with the font tooling the project uses |
-
-Blur, shaders and large shadows cost frames. Measure the hero on a mid-range phone; if it drops frames, simplify the effect before you ship the stutter.
+| Data-drawn hero | Swift Charts, `Canvas`, custom `Shape` | `Canvas`, `drawWithCache`, a charting library the project has | `CustomPainter`, a charting package the project has | A charting or Skia library the project has, otherwise SVG |
+| Tap consequence | `withAnimation(.spring)` | `Animatable`, `spring()` | `AnimationController`, implicit animations | Reanimated `withSpring` |
+| Icons | SF Symbols | Material Symbols | The platform sets, or the dealt set's package | The platform sets, or the dealt set's package |
+| Dealt typeface | Bundle it, register it, use it through a scaled text style | Font resources, exposed in `Typography` | `pubspec.yaml`, exposed in `TextTheme` | The font tooling the project uses |
+| Real imagery | Asset catalog, `AsyncImage` with a designed placeholder | Image resources or the image loader the project uses | Assets or the image package the project uses | The image component the project uses |
