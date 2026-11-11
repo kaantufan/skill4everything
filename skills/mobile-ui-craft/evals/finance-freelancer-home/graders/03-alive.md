@@ -4,4 +4,4 @@ focus: trace
 weight: 1
 ---
 
-The prototype has an entrance, a continuously animated hero and a working primary action that visibly changes the hero
+The prototype has a working primary action that visibly changes the hero or opens the next step of the task, and at least one finished motion moment (for example an automatic first demonstration of that action)

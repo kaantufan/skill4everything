@@ -18,7 +18,39 @@ const STACKS = { '.swift': 'swift', '.kt': 'kotlin', '.dart': 'dart', '.tsx': 'r
 const THEME_HINTS = ['theme', 'color', 'colour', 'token', 'typography', 'palette', '/type'];
 const TIERS = ['', 'Tier 1 - anyone notices', 'Tier 2 - a designer or developer notices', 'Tier 3 - craft gaps'];
 
+// A neutral light grey (#ccc, #ddd, #eee, #d1d1d6, #e5e5ea, #e0e0e0): a placeholder colour, never a photo's colour.
+const NEUTRAL_GREY = /^#[c-e][0-9a-f]{5}$/i;
+const SLOT_CLASS = /(?:^|[^a-z])(?:photo|img|image|cover|art(?![a-z])|artwork|thumb|avatar|hero|map)/i;
+// Heuristic, not a parser: finds neutral-grey backgrounds in CSS rules and inline styles whose class or id names a slot.
+// shortcut: regex over the file text, upgrade to a CSS parser if it misfires on real projects
+function greySlots(text) {
+  const neutral = (hex) => {
+    const h = hex.length === 4 ? '#' + [...hex.slice(1)].map((c) => c + c).join('') : hex;
+    if (h.length !== 7 || !NEUTRAL_GREY.test(h)) return false;
+    const ch = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+    return Math.max(...ch) - Math.min(...ch) <= 8;
+  };
+  // a custom property holding a grey (--slot: #e3e3e8) counts as that grey wherever var(--slot) is used as a background
+  const vars = new Map();
+  for (const m of text.matchAll(/(--[\w-]+)\s*:\s*(#[0-9a-f]{3,6})\b/gi)) vars.set(m[1], [...(vars.get(m[1]) ?? []), m[2]]);
+  const grey = (decl) => [...decl.matchAll(/background(?:-color)?\s*:\s*(?:(#[0-9a-f]{3,6})\b|var\((--[\w-]+))/gi)].some((m) => (m[1] ? neutral(m[1]) : (vars.get(m[2]) ?? []).some(neutral)));
+  const lineOf = (i) => text.slice(0, i).split('\n').length;
+  const hits = [];
+  // the selector length cap keeps this linear on long runs such as data URIs
+  for (const m of text.matchAll(/([^{}<>]{1,300})\{([^{}]*)\}/g)) {
+    const sel = m[1].replace(/\/\*[\s\S]*?\*\//g, '').trim();
+    if (SLOT_CLASS.test(sel) && grey(m[2])) hits.push({ line: lineOf(m.index + m[1].length), text: `${sel} { ${m[2].trim()} }`.replace(/\s+/g, ' ').slice(0, 100) });
+  }
+  for (const m of text.matchAll(/<[a-z][^>]*>/gi)) {
+    const attr = (name) => (m[0].match(new RegExp(`\\b${name}\\s*=\\s*"([^"]*)"`, 'i')) || [])[1] || '';
+    const style = attr('style');
+    if (style && SLOT_CLASS.test(`${attr('class')} ${attr('id')}`) && grey(style)) hits.push({ line: lineOf(m.index), text: m[0].replace(/\s+/g, ' ').slice(0, 100) });
+  }
+  return hits;
+}
+
 // min = matching lines a file needs before the rule reports it; yes/no are self-test samples.
+// A rule with scan(text) instead of re looks at the whole file (multi-line CSS) and returns [{ line, text }].
 const RULES = [
   { id: 'template-purple', tier: 1, stacks: ['all'], re: /(?:#|0x(?:ff)?)(?:6366F1|8B5CF6|7C3AED|A855F7|4F46E5|667EEA|764BA2|6750A4|6650A4|D0BCFF)\b/i,
     msg: 'Template purple left in place', yes: 'val primary = Color(0xFF6750A4)', no: 'val primary = Color(0xFF1B4D3E)' },
@@ -35,11 +67,22 @@ const RULES = [
   { id: 'filler-copy', tier: 2, stacks: ['all'], re: /\b(?:seamless|effortless|supercharge|unlock your|elevate your|all-in-one|next[- ]level)/i,
     msg: 'Filler marketing copy', yes: 'Text("Seamlessly manage money")', no: 'Text("Add expense")' },
   { id: 'model-favourite-font', tier: 1, stacks: ['all'], re: /(?:font-?family|family=|GoogleFonts\.|Font\.custom\(|FontFamily\()[^;\n]{0,80}?(?:Inter\b|Fraunces|Instrument[ +](?:Serif|Sans)|Playfair|Space[ +]Grotesk|DM[ +](?:Sans|Serif)|Bricolage|Plus[ +]Jakarta|Manrope|Sora\b|Outfit\b|Syne\b|Poppins|Montserrat|Geist|Figtree|Barlow[ +]Condensed)/i,
-    msg: 'Typeface from the short list models reach for: use the dealt one', yes: "font-family: 'Fraunces', serif;", no: "font-family: 'Literata', serif;" },
+    msg: 'Typeface from the short list models reach for: use the dealt face', yes: "font-family: 'Fraunces', serif;", no: "font-family: 'Literata', serif;" },
   { id: 'middot-chain', tier: 2, stacks: ['all'], min: 4, re: / \u00b7 /,
     msg: 'Metadata chained with middle dots', yes: 'Text("Kafe \u00b7 12:40")', no: 'Text("Kafe, 12:40")' },
-  { id: 'drawn-icons', tier: 2, stacks: ['html'], min: 8, re: /<svg\b/,
-    msg: 'Many inline SVGs: icons belong to a real icon set, not to hand-written paths', yes: '<svg viewBox="0 0 24 24">', no: '<i class="ph ph-house"></i>' },
+  // The threshold leaves room for hand-drawn SVG charts, rings and sparklines; this rule targets icon paths.
+  { id: 'drawn-icons', tier: 2, stacks: ['html'], min: 12, re: /<svg\b/,
+    msg: 'Many inline SVGs: icons belong to a real icon set, not to hand-written paths (a few hand-drawn charts are fine)', yes: '<svg viewBox="0 0 24 24">', no: '<i class="ph ph-house"></i>' },
+  { id: 'lucide-icons', tier: 2, stacks: ['all'], re: /(?:src|href)\s*=\s*["'][^"']*lucide|data-lucide\s*=|from ['"]lucide-react/i,
+    msg: 'Lucide is the default icon set of generated UI: use the direction\'s set', yes: '<script src="https://unpkg.com/lucide@latest"></script>', no: '<i class="ph ph-house"></i>' },
+  { id: 'gradient-text', tier: 1, stacks: ['html'], re: /background-clip:\s*text/i,
+    msg: 'Gradient text', yes: '-webkit-background-clip: text;', no: 'background-clip: border-box;' },
+  { id: 'fingernail-card', tier: 2, stacks: ['html'], min: 2, re: /border-left:\s*[3-6]px solid/i,
+    msg: 'Cards with a coloured left edge ("fingernail" cards)', yes: 'border-left: 4px solid #6c5ce7;', no: 'border-left: 1px solid #ddd;' },
+  { id: 'grey-slot', tier: 1, stacks: ['html'], scan: greySlots,
+    msg: 'Neutral grey fill on a photo, cover, avatar, hero or map slot (heuristic): use real material and a coloured fallback near the photo', yes: '.cover { background: #ddd; }', no: '.cover { background: #8a5a3c; }' },
+  { id: 'random-avatar-service', tier: 2, stacks: ['all'], re: /randomuser\.me|ui-avatars\.com/i,
+    msg: 'Avatar service: use a real portrait from the imagery list, cropped to faces', yes: '<img src="https://randomuser.me/api/portraits/women/44.jpg">', no: '<img src="photo.jpg">' },
   { id: 'glow', tier: 2, stacks: ['html'], re: /filter:\s*blur\(\s*(?:[2-9]\d|\d{3,})px/,
     msg: 'Blurred glow', yes: 'filter: blur(46px);', no: 'filter: blur(2px);' },
   { id: 'light-gradient', tier: 2, stacks: ['html'], min: 2, re: /radial-gradient\(/,
@@ -151,12 +194,17 @@ function scanFile(abs, stack) {
   const exempt = THEME_HINTS.some((h) => `/${file.toLowerCase()}`.includes(h));
   const rules = RULES.filter((r) => (r.stacks[0] === 'all' || r.stacks.includes(stack)) && !(r.themeExempt && exempt));
   const found = rules.map(() => []);
-  readFileSync(abs, 'utf8').split(/\r?\n/).forEach((raw, i) => {
+  const text = readFileSync(abs, 'utf8');
+  const lines = text.split(/\r?\n/);
+  lines.forEach((raw, i) => {
     const t = raw.trim();
     if (!t || t.includes('slop-ok') || t.startsWith('//') || t.startsWith('*')) return;
     rules.forEach((r, k) => {
-      if (r.re.test(t)) found[k].push({ rule: r.id, tier: r.tier, file, line: i + 1, text: ascii(t.replace(/\s+/g, ' ').slice(0, 100)) });
+      if (r.re?.test(t)) found[k].push({ rule: r.id, tier: r.tier, file, line: i + 1, text: ascii(t.replace(/\s+/g, ' ').slice(0, 100)) });
     });
+  });
+  rules.forEach((r, k) => {
+    if (r.scan) for (const h of r.scan(text)) if (!lines[h.line - 1]?.includes('slop-ok')) found[k].push({ rule: r.id, tier: r.tier, file, line: h.line, text: ascii(h.text) });
   });
   return rules.flatMap((r, k) => (found[k].length >= (r.min ?? 1) ? found[k] : []));
 }
@@ -168,6 +216,11 @@ function selfTest() {
       assert.ok(!ids.has(r.id), `duplicate id ${r.id}`);
       ids.add(r.id);
       assert.ok(r.tier >= 1 && r.tier <= 3, `${r.id}: tier must be 1..3`);
+      if (r.scan) {
+        assert.ok(r.scan(r.yes).length > 0, `${r.id}: yes sample must match`);
+        assert.ok(r.scan(r.no).length === 0, `${r.id}: no sample must not match`);
+        continue;
+      }
       assert.ok(!r.re.global && !r.re.sticky, `${r.id}: regex must not be global or sticky`);
       assert.ok(r.re.test(r.yes), `${r.id}: yes sample must match`);
       assert.ok(!r.re.test(r.no), `${r.id}: no sample must not match`);

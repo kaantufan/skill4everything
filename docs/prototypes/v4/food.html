@@ -1,0 +1,598 @@
+<!doctype html>
+<!-- Sofra, restaurant page. HTML mockup at 393x852 (iOS). Sample data throughout. -->
+<html lang="en" data-platform="ios" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sofra, Hasır Ocakbaşı</title>
+<script>{ const t = new URLSearchParams(location.search).get('theme'); if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t; }</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css">
+<style>
+  /* device frame (from the skill's phone-frame.html) */
+  :root { --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px; --chrome: #000; }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--ground); color: var(--ink); }
+  .statusbar { position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 30; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 28px 10px; font: 600 16px -apple-system, "SF Pro Text", system-ui, sans-serif; color: var(--sb, var(--chrome)); pointer-events: none; transition: color .2s; }
+  .statusbar svg { height: 12px; fill: var(--sb, var(--chrome)); }
+  .home-indicator { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 30; width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none; }
+  #screen { position: absolute; inset: 0; overflow: hidden; }
+</style>
+<style>
+  /* PRODUCT TOKENS: dealt direction "brand-signal", Barlow, green. */
+  :root {
+    --font: "Barlow", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif;
+    --ground: #FFFFFF; --raised: #F5F5F5; --ink: #121212; --ink-2: #5C5C5C; --line: #E6E6E6;
+    --accent: #1E9E4A; --on-accent: #121212; --positive: #1E9E4A; --negative: #D93025;
+    --scrim: rgb(0 0 0 / .45);
+    --r-card: 12px; --r-thumb: 10px; --r-chip: 8px; --r-sheet: 14px;
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px;
+    --nav-h: 52px; --chips-h: 56px;
+    --ease: cubic-bezier(.22,1,.36,1);
+    --spring: var(--ease); --ms: 300ms;
+  }
+  [data-theme="dark"] {
+    --ground: #121212; --raised: #1E1E1E; --ink: #FFFFFF; --ink-2: #ABABAB; --line: #2C2C2C;
+    --negative: #FF6B5E; --scrim: rgb(0 0 0 / .6);
+  }
+
+  /* type roles */
+  .t-title { font-size: 30px; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; margin: 0; }
+  .t-section { font-size: 18px; font-weight: 700; margin: 0; }
+  .t-body { font-size: 16px; font-weight: 400; }
+  .t-label { font-size: 13px; font-weight: 600; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; touch-action: manipulation; transition: transform .12s var(--ease); -webkit-tap-highlight-color: transparent; }
+  button:active:not(:disabled) { transform: scale(.97); }
+  button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  button:disabled { cursor: default; }
+
+  /* never-grey image slot */
+  .pic { position: relative; overflow: hidden; background: var(--c, #8a5a3a); }
+  .pic img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; transition: opacity .4s ease-out; }
+  .pic img.in { opacity: 1; }
+
+  /* scroller */
+  .scroll { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* nav bar: transparent over the photo, solid once the photo is gone */
+  .nav { position: absolute; inset: 0 0 auto 0; z-index: 20; height: calc(var(--safe-top) + var(--nav-h)); padding: var(--safe-top) var(--s2) 0; display: flex; align-items: center; gap: var(--s2); background: transparent; border-bottom: 1px solid transparent; transition: background .2s, border-color .2s; }
+  .nav.solid { background: var(--ground); border-color: var(--line); }
+  .nav h2 { flex: 1; margin: 0; font-size: 17px; font-weight: 700; text-align: center; opacity: 0; transform: translateY(4px); transition: opacity .2s, transform .2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nav.solid h2 { opacity: 1; transform: none; }
+  .navbtn { width: 44px; height: 44px; border-radius: 22px; display: grid; place-items: center; background: var(--ground); color: var(--ink); font-size: 22px; flex: none; box-shadow: 0 1px 4px rgb(0 0 0 / .18); transition: box-shadow .2s, transform .12s var(--ease); }
+  .nav.solid .navbtn { box-shadow: none; }
+  .navbtn[aria-pressed="true"] i { color: var(--negative); }
+  html:not(.scrolled):not([data-state="loading"]):not([data-state="empty"]):not([data-state="error"]) { --sb: #fff; }
+
+  /* hero */
+  .hero { height: 220px; }
+  .hero::after { content: ""; position: absolute; inset: 0 0 auto 0; height: 120px; background: linear-gradient(rgb(0 0 0 / .5), transparent); pointer-events: none; }
+  @supports (animation-timeline: scroll()) {
+    .hero img.in { animation: par linear both; animation-timeline: scroll(nearest); animation-range: 0 220px; }
+    @keyframes par { to { transform: translateY(70px) scale(1.08); filter: brightness(.8); } }
+  }
+
+  .info { padding: var(--s4) var(--s4) 0; }
+  .meta { margin: 6px 0 0; color: var(--ink-2); font-size: 15px; line-height: 1.4; }
+  .meta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-top: 6px; font-size: 15px; }
+  .meta-row .ph-fill { font-size: 15px; vertical-align: -2px; }
+  .open { color: var(--ink-2); }
+  .open b { color: var(--positive); font-weight: 600; }
+
+  .facts { margin: var(--s4) var(--s4) 0; display: grid; grid-template-columns: repeat(3, 1fr); background: var(--raised); border-radius: var(--r-card); }
+  .facts div { padding: 12px 10px 11px 14px; }
+  .facts div + div { border-left: 1px solid var(--line); }
+  .facts strong { display: block; font-size: 20px; font-weight: 700; line-height: 1.15; white-space: nowrap; }
+  .facts span { color: var(--ink-2); }
+  .addr { display: flex; align-items: center; gap: 6px; margin: var(--s3) var(--s4) 0; color: var(--ink-2); font-size: 15px; }
+  .addr i { font-size: 18px; color: var(--ink); }
+
+  /* category chips */
+  .chips { position: sticky; top: calc(var(--safe-top) + var(--nav-h)); z-index: 10; height: var(--chips-h); margin-top: var(--s4); background: var(--ground); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: var(--s2); padding: 0 var(--s4); overflow-x: auto; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { flex: none; height: 44px; padding: 0 14px; border-radius: var(--r-chip); font-size: 15px; font-weight: 600; color: var(--ink); background: var(--raised); white-space: nowrap; transition: background .18s, color .18s, transform .12s var(--ease); }
+  .chip[aria-current="true"] { background: var(--accent); color: var(--on-accent); }
+
+  /* menu */
+  .sec { padding: var(--s5) 0 0; scroll-margin-top: calc(var(--safe-top) + var(--nav-h) + var(--chips-h)); }
+  .sec > h2 { padding: 0 var(--s4) var(--s1); }
+  .rows { list-style: none; margin: 0; padding: 0; }
+  .row { position: relative; display: flex; gap: var(--s3); padding: 14px var(--s4); min-height: 96px; }
+  .row + .row { border-top: 1px solid var(--line); }
+  .row + .row::before { content: none; }
+  .row .txt { flex: 1; min-width: 0; padding-right: 0; }
+  .row.nophoto .txt { padding-right: 56px; }
+  .row h3 { margin: 0; font-size: 16px; font-weight: 600; line-height: 1.3; }
+  .desc { margin: 3px 0 0; color: var(--ink-2); font-size: 15px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .alg { margin: 4px 0 0; color: var(--ink-2); font-size: 13px; font-weight: 600; }
+  .price { margin: 6px 0 0; font-size: 16px; font-weight: 600; }
+  .soldout { color: var(--negative); font-weight: 600; font-size: 13px; margin-left: 8px; }
+  .thumb { flex: none; width: 104px; height: 104px; border-radius: var(--r-thumb); }
+
+  .add { position: absolute; width: 44px; height: 44px; display: grid; place-items: center; }
+  .add > span { width: 36px; height: 36px; border-radius: 18px; display: grid; place-items: center; background: var(--ground); color: var(--ink); font-size: 20px; font-weight: 700; box-shadow: 0 1px 4px rgb(0 0 0 / .22); transition: background .18s, color .18s; }
+  .row:not(.nophoto) .add { right: calc(var(--s4) - 2px); top: 76px; }
+  .row.nophoto .add { right: calc(var(--s4) - 4px); top: 50%; translate: 0 -50%; }
+  .row.nophoto .add > span { background: var(--raised); box-shadow: none; }
+  .add.has > span { background: var(--accent); color: var(--on-accent); }
+  .add:disabled > span { opacity: .4; }
+
+  /* popular carousel */
+  .carousel { list-style: none; margin: 0; padding: var(--s2) var(--s4) 2px; display: flex; gap: var(--s3); overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding: 0 var(--s4); scrollbar-width: none; }
+  .carousel::-webkit-scrollbar { display: none; }
+  .card { position: relative; flex: none; width: 172px; scroll-snap-align: start; }
+  .card .pic { height: 124px; border-radius: var(--r-card); }
+  .card h3 { margin: 8px 0 0; font-size: 16px; font-weight: 600; }
+  .card .price { margin-top: 2px; font-weight: 400; color: var(--ink-2); }
+  .card .add { right: 2px; top: 78px; }
+
+  .foot { padding: var(--s5) var(--s4) 0; color: var(--ink-2); font-size: 13px; line-height: 1.5; }
+  .spacer { height: calc(var(--safe-bottom) + 40px); transition: height .2s; }
+  html.has-cart .spacer { height: calc(var(--safe-bottom) + 150px); }
+
+  /* cart bar */
+  .cartbar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 15; padding: 10px var(--s4) calc(var(--safe-bottom) + 6px); background: var(--ground); border-top: 1px solid var(--line); transform: translateY(105%); transition: transform var(--ms) var(--spring); }
+  html.has-cart .cartbar { transform: none; }
+  .progress-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 14px; color: var(--ink-2); }
+  .progress-row b { color: var(--ink); font-weight: 600; }
+  .segs { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin: 6px 0 10px; }
+  .seg { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+  .seg i { display: block; height: 100%; background: var(--accent); transform-origin: left; transform: scaleX(0); transition: transform var(--ms) var(--spring); }
+  .cartbtn { width: 100%; height: 56px; border-radius: var(--r-card); background: var(--accent); color: var(--on-accent); display: flex; align-items: center; gap: 12px; padding: 0 16px 0 10px; text-align: left; }
+  .count { min-width: 32px; height: 32px; padding: 0 8px; border-radius: 8px; background: var(--on-accent); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 16px; }
+  .cartbtn .lbl { flex: 1; font-size: 17px; font-weight: 700; }
+  .cartbtn .tot { text-align: right; line-height: 1.1; }
+  .cartbtn .tot strong { display: block; font-size: 17px; font-weight: 700; }
+  .cartbtn .tot small { font-size: 12px; font-weight: 600; }
+  .placed { display: none; align-items: center; gap: 10px; height: 56px; font-weight: 600; }
+  .placed i { font-size: 26px; color: var(--positive); }
+  html.order-placed .cartbar .progress-row, html.order-placed .cartbar .segs, html.order-placed .cartbtn { display: none; }
+  html.order-placed .placed { display: flex; }
+
+  /* sheet */
+  .scrim { position: absolute; inset: 0; z-index: 40; background: var(--scrim); opacity: 0; transition: opacity .22s ease-out; }
+  .scrim.on { opacity: 1; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 41; max-height: calc(var(--h) - var(--safe-top) - 16px); display: flex; flex-direction: column; background: var(--ground); border-radius: var(--r-sheet) var(--r-sheet) 0 0; transform: translateY(102%); transition: transform 320ms var(--ease); }
+  .sheet.on { transform: none; }
+  .sheet[hidden], .scrim[hidden] { display: none; }
+  .grab { padding: 8px var(--s4) 4px; touch-action: none; cursor: grab; }
+  .grab .handle { width: 36px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto 6px; }
+  .sheet-head { display: flex; align-items: center; gap: 8px; }
+  .sheet-head h2 { flex: 1; font-size: 22px; font-weight: 800; letter-spacing: -.01em; margin: 0; outline: none; }
+  .closebtn { width: 44px; height: 44px; border-radius: 22px; display: grid; place-items: center; background: var(--raised); font-size: 20px; margin-right: -6px; }
+  .sheet-sub { margin: 0; color: var(--ink-2); font-size: 15px; }
+  .sheet-body { overflow-y: auto; padding: 0 var(--s4) var(--s4); scrollbar-width: none; }
+  .lines { list-style: none; margin: var(--s2) 0 0; padding: 0; }
+  .line { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .line .n { flex: 1; min-width: 0; }
+  .line .n b { display: block; font-weight: 600; font-size: 16px; }
+  .line .n span { color: var(--ink-2); font-size: 14px; }
+  .line .lp { font-weight: 600; min-width: 76px; text-align: right; }
+  .stepper { display: flex; align-items: center; background: var(--raised); border-radius: 22px; }
+  .stepper button { width: 44px; height: 44px; display: grid; place-items: center; font-size: 18px; border-radius: 22px; }
+  .stepper output { min-width: 18px; text-align: center; font-weight: 700; }
+  html.order-placed .stepper button { display: none; }
+  html.order-placed .stepper { background: none; }
+  .minnote { margin: var(--s3) 0 0; padding: 12px 14px; border-radius: var(--r-card); background: var(--raised); font-size: 15px; }
+  .minnote .segs { margin: 8px 0 0; }
+  .more { margin-top: var(--s3); height: 44px; padding: 0 14px; border-radius: 22px; border: 1px solid var(--line); font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+  html.order-placed .more, html.order-placed .minnote { display: none; }
+  .dl { margin: var(--s4) 0 0; display: grid; grid-template-columns: auto 1fr; gap: 10px 16px; font-size: 15px; }
+  .dl dt { color: var(--ink-2); }
+  .dl dd { margin: 0; text-align: right; font-weight: 600; }
+  .sum { margin: var(--s4) 0 0; padding-top: var(--s3); border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr auto; gap: 8px; font-size: 16px; }
+  .sum dt { color: var(--ink-2); }
+  .sum dd { margin: 0; text-align: right; }
+  .sum .total { color: var(--ink); font-weight: 700; font-size: 18px; }
+  .vat { margin: 6px 0 0; color: var(--ink-2); font-size: 13px; }
+  .sheet-foot { padding: 10px var(--s4) calc(var(--safe-bottom) + 6px); border-top: 1px solid var(--line); }
+  .order { width: 100%; height: 56px; border-radius: var(--r-card); background: var(--accent); color: var(--on-accent); font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .order:disabled { background: var(--raised); color: var(--ink-2); }
+  .spin { width: 20px; height: 20px; border-radius: 50%; border: 3px solid currentColor; border-right-color: transparent; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(1turn); } }
+  .order .ph-check-circle { font-size: 24px; }
+  .empty-cart { padding: var(--s5) 0; text-align: center; }
+  .empty-cart p { color: var(--ink-2); margin: 6px 0 var(--s4); }
+
+  .snack { position: absolute; left: var(--s4); right: var(--s4); bottom: calc(var(--safe-bottom) + 84px); z-index: 50; min-height: 52px; padding: 4px 4px 4px 16px; border-radius: var(--r-card); background: var(--ink); color: var(--ground); display: flex; align-items: center; gap: 8px; font-size: 15px; transform: translateY(8px); opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s var(--ease); }
+  .snack.on { opacity: 1; transform: none; pointer-events: auto; }
+  .snack span { flex: 1; }
+  .snack button { height: 44px; padding: 0 14px; font-weight: 700; color: var(--accent); }
+  [data-theme="dark"] .snack button { color: #13782F; }
+
+  /* states (by URL hash) */
+  .state, .offline { display: none; }
+  [data-state="loading"] .content, [data-state="empty"] .content, [data-state="error"] .content { display: none; }
+  [data-state="loading"] .s-loading, [data-state="empty"] .s-msg.empty, [data-state="error"] .s-msg.error { display: block; }
+  [data-state="offline"] .offline { display: flex; }
+  .s-msg { padding: 40px var(--s4) 0; }
+  .s-msg h2 { font-size: 22px; font-weight: 700; margin: 0 0 6px; }
+  .s-msg p { color: var(--ink-2); margin: 0 0 var(--s4); font-size: 16px; line-height: 1.4; }
+  .btn2 { height: 48px; padding: 0 20px; border-radius: var(--r-card); background: var(--accent); color: var(--on-accent); font-weight: 700; font-size: 16px; }
+  .sk { background: var(--raised); border-radius: 8px; }
+  .s-loading .sk { animation: pulse 1.2s ease-in-out infinite alternate; }
+  @keyframes pulse { to { opacity: .55; } }
+  .offline { align-items: center; gap: 10px; margin: var(--s3) var(--s4) 0; padding: 10px 12px; border-radius: var(--r-card); background: var(--raised); font-size: 15px; }
+  .offline i { font-size: 20px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    .hero img.in { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="statusbar">
+    <span id="clock">20:10</span>
+    <svg viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" style="stroke: var(--sb, var(--chrome))" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen">
+    <header class="nav" id="nav">
+      <button class="navbtn" aria-label="Back" onclick="history.back()"><i class="ph ph-caret-left"></i></button>
+      <h2 aria-hidden="true">Hasır Ocakbaşı</h2>
+      <button class="navbtn" id="fav" aria-label="Save to favourites" aria-pressed="false"><i class="ph ph-heart"></i></button>
+    </header>
+
+    <div class="scroll" id="scroll">
+      <!-- loading skeleton -->
+      <div class="state s-loading" aria-busy="true" aria-label="Loading menu">
+        <div class="sk" style="height:220px;border-radius:0"></div>
+        <div style="padding:16px">
+          <div class="sk" style="height:32px;width:70%"></div>
+          <div class="sk" style="height:16px;width:45%;margin-top:12px"></div>
+          <div class="sk" style="height:66px;margin-top:16px;border-radius:12px"></div>
+          <div class="sk" style="height:44px;width:80%;margin-top:28px"></div>
+          <div style="display:flex;gap:12px;margin-top:24px"><div style="flex:1"><div class="sk" style="height:18px;width:60%"></div><div class="sk" style="height:14px;margin-top:10px"></div><div class="sk" style="height:14px;width:70%;margin-top:6px"></div></div><div class="sk" style="width:104px;height:104px;border-radius:10px"></div></div>
+          <div style="display:flex;gap:12px;margin-top:24px"><div style="flex:1"><div class="sk" style="height:18px;width:50%"></div><div class="sk" style="height:14px;margin-top:10px"></div><div class="sk" style="height:14px;width:60%;margin-top:6px"></div></div><div class="sk" style="width:104px;height:104px;border-radius:10px"></div></div>
+        </div>
+      </div>
+
+      <div class="state s-msg empty" style="padding-top:calc(var(--safe-top) + 72px)">
+        <h2>No dishes listed right now</h2>
+        <p>Hasır Ocakbaşı hasn't put its menu on Sofra yet.</p>
+        <button class="btn2" onclick="history.back()">Back to restaurants</button>
+      </div>
+      <div class="state s-msg error" style="padding-top:calc(var(--safe-top) + 72px)">
+        <h2>The menu didn't load</h2>
+        <p>Check your connection, then try again.</p>
+        <button class="btn2" onclick="location.hash=''">Try again</button>
+      </div>
+
+      <div class="content">
+        <div class="hero pic" style="--c:#7a4a2c">
+          <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1200&q=80&auto=format&fit=crop" alt="Kebab platter from Hasır Ocakbaşı" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()">
+        </div>
+
+        <section class="info" aria-labelledby="rname">
+          <h1 class="t-title" id="rname">Hasır Ocakbaşı</h1>
+          <p class="meta">Kebab, grill, lahmacun</p>
+          <div class="meta-row">
+            <span><i class="ph-fill ph-star" aria-hidden="true"></i> <b class="num">4.6</b> <span style="color:var(--ink-2)">1,240 ratings</span></span>
+            <span class="open"><b>Open</b> until 23:30</span>
+          </div>
+        </section>
+
+        <div class="offline" role="status"><i class="ph ph-wifi-slash" aria-hidden="true"></i><span>You're offline. Menu saved at 19:52; ordering resumes when you reconnect.</span></div>
+
+        <div class="facts" role="list">
+          <div role="listitem"><strong class="num">25–35 min</strong><span class="t-label">Sofra courier</span></div>
+          <div role="listitem"><strong class="num" id="feeTxt">₺29,90</strong><span class="t-label">Delivery fee</span></div>
+          <div role="listitem"><strong class="num" id="minTxt">₺300,00</strong><span class="t-label">Minimum order</span></div>
+        </div>
+        <p class="addr"><i class="ph ph-map-pin" aria-hidden="true"></i>To Moda Cd. 112, Kadıköy</p>
+
+        <nav class="chips" id="chips" aria-label="Menu sections"></nav>
+        <div id="menu"></div>
+
+        <p class="foot">Prices include VAT. Allergens are listed per dish; ask the restaurant about cross-contact.<br>Photos: Unsplash, Wikimedia Commons.</p>
+        <div class="spacer"></div>
+      </div>
+    </div>
+
+    <!-- cart bar -->
+    <div class="cartbar" id="cartbar" aria-hidden="true">
+      <div class="progress-row" aria-live="polite"><span id="minMsg">Add ₺300,00 more to order</span><span class="num" id="minOf"></span></div>
+      <div class="segs" id="barSegs" aria-hidden="true"></div>
+      <button class="cartbtn" id="cartBtn" aria-haspopup="dialog">
+        <span class="count num" id="count">0</span>
+        <span class="lbl">View cart</span>
+        <span class="tot"><strong class="num" id="barTotal">₺0,00</strong><small class="num" id="barFee">incl. ₺29,90 delivery</small></span>
+      </button>
+      <div class="placed" role="status"><i class="ph-fill ph-check-circle" aria-hidden="true"></i><span id="placedTxt">Order placed</span></div>
+    </div>
+
+    <!-- cart sheet -->
+    <div class="scrim" id="scrim" hidden></div>
+    <section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden>
+      <div class="grab" id="grab">
+        <div class="handle" aria-hidden="true"></div>
+        <div class="sheet-head">
+          <h2 id="sheetTitle" tabindex="-1">Your order</h2>
+          <button class="closebtn" id="closeSheet" aria-label="Close cart"><i class="ph ph-x"></i></button>
+        </div>
+        <p class="sheet-sub" id="sheetSub">Hasır Ocakbaşı</p>
+      </div>
+      <div class="sheet-body" id="sheetBody">
+        <ul class="lines" id="lines"></ul>
+        <div class="empty-cart" id="emptyCart" hidden>
+          <h3 class="t-section">Your cart is empty</h3>
+          <p>Dishes you add from the menu show up here.</p>
+          <button class="btn2" data-close>Browse the menu</button>
+        </div>
+        <div id="cartDetails">
+          <div class="minnote" id="minNote"><span id="minNoteTxt"></span><div class="segs" id="sheetSegs" aria-hidden="true"></div></div>
+          <button class="more" data-close><i class="ph ph-plus" aria-hidden="true"></i>Add more dishes</button>
+          <dl class="dl">
+            <dt>Deliver to</dt><dd>Moda Cd. 112, Kadıköy</dd>
+            <dt>Arrives</dt><dd class="num" id="eta">25–35 min</dd>
+            <dt>Pay with</dt><dd>Visa ending 4821</dd>
+          </dl>
+          <dl class="sum">
+            <dt>Subtotal</dt><dd class="num" id="sub">₺0,00</dd>
+            <dt>Delivery fee, Sofra courier</dt><dd class="num" id="fee">₺29,90</dd>
+            <dt class="total">Total</dt><dd class="num total" id="total">₺0,00</dd>
+          </dl>
+          <p class="vat">Prices include VAT. No service fee, no tip added.</p>
+        </div>
+      </div>
+      <div class="sheet-foot" id="sheetFoot">
+        <button class="order" id="orderBtn"><span id="orderLbl">Place order</span></button>
+      </div>
+    </section>
+
+    <div class="snack" id="snack" role="status" aria-live="polite"><span id="snackTxt"></span><button id="undo">Undo</button></div>
+  </main>
+
+  <div class="home-indicator"></div>
+
+<script>
+// ---------- sample data (prices in kuruş) ----------
+const FEE = 2990, MIN = 30000, SEGS = 6;
+const U = (id, w = 400) => `https://images.unsplash.com/photo-${id}?w=${w}&q=80&auto=format&fit=crop&dpr=2`;
+const ITEMS = {
+  adana:   { n: 'Adana kebab', p: 42000, d: 'Hand-minced lamb on the skewer, lavash, grilled pepper and tomato', a: 'Gluten', img: U('1555939594-58d7cb561ad1'), c: '#7a4a2c' },
+  urfa:    { n: 'Urfa kebab', p: 42000, d: 'Mild lamb mince, sumac onions, lavash', a: 'Gluten' },
+  tavuk:   { n: 'Chicken shish', p: 36000, d: 'Marinated thigh, fries, salad', img: U('1603360946369-dc9bb6258143'), c: '#9a7b4f' },
+  kofte:   { n: 'Izgara köfte', p: 38000, d: 'Grilled meatballs, piyaz, greens', a: 'Gluten, egg', img: U('1529042410759-befb1204b468'), c: '#5d4a30' },
+  pirzola: { n: 'Lamb chops', p: 64000, d: 'Four chops over charcoal, bulgur pilav', a: 'Gluten', img: U('1504674900247-0877df9cc836'), c: '#4a3626', out: true },
+  lahmacun:{ n: 'Lahmacun', p: 13000, d: 'Thin dough, minced lamb, parsley, lemon', a: 'Gluten' },
+  pide:    { n: 'Kıymalı pide', p: 29000, d: 'Minced beef, onion, green pepper', a: 'Gluten, milk, egg', img: U('1620167790054-de54f34308bb'), c: '#a8743f' },
+  durum:   { n: 'Döner dürüm', p: 26000, d: 'Beef döner in lavash, tomato, pickles', a: 'Gluten', img: U('1699728088614-7d1d4277414b'), c: '#a77b4c' },
+  humus:   { n: 'Humus', p: 15000, d: 'Chickpeas, tahini, olive oil, paprika', a: 'Sesame', img: U('1619941862585-cd4fa9a4c2cb'), c: '#c9a46a' },
+  meze:    { n: 'Mezze plate for two', p: 34000, d: 'Haydari, ezme, humus, şakşuka, babagannuş, atom', a: 'Milk, sesame', img: U('1542528180-0c79567c66de'), c: '#8e7a4e' },
+  salata:  { n: 'Çoban salatası', p: 14000, d: 'Tomato, cucumber, onion, parsley' },
+  lavas:   { n: 'Extra lavash', p: 0, a: 'Gluten' },
+  kunefe:  { n: 'Künefe', p: 21000, d: 'Shredded pastry, unsalted cheese, syrup, pistachio', a: 'Gluten, milk, nuts' },
+  baklava: { n: 'Pistachio baklava, 4 pieces', p: 22000, a: 'Gluten, milk, nuts', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Baklava_-_Turkish_special%2C_80-ply.JPEG/500px-Baklava_-_Turkish_special%2C_80-ply.JPEG', c: '#b8873e' },
+  ayran:   { n: 'Ayran', p: 4500, d: '300 ml', a: 'Milk' },
+  salgam:  { n: 'Şalgam, spicy', p: 5000, d: '330 ml' },
+  cay:     { n: 'Tea', p: 2500, d: 'Glass of black tea', img: U('1690063860120-3521cead6c1c'), c: '#7a3a1a' },
+};
+const SECTIONS = [
+  { id: 'popular', t: 'Popular', carousel: ['adana', 'durum', 'tavuk', 'meze'] },
+  { id: 'kebabs', t: 'Kebabs', items: ['adana', 'urfa', 'tavuk', 'kofte', 'pirzola'] },
+  { id: 'pide', t: 'Pide & lahmacun', items: ['lahmacun', 'pide', 'durum'] },
+  { id: 'mezze', t: 'Mezze', items: ['humus', 'meze', 'salata', 'lavas'] },
+  { id: 'desserts', t: 'Desserts', items: ['kunefe', 'baklava'] },
+  { id: 'drinks', t: 'Drinks', items: ['ayran', 'salgam', 'cay'] },
+];
+const fmt = k => (k / 100).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' });
+const priceTxt = k => k === 0 ? 'Free' : fmt(k);
+const $ = s => document.querySelector(s);
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ---------- spring easing (from the skill's prototype notes) ----------
+function spring(k = 170, c = 14, m = 1, pts = 40) {
+  const w0 = Math.sqrt(k / m), z = c / (2 * Math.sqrt(k * m)), wd = w0 * Math.sqrt(Math.max(1e-6, 1 - z * z));
+  const x = t => z < 1 ? 1 - Math.exp(-z * w0 * t) * (Math.cos(wd * t) + (z * w0 / wd) * Math.sin(wd * t)) : 1 - Math.exp(-w0 * t) * (1 + w0 * t);
+  let T = .02; while (T < 10) { if (Math.abs(1 - x(T)) < .001 && Math.abs(1 - x(T + .1)) < .001) break; T += .02; }
+  const v = []; for (let i = 0; i <= pts; i++) v.push(+x(T * i / pts).toFixed(4)); v[pts] = 1;
+  return { css: `linear(${v.join(',')})`, ms: Math.round(T * 1000) };
+}
+const sp = spring(200, 17);
+document.documentElement.style.setProperty('--spring', sp.css);
+document.documentElement.style.setProperty('--ms', Math.min(sp.ms, 700) + 'ms');
+
+// ---------- render menu ----------
+const addBtn = id => {
+  const it = ITEMS[id];
+  return `<button class="add" data-add="${id}" ${it.out ? 'disabled' : ''} aria-label="${it.out ? it.n + ', sold out today' : 'Add ' + it.n + ', ' + priceTxt(it.p)}"><span><i class="ph ph-plus" aria-hidden="true"></i></span></button>`;
+};
+const photo = (it, cls) => `<div class="pic ${cls}" style="--c:${it.c}"><img src="${it.img}" alt="${it.n}" loading="lazy" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()"></div>`;
+$('#menu').innerHTML = SECTIONS.map(s => `<section class="sec" id="s-${s.id}" aria-labelledby="h-${s.id}"><h2 class="t-section" id="h-${s.id}">${s.t}</h2>` + (s.carousel
+  ? `<ul class="carousel">${s.carousel.map(id => { const it = ITEMS[id]; return `<li class="card">${photo(it, '')}<h3>${it.n}</h3><p class="price num">${priceTxt(it.p)}</p>${addBtn(id)}</li>`; }).join('')}</ul>`
+  : `<ul class="rows">${s.items.map(id => { const it = ITEMS[id]; return `<li class="row ${it.img ? '' : 'nophoto'}"><div class="txt"><h3>${it.n}</h3>${it.d ? `<p class="desc">${it.d}</p>` : ''}${it.a ? `<p class="alg">Contains ${it.a.toLowerCase()}</p>` : ''}<p class="price num">${priceTxt(it.p)}${it.out ? '<span class="soldout">Sold out today</span>' : ''}</p></div>${it.img ? photo(it, 'thumb') : ''}${addBtn(id)}</li>`; }).join('')}</ul>`) + `</section>`).join('');
+$('#chips').innerHTML = SECTIONS.map((s, i) => `<button class="chip" data-sec="${s.id}" aria-current="${i === 0}">${s.t}</button>`).join('');
+const segHTML = Array.from({ length: SEGS }, () => '<div class="seg"><i></i></div>').join('');
+$('#barSegs').innerHTML = segHTML; $('#sheetSegs').innerHTML = segHTML;
+
+// ---------- cart ----------
+const cart = new Map(); // id -> qty, insertion order kept
+let placed = false;
+const subtotal = () => [...cart].reduce((s, [id, q]) => s + ITEMS[id].p * q, 0);
+const qtyAll = () => [...cart.values()].reduce((s, q) => s + q, 0);
+
+function fillSegs(root, sub) {
+  root.querySelectorAll('.seg i').forEach((el, i) => {
+    const f = Math.max(0, Math.min(1, sub / MIN * SEGS - i));
+    el.style.transitionDelay = RM ? '0ms' : (i * 45) + 'ms';
+    el.style.transform = `scaleX(${f})`;
+  });
+}
+
+function render() {
+  const sub = subtotal(), n = qtyAll(), total = n ? sub + FEE : 0, short = Math.max(0, MIN - sub);
+  const html = document.documentElement;
+  html.classList.toggle('has-cart', n > 0 || placed);
+  $('#cartbar').setAttribute('aria-hidden', String(!(n > 0 || placed)));
+  $('#count').textContent = n;
+  $('#barTotal').textContent = fmt(total);
+  $('#barFee').textContent = `incl. ${fmt(FEE)} delivery`;
+  $('#cartBtn').setAttribute('aria-label', `View cart, ${n} item${n === 1 ? '' : 's'}, total ${fmt(total)} including ${fmt(FEE)} delivery`);
+  $('#minMsg').innerHTML = short ? `Add <b class="num">${fmt(short)}</b> more to order` : '<b>Minimum reached</b>';
+  $('#minOf').textContent = short ? `Minimum ${fmt(MIN)}` : '';
+  fillSegs($('#barSegs'), sub); fillSegs($('#sheetSegs'), sub);
+
+  // menu buttons show the quantity once a dish is in the cart (selected state)
+  document.querySelectorAll('[data-add]').forEach(b => {
+    const id = b.dataset.add, it = ITEMS[id], q = cart.get(id) || 0;
+    if (it.out) return;
+    b.classList.toggle('has', q > 0);
+    b.firstElementChild.innerHTML = q ? `<b class="num">${q}</b>` : '<i class="ph ph-plus" aria-hidden="true"></i>';
+    b.setAttribute('aria-label', `Add ${it.n}, ${priceTxt(it.p)}` + (q ? `, ${q} in cart` : ''));
+  });
+
+  // sheet
+  $('#lines').innerHTML = [...cart].map(([id, q]) => { const it = ITEMS[id]; return `<li class="line"><div class="n"><b>${it.n}</b><span class="num">${priceTxt(it.p)} each</span></div>
+    <div class="stepper"><button data-dec="${id}" aria-label="${q === 1 ? 'Remove ' + it.n : 'One less ' + it.n}"><i class="ph ${q === 1 ? 'ph-trash' : 'ph-minus'}" aria-hidden="true"></i></button><output class="num" aria-label="Quantity">${q}</output><button data-inc="${id}" aria-label="One more ${it.n}"><i class="ph ph-plus" aria-hidden="true"></i></button></div>
+    <span class="lp num">${fmt(it.p * q)}</span></li>`; }).join('');
+  $('#emptyCart').hidden = n > 0 || placed;
+  $('#cartDetails').hidden = n === 0 && !placed;
+  $('#sheetFoot').hidden = n === 0 && !placed;
+  $('#minNote').hidden = !short;
+  $('#minNoteTxt').innerHTML = `Add <b class="num">${fmt(short)}</b> more to reach the ${fmt(MIN)} minimum.`;
+  $('#sub').textContent = fmt(sub); $('#fee').textContent = fmt(FEE); $('#total').textContent = fmt(total);
+  if (!placed) {
+    const offline = html.dataset.state === 'offline', ob = $('#orderBtn');
+    ob.disabled = !!short || offline || n === 0;
+    $('#orderLbl').textContent = offline ? 'Offline, reconnect to order' : short ? `Add ${fmt(short)} more to order` : `Place order, ${fmt(total)}`;
+  }
+  assertTotals();
+}
+
+// honest totals: every visible total is the sum of the visible prices
+function assertTotals() {
+  const lines = [...cart].reduce((s, [id, q]) => s + ITEMS[id].p * q, 0);
+  const shown = [...document.querySelectorAll('.line .lp')].reduce((s, el) => s + Math.round(parseFloat(el.textContent.replace(/[₺.\s]/g, '').replace(',', '.')) * 100), 0);
+  console.assert(lines === subtotal() && shown === lines, 'line prices do not add up to the subtotal');
+  const n = qtyAll();
+  console.assert($('#total').textContent === fmt(n ? lines + FEE : 0) && $('#barTotal').textContent === $('#total').textContent, 'bar total and sheet total disagree');
+}
+
+function add(id) { if (ITEMS[id].out || placed) return; cart.set(id, (cart.get(id) || 0) + 1); render(); }
+
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-add]'); if (a) return add(a.dataset.add);
+  const inc = e.target.closest('[data-inc]'); if (inc) return add(inc.dataset.inc);
+  const dec = e.target.closest('[data-dec]');
+  if (dec) {
+    const id = dec.dataset.dec, q = cart.get(id);
+    if (q > 1) { cart.set(id, q - 1); render(); return; }
+    const order = [...cart.keys()], pos = order.indexOf(id);
+    cart.delete(id); render(); showUndo(id, pos);
+    return;
+  }
+  if (e.target.closest('[data-close]')) return closeSheet();
+  const chip = e.target.closest('[data-sec]');
+  if (chip) { const sec = $('#s-' + chip.dataset.sec); $('#scroll').scrollTo({ top: sec.offsetTop - (59 + 52 + 56) + 1, behavior: RM ? 'auto' : 'smooth' }); }
+});
+
+// undo, restoring the line in place
+let undoTimer, undoData;
+function showUndo(id, pos) {
+  undoData = { id, pos };
+  $('#snackTxt').textContent = `${ITEMS[id].n} removed`;
+  $('#snack').classList.add('on');
+  clearTimeout(undoTimer); undoTimer = setTimeout(() => $('#snack').classList.remove('on'), 6000);
+}
+$('#undo').onclick = () => {
+  if (!undoData) return;
+  const entries = [...cart]; entries.splice(undoData.pos, 0, [undoData.id, 1]);
+  cart.clear(); entries.forEach(([k, v]) => cart.set(k, v)); undoData = null;
+  $('#snack').classList.remove('on'); render();
+};
+
+// favourite toggle
+$('#fav').onclick = function () {
+  const on = this.getAttribute('aria-pressed') !== 'true';
+  this.setAttribute('aria-pressed', String(on));
+  this.setAttribute('aria-label', on ? 'Remove from favourites' : 'Save to favourites');
+  this.innerHTML = `<i class="${on ? 'ph-fill' : 'ph'} ph-heart"></i>`;
+};
+
+// ---------- sheet open / close / drag ----------
+const sheet = $('#sheet'), scrim = $('#scrim');
+function openSheet() {
+  sheet.hidden = scrim.hidden = false; sheet.style.transform = '';
+  requestAnimationFrame(() => requestAnimationFrame(() => { sheet.classList.add('on'); scrim.classList.add('on'); }));
+  setTimeout(() => $('#sheetTitle').focus({ preventScroll: true }), 60);
+}
+function closeSheet() {
+  sheet.classList.remove('on'); scrim.classList.remove('on'); sheet.style.transform = '';
+  $('#snack').classList.remove('on');
+  setTimeout(() => { if (!sheet.classList.contains('on')) { sheet.hidden = scrim.hidden = true; } }, RM ? 0 : 330);
+  (placed ? $('#scroll') : $('#cartBtn')).focus({ preventScroll: true });
+}
+$('#cartBtn').onclick = openSheet;
+$('#closeSheet').onclick = closeSheet;
+scrim.onclick = closeSheet;
+addEventListener('keydown', e => { if (e.key === 'Escape' && !sheet.hidden) closeSheet(); });
+{ // drag down on the handle area: follows the finger, commits from the projected position
+  const g = $('#grab'); let y0 = 0, y = 0, v = 0, lt = 0, ly = 0, drag = false;
+  g.onpointerdown = e => { if (e.target.closest('button')) return; drag = true; g.setPointerCapture(e.pointerId); y0 = ly = e.clientY; lt = e.timeStamp; y = 0; sheet.style.transition = 'none'; };
+  g.onpointermove = e => { if (!drag) return; const dy = e.clientY - y0; y = dy < 0 ? dy * .25 : dy; v = (e.clientY - ly) / (e.timeStamp - lt || 1); ly = e.clientY; lt = e.timeStamp; sheet.style.transform = `translateY(${y}px)`; };
+  g.onpointerup = g.onpointercancel = () => { if (!drag) return; drag = false; sheet.style.transition = ''; if (y + v * 180 > 160) closeSheet(); else sheet.style.transform = ''; };
+}
+
+// ---------- place order: label -> progress -> check ----------
+$('#orderBtn').onclick = function () {
+  if (this.disabled || placed) return;
+  this.disabled = true; this.style.background = 'var(--accent)'; this.style.color = 'var(--on-accent)';
+  this.innerHTML = '<span class="spin" aria-hidden="true"></span><span>Placing order...</span>';
+  setTimeout(() => {
+    placed = true; document.documentElement.classList.add('order-placed');
+    const now = new Date(), t = m => new Date(now.getTime() + m * 60000).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+    const win = `${t(25)}–${t(35)}`;
+    this.innerHTML = '<i class="ph-fill ph-check-circle" aria-hidden="true"></i><span>Order placed</span>';
+    $('#sheetTitle').textContent = 'Order placed';
+    $('#sheetSub').textContent = `Hasır Ocakbaşı is preparing it. Arrives ${win}.`;
+    $('#eta').textContent = win;
+    $('#placedTxt').textContent = `Order placed, arrives ${win}`;
+    render(); $('#sheetTitle').focus({ preventScroll: true });
+  }, RM ? 300 : 1300);
+};
+
+// ---------- scroll: nav solid, chip follows the section ----------
+const sc = $('#scroll'), nav = $('#nav'), chips = [...document.querySelectorAll('.chip')];
+sc.addEventListener('scroll', () => {
+  const solid = sc.scrollTop > 165;
+  nav.classList.toggle('solid', solid); document.documentElement.classList.toggle('scrolled', solid);
+  const line = sc.scrollTop + 59 + 52 + 56 + 8;
+  let cur = SECTIONS[0].id;
+  for (const s of SECTIONS) if ($('#s-' + s.id).offsetTop <= line) cur = s.id;
+  if (sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 2) cur = SECTIONS.at(-1).id;
+  chips.forEach(c => {
+    const on = c.dataset.sec === cur;
+    if (on && c.getAttribute('aria-current') !== 'true') { const row = $('#chips'); row.scrollTo({ left: c.offsetLeft - 16, behavior: RM ? 'auto' : 'smooth' }); }
+    c.setAttribute('aria-current', String(on));
+  });
+}, { passive: true });
+
+// ---------- states by URL hash ----------
+const STATES = ['loading', 'empty', 'error', 'offline'];
+const sync = () => { const s = location.hash.slice(1); document.documentElement.dataset.state = STATES.includes(s) ? s : 'content'; render(); };
+addEventListener('hashchange', sync); sync();
+
+// clock: the real time
+$('#clock').textContent = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+
+// ---------- auto-demo: add one dish so the cart bar and the minimum segments show ----------
+if (!RM && document.documentElement.dataset.state === 'content') setTimeout(() => { if (!cart.size) add('lahmacun'); }, 2400);
+</script>
+</body>
+</html>

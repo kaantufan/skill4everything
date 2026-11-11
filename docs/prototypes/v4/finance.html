@@ -1,0 +1,461 @@
+<!doctype html>
+<!-- Pano home: HTML mockup of a native iOS screen. States: #loading #empty #error #offline. Light: ?theme=light -->
+<html lang="en" data-platform="ios" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pano home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.51.0/dist/tabler-icons.min.css">
+<!-- the filled stylesheet redefines .ti for every icon, so only the selected-state glyph is taken from the filled font -->
+<script>{const t=new URLSearchParams(location.search).get('theme'); if(t==='light'||t==='dark') document.documentElement.dataset.theme=t;}</script>
+<style>
+  :root {
+    --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px;
+    --font: -apple-system, "SF Pro Text", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+    --chrome: #000;
+  }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--screen-bg); color: var(--screen-fg); }
+  .statusbar { position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 30; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none; font-family: -apple-system, "SF Pro Text", system-ui, sans-serif; }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  .home-indicator { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 30; width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none; }
+  #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+</style>
+<style>
+  /* PRODUCT TOKENS (dealt: austere-dark, Hanken Grotesk, signal blue). Screens use only these. */
+  :root, [data-theme="light"] {
+    --ground: #FFFFFF; --raised: #F4F4F5; --ink: #0B0B0C; --ink-2: #52525B; --line: #E4E4E7;
+    --accent: #4F7DFF; --on-accent: #0B0B0C; --positive: #15803D; --negative: #DC2626;
+    --seg-tax-a: #52525B; --seg-tax-b: #D4D4D8; --seg-bills: #71717A; --seg-spent: #A1A1AA;
+    --scrim: rgb(0 0 0 / .35);
+  }
+  [data-theme="dark"] {
+    --ground: #0B0B0C; --raised: #161618; --ink: #F4F4F5; --ink-2: #A1A1AA; --line: #27272A;
+    --accent: #4F7DFF; --on-accent: #0B0B0C; --positive: #3DD68C; --negative: #FF6B6B;
+    --seg-tax-a: #A1A1AA; --seg-tax-b: #52525B; --seg-bills: #71717A; --seg-spent: #52525B;
+    --scrim: rgb(0 0 0 / .6);
+  }
+  :root {
+    --screen-bg: var(--ground); --screen-fg: var(--ink);
+    --face: "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif;
+    --t-balance: 500 48px/1.05 var(--face); --t-title: 600 20px/1.25 var(--face);
+    --t-body: 400 15px/1.35 var(--face); --t-body-m: 500 15px/1.35 var(--face); --t-label: 500 13px/1.3 var(--face);
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px;
+    --r-card: 14px; --r-seg: 6px; --r-pill: 999px;
+    --tabbar: 50px;
+    --ease: cubic-bezier(.22,1,.36,1); --t-ui: 240ms; --t-roll: 520ms;
+  }
+</style>
+<style>
+  body { font: var(--t-body); font-family: var(--face); }
+  .num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; white-space: nowrap; }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: inherit; }
+  button, .tap { transition: transform .12s var(--ease), background-color .12s var(--ease); touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  button:active, .tap:active { transform: scale(.97); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+
+  /* nav bar */
+  .nav { flex: none; padding: var(--safe-top) var(--s5) 0; background: var(--ground); position: relative; z-index: 5; }
+  .nav-row { height: 44px; display: flex; align-items: center; justify-content: space-between; }
+  .wordmark { font: var(--t-title); letter-spacing: -.01em; margin: 0; }
+  .updated { font: var(--t-label); color: var(--ink-2); display: flex; align-items: center; gap: 6px; }
+
+  #scroll { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 0 var(--s5) calc(var(--tabbar) + var(--safe-bottom) + var(--s6)); scrollbar-width: none; }
+  #scroll::-webkit-scrollbar { display: none; }
+
+  /* banners for error / offline */
+  .banner { display: none; align-items: center; gap: var(--s3); margin: var(--s2) 0 0; padding: var(--s3) var(--s4); border: 1px solid var(--line); border-radius: var(--r-card); font: var(--t-label); color: var(--ink); }
+  .banner i { font-size: 20px; }
+  .banner .grow { flex: 1; }
+  .banner button { min-height: 44px; min-width: 44px; padding: 0 var(--s3); color: var(--accent); font: var(--t-body-m); }
+  [data-state="error"] #b-error, [data-state="offline"] #b-offline { display: flex; }
+  #b-error i { color: var(--negative); }
+
+  /* hero: safe to spend */
+  .hero { display: block; width: 100%; padding: var(--s5) 0 var(--s4); border-radius: var(--r-card); }
+  .hero-label { font: var(--t-body-m); color: var(--ink-2); display: flex; align-items: center; gap: 4px; }
+  .hero-label i { font-size: 18px; }
+  .balance { font: var(--t-balance); letter-spacing: -.02em; margin-top: var(--s2); display: block; }
+  .hero-sub { font: var(--t-label); color: var(--ink-2); margin-top: var(--s2); }
+
+  /* the split: this month's money as one bar */
+  .split { display: flex; gap: 2px; height: 44px; margin-top: var(--s5); border-radius: 10px; overflow: hidden; }
+  .seg { flex: none; height: 100%; border-radius: 2px; transition: width var(--t-roll) var(--ease); min-width: 0; }
+  .seg:first-child { border-radius: 10px 2px 2px 10px; }
+  .seg:last-child { border-radius: 2px 10px 10px 2px; }
+  .sw-tax   { background: repeating-linear-gradient(135deg, var(--seg-tax-a) 0 2px, var(--seg-tax-b) 2px 6px); }
+  .sw-bills { background: var(--seg-bills); }
+  .sw-spent { background: var(--seg-spent); }
+  .sw-safe  { background: var(--accent); }
+
+  /* statement rows */
+  .statement { margin-top: var(--s3); }
+  .st-row { display: grid; grid-template-columns: 12px 1fr auto; align-items: center; column-gap: var(--s3); min-height: 52px; padding: var(--s2) 0; border-bottom: 1px solid var(--line); }
+  .st-row:last-child { border-bottom: 0; }
+  .sw { width: 12px; height: 12px; border-radius: 3px; }
+  .st-name { font: var(--t-body); }
+  .st-note { font: var(--t-label); color: var(--ink-2); margin-top: 2px; }
+  .st-amt { font: var(--t-body-m); text-align: right; }
+  .breakdown-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 48px; margin-top: var(--s2); border-radius: var(--r-card); background: var(--raised); font: var(--t-body-m); }
+  .breakdown-btn i { font-size: 18px; color: var(--ink-2); }
+
+  /* activity */
+  .section-h { font: var(--t-title); margin: var(--s6) 0 var(--s1); }
+  .sub-h { font: var(--t-label); color: var(--ink-2); margin: var(--s4) 0 0; }
+  .act { list-style: none; margin: 0; padding: 0; }
+  .act li { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; column-gap: var(--s3); min-height: 60px; padding: var(--s2) 0; border-bottom: 1px solid var(--line); }
+  .act li:last-child { border-bottom: 0; }
+  .av { width: 40px; height: 40px; border-radius: 12px; background: var(--raised); display: grid; place-items: center; font: var(--t-label); color: var(--ink); }
+  .av i { font-size: 20px; color: var(--ink-2); }
+  .a-name { font: var(--t-body); overflow-wrap: anywhere; }
+  .a-note { font: var(--t-label); color: var(--ink-2); margin-top: 2px; display: flex; align-items: center; gap: 4px; }
+  .a-note i { font-size: 14px; }
+  .a-amt { font: var(--t-body-m); text-align: right; align-self: center; display: flex; flex-direction: column; align-items: flex-end; }
+  .a-amt.in { color: var(--positive); }
+  .pending-tag { display: inline-flex; align-items: center; gap: 3px; color: var(--ink-2); }
+  li.arrived { animation: arrive .5s var(--ease); }
+  @keyframes arrive { from { opacity: .3; transform: translateY(-6px); } }
+
+  /* empty */
+  .empty { display: none; padding: var(--s6) 0; }
+  .empty h2 { font: var(--t-title); margin: 0 0 var(--s2); }
+  .empty p { margin: 0; color: var(--ink-2); }
+  [data-state="empty"] .empty { display: block; }
+  [data-state="empty"] .content-only { display: none; }
+
+  /* loading skeleton */
+  .skel { display: none; padding-top: var(--s5); }
+  .skel div { background: var(--raised); border-radius: 8px; margin-bottom: var(--s3); animation: pulse 1.4s ease-in-out infinite alternate; }
+  @keyframes pulse { to { opacity: .55; } }
+  [data-state="loading"] .skel { display: block; }
+  [data-state="loading"] .content-only, [data-state="loading"] .empty { display: none; }
+
+  /* tab bar: opaque */
+  .tabbar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--ground); border-top: 1px solid var(--line); padding-bottom: var(--safe-bottom); display: flex; }
+  .tabbar a { flex: 1; height: var(--tabbar); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--ink-2); text-decoration: none; font: 500 11px/1.1 var(--face); }
+  .tabbar a i { font-size: 24px; }
+  .tabbar a[aria-current="page"] { color: var(--accent); font-weight: 600; }
+  @font-face { font-family: "tabler-filled"; src: url("https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.51.0/dist/fonts/tabler-icons-filled.core.woff2") format("woff2"); }
+  .tif-home::before { font-family: "tabler-filled" !important; content: "\102b3"; }
+
+  /* toast */
+  .toast { position: absolute; left: var(--s4); right: var(--s4); bottom: calc(var(--tabbar) + var(--safe-bottom) + var(--s3)); z-index: 7; display: flex; align-items: center; gap: var(--s3); padding: var(--s2) var(--s2) var(--s2) var(--s4); background: var(--ink); color: var(--ground); border-radius: var(--r-card); font: var(--t-body-m); transition: opacity .2s var(--ease), transform .2s var(--ease); }
+  .toast[hidden] { display: flex; opacity: 0; transform: translateY(8px); pointer-events: none; }
+  .toast .grow { flex: 1; }
+  .toast button { min-height: 44px; padding: 0 var(--s4); border-radius: 10px; font: 600 15px/1 var(--face); color: var(--ground); text-decoration: underline; text-underline-offset: 3px; }
+
+  /* breakdown sheet */
+  .scrim { position: absolute; inset: 0; z-index: 20; background: var(--scrim); transition: opacity var(--t-ui) var(--ease); }
+  .scrim[hidden] { display: block; opacity: 0; pointer-events: none; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; top: calc(var(--safe-top) + 10px); z-index: 21; background: var(--raised); border-radius: var(--r-card) var(--r-card) 0 0; display: flex; flex-direction: column; transition: transform var(--t-ui) var(--ease); }
+  [data-theme="light"] .sheet { background: var(--ground); }
+  .sheet[hidden] { display: flex; transform: translateY(105%); pointer-events: none; }
+  .handle { width: 36px; height: 5px; border-radius: 3px; background: var(--line); margin: 6px auto 0; }
+  .sheet-head { display: flex; align-items: center; justify-content: space-between; padding: var(--s2) var(--s3) 0 var(--s5); }
+  .sheet-head h2 { font: var(--t-title); margin: 0; }
+  .icon-btn { width: 44px; height: 44px; border-radius: 22px; display: grid; place-items: center; }
+  .icon-btn i { font-size: 22px; color: var(--ink-2); }
+  .sheet-body { flex: 1; overflow-y: auto; padding: 0 var(--s5) calc(var(--safe-bottom) + var(--s5)); scrollbar-width: none; }
+  .sheet-body::-webkit-scrollbar { display: none; }
+  .grp { margin-top: var(--s5); }
+  .grp-h { display: grid; grid-template-columns: 12px 1fr auto; column-gap: var(--s3); align-items: center; padding-bottom: var(--s2); border-bottom: 1px solid var(--line); font: 600 15px/1.35 var(--face); }
+  .grp-h .num { text-align: right; }
+  .line { display: grid; grid-template-columns: 1fr auto; column-gap: var(--s3); padding: 10px 0 10px 24px; border-bottom: 1px solid var(--line); }
+  .line:last-child { border-bottom: 0; }
+  .line .n { overflow-wrap: anywhere; }
+  .line .d { font: var(--t-label); color: var(--ink-2); margin-top: 2px; }
+  .line .num { text-align: right; }
+  .total { display: grid; grid-template-columns: 1fr auto; margin-top: var(--s5); padding-top: var(--s3); border-top: 2px solid var(--ink); font: 600 17px/1.3 var(--face); }
+  .fine { font: var(--t-label); color: var(--ink-2); margin: var(--s3) 0 0; }
+
+  /* number roll */
+  .roll { display: inline-flex; line-height: 1.15; font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; white-space: nowrap; }
+  .roll .d { display: block; height: 1.15em; overflow: hidden; }
+  .roll .col { display: flex; flex-direction: column; transition: transform var(--t-roll) var(--ease); }
+  .roll i { display: block; height: 1.15em; font-style: normal; }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+</style>
+</head>
+<body>
+  <div class="statusbar">
+    <span id="clock">10:08</span>
+    <svg class="ios" viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" stroke="currentColor" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen">
+    <header class="nav">
+      <div class="nav-row">
+        <h1 class="wordmark">Pano</h1>
+        <span class="updated" id="updated"></span>
+      </div>
+    </header>
+
+    <div id="scroll">
+      <div class="banner" id="b-error" role="status">
+        <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+        <span class="grow">Couldn't refresh. Showing figures from <span class="cached-at"></span>.</span>
+        <button type="button" id="retry">Retry</button>
+      </div>
+      <div class="banner" id="b-offline" role="status">
+        <i class="ti ti-wifi-off" aria-hidden="true"></i>
+        <span class="grow">Offline. Figures as of <span class="cached-at"></span>.</span>
+      </div>
+
+      <div class="skel" aria-label="Loading" role="progressbar">
+        <div style="width:110px;height:18px"></div>
+        <div style="width:230px;height:50px"></div>
+        <div style="height:44px;margin-top:24px"></div>
+        <div style="height:40px"></div><div style="height:40px"></div><div style="height:40px"></div><div style="height:40px"></div>
+        <div style="width:120px;height:24px;margin-top:28px"></div>
+        <div style="height:52px"></div><div style="height:52px"></div>
+      </div>
+
+      <section class="empty" aria-labelledby="empty-h">
+        <span class="hero-label">Safe to spend</span>
+        <span class="balance num" aria-label="Safe to spend $0.00">$0.00</span>
+        <h2 id="empty-h" style="margin-top:var(--s5)">No payments yet in November</h2>
+        <p>When a client pays, your tax share is set aside first.</p>
+        <div class="statement">
+          <div class="st-row"><span class="sw sw-tax"></span><div class="st-name">Your tax rate</div><span class="st-amt num">28%</span></div>
+          <div class="st-row"><span class="sw sw-bills"></span><div class="st-name">Bills before Dec 1</div><span class="st-amt num">−$1,240.00</span></div>
+          <div class="st-row"><span class="sw sw-tax"></span><div class="st-name">Tax pot, Q4</div><span class="st-amt num">$3,582.60</span></div>
+        </div>
+      </section>
+
+      <div class="content-only">
+        <section aria-label="Safe to spend">
+          <button type="button" class="hero" id="hero" aria-haspopup="dialog" aria-controls="sheet">
+            <span class="hero-label">Safe to spend <i class="ti ti-chevron-right" aria-hidden="true"></i></span>
+            <span class="balance roll" id="safe"></span>
+            <span class="hero-sub" style="display:block">Until Dec 1, after tax and bills</span>
+            <span class="split" id="split" aria-hidden="true">
+              <span class="seg sw-tax" data-k="tax"></span>
+              <span class="seg sw-bills" data-k="bills"></span>
+              <span class="seg sw-spent" data-k="spent"></span>
+              <span class="seg sw-safe" data-k="safe"></span>
+            </span>
+          </button>
+
+          <div class="statement" id="statement">
+            <div class="st-row"><span class="sw" style="border:2px solid var(--positive)"></span><div><div class="st-name">Came in this month</div><div class="st-note" id="n-in"></div></div><span class="st-amt"><span>+</span><span class="roll" id="r-in"></span></span></div>
+            <div class="st-row"><span class="sw sw-tax"></span><div><div class="st-name">Tax set aside</div><div class="st-note" id="n-tax"></div></div><span class="st-amt"><span>−</span><span class="roll" id="r-tax"></span></span></div>
+            <div class="st-row"><span class="sw sw-bills"></span><div><div class="st-name">Bills before Dec 1</div><div class="st-note" id="n-bills"></div></div><span class="st-amt"><span>−</span><span class="roll" id="r-bills"></span></span></div>
+            <div class="st-row"><span class="sw sw-spent"></span><div><div class="st-name">Spent</div><div class="st-note">Since Nov 1</div></div><span class="st-amt"><span>−</span><span class="roll" id="r-spent"></span></span></div>
+          </div>
+          <button type="button" class="breakdown-btn" id="open-sheet" aria-haspopup="dialog" aria-controls="sheet">See breakdown <i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+        </section>
+
+        <section aria-labelledby="act-h">
+          <h2 class="section-h" id="act-h">Activity</h2>
+          <ul class="act" id="act-pending" aria-label="Pending"></ul>
+          <h3 class="sub-h">Recent</h3>
+          <ul class="act" id="act-recent"></ul>
+        </section>
+      </div>
+    </div>
+
+    <nav class="tabbar" aria-label="Tabs">
+      <a href="#" aria-current="page"><i class="ti tif-home" aria-hidden="true"></i>Home</a>
+      <a href="#"><i class="ti ti-file-invoice" aria-hidden="true"></i>Invoices</a>
+      <a href="#"><i class="ti ti-receipt-tax" aria-hidden="true"></i>Taxes</a>
+      <a href="#"><i class="ti ti-building-bank" aria-hidden="true"></i>Accounts</a>
+    </nav>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden>
+      <span class="grow" id="toast-msg"></span>
+      <button type="button" id="undo">Undo</button>
+    </div>
+
+    <div class="scrim" id="scrim" hidden></div>
+    <section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-h" hidden>
+      <div class="handle" aria-hidden="true"></div>
+      <div class="sheet-head">
+        <h2 id="sheet-h" tabindex="-1">Safe to spend</h2>
+        <button type="button" class="icon-btn" id="close-sheet" aria-label="Close"><i class="ti ti-x" aria-hidden="true"></i></button>
+      </div>
+      <div class="sheet-body" id="sheet-body"></div>
+    </section>
+  </main>
+
+  <div class="home-indicator"></div>
+
+<script>
+// ---- sample data (USD, November 2026). Every figure on screen is derived from this. ----
+const TAX_RATE = 0.28;                 // the user's own setting
+const POT_BEFORE_NOV = 3582.60;        // tax pot from Sep and Oct, Q4 period
+const PAID_THIS_QUARTER = 0;
+const payments = [
+  { id: 'p4', who: 'Brightline Media', date: 'Nov 10', amt: 1870.00, init: 'BM' },
+  { id: 'p3', who: 'Kowalczyk Architecture & Interiors Group', date: 'Nov 7', amt: 2750.00, init: 'KA' },
+  { id: 'p2', who: 'Halden Coffee Co.', date: 'Nov 5', amt: 600.00, init: 'HC' },
+  { id: 'p1', who: 'Okafor & Reyes LLP', date: 'Nov 3', amt: 3200.00, init: 'OR' },
+];
+payments.forEach(p => p.tax = round2(p.amt * TAX_RATE));
+const pending = { id: 'p5', who: 'Northfield Dental', ref: 'Invoice 1042', amt: 1200.00, init: 'ND' };
+const bills = [
+  { n: 'Coworking desk', d: 'Nov 15', amt: 350.00 },
+  { n: 'Health insurance', d: 'Nov 20', amt: 612.00 },
+  { n: 'Adobe Creative Cloud', d: 'Nov 22', amt: 59.99 },
+  { n: 'Phone', d: 'Nov 26', amt: 78.01 },
+  { n: 'Accounting software', d: 'Nov 28', amt: 140.00 },
+];
+const spending = [
+  { n: 'Travel', amt: 640.00 }, { n: 'Groceries', amt: 412.80 }, { n: 'Eating out', amt: 233.38 },
+  { n: 'Other', amt: 220.00 }, { n: 'Transport', amt: 213.50 }, { n: 'Software', amt: 186.47 },
+];
+const recentSpend = [
+  { n: 'Whole Foods Market', note: 'Nov 10, Groceries', amt: 84.37, icon: 'ti-shopping-cart' },
+  { n: 'SQ *MKT 4471', note: 'Nov 9, Uncategorized', amt: 18.50, icon: 'ti-help-circle' },
+  { n: 'Figma', note: 'Nov 8, Software', amt: 15.00, icon: 'ti-device-desktop' },
+];
+
+function round2(x) { return Math.round(x * 100) / 100; }
+const sum = a => round2(a.reduce((s, x) => s + x, 0));
+const usd = x => x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const money = x => (x < 0 ? '−$' : '$') + usd(Math.abs(x));
+
+function totals() {
+  const income = sum(payments.map(p => p.amt));
+  const tax = sum(payments.map(p => p.tax));
+  const billsT = sum(bills.map(b => b.amt));
+  const spent = sum(spending.map(s => s.amt));
+  const safe = round2(income - tax - billsT - spent);
+  // honest totals: the statement must add up, and the sheet uses the same numbers
+  console.assert(Math.abs(income - tax - billsT - spent - safe) < 0.005, 'statement does not add up');
+  console.assert(spent === 1906.15 && billsT === 1240.00, 'sample totals changed');
+  return { income, tax, bills: billsT, spent, safe };
+}
+
+// ---- number roll (signature moment) ----
+function roll(el, text, label) {
+  el.setAttribute('role', 'img'); el.setAttribute('aria-label', label || text);
+  if (el.dataset.len !== String(text.length)) {
+    el.dataset.len = text.length;
+    el.innerHTML = [...text].map(c => /\d/.test(c)
+      ? '<span class="d" aria-hidden="true"><span class="col">' + [...'0123456789'].map(n => '<i>' + n + '</i>').join('') + '</span></span>'
+      : '<span aria-hidden="true">' + c + '</span>').join('');
+  }
+  let k = 0; const cols = el.querySelectorAll('.col');
+  for (const c of text) if (/\d/.test(c)) cols[k++].style.transform = 'translateY(-' + (+c * 1.15) + 'em)';
+}
+
+const $ = id => document.getElementById(id);
+function render() {
+  const t = totals();
+  roll($('safe'), money(t.safe), 'Safe to spend ' + money(t.safe));
+  roll($('r-in'), money(t.income), 'plus ' + money(t.income));
+  roll($('r-tax'), money(t.tax), 'minus ' + money(t.tax));
+  roll($('r-bills'), money(t.bills), 'minus ' + money(t.bills));
+  roll($('r-spent'), money(t.spent), 'minus ' + money(t.spent));
+  $('n-in').textContent = payments.length + (payments.length === 1 ? ' payment' : ' payments');
+  const pct = t.income ? Math.round(t.tax / t.income * 1000) / 10 : 0;
+  $('n-tax').textContent = pct + '% of what came in';
+  $('n-bills').textContent = bills.length + ' scheduled';
+  // the bar: each segment's length is its share of what came in
+  const base = Math.max(t.income, t.tax + t.bills + t.spent);
+  for (const seg of document.querySelectorAll('#split .seg')) seg.style.width = `calc((100% - 6px) * ${Math.max(0, t[seg.dataset.k]) / base})`;
+  renderActivity();
+  renderSheet(t);
+}
+
+function li(html, cls) { const e = document.createElement('li'); if (cls) e.className = cls; e.innerHTML = html; return e; }
+function renderActivity() {
+  const pend = $('act-pending'), rec = $('act-recent');
+  pend.innerHTML = ''; rec.innerHTML = '';
+  if (pending.state !== 'arrived') {
+    pend.appendChild(li(`<span class="av">${pending.init}</span>
+      <div><div class="a-name">${pending.who}</div><div class="a-note">${pending.ref}, expected today</div></div>
+      <span class="a-amt" aria-label="plus ${money(pending.amt)}, pending"><span class="num">+${money(pending.amt)}</span><span class="a-note pending-tag" style="justify-content:flex-end"><i class="ti ti-clock" aria-hidden="true"></i>Pending</span></span>`));
+  }
+  $('act-pending').hidden = pending.state === 'arrived';
+  const rows = [];
+  payments.slice(0, 2).forEach(p => rows.push(li(`<span class="av">${p.init}</span>
+      <div><div class="a-name">${p.who}</div><div class="a-note">${p.date}, ${p.tax ? money(p.tax) + ' to tax' : 'no tax set aside'}</div></div>
+      <span class="a-amt in num" aria-label="plus ${money(p.amt)}">+${money(p.amt)}</span>`, p.id === pending.id && pending.fresh ? 'arrived' : '')));
+  recentSpend.forEach(s => rows.push(li(`<span class="av"><i class="ti ${s.icon}" aria-hidden="true"></i></span>
+      <div><div class="a-name">${s.n}</div><div class="a-note">${s.note}</div></div>
+      <span class="a-amt num" aria-label="minus ${money(s.amt)}">−${money(s.amt)}</span>`)));
+  rows.forEach(r => rec.appendChild(r));
+  pending.fresh = false;
+}
+
+function renderSheet(t) {
+  const pot = round2(POT_BEFORE_NOV + t.tax);
+  const lines = (arr, f) => arr.map(f).join('');
+  $('sheet-body').innerHTML = `
+    <div class="grp"><div class="grp-h"><span class="sw" style="border:2px solid var(--positive)"></span><span>Came in</span><span class="num">+${money(t.income)}</span></div>
+      ${lines(payments, p => `<div class="line"><div><div class="n">${p.who}</div><div class="d">${p.date}</div></div><span class="num">+${money(p.amt)}</span></div>`)}</div>
+    <div class="grp"><div class="grp-h"><span class="sw sw-tax"></span><span>Tax set aside</span><span class="num">−${money(t.tax)}</span></div>
+      <div class="line"><div><div class="n">Your rate</div><div class="d">Taken from each payment as it arrives</div></div><span class="num">${Math.round(TAX_RATE * 100)}%</span></div>
+      <div class="line"><div><div class="n">Tax pot, Q4</div><div class="d">Sep 1 to Dec 31</div></div><span class="num">${money(pot)}</span></div>
+      <div class="line"><div><div class="n">Paid to IRS this quarter</div><div class="d">Q4 estimate due Jan 15, 2027</div></div><span class="num">${money(PAID_THIS_QUARTER)}</span></div></div>
+    <div class="grp"><div class="grp-h"><span class="sw sw-bills"></span><span>Bills before Dec 1</span><span class="num">−${money(t.bills)}</span></div>
+      ${lines(bills, b => `<div class="line"><div><div class="n">${b.n}</div><div class="d">${b.d}</div></div><span class="num">−${money(b.amt)}</span></div>`)}</div>
+    <div class="grp"><div class="grp-h"><span class="sw sw-spent"></span><span>Spent</span><span class="num">−${money(t.spent)}</span></div>
+      ${lines(spending, s => `<div class="line"><div class="n">${s.n}</div><span class="num">−${money(s.amt)}</span></div>`)}</div>
+    <div class="total"><span>Safe to spend</span><span class="num">${money(t.safe)}</span></div>
+    <p class="fine">The tax rate is an estimate you set. Your actual bill depends on your full-year return.</p>`;
+}
+
+// ---- payment arrives: split it, with undo for the tax move ----
+let undoTimer, lastArrived;
+function arrive() {
+  if (pending.state === 'arrived') return;
+  pending.state = 'arrived';
+  const p = { id: pending.id, who: pending.who, date: 'Today', amt: pending.amt, init: pending.init, tax: round2(pending.amt * TAX_RATE) };
+  payments.unshift(p); lastArrived = p; pending.fresh = true;
+  render();
+  showToast(`${pending.who} paid. ${money(p.tax)} set aside for tax.`);
+}
+function showToast(msg) {
+  $('toast-msg').textContent = msg; $('toast').hidden = false; $('undo').hidden = false;
+  clearTimeout(undoTimer); undoTimer = setTimeout(() => $('toast').hidden = true, 8000);
+}
+$('undo').onclick = () => {
+  if (!lastArrived) return;
+  lastArrived.tax = 0; lastArrived = null; render();
+  $('toast-msg').textContent = 'Tax set-aside undone. It stays spendable.'; $('undo').hidden = true;
+  clearTimeout(undoTimer); undoTimer = setTimeout(() => $('toast').hidden = true, 4000);
+};
+
+// ---- sheet ----
+let opener;
+function openSheet(e) { opener = e.currentTarget; $('scrim').hidden = false; $('sheet').hidden = false; $('sheet-body').scrollTop = 0; setTimeout(() => $('sheet-h').focus(), 50); }
+function closeSheet() { $('scrim').hidden = true; $('sheet').hidden = true; opener && opener.focus(); }
+$('hero').onclick = openSheet; $('open-sheet').onclick = openSheet;
+$('close-sheet').onclick = closeSheet; $('scrim').onclick = closeSheet;
+addEventListener('keydown', e => { if (e.key === 'Escape' && !$('sheet').hidden) closeSheet(); });
+document.querySelectorAll('.tabbar a').forEach(a => a.onclick = e => e.preventDefault()); // shortcut: other tabs not built in this prototype
+
+// ---- clock, states by URL hash ----
+const now = new Date(), hm = d => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+$('clock').textContent = hm(now).replace(/\s?[AP]M$/i, '');
+const cached = hm(new Date(now - 16 * 60000));
+document.querySelectorAll('.cached-at').forEach(e => e.textContent = cached);
+const states = ['loading', 'empty', 'error', 'offline'];
+const sync = () => {
+  const s = location.hash.slice(1); const st = states.includes(s) ? s : 'content';
+  document.documentElement.dataset.state = st;
+  $('updated').innerHTML = st === 'offline' || st === 'error'
+    ? `<i class="ti ti-clock" aria-hidden="true"></i>As of ${cached}` : st === 'loading' ? 'Updating' : 'Updated ' + hm(now);
+};
+addEventListener('hashchange', sync); sync();
+$('retry').onclick = () => { location.hash = ''; };
+
+render();
+// auto-demo: the pending invoice clears 2.5 s after load and is split in front of the user
+if (!matchMedia('(prefers-reduced-motion: reduce)').matches && document.documentElement.dataset.state === 'content') setTimeout(arrive, 2500);
+</script>
+</body>
+</html>

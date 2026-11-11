@@ -2,16 +2,20 @@
 // Captures an HTML prototype at a real phone viewport, in real time, at several moments.
 // Zero dependencies: drives a locally installed Chrome or Edge over the DevTools protocol.
 //
-//   node capture.mjs <screen.html> <out-prefix> [--size 393x852] [--at 1200,3000,6000] [--scale 2] [--tap x,y@ms] [--dark]
+//   node capture.mjs <screen.html> <out-prefix> [--size 393x852] [--at 1200,3000,6000] [--scale 2] [--tap x,y@ms] [--dark] [--scroll-end]
 //
 // Writes <out-prefix>-<ms>.png for each moment. --tap sends one tap at viewport point x,y at the given time.
+// --scroll-end also scrolls every scrolling area to its end afterwards and writes <out-prefix>-end.png.
+// After the load event and before the clock starts it waits (at most 12 s) for fonts, for every <img> to load or fail,
+// and, when the page has a .maplibregl-map, for document.documentElement.dataset.mapReady === '1'. The moments in --at
+// are measured from the end of that wait, so photos and the map are in place in the first capture.
 import { spawn } from 'node:child_process';
 import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-const USAGE = 'usage: node capture.mjs <screen.html> <out-prefix> [--size 393x852] [--at 1200,3000,6000] [--scale 2] [--tap x,y@ms] [--dark]';
+const USAGE = 'usage: node capture.mjs <screen.html> <out-prefix> [--size 393x852] [--at 1200,3000,6000] [--scale 2] [--tap x,y@ms] [--dark] [--scroll-end]';
 const argv = process.argv.slice(2);
 const opt = (name, def) => { const i = argv.indexOf(name); return i < 0 ? def : argv.splice(i, 2)[1]; };
 const flag = (name) => { const i = argv.indexOf(name); return i < 0 ? false : (argv.splice(i, 1), true); };
@@ -21,6 +25,7 @@ const times = opt('--at', '1200,3000,6000').split(',').map(Number).sort((a, b) =
 const scale = Number(opt('--scale', '2'));
 const tap = opt('--tap', null);
 const dark = flag('--dark');
+const scrollEnd = flag('--scroll-end');
 const [html, prefix] = argv;
 if (!html || !prefix || !existsSync(html) || !w || !h || times.some(Number.isNaN)) { console.error(USAGE); process.exit(2); }
 
@@ -67,6 +72,15 @@ try {
   await send('Page.enable');
   await send('Page.navigate', { url: pathToFileURL(resolve(html)).href });
   for (let i = 0; i < 100 && !events.includes('Page.loadEventFired'); i++) await sleep(100);
+  // fonts, photos and the map settle first; a missing photo (404) counts as settled so the wait cannot hang
+  await send('Runtime.evaluate', { awaitPromise: true, expression: `(async () => {
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    await Promise.race([wait(12000), (async () => {
+      await document.fonts.ready;
+      await Promise.all([...document.images].map((img) => { img.loading = 'eager'; return img.decode().catch(() => 0); }));
+      if (document.querySelector('.maplibregl-map')) while (document.documentElement.dataset.mapReady !== '1') await wait(100);
+    })()]);
+  })()` });
   const start = Date.now();
   const [tx, ty, tms] = tap ? tap.split(/[,@]/).map(Number) : [];
   let tapped = !tap;
@@ -82,6 +96,14 @@ try {
     const out = `${prefix}-${String(t).padStart(5, '0')}.png`;
     writeFileSync(out, Buffer.from(shot.result.data, 'base64'));
     console.log(out);
+  }
+  if (scrollEnd) {
+    await send('Runtime.evaluate', { expression: "for (const el of [document.scrollingElement, ...document.querySelectorAll('*')]) if (el && el.scrollHeight > el.clientHeight + 4 && (el === document.scrollingElement || /auto|scroll/.test(getComputedStyle(el).overflowY))) el.scrollTop = el.scrollHeight;" });
+    await sleep(700);
+    const shot = await send('Page.captureScreenshot', { format: 'png' });
+    if (!shot.result?.data) throw new Error('screenshot failed');
+    writeFileSync(`${prefix}-end.png`, Buffer.from(shot.result.data, 'base64'));
+    console.log(`${prefix}-end.png`);
   }
   ws.close();
 } catch (e) {

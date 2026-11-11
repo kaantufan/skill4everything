@@ -1,0 +1,607 @@
+<!doctype html>
+<!-- Plak, Now Playing. HTML mockup at 393x852 (iOS). States: #loading (buffering), #empty (nothing up next), #error, #offline. ?theme=light for the light appearance. -->
+<html lang="en" data-platform="ios" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plak – Now Playing</title>
+<script>{const t=new URLSearchParams(location.search).get('theme');document.documentElement.dataset.theme=t==='light'?'light':'dark';}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css">
+<style>
+  /* device frame (from assets/phone-frame.html) */
+  :root { --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px; --chrome: #000; }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--screen-bg); color: var(--screen-fg); }
+  .statusbar { position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 40; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none; }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  .home-indicator { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 40; width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none; }
+  #screen { position: absolute; inset: 0; overflow: hidden; }
+</style>
+<style>
+  /* PRODUCT TOKENS: direction photo-editorial, dealt for "Plak" (media-streaming, ios) */
+  @property --tint { syntax: '<color>'; inherits: true; initial-value: #3a2a20; }
+  :root {
+    --font: "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif;
+    --ground: #0A0A0A; --raised: #1A1A1A; --ink: #FFFFFF; --ink-2: #B3B3B3; --line: #2A2A2A;
+    --accent: #D93B30; --on-accent: #FFFFFF; --positive: #3DB87A; --negative: #F0605A;
+    --base: #000; --t1: 60%; --t2: 30%;            /* how much artwork colour goes into the wash, top and middle */
+    --track: rgb(255 255 255 / .24); --fill: rgb(255 255 255 / .08); --fill-press: rgb(255 255 255 / .16);
+    --screen-bg: var(--ground); --screen-fg: var(--ink);
+    --r-art: 14px; --r-card: 12px; --r-thumb: 6px; --r-sheet: 16px;
+    --s-title: 28px; --s-section: 20px; --s-body: 16px; --s-meta: 14px;
+    --ease: cubic-bezier(.22,1,.36,1); --sheet-ease: cubic-bezier(.32,.72,0,1);
+    --tint-ms: 700ms;
+  }
+  [data-theme="light"] {
+    --ground: #FFFFFF; --raised: #F7F7F7; --ink: #1A1A1A; --ink-2: #5F5F5F; --line: #EBEBEB;
+    --positive: #1F7A4C; --negative: #D93B30;
+    --base: #fff; --t1: 22%; --t2: 10%;
+    --track: rgb(0 0 0 / .16); --fill: rgb(0 0 0 / .05); --fill-press: rgb(0 0 0 / .1);
+  }
+
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: transform .12s var(--ease), background-color .12s; }
+  button:active:not(:disabled) { transform: scale(.94); }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  button:disabled { opacity: .35; cursor: default; }
+  .ph, .ph-fill { line-height: 1; }
+  .icon-btn { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 26px; flex: none; }
+  .icon-btn:active:not(:disabled) { background: var(--fill-press); }
+  .tnum { font-variant-numeric: tabular-nums; }
+  .ph-slot { position: relative; overflow: hidden; background: var(--c, #3a2a20); }
+  .ph-slot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; transition: opacity .45s ease-out; }
+  .ph-slot img.in { opacity: 1; }
+
+  /* ---------- Now Playing ---------- */
+  .np { position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column;
+        background: linear-gradient(180deg, color-mix(in oklab, var(--tint) var(--t1), var(--base)) 0%, color-mix(in oklab, var(--tint) var(--t2), var(--base)) 52%, var(--ground) 86%);
+        transition: --tint var(--tint-ms) var(--ease), transform .38s var(--sheet-ease); }
+  .np.closed { transform: translateY(100%); }
+  .top { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 8px; padding: calc(var(--safe-top) + 2px) 16px 0; }
+  .src { text-align: center; min-width: 0; line-height: 1.3; }
+  .src span { display: block; font-size: var(--s-meta); color: var(--ink-2); }
+  .src strong { display: block; font-size: var(--s-body); font-weight: 600; }
+  .notice { display: none; align-items: center; gap: 10px; margin: 10px 24px 0; padding: 10px 12px; border-radius: var(--r-card); background: var(--fill); font-size: var(--s-meta); line-height: 1.35; }
+  .notice i { font-size: 20px; flex: none; }
+  .notice .grow { flex: 1; }
+  .notice button { min-height: 44px; padding: 0 14px; border-radius: 22px; background: var(--ink); color: var(--ground); font-weight: 600; }
+  [data-state="offline"] .notice.off, [data-state="error"] .notice.err { display: flex; }
+  .notice.err i { color: var(--negative); }
+
+  .art-wrap { flex: 1 1 0; min-height: 0; container-type: size; display: flex; align-items: center; justify-content: center; }
+  .art { width: min(calc(100cqw - 64px), calc(100cqh - 20px)); aspect-ratio: 1; border-radius: var(--r-art);
+         transform: scale(var(--s, 1)); transition: transform var(--spring-ms, 420ms) var(--spring, var(--ease)), background-color .5s; }
+  .np.paused .art { --s: .84; }
+
+  .meta-row { display: flex; align-items: flex-start; gap: 12px; padding: 4px 16px 0 24px; }
+  .titles { flex: 1; min-width: 0; }
+  .title { margin: 0; font-size: var(--s-title); font-weight: 700; letter-spacing: -.02em; line-height: 1.15; overflow-wrap: anywhere; }
+  .title:focus { outline: none; }
+  .artist { margin: 4px 0 0; font-size: var(--s-body); color: var(--ink-2); display: flex; align-items: center; gap: 6px; }
+  .artist i { font-size: 16px; }
+  .save { margin-top: -2px; }
+  .save[aria-pressed="true"] i { color: var(--accent); }
+
+  .scrub-wrap { padding: 10px 24px 0; }
+  .scrub { -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 44px; margin: -10px 0 -12px; background: transparent; touch-action: none; cursor: pointer; }
+  .scrub::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: linear-gradient(var(--ink), var(--ink)) 0 0 / var(--p, 0%) 100% no-repeat, var(--track); }
+  .scrub::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; margin-top: -5px; border-radius: 50%; background: var(--ink); transition: transform .12s var(--ease); }
+  .scrub:active::-webkit-slider-thumb { transform: scale(1.5); }
+  .scrub::-moz-range-track { height: 4px; border-radius: 2px; background: var(--track); }
+  .scrub::-moz-range-progress { height: 4px; border-radius: 2px; background: var(--ink); }
+  .scrub::-moz-range-thumb { width: 14px; height: 14px; border: 0; border-radius: 50%; background: var(--ink); }
+  .times { display: flex; justify-content: space-between; font-size: var(--s-meta); color: var(--ink-2); }
+
+  .transport { display: flex; align-items: center; justify-content: space-between; padding: 8px 18px 0; }
+  .t-skip { width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; font-size: 38px; }
+  .t-skip:active:not(:disabled) { background: var(--fill-press); }
+  .t-mode { position: relative; color: var(--ink-2); font-size: 24px; }
+  .t-mode[aria-pressed="true"] { color: var(--accent); }
+  .t-mode[aria-pressed="true"]::after { content: ""; position: absolute; left: 50%; bottom: 3px; width: 4px; height: 4px; margin-left: -2px; border-radius: 2px; background: currentColor; }
+  .play { position: relative; width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--ground); font-size: 34px; }
+  .play::before { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 3px solid transparent; }
+  [data-state="loading"] .play::before { border-top-color: var(--ink); animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(1turn); } }
+
+  .upnext { margin: 16px 16px 0; min-height: 64px; display: flex; align-items: center; gap: 12px; padding: 10px 8px 10px 12px; border-radius: var(--r-card); background: var(--fill); text-align: left; }
+  .upnext:active { background: var(--fill-press); }
+  .upnext:active:not(:disabled) { transform: scale(.98); }
+  .thumb { width: 44px; height: 44px; border-radius: var(--r-thumb); flex: none; }
+  .un-text { flex: 1; min-width: 0; line-height: 1.3; }
+  .un-text span { display: block; }
+  .un-label { font-size: var(--s-meta); color: var(--ink-2); }
+  .un-title { font-size: var(--s-body); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .un-title em { font-style: normal; font-weight: 400; color: var(--ink-2); }
+  .un-q { display: flex; flex-direction: column; align-items: center; gap: 2px; width: 52px; font-size: 12px; color: var(--ink-2); }
+  .un-q i { font-size: 24px; color: var(--ink); }
+  .upnext.none .thumb { display: none; }
+
+  .foot { display: flex; justify-content: center; padding: 4px 16px var(--safe-bottom); }
+  .device { min-height: 44px; display: flex; align-items: center; gap: 8px; padding: 0 14px; border-radius: 22px; font-size: var(--s-meta); color: var(--ink-2); }
+  .device i { font-size: 20px; }
+  .device.ext { color: var(--positive); }
+  .device:active { background: var(--fill-press); }
+
+  /* ---------- Home with mini-player (where Now Playing collapses to) ---------- */
+  .home { position: absolute; inset: 0; z-index: 1; background: var(--ground); padding: calc(var(--safe-top) + 8px) 20px 0; }
+  .home h1 { margin: 0 0 20px; font-size: var(--s-title); font-weight: 700; letter-spacing: -.02em; }
+  .home h2 { margin: 0 0 12px; font-size: var(--s-section); font-weight: 600; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 14px; }
+  .tile { text-align: left; }
+  .tile .ph-slot { aspect-ratio: 1; border-radius: var(--r-card); margin-bottom: 8px; }
+  .tile b { display: block; font-size: var(--s-body); font-weight: 600; }
+  .tile span { display: block; font-size: var(--s-meta); color: var(--ink-2); }
+  .mini { position: absolute; left: 8px; right: 8px; bottom: calc(var(--safe-bottom) + 8px); height: 64px; border-radius: var(--r-card); background: var(--raised); display: flex; align-items: center; padding: 0 6px 0 10px; gap: 4px; overflow: hidden;
+          background-image: linear-gradient(90deg, color-mix(in oklab, var(--tint) 30%, var(--raised)), var(--raised)); transition: --tint var(--tint-ms) var(--ease); }
+  .mini-open { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; text-align: left; height: 100%; }
+  .mini-open .thumb { width: 44px; height: 44px; }
+  .mini-open .un-text b { display: block; font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini-open .un-text span { font-size: 13px; color: var(--ink-2); }
+  .mini-open:active:not(:disabled) { transform: none; }
+  .mini-bar { position: absolute; left: 10px; right: 10px; bottom: 0; height: 2px; background: var(--track); }
+  .mini-bar i { display: block; height: 100%; width: var(--p, 0%); background: var(--ink); }
+
+  /* ---------- Sheets ---------- */
+  .scrim { position: absolute; inset: 0; z-index: 20; background: rgb(0 0 0 / .5); opacity: 0; pointer-events: none; transition: opacity .25s; }
+  .scrim.show { opacity: 1; pointer-events: auto; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 21; height: 82%; display: flex; flex-direction: column; background: var(--raised); border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+           transform: translateY(105%); visibility: hidden; transition: transform .36s var(--sheet-ease), visibility 0s linear .36s; }
+  .sheet.open { transform: none; visibility: visible; transition: transform .36s var(--sheet-ease), visibility 0s; }
+  .sheet.small { height: auto; }
+  .sheet-h { flex: none; padding: 8px 12px 4px 20px; touch-action: none; }
+  .grab { width: 36px; height: 5px; border-radius: 3px; background: var(--track); margin: 0 auto 6px; }
+  .sheet-h .row { display: flex; align-items: center; justify-content: space-between; }
+  .sheet-h h2 { margin: 0; font-size: var(--s-section); font-weight: 600; }
+  .sheet-h h2:focus { outline: none; }
+  .sheet-body { flex: 1; overflow-y: auto; padding: 0 0 calc(var(--safe-bottom) + 84px); overscroll-behavior: contain; }
+  .small .sheet-body { padding-bottom: calc(var(--safe-bottom) + 12px); }
+  .now-row { display: flex; align-items: center; gap: 12px; margin: 8px 20px 4px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+  .now-row .un-label { color: var(--ink-2); }
+  .q-head { display: flex; align-items: baseline; justify-content: space-between; padding: 16px 20px 6px; }
+  .q-head h3 { margin: 0; font-size: var(--s-body); font-weight: 600; }
+  .q-head span { font-size: var(--s-meta); color: var(--ink-2); }
+  .q-list { list-style: none; margin: 0; padding: 0; }
+  .q-row { display: flex; align-items: center; gap: 0; padding: 0 6px 0 12px; min-height: 64px; background: var(--raised); transition: background-color .12s; }
+  .q-row.dragging { background: var(--line); position: relative; z-index: 1; }
+  .q-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: var(--r-card); text-align: left; }
+  .q-main:active:not(:disabled) { transform: none; background: var(--fill-press); }
+  .q-main:disabled { opacity: 1; }
+  .q-main:disabled .thumb, .q-main:disabled b { opacity: .45; }
+  .q-main b { display: block; font-size: var(--s-body); font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+  .q-main .sub { display: flex; align-items: center; gap: 5px; font-size: var(--s-meta); color: var(--ink-2); line-height: 1.3; }
+  .q-main .dur { flex: none; font-size: var(--s-meta); color: var(--ink-2); }
+  .q-drag { cursor: grab; touch-action: none; color: var(--ink-2); }
+  .q-rm { color: var(--ink-2); }
+  .q-empty { display: none; padding: 24px 20px 8px; }
+  .q-empty b { display: block; font-size: var(--s-body); font-weight: 600; margin-bottom: 4px; }
+  .q-empty p { margin: 0 0 14px; font-size: var(--s-meta); color: var(--ink-2); }
+  .q-empty button { min-height: 44px; padding: 0 18px; border-radius: 22px; background: var(--ink); color: var(--ground); font-weight: 600; }
+  .q-list:empty + .q-empty { display: block; }
+  .autoplay { display: flex; align-items: center; gap: 12px; margin: 12px 20px 0; padding-top: 16px; border-top: 1px solid var(--line); }
+  .autoplay label { flex: 1; font-size: var(--s-body); }
+  .autoplay label span { display: block; font-size: var(--s-meta); color: var(--ink-2); }
+  .switch { -webkit-appearance: none; appearance: none; position: relative; width: 51px; height: 31px; border-radius: 16px; background: var(--track); margin: 0; flex: none; cursor: pointer; transition: background-color .2s; }
+  .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; transition: transform .2s var(--ease); }
+  .switch:checked { background: var(--positive); }
+  .switch:checked::after { transform: translateX(20px); }
+  .dev-list { padding: 4px 8px 0; }
+  .dev { width: 100%; min-height: 56px; display: flex; align-items: center; gap: 14px; padding: 0 12px; border-radius: var(--r-card); text-align: left; font-size: var(--s-body); }
+  .dev:active:not(:disabled) { transform: none; background: var(--fill-press); }
+  .dev > i:first-child { font-size: 24px; }
+  .dev span { flex: 1; }
+  .dev .ck { font-size: 22px; visibility: hidden; color: var(--positive); }
+  .dev[aria-checked="true"] .ck { visibility: visible; }
+
+  .toast { position: absolute; left: 16px; right: 16px; top: calc(var(--safe-top) + 56px); z-index: 30; min-height: 52px; display: flex; align-items: center; gap: 8px; padding: 4px 6px 4px 16px; border-radius: var(--r-card);
+           background: var(--ink); color: var(--ground); font-size: var(--s-meta); opacity: 0; transform: translateY(-8px); pointer-events: none; transition: opacity .2s, transform .2s var(--ease); }
+  .toast.low { top: auto; bottom: calc(var(--safe-bottom) + 12px); transform: translateY(8px); }
+  .toast.show { opacity: 1; transform: none; pointer-events: auto; }
+  .toast .msg { flex: 1; }
+  .toast button { min-height: 44px; padding: 0 12px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    .np.paused .art { --s: 1; }
+  }
+</style>
+</head>
+<body>
+  <div class="statusbar">
+    <span id="clock">10:08</span>
+    <svg class="ios" viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" stroke="currentColor" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen">
+    <!-- Home, shown when Now Playing is collapsed -->
+    <section class="home" id="home" inert aria-label="Home">
+      <h1>Home</h1>
+      <h2>Recently played</h2>
+      <div class="grid" id="recent"></div>
+      <div class="mini" id="mini">
+        <button class="mini-open" id="miniOpen" aria-label="Open Now Playing">
+          <span class="thumb ph-slot" id="miniThumb"></span>
+          <span class="un-text"><b id="miniTitle"></b><span id="miniArtist"></span></span>
+        </button>
+        <button class="icon-btn" id="miniPlay" aria-label="Pause"><i class="ph-fill ph-pause"></i></button>
+        <button class="icon-btn" id="miniNext" aria-label="Next song"><i class="ph-fill ph-skip-forward"></i></button>
+        <div class="mini-bar" aria-hidden="true"><i id="miniBar"></i></div>
+      </div>
+    </section>
+
+    <!-- Now Playing -->
+    <section class="np" id="np" aria-label="Now Playing">
+      <header class="top">
+        <button class="icon-btn" id="close" aria-label="Close Now Playing"><i class="ph ph-caret-down"></i></button>
+        <div class="src"><span>Playing from playlist</span><strong>Plak Weekly</strong></div>
+        <span aria-hidden="true"></span>
+      </header>
+
+      <div class="notice off" role="status"><i class="ph ph-cloud-slash"></i><span class="grow">Offline. Only downloaded songs play.</span></div>
+      <div class="notice err" role="alert"><i class="ph-fill ph-warning-circle"></i><span class="grow">This song didn’t load. Check your connection.</span><button id="retry">Retry</button></div>
+
+      <div class="art-wrap"><div class="art ph-slot" id="art"></div></div>
+
+      <div class="meta-row">
+        <div class="titles">
+          <h1 class="title" id="title" tabindex="-1"></h1>
+          <p class="artist"><span id="artist"></span><i class="ph-fill ph-arrow-circle-down" id="dl" role="img" aria-label="Downloaded"></i></p>
+        </div>
+        <button class="icon-btn save" id="save" aria-pressed="false" aria-label="Save to Library"><i class="ph ph-heart"></i></button>
+      </div>
+
+      <div class="scrub-wrap">
+        <input class="scrub" id="scrub" type="range" min="0" max="228" step="1" value="0" aria-label="Song position">
+        <div class="times tnum"><span id="elapsed">0:00</span><span id="remain">-0:00</span></div>
+      </div>
+
+      <div class="transport">
+        <button class="icon-btn t-mode" id="shuffle" aria-pressed="false" aria-label="Shuffle"><i class="ph ph-shuffle"></i></button>
+        <button class="t-skip" id="prev" aria-label="Previous song"><i class="ph-fill ph-skip-back"></i></button>
+        <button class="play" id="play" aria-label="Pause"><i class="ph-fill ph-pause"></i></button>
+        <button class="t-skip" id="next" aria-label="Next song" aria-describedby="unTitle"><i class="ph-fill ph-skip-forward"></i></button>
+        <button class="icon-btn t-mode" id="repeat" aria-pressed="false" aria-label="Repeat: off"><i class="ph ph-repeat"></i></button>
+      </div>
+
+      <button class="upnext" id="openQueue" aria-haspopup="dialog">
+        <span class="thumb ph-slot" id="unThumb"></span>
+        <span class="un-text"><span class="un-label" id="unLabel">Up next</span><span class="un-title" id="unTitle"></span></span>
+        <span class="un-q"><i class="ph ph-queue"></i>Queue</span>
+      </button>
+
+      <div class="foot">
+        <button class="device" id="openDevice" aria-haspopup="dialog"><i class="ph ph-device-mobile" id="devIcon"></i><span id="devName">iPhone</span></button>
+      </div>
+    </section>
+
+    <div class="scrim" id="scrim"></div>
+
+    <section class="sheet" id="queueSheet" role="dialog" aria-modal="true" aria-labelledby="qTitle">
+      <div class="sheet-h"><div class="grab" aria-hidden="true"></div>
+        <div class="row"><h2 id="qTitle" tabindex="-1">Queue</h2><button class="icon-btn" data-close aria-label="Close queue"><i class="ph ph-x"></i></button></div>
+      </div>
+      <div class="sheet-body">
+        <div class="now-row"><span class="thumb ph-slot" id="qNowThumb"></span>
+          <span class="un-text"><span class="un-label">Now playing</span><span class="un-title" id="qNowTitle"></span></span></div>
+        <div class="q-head"><h3>Up next</h3><span id="qSum" class="tnum"></span></div>
+        <ol class="q-list" id="qList"></ol>
+        <div class="q-empty"><b>Nothing up next</b><p>Add songs from any album or playlist, or let Autoplay continue with similar music.</p><button id="autoOn">Turn on Autoplay</button></div>
+        <div class="autoplay"><label for="autoplay">Autoplay<span>Similar music after the queue ends</span></label><input class="switch" type="checkbox" role="switch" id="autoplay"></div>
+      </div>
+    </section>
+
+    <section class="sheet small" id="deviceSheet" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+      <div class="sheet-h"><div class="grab" aria-hidden="true"></div>
+        <div class="row"><h2 id="dTitle" tabindex="-1">Play on</h2><button class="icon-btn" data-close aria-label="Close"><i class="ph ph-x"></i></button></div>
+      </div>
+      <div class="sheet-body"><div class="dev-list" role="radiogroup" aria-labelledby="dTitle" id="devList"></div></div>
+    </section>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"><span class="msg"></span><button id="undo">Undo</button></div>
+    <div class="sr" id="announce" aria-live="polite"></div>
+  </main>
+
+  <div class="home-indicator"></div>
+  <script>document.getElementById('clock').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, '');</script>
+
+<script>
+// Sample data: made-up artists and songs. Covers are Unsplash photos (assets/imagery.md); c = the cover's dominant colour (sampled once, stored with the URL): never-grey fallback and the wash.
+const $ = s => document.querySelector(s);
+const pic = (id, w = 800) => `https://images.unsplash.com/photo-${id}?w=${w}&q=80&auto=format&fit=crop`;
+const LIB = [
+  { id: 'kiyida', title: 'Kıyıda', artist: 'Deniz Aral', dur: 228, img: '1604079628040-94301bb21b91', c: '#c8642a', dl: true },
+  { id: 'mavi', title: 'Mavi', artist: 'Selin Koç', dur: 201, img: '1614850523011-8f49ffc73908', c: '#1e3c8c', dl: true },
+  { id: 'donus', title: 'Dönüş', artist: 'Ekin Tan', dur: 187, img: '1602848597941-0d3d3a2c1241', c: '#a3302a', dl: false },
+  { id: 'sabah', title: 'Bir Sabah Erkenden Sahile İndim (Akustik)', artist: 'Deniz Aral', dur: 312, img: '1616714109948-c74fe5029a4d', c: '#9a6230', dl: true },
+  { id: 'defter', title: 'Eski Defter', artist: 'Lara Yüce', dur: 174, img: '1580656449278-e8381933522c', c: '#c9a227', dl: false, blocked: 'Not available in your country' },
+  { id: 'saat', title: 'Saat 3', artist: 'Mert Ozan, Lara Yüce', dur: 243, img: '1620641788421-7a1c342ea42e', c: '#8a3c9c', dl: false },
+  { id: 'yol', title: 'Yol', artist: 'Ekin Tan', dur: 265, img: '1478760329108-5c3ed9d495a0', c: '#1f4a52', dl: true },
+  { id: 'gece', title: 'Gece', artist: 'Selin Koç', dur: 219, img: '1557683316-973673baf926', c: '#2a6f86', dl: false },
+];
+const AUTO = [
+  { id: 'ruzgar', title: 'Rüzgar', artist: 'Ekin Tan', dur: 236, img: '1541701494587-cb58502866ab', c: '#2c4f7a', dl: false, auto: true },
+  { id: 'liman', title: 'Liman', artist: 'Deniz Aral', dur: 198, img: '1557672172-298e090bd0f1', c: '#6d5aa8', dl: false, auto: true },
+];
+const DEVICES = [
+  { id: 'iphone', name: 'iPhone', icon: 'ph-device-mobile' },
+  { id: 'airpods', name: 'AirPods Pro', icon: 'ph-headphones' },
+  { id: 'living', name: 'Living room', icon: 'ph-speaker-hifi' },
+];
+const STATES = ['loading', 'empty', 'error', 'offline'];
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let S;
+
+function fresh(state) {
+  const s = { cur: LIB[0], queue: LIB.slice(1), hist: [], t: 72, playing: true, shuffle: false, orig: null, repeat: 'off',
+              autoplay: true, autoUsed: false, saved: new Set(['mavi', 'yol']), device: S ? S.device : 'iphone', state };
+  if (state === 'empty') { s.queue = []; s.autoplay = false; }
+  if (state === 'error') s.playing = false;
+  return s;
+}
+
+// ---------- helpers ----------
+const fmt = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+const words = s => { const m = Math.floor(s / 60), x = Math.floor(s % 60); return `${m} minute${m === 1 ? '' : 's'} ${x} second${x === 1 ? '' : 's'}`; };
+const ok = t => !t.blocked && !(S.state === 'offline' && !t.dl);
+const nextUp = () => S.queue.find(ok);
+const canAdvance = () => !!nextUp() || S.repeat === 'all' || (S.autoplay && !S.autoUsed);
+const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+function slot(el, t, w = 200) {             // never-grey image slot: colour first, photo fades in, removed on error
+  el.style.setProperty('--c', t.c);
+  if (el.dataset.id === t.id) return;
+  el.dataset.id = t.id;
+  el.innerHTML = `<img alt="" crossorigin="anonymous" src="${pic(t.img, w)}" onload="this.classList.add('in')" onerror="this.remove()">`;
+}
+
+// ---------- signature: the wash follows the cover ----------
+const root = document.documentElement;
+function setArt(t) {
+  const art = $('#art');
+  art.style.setProperty('--c', t.c);
+  root.style.setProperty('--tint', t.c);
+  if (art.dataset.id === t.id) return;
+  art.dataset.id = t.id;
+  const img = new Image(); img.alt = `Cover of ${t.title}`; img.crossOrigin = 'anonymous'; img.src = pic(t.img, 1000);
+  img.onload = () => {
+    img.classList.add('in');
+    [...art.querySelectorAll('img')].filter(i => i !== img).forEach(i => setTimeout(() => i.remove(), 500));
+  };
+  img.onerror = () => img.remove();
+  art.appendChild(img);
+}
+
+// ---------- render ----------
+function renderTime() {
+  const t = S.cur, sc = $('#scrub');
+  if (!S.scrubbing) sc.value = S.t;
+  sc.max = t.dur; sc.style.setProperty('--p', (S.t / t.dur * 100) + '%');
+  sc.setAttribute('aria-valuetext', `${words(S.t)} of ${words(t.dur)}`);
+  $('#elapsed').textContent = S.state === 'loading' ? 'Buffering' : fmt(S.t);
+  $('#remain').textContent = '-' + fmt(t.dur - S.t);
+  $('#miniBar').style.setProperty('--p', (S.t / t.dur * 100) + '%');
+}
+function render() {
+  const t = S.cur;
+  root.dataset.state = S.state;
+  $('#title').textContent = t.title; $('#artist').textContent = t.artist; $('#dl').hidden = !t.dl;
+  setArt(t);
+  const saved = S.saved.has(t.id), sv = $('#save');
+  sv.setAttribute('aria-pressed', saved); sv.firstElementChild.className = saved ? 'ph-fill ph-heart' : 'ph ph-heart';
+  const playing = S.playing && S.state !== 'error';
+  $('#np').classList.toggle('paused', !playing);
+  for (const b of [$('#play'), $('#miniPlay')]) {
+    b.setAttribute('aria-label', S.state === 'loading' ? 'Buffering. Pause' : playing ? 'Pause' : 'Play');
+    b.firstElementChild.className = 'ph-fill ' + (playing ? 'ph-pause' : 'ph-play');
+  }
+  $('#shuffle').setAttribute('aria-pressed', S.shuffle);
+  const rp = $('#repeat'); rp.setAttribute('aria-pressed', S.repeat !== 'off'); rp.setAttribute('aria-label', 'Repeat: ' + S.repeat);
+  rp.firstElementChild.className = 'ph ' + (S.repeat === 'one' ? 'ph-repeat-once' : 'ph-repeat');
+  $('#next').disabled = $('#miniNext').disabled = !canAdvance();
+  const n = nextUp(), un = $('#openQueue');
+  un.classList.toggle('none', !n);
+  if (n) { slot($('#unThumb'), n, 120); $('#unLabel').textContent = 'Up next';
+    $('#unTitle').innerHTML = `${esc(n.title)} <em>– ${esc(n.artist)}</em>`;
+    un.setAttribute('aria-label', `Queue. Up next: ${n.title} by ${n.artist}`); }
+  else { $('#unLabel').textContent = 'Up next';
+    $('#unTitle').innerHTML = S.autoplay ? 'Autoplay <em>similar music</em>' : 'Nothing queued';
+    un.setAttribute('aria-label', 'Queue. Nothing queued'); }
+  slot($('#miniThumb'), t, 120); $('#miniTitle').textContent = t.title; $('#miniArtist').textContent = t.artist;
+  const d = DEVICES.find(x => x.id === S.device);
+  $('#devName').textContent = d.name; $('#devIcon').className = 'ph ' + d.icon;
+  $('#openDevice').classList.toggle('ext', d.id !== 'iphone');
+  $('#openDevice').setAttribute('aria-label', `Playing on ${d.name}. Choose where to play`);
+  renderTime();
+  if (openSheet === $('#queueSheet')) renderQueue();
+}
+
+function renderQueue() {
+  slot($('#qNowThumb'), S.cur, 120);
+  $('#qNowTitle').innerHTML = `${esc(S.cur.title)} <em>– ${esc(S.cur.artist)}</em>`;
+  const list = $('#qList');
+  list.innerHTML = S.queue.map((t, i) => {
+    const why = t.blocked ? `<i class="ph ph-prohibit" aria-hidden="true"></i>${t.blocked}`
+      : (S.state === 'offline' && !t.dl) ? `<i class="ph ph-cloud-slash" aria-hidden="true"></i>Not downloaded`
+      : esc(t.artist) + (t.auto ? ', from Autoplay' : '');
+    return `<li class="q-row" data-id="${t.id}">
+      <button class="q-main" data-i="${i}" ${ok(t) ? '' : 'disabled'} aria-label="${ok(t) ? 'Play ' : ''}${esc(t.title)}, ${esc(t.artist)}${ok(t) ? '' : '. ' + (t.blocked || 'Not downloaded')}">
+        <span class="thumb ph-slot" style="--c:${t.c}"><img alt="" src="${pic(t.img, 120)}" onload="this.classList.add('in')" onerror="this.remove()"></span>
+        <span class="un-text"><b>${esc(t.title)}</b><span class="sub">${why}</span></span>
+        <span class="dur tnum">${fmt(t.dur)}</span></button>
+      <button class="icon-btn q-rm" data-i="${i}" aria-label="Remove ${esc(t.title)} from queue"><i class="ph ph-minus-circle"></i></button>
+      <button class="icon-btn q-drag" data-i="${i}" aria-label="Reorder ${esc(t.title)}, position ${i + 1} of ${S.queue.length}. Arrow keys move it."><i class="ph ph-dots-six-vertical"></i></button>
+    </li>`; }).join('');
+  const play = S.queue.filter(ok), secs = play.reduce((a, t) => a + t.dur, 0);
+  $('#qSum').textContent = play.length ? `${play.length} song${play.length === 1 ? '' : 's'}, ${Math.round(secs / 60)} min` : '';
+  // honest total: the summary must equal the playable rows on screen
+  const shown = [...list.querySelectorAll('.q-main:not(:disabled) .dur')].reduce((a, e) => { const [m, s] = e.textContent.split(':'); return a + (+m) * 60 + (+s); }, 0);
+  console.assert(shown === secs, 'queue total mismatch', shown, secs);
+  $('#autoplay').checked = S.autoplay;
+}
+
+// ---------- playback ----------
+let toastTimer;
+function toast(msg, undo) {
+  const el = $('#toast'); el.querySelector('.msg').textContent = msg;
+  $('#undo').hidden = !undo; $('#undo').onclick = () => { undo(); hideToast(); };
+  el.classList.toggle('low', !!openSheet); el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(hideToast, 6000);
+}
+function hideToast() { $('#toast').classList.remove('show'); }
+
+function next() {
+  let i = S.queue.findIndex(ok);
+  if (i < 0) {
+    if (S.repeat === 'all' && (S.hist.length)) { S.queue = [...S.hist, S.cur, ...S.queue]; S.hist = []; return next(); }
+    if (S.autoplay && !S.autoUsed) { S.autoUsed = true; S.queue.push(...AUTO); return next(); }
+    S.playing = false; S.t = 0; return render();
+  }
+  const skipped = S.queue.splice(0, i), blocked = skipped.find(t => t.blocked);
+  S.hist.push(S.cur, ...skipped); S.cur = S.queue.shift(); S.t = 0;
+  if (blocked) toast(`Skipped “${blocked.title}”. ${blocked.blocked}.`);
+  render();
+}
+function prev() {
+  if (S.t > 3) { S.t = 0; return renderTime(); }
+  let i = -1; for (let k = S.hist.length - 1; k >= 0; k--) if (ok(S.hist[k])) { i = k; break; }
+  if (i < 0) { S.t = 0; return renderTime(); }
+  const back = S.hist.splice(i), t = back.shift();
+  S.queue.unshift(...back, S.cur); S.cur = t; S.t = 0; render();
+}
+function jump(i) {
+  const skipped = S.queue.splice(0, i); S.hist.push(S.cur, ...skipped); S.cur = S.queue.shift(); S.t = 0; S.playing = true; render();
+}
+function togglePlay() { if (S.state === 'error') return retry(); S.playing = !S.playing; render(); }
+function retry() { location.hash = ''; }
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+setInterval(() => {
+  if (!S.playing || S.scrubbing || S.state === 'loading' || S.state === 'error') return;
+  S.t++;
+  if (S.t >= S.cur.dur) { if (S.repeat === 'one') S.t = 0; else return next(); }
+  renderTime();
+}, 1000);
+
+// ---------- sheets ----------
+let openSheet = null, lastFocus = null;
+function openS(sh) {
+  lastFocus = document.activeElement; openSheet = sh;
+  if (sh.id === 'queueSheet') renderQueue(); else renderDevices();
+  sh.classList.add('open'); $('#scrim').classList.add('show'); $('#np').inert = true;
+  setTimeout(() => sh.querySelector('h2').focus(), 60);
+}
+function closeS() {
+  const sh = openSheet; if (!sh) return;
+  sh.style.transform = ''; sh.style.transition = '';
+  sh.classList.remove('open'); $('#scrim').classList.remove('show'); $('#np').inert = false; openSheet = null;
+  $('#toast').classList.remove('low'); lastFocus?.focus();
+}
+document.querySelectorAll('[data-close]').forEach(b => b.onclick = closeS);
+$('#scrim').onclick = closeS;
+addEventListener('keydown', e => { if (e.key === 'Escape') openSheet ? closeS() : !$('#np').classList.contains('closed') && collapse(); });
+document.querySelectorAll('.sheet-h').forEach(h => {   // drag the header down to dismiss; the close button stays
+  let y0 = null, dy = 0, t0 = 0;
+  h.onpointerdown = e => { if (e.target.closest('button')) return; y0 = e.clientY; dy = 0; t0 = e.timeStamp; h.setPointerCapture(e.pointerId); openSheet.style.transition = 'none'; };
+  h.onpointermove = e => { if (y0 === null) return; const d = e.clientY - y0; dy = d < 0 ? d * .2 : d; openSheet.style.transform = `translateY(${dy}px)`; };
+  h.onpointerup = h.onpointercancel = e => { if (y0 === null) return; const v = dy / Math.max(1, e.timeStamp - t0); y0 = null;
+    openSheet.style.transition = ''; if (dy > 120 || v > .6) closeS(); else openSheet.style.transform = ''; };
+});
+
+function renderDevices() {
+  $('#devList').innerHTML = DEVICES.map(d => `<button class="dev" role="radio" aria-checked="${d.id === S.device}" data-d="${d.id}">
+    <i class="ph ${d.icon}"></i><span>${d.name}</span><i class="ph ph-check ck" aria-hidden="true"></i></button>`).join('');
+}
+$('#devList').onclick = e => { const b = e.target.closest('.dev'); if (!b) return;
+  S.device = b.dataset.d; render(); closeS(); toast('Playing on ' + DEVICES.find(d => d.id === S.device).name); };
+
+// ---------- queue editing ----------
+const list = $('#qList');
+const announce = m => { $('#announce').textContent = m; };
+list.addEventListener('click', e => {
+  const m = e.target.closest('.q-main'), r = e.target.closest('.q-rm');
+  if (m) { jump(+m.dataset.i); closeS(); }
+  if (r) { const i = +r.dataset.i, t = S.queue.splice(i, 1)[0]; render(); renderQueue();
+    toast(`Removed “${t.title}” from the queue`, () => { S.queue.splice(i, 0, t); render(); renderQueue(); }); }
+});
+list.addEventListener('keydown', e => {
+  const h = e.target.closest('.q-drag'); if (!h || !['ArrowUp', 'ArrowDown'].includes(e.key)) return;
+  e.preventDefault(); const i = +h.dataset.i, j = i + (e.key === 'ArrowUp' ? -1 : 1);
+  if (j < 0 || j >= S.queue.length) return;
+  const [t] = S.queue.splice(i, 1); S.queue.splice(j, 0, t); render(); renderQueue();
+  list.children[j].querySelector('.q-drag').focus(); announce(`${t.title}, position ${j + 1} of ${S.queue.length}`);
+});
+let drag = null;
+list.addEventListener('pointerdown', e => { const h = e.target.closest('.q-drag'); if (!h) return; e.preventDefault();
+  drag = h.closest('li'); drag.classList.add('dragging'); });
+addEventListener('pointermove', e => { if (!drag) return;
+  const p = drag.previousElementSibling, n = drag.nextElementSibling;
+  if (p && e.clientY < p.getBoundingClientRect().top + p.offsetHeight / 2) list.insertBefore(drag, p);
+  else if (n && e.clientY > n.getBoundingClientRect().top + n.offsetHeight / 2) list.insertBefore(n, drag);
+});
+addEventListener('pointerup', () => { if (!drag) return; const id = drag.dataset.id; drag.classList.remove('dragging'); drag = null;
+  const all = [...LIB, ...AUTO]; S.queue = [...list.children].map(li => all.find(t => t.id === li.dataset.id));
+  render(); renderQueue(); const i = S.queue.findIndex(t => t.id === id); announce(`${S.queue[i].title}, position ${i + 1} of ${S.queue.length}`); });
+$('#autoplay').onchange = e => { S.autoplay = e.target.checked; render(); };
+$('#autoOn').onclick = () => { S.autoplay = true; S.autoUsed = true; S.queue.push(...AUTO); render(); renderQueue(); };
+
+// ---------- controls ----------
+$('#play').onclick = togglePlay; $('#miniPlay').onclick = togglePlay;
+$('#next').onclick = next; $('#miniNext').onclick = next; $('#prev').onclick = prev;
+$('#retry').onclick = retry;
+$('#shuffle').onclick = () => {
+  S.shuffle = !S.shuffle;
+  if (S.shuffle) { S.orig = S.queue.slice(); const r = rng(7), q = S.queue; for (let i = q.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [q[i], q[j]] = [q[j], q[i]]; } }
+  else if (S.orig) { S.queue = S.orig.filter(t => S.queue.includes(t)).concat(S.queue.filter(t => !S.orig.includes(t))); S.orig = null; }
+  render(); toast(S.shuffle ? 'Shuffle on' : 'Shuffle off');
+};
+$('#repeat').onclick = () => { S.repeat = { off: 'all', all: 'one', one: 'off' }[S.repeat]; render();
+  toast({ off: 'Repeat off', all: 'Repeating the playlist', one: 'Repeating this song' }[S.repeat]); };
+$('#save').onclick = () => { const id = S.cur.id, flip = () => { S.saved.has(id) ? S.saved.delete(id) : S.saved.add(id); render(); };
+  flip(); toast(S.saved.has(id) ? 'Saved to Library' : 'Removed from Library', flip); };
+const sc = $('#scrub');
+sc.addEventListener('pointerdown', () => { S.scrubbing = true; });
+sc.addEventListener('input', () => { S.t = +sc.value; renderTime(); });
+addEventListener('pointerup', () => { S.scrubbing = false; });
+$('#openQueue').onclick = () => openS($('#queueSheet'));
+$('#openDevice').onclick = () => openS($('#deviceSheet'));
+
+// collapse to the mini-player and back
+function collapse() { $('#np').classList.add('closed'); $('#np').inert = true; $('#home').inert = false; setTimeout(() => $('#miniOpen').focus(), 60); }
+function expand() { $('#np').classList.remove('closed'); $('#np').inert = false; $('#home').inert = true; setTimeout(() => $('#title').focus(), 60); }
+$('#close').onclick = collapse; $('#miniOpen').onclick = expand;
+const RECENT = ['mavi', 'yol', 'saat', 'donus'].map(id => LIB.find(t => t.id === id));
+$('#recent').innerHTML = RECENT.map(t => `<button class="tile" data-id="${t.id}" aria-label="Play ${esc(t.title)} by ${esc(t.artist)}">
+  <span class="ph-slot" style="--c:${t.c}"><img alt="" src="${pic(t.img, 400)}" onload="this.classList.add('in')" onerror="this.remove()"></span>
+  <b>${esc(t.title)}</b><span>${esc(t.artist)}</span></button>`).join('');
+$('#recent').onclick = e => { const b = e.target.closest('.tile'); if (!b) return; const t = LIB.find(x => x.id === b.dataset.id);
+  S.queue = S.queue.filter(x => x !== t); S.hist.push(S.cur); S.cur = t; S.t = 0; S.playing = true; render(); expand(); };
+
+// the pause shrink is a spring (what the finger started)
+function spring(k = 170, c = 14, m = 1, pts = 40) {
+  const w0 = Math.sqrt(k / m), z = c / (2 * Math.sqrt(k * m)), wd = w0 * Math.sqrt(Math.max(1e-6, 1 - z * z));
+  const x = t => z < 1 ? 1 - Math.exp(-z * w0 * t) * (Math.cos(wd * t) + (z * w0 / wd) * Math.sin(wd * t)) : 1 - Math.exp(-w0 * t) * (1 + w0 * t);
+  let T = .02; while (T < 10) { if (Math.abs(1 - x(T)) < .001 && Math.abs(1 - x(T + .1)) < .001) break; T += .02; }
+  const v = []; for (let i = 0; i <= pts; i++) v.push(+x(T * i / pts).toFixed(4)); v[pts] = 1;
+  return { css: `linear(${v.join(',')})`, ms: Math.round(T * 1000) };
+}
+const sp = spring(260, 22); root.style.setProperty('--spring', sp.css); root.style.setProperty('--spring-ms', sp.ms + 'ms');
+
+// ---------- states by hash ----------
+function applyState() { const s = location.hash.slice(1); S = fresh(STATES.includes(s) ? s : 'content'); closeS(); hideToast(); render(); }
+addEventListener('hashchange', applyState); applyState();
+
+// auto-demo: skip to the next song once, so the wash crossfades from the orange sleeve to the blue one
+setTimeout(() => { if (S.state === 'content' && !reduce && !openSheet && S.cur.id === 'kiyida') next(); }, 2500);
+</script>
+</body>
+</html>

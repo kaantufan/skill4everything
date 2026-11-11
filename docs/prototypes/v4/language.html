@@ -1,0 +1,608 @@
+<!doctype html>
+<!-- Söz home screen prototype. Phone frame from mobile-ui-craft/assets/phone-frame.html.
+     States by hash: #loading #empty #error #offline. Other appearance: ?theme=dark. Large text: ?text=xxl -->
+<html lang="en" data-platform="ios" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Söz, Today</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css">
+<style>
+  :root {
+    --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px;
+    --font: -apple-system, "SF Pro Text", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+    --chrome: #000;
+  }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--screen-bg); color: var(--screen-fg); }
+  .statusbar {
+    position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 10;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none;
+    font-family: -apple-system, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  .home-indicator {
+    position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 10;
+    width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none;
+  }
+  #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+</style>
+<style>
+  /* PRODUCT TOKENS (dealt direction: native-quiet, Public Sans, orange) */
+  :root {
+    --ground: #FFFFFF; --raised: #F2F2F7; --ink: #000000; --ink-2: #5E5E63; --line: #D8D8DC;
+    --accent: #B85C00; --on-accent: #FFFFFF; --positive: #2E7D46; --negative: #D4442E;
+    --face: "Public Sans", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif;
+    /* type roles, in rem so ?text=xxl scales them */
+    --t-large: 700 2.125rem/1.12 var(--face);   /* 34 */
+    --t-title: 600 1.375rem/1.2 var(--face);    /* 22 */
+    --t-head: 600 1.0625rem/1.3 var(--face);    /* 17 */
+    --t-body: 400 1.0625rem/1.35 var(--face);   /* 17 */
+    --t-sub: 400 .9375rem/1.35 var(--face);     /* 15 */
+    --t-foot: 400 .8125rem/1.3 var(--face);     /* 13 */
+    --r-group: 12px; --r-btn: 10px;
+    --gutter: 16px; --tabbar: calc(49px + var(--safe-bottom));
+    --ease-out: cubic-bezier(.22,1,.36,1);
+    --screen-bg: var(--ground); --screen-fg: var(--ink);
+  }
+  [data-theme="dark"] {
+    --ground: #000000; --raised: #1C1C1E; --ink: #FFFFFF; --ink-2: #A1A1A6; --line: #38383A;
+  }
+  html { font-size: 16px; }
+  html[data-text="xxl"] { font-size: 22px; }
+  body, button { font-family: var(--face); }
+  button { color: inherit; background: none; border: 0; padding: 0; margin: 0; text-align: inherit; font: inherit; cursor: pointer;
+           touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: transform .12s var(--ease-out), opacity .12s; }
+  button:active { transform: scale(.97); }
+  button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: var(--r-btn); }
+  .num { font-variant-numeric: tabular-nums; }
+  i.ph, i.ph-fill { font-size: 22px; line-height: 1; }
+
+  /* views */
+  .view { position: absolute; inset: 0; }
+  .view[hidden] { display: none; }
+  .scroll { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
+            padding: var(--safe-top) 0 calc(var(--tabbar) + 32px); }
+  .scroll::-webkit-scrollbar { display: none; }
+  .navbar { position: absolute; inset: 0 0 auto 0; height: calc(var(--safe-top) + 44px); z-index: 3; pointer-events: none;
+            display: flex; align-items: flex-end; justify-content: center; padding-bottom: 11px;
+            background: color-mix(in srgb, var(--ground) 82%, transparent); -webkit-backdrop-filter: blur(20px) saturate(1.8); backdrop-filter: blur(20px) saturate(1.8); /* slop-ok: iOS bar material over scrolling content */
+            border-bottom: .5px solid var(--line); opacity: 0; transition: opacity .18s var(--ease-out); font: var(--t-head); }
+  .view.scrolled .navbar { opacity: 1; }
+  .topline { height: 44px; display: flex; align-items: center; padding: 0 var(--gutter); }
+  .wordmark { font: 700 1.25rem/1 var(--face); color: var(--accent); letter-spacing: -.01em; }
+  h1 { font: var(--t-large); letter-spacing: -.02em; margin: 2px var(--gutter) 0; }
+  .date { font: var(--t-sub); color: var(--ink-2); margin: 2px var(--gutter) 0; }
+  h2 { font: var(--t-title); margin: 32px var(--gutter) 10px; display: flex; justify-content: space-between; align-items: baseline; }
+  h2 small { font: var(--t-sub); color: var(--ink-2); }
+
+  /* hero lesson card: the brand surface */
+  .lesson-card { display: block; width: calc(100% - 2 * var(--gutter)); margin: 16px var(--gutter) 0; border-radius: var(--r-group);
+                 background: var(--accent); color: var(--on-accent); overflow: hidden; position: relative;
+                 transition: transform .18s var(--ease-out), box-shadow .18s var(--ease-out); }
+  .lesson-card:active, .lesson-card.lift { transform: translateY(-3px) scale(1.012); box-shadow: 0 12px 28px rgb(0 0 0 / .22); }
+  .ph-slot { position: relative; overflow: hidden; background: var(--c, #6b3a1f); }
+  .ph-slot img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .4s ease-out; display: block; }
+  .ph-slot img.in { opacity: 1; }
+  .lc-photo { height: 128px; }
+  .lc-photo img { object-position: 50% 62%; }
+  .lc-body { padding: 14px 16px 16px; }
+  .lc-unit { font: 600 .9375rem/1.3 var(--face); }
+  .lc-title { font: var(--t-large); letter-spacing: -.02em; margin: 4px 0 2px; display: block; width: fit-content; }
+  .lc-en { font: var(--t-sub); }
+  .lc-new { font: var(--t-sub); margin-top: 10px; }
+  .segs { display: flex; gap: 4px; margin: 14px 0 6px; }
+  .segs span { flex: 1; height: 6px; border-radius: 3px; background: rgb(255 255 255 / .34); transition: background .3s var(--ease-out); }
+  .segs span.on { background: var(--on-accent); }
+  .lc-meta { font: var(--t-foot); display: flex; justify-content: space-between; }
+  .lc-start { margin-top: 14px; min-height: 50px; border-radius: var(--r-btn); background: var(--on-accent); color: var(--accent);
+              font: var(--t-head); display: flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 12px; }
+  .lc-done-row { display: none; align-items: center; gap: 8px; margin-top: 14px; font: var(--t-head); }
+  .lesson-card.done .lc-start { display: none; }
+  .lesson-card.done .lc-done-row { display: flex; }
+
+  /* grouped lists */
+  .group { margin: 0 var(--gutter); background: var(--raised); border-radius: var(--r-group); overflow: hidden; }
+  .group + .group { margin-top: 12px; }
+  .row { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 8px 8px 16px; position: relative; width: 100%; }
+  .row + .row::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: .5px solid var(--line); }
+  .row .txt { flex: 1; min-width: 0; padding: 2px 0; }
+  .row .tr { font: var(--t-head); overflow-wrap: anywhere; }
+  .row .en { font: var(--t-sub); color: var(--ink-2); }
+  .row .end { font: var(--t-foot); color: var(--ink-2); white-space: nowrap; padding-right: 8px; }
+  .icon-btn { width: 44px; height: 44px; flex: none; display: grid; place-items: center; border-radius: 22px; color: var(--accent); }
+  .row.action { color: var(--accent); font: var(--t-head); min-height: 52px; }
+  .row.action .end { color: var(--ink-2); }
+  .row.action i.ph-caret-right { color: var(--ink-2); font-size: 16px; margin-right: 8px; }
+  .pie { width: 26px; height: 26px; flex: none; border-radius: 50%;
+         background: conic-gradient(var(--accent) calc(var(--p) * 1turn), var(--line) 0);
+         -webkit-mask: radial-gradient(circle, transparent 7px, #000 7.5px); mask: radial-gradient(circle, transparent 7px, #000 7.5px); }
+  .done-ic { width: 26px; flex: none; color: var(--accent); display: grid; place-items: center; }
+  .done-ic i { font-size: 27px; }
+
+  .course-row { padding: 14px 16px; }
+  .course-row .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .bar { height: 6px; border-radius: 3px; background: var(--line); margin-top: 10px; overflow: hidden; }
+  .bar span { display: block; height: 100%; background: var(--accent); border-radius: 3px; transition: width .5s var(--ease-out); }
+
+  .week { padding: 14px 16px 16px; }
+  .week .top { display: flex; justify-content: space-between; align-items: baseline; font: var(--t-head); }
+  .week .top span { font: var(--t-sub); color: var(--ink-2); }
+  .days { display: grid; grid-template-columns: repeat(7, 1fr); margin-top: 12px; text-align: center; }
+  .days .l { font: var(--t-foot); color: var(--ink-2); }
+  .days .c { width: 32px; height: 32px; margin: 6px auto 0; border-radius: 50%; border: 1.5px solid var(--line); display: grid; place-items: center; }
+  .days .c.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .days .c.on i { font-size: 17px; }
+  .days .c.today { border: 2px solid var(--accent); }
+  .days .c.pop { animation: pop 420ms var(--spring, var(--ease-out)); }
+  @keyframes pop { from { transform: scale(.94); } to { transform: scale(1); } }
+
+  /* banners and states */
+  .banner { display: none; margin: 14px var(--gutter) 0; padding: 12px 14px; border-radius: var(--r-group); background: var(--raised); gap: 10px; align-items: flex-start; font: var(--t-sub); }
+  .banner i { color: var(--ink-2); margin-top: 1px; }
+  [data-state="offline"] .banner.offline { display: flex; }
+  .state-box { display: none; margin: 16px var(--gutter) 0; padding: 24px 20px; border-radius: var(--r-group); background: var(--raised); text-align: center; }
+  .state-box i { font-size: 30px; color: var(--ink-2); }
+  .state-box h3 { font: var(--t-head); margin: 8px 0 4px; }
+  .state-box p { font: var(--t-sub); color: var(--ink-2); margin: 0; }
+  .btn { min-height: 50px; border-radius: var(--r-btn); font: var(--t-head); display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 22px; }
+  .btn.primary { background: var(--accent); color: var(--on-accent); }
+  .btn.primary[aria-disabled="true"] { opacity: .45; }
+  .state-box .btn { margin-top: 16px; }
+  .state-box .btn i { font-size: 22px; color: inherit; }
+  [data-state="error"] .lesson-card { display: none; }
+  [data-state="error"] .state-box.error { display: block; }
+  [data-state="empty"] #weak-home { display: none; }
+  [data-state="empty"] .state-box.empty { display: block; margin-top: 0; }
+  [data-state="empty"] #weak-count { display: none; }
+  .skel { display: none; }
+  [data-state="loading"] .skel { display: block; }
+  [data-state="loading"] .real { display: none; }
+  .sk { background: var(--raised); border-radius: var(--r-group); margin: 16px var(--gutter) 0; position: relative; overflow: hidden; }
+  .sk::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--ground) 55%, transparent), transparent);
+               transform: translateX(-100%); animation: shimmer 1.3s infinite; }
+  @keyframes shimmer { to { transform: translateX(100%); } }
+
+  /* tab bar */
+  .tabbar { position: absolute; inset: auto 0 0 0; height: var(--tabbar); z-index: 4; display: grid; grid-template-columns: repeat(4, 1fr);
+            padding: 0 4px var(--safe-bottom); border-top: .5px solid var(--line);
+            background: color-mix(in srgb, var(--ground) 86%, transparent); -webkit-backdrop-filter: blur(20px) saturate(1.8); backdrop-filter: blur(20px) saturate(1.8); } /* slop-ok: iOS tab bar material */
+  .tabbar button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 49px; color: var(--ink-2); font: 600 .6875rem/1.1 var(--face); }
+  .tabbar button i { font-size: 26px; }
+  .tabbar button[aria-current="page"] { color: var(--accent); }
+
+  .toast { position: absolute; left: var(--gutter); right: var(--gutter); bottom: calc(var(--tabbar) + 12px); z-index: 6;
+           background: var(--ink); color: var(--ground); border-radius: var(--r-group); padding: 14px 16px; font: var(--t-sub);
+           display: flex; gap: 10px; align-items: center; transition: opacity .2s var(--ease-out), transform .2s var(--ease-out); }
+  .toast[hidden] { display: flex; opacity: 0; transform: translateY(8px); pointer-events: none; }
+
+  /* lesson / practice view (the next step) */
+  #lesson { position: absolute; inset: 0; z-index: 5; background: var(--ground); display: flex; flex-direction: column; padding: var(--safe-top) 0 calc(var(--safe-bottom) + 12px); }
+  #lesson[hidden] { display: none; }
+  .lv-top { display: flex; align-items: center; gap: 8px; padding: 0 var(--gutter) 0 6px; min-height: 52px; }
+  .lv-top .icon-btn { color: var(--ink); }
+  .lv-segs { flex: 1; display: flex; gap: 3px; }
+  .lv-segs span { flex: 1; height: 6px; border-radius: 3px; background: var(--line); transition: background .25s var(--ease-out); }
+  .lv-segs span.on { background: var(--accent); }
+  .lv-count { font: var(--t-foot); color: var(--ink-2); min-width: 44px; text-align: right; }
+  .lv-head { margin: 4px var(--gutter) 0; border-radius: var(--r-group); height: 112px; position: relative; flex: none; }
+  .lv-head .scrim { position: absolute; inset: 0; background: linear-gradient(transparent 15%, rgb(0 0 0 / .66)); }
+  .lv-head .cap { position: absolute; left: 14px; right: 14px; bottom: 12px; color: #fff; }
+  .lv-head .cap small { font: 600 .8125rem/1.2 var(--face); display: block; }
+  .lv-head .cap h2 { margin: 2px 0 0; font: var(--t-title); display: block; width: fit-content; }
+  .lv-plainhead { margin: 4px var(--gutter) 0; font: var(--t-title); }
+  .lv-plainhead small { display: block; font: var(--t-sub); color: var(--ink-2); margin-top: 2px; }
+  .lv-body { flex: 1; overflow-y: auto; padding: 20px var(--gutter) 12px; scrollbar-width: none; }
+  .lv-prompt { font: var(--t-sub); color: var(--ink-2); }
+  .lv-phrase { display: flex; align-items: center; gap: 8px; margin: 6px 0 18px; }
+  .lv-phrase b { font: 700 1.75rem/1.2 var(--face); letter-spacing: -.01em; flex: 1; overflow-wrap: anywhere; }
+  .lv-phrase .icon-btn { background: var(--raised); }
+  .opts { display: grid; gap: 10px; }
+  .opt { min-height: 56px; border-radius: var(--r-btn); border: 1.5px solid var(--line); padding: 12px 14px; font: var(--t-body);
+         display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--ground); }
+  .opt[aria-checked="true"] { border: 2px solid var(--accent); color: var(--accent); font-weight: 600; }
+  .opt.right { border: 2px solid var(--positive); color: var(--positive); font-weight: 600; }
+  .opt.wrong { border: 2px solid var(--negative); color: var(--negative); font-weight: 600; }
+  .opt i { display: none; }
+  .opt.right i.ph-check-circle, .opt.wrong i.ph-x-circle { display: block; }
+  .lv-foot { padding: 0 var(--gutter); }
+  .fb { border-radius: var(--r-group); padding: 14px 16px; margin-bottom: 12px; display: flex; gap: 10px; align-items: flex-start;
+        transition: opacity .18s var(--ease-out), transform .18s var(--ease-out); }
+  .fb[hidden] { display: flex; visibility: hidden; opacity: 0; transform: translateY(6px); position: absolute; }
+  .fb.ok { background: color-mix(in srgb, var(--positive) 13%, var(--ground)); }
+  .fb.no { background: color-mix(in srgb, var(--negative) 12%, var(--ground)); }
+  .fb i { font-size: 26px; }
+  .fb.ok i { color: var(--positive); } .fb.no i { color: var(--negative); }
+  .fb b { font: var(--t-head); display: block; }
+  .fb.ok b { color: var(--positive); } .fb.no b { color: var(--negative); }
+  .fb p { margin: 2px 0 0; font: var(--t-sub); color: var(--ink); }
+  .hint { font: var(--t-sub); color: var(--ink-2); text-align: center; min-height: 1.4em; margin-bottom: 6px; }
+  #lv-go { width: 100%; }
+
+  /* shared-element lift into the lesson */
+  ::view-transition-group(lphoto), ::view-transition-group(ltitle) { animation-duration: var(--ms, 420ms); animation-timing-function: var(--spring, var(--ease-out)); }
+  ::view-transition-old(lphoto), ::view-transition-new(lphoto) { object-fit: cover; height: 100%; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 220ms; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after, ::view-transition-group(*) { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    .sk::after { display: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="statusbar">
+    <span id="clock">10:08</span>
+    <svg class="ios" viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" stroke="currentColor" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen">
+    <!-- TODAY -->
+    <section class="view" id="v-today" aria-labelledby="h-today">
+      <div class="navbar" aria-hidden="true">Today</div>
+      <div class="scroll">
+        <div class="topline"><span class="wordmark" aria-label="Söz">Söz</span></div>
+        <h1 id="h-today" tabindex="-1">Today</h1>
+        <p class="date" id="date"></p>
+
+        <div class="banner offline" role="status"><i class="ph ph-wifi-slash" aria-hidden="true"></i>
+          <span>Offline. Today's lesson is downloaded. Progress syncs later.</span></div>
+
+        <div class="skel"><div class="sk" style="height:352px"></div><div class="sk" style="height:24px;width:40%;margin-top:32px"></div><div class="sk" style="height:200px;margin-top:12px"></div></div>
+
+        <div class="real">
+          <button class="lesson-card" id="card" type="button">
+            <div class="ph-slot lc-photo" style="--c:#7b3f1d">
+              <img id="card-img" src="https://images.unsplash.com/photo-1690063860120-3521cead6c1c?w=800&h=320&q=80&auto=format&fit=crop&dpr=2"
+                   alt="A glass of Turkish tea" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()">
+            </div>
+            <div class="lc-body">
+              <span class="lc-unit">Unit 3, Lesson 4</span>
+              <span class="lc-title" id="card-title" lang="tr">Bir çay, lütfen</span>
+              <span class="lc-en">Ordering at a café</span>
+              <div class="lc-new">New words: <span lang="tr">şeker, su, hesap</span></div>
+              <div class="segs" id="card-segs" aria-hidden="true"></div>
+              <div class="lc-meta"><span class="num" id="card-progress">0 of 8 exercises</span><span>About 5 min</span></div>
+              <span class="lc-start" id="card-start"><i class="ph-fill ph-play" aria-hidden="true"></i><span id="card-start-label">Start lesson</span></span>
+              <span class="lc-done-row"><i class="ph-fill ph-check-circle" aria-hidden="true"></i>Done for today. Lesson 5 is ready tomorrow.</span>
+            </div>
+          </button>
+
+          <div class="state-box error" role="alert">
+            <i class="ph ph-warning-circle" aria-hidden="true"></i>
+            <h3>Today's lesson didn't load</h3>
+            <p>Check your connection and try again. Weak words below work offline.</p>
+            <button class="btn primary" type="button" id="retry"><i class="ph ph-arrow-clockwise" aria-hidden="true"></i><span>Try again</span></button>
+          </div>
+
+          <h2>Weak words <small class="num" id="weak-count"></small></h2>
+          <div class="group" id="weak-home"></div>
+          <div class="state-box empty">
+            <i class="ph ph-check-circle" aria-hidden="true"></i>
+            <h3>No weak words</h3>
+            <p>Words you miss twice in lessons show up here.</p>
+          </div>
+
+          <h2>Progress</h2>
+          <div class="group"><div class="week" id="week"></div></div>
+          <div class="group" id="course-home"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COURSE -->
+    <section class="view" id="v-course" hidden aria-labelledby="h-course">
+      <div class="navbar" aria-hidden="true">Course</div>
+      <div class="scroll">
+        <div class="topline"></div>
+        <h1 id="h-course" tabindex="-1">Course</h1>
+        <p class="date">Turkish for English speakers, A1</p>
+        <div class="group" id="course-all" style="margin-top:16px"></div>
+      </div>
+    </section>
+
+    <!-- PRACTICE -->
+    <section class="view" id="v-practice" hidden aria-labelledby="h-practice">
+      <div class="navbar" aria-hidden="true">Practice</div>
+      <div class="scroll">
+        <div class="topline"></div>
+        <h1 id="h-practice" tabindex="-1">Practice</h1>
+        <p class="date">Words you've missed in recent lessons</p>
+        <div class="group" id="weak-all" style="margin-top:16px"></div>
+      </div>
+    </section>
+
+    <!-- PROFILE -->
+    <section class="view" id="v-profile" hidden aria-labelledby="h-profile">
+      <div class="navbar" aria-hidden="true">Profile</div>
+      <div class="scroll">
+        <div class="topline"></div>
+        <h1 id="h-profile" tabindex="-1">Profile</h1>
+        <div class="group" style="margin-top:16px">
+          <div class="row"><div class="txt"><div class="tr">Weekly goal</div></div><span class="end">5 days</span></div>
+          <div class="row"><div class="txt"><div class="tr">Lesson length</div></div><span class="end">5 min</span></div>
+          <div class="row"><div class="txt"><div class="tr">Reminder</div></div><span class="end num">08:30</span></div>
+          <div class="row"><div class="txt"><div class="tr">Course</div><div class="en">Turkish for English speakers, A1</div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <nav class="tabbar" aria-label="Main">
+      <button type="button" data-tab="today" aria-current="page"><i class="ph-fill ph-sun" aria-hidden="true"></i>Today</button>
+      <button type="button" data-tab="course"><i class="ph ph-path" aria-hidden="true"></i>Course</button>
+      <button type="button" data-tab="practice"><i class="ph ph-cards" aria-hidden="true"></i>Practice</button>
+      <button type="button" data-tab="profile"><i class="ph ph-user-circle" aria-hidden="true"></i>Profile</button>
+    </nav>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden><i class="ph ph-check-circle" aria-hidden="true"></i><span id="toast-text"></span></div>
+
+    <!-- LESSON / PRACTICE: the next step of the task -->
+    <section id="lesson" hidden aria-labelledby="lv-h" role="dialog" aria-modal="true">
+      <div class="lv-top">
+        <button class="icon-btn" type="button" id="lv-close" aria-label="Save and close"><i class="ph ph-x" aria-hidden="true"></i></button>
+        <div class="lv-segs" id="lv-segs" aria-hidden="true"></div>
+        <span class="lv-count num" id="lv-count"></span>
+      </div>
+      <div class="ph-slot lv-head" id="lv-head" style="--c:#7b3f1d">
+        <img id="lv-img" src="https://images.unsplash.com/photo-1690063860120-3521cead6c1c?w=800&h=320&q=80&auto=format&fit=crop&dpr=2"
+             alt="" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()" style="object-position:50% 62%">
+        <div class="scrim"></div>
+        <div class="cap"><small>Unit 3, Lesson 4</small><h2 id="lv-h" tabindex="-1" lang="tr">Bir çay, lütfen</h2></div>
+      </div>
+      <div class="lv-plainhead" id="lv-plain" hidden><span id="lv-h2" tabindex="-1">Weak words</span><small>Practice, about 3 min</small></div>
+      <div class="lv-body">
+        <div class="lv-prompt" id="lv-prompt"></div>
+        <div class="lv-phrase" id="lv-phrase-row"><b id="lv-phrase" lang="tr"></b>
+          <button class="icon-btn" type="button" id="lv-say" aria-label="Play audio"><i class="ph ph-speaker-high" aria-hidden="true"></i></button></div>
+        <div class="opts" id="lv-opts" role="radiogroup" aria-labelledby="lv-prompt"></div>
+      </div>
+      <div class="lv-foot">
+        <div class="fb" id="fb" hidden aria-live="polite"><i class="ph-fill" id="fb-ic" aria-hidden="true"></i><div><b id="fb-h"></b><p id="fb-p"></p></div></div>
+        <div class="hint" id="hint" aria-live="polite"></div>
+        <button class="btn primary" type="button" id="lv-go">Check</button>
+      </div>
+    </section>
+  </main>
+
+  <div class="home-indicator"></div>
+  <script>document.getElementById('clock').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, '');</script>
+<script>
+const $ = s => document.querySelector(s), html = document.documentElement;
+const q = new URLSearchParams(location.search);
+if (q.get('theme') === 'dark' || q.get('theme') === 'light') html.dataset.theme = q.get('theme');
+if (q.get('text') === 'xxl') html.dataset.text = 'xxl';
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* spring as linear() easing (preview.md technique) */
+function spring(k=170,c=14,m=1,pts=40){
+  const w0=Math.sqrt(k/m), z=c/(2*Math.sqrt(k*m)), wd=w0*Math.sqrt(Math.max(1e-6,1-z*z));
+  const x=t=>z<1?1-Math.exp(-z*w0*t)*(Math.cos(wd*t)+(z*w0/wd)*Math.sin(wd*t)):1-Math.exp(-w0*t)*(1+w0*t);
+  let T=.02; while(T<10){ if(Math.abs(1-x(T))<.001&&Math.abs(1-x(T+.1))<.001)break; T+=.02; }
+  const v=[]; for(let i=0;i<=pts;i++) v.push(+x(T*i/pts).toFixed(4)); v[pts]=1;
+  return {css:`linear(${v.join(',')})`, ms:Math.round(T*1000)};
+}
+const sp = spring(300, 30); html.style.setProperty('--spring', sp.css); html.style.setProperty('--ms', Math.min(sp.ms, 520) + 'ms');
+
+/* sample data (course content is sample, not a real curriculum) */
+const LESSONS_PER_UNIT = 8;
+const units = [
+  { tr:'Merhaba', en:'Greetings', done:8 }, { tr:'Sayılar', en:'Numbers', done:8 },
+  { tr:'Kafede', en:'At the café', done:3 }, { tr:'Yol tarifi', en:'Directions', done:0 },
+  { tr:'Aile', en:'Family', done:0 }, { tr:'Alışveriş ve pazarlık', en:'Shopping and bargaining', done:0 },
+  { tr:'Zaman', en:'Time and dates', done:0 }, { tr:'Evde', en:'At home', done:0 },
+  { tr:'Yemek', en:'Food', done:0 }, { tr:'Seyahat', en:'Travel', done:0 },
+];
+const words = [
+  { tr:'teşekkür ederim', en:'thank you', miss:4 }, { tr:'ışık', en:'light', miss:3 }, { tr:'dün', en:'yesterday', miss:3 },
+  { tr:'İngiliz', en:'English (person)', miss:2 }, { tr:'ekmek', en:'bread', miss:2 }, { tr:'değil', en:'not', miss:2 },
+  { tr:'şimdi', en:'now', miss:2 }, { tr:'kaç', en:'how many', miss:2 }, { tr:'yarın', en:'tomorrow', miss:2 },
+  { tr:'küçük', en:'small', miss:2 }, { tr:'görüşürüz', en:'see you', miss:2 }, { tr:'pahalı', en:'expensive', miss:2 },
+];
+// Lesson 3.4: first option is the right one; options are rotated at render
+const lessonEx = [
+  { p:'What does this mean?', t:'Bir çay, lütfen.', o:['A tea, please.','Water, please.','The bill, please.'], ok:'Çay is tea, and lütfen (please) goes at the end.', no:'Çay is tea. Water is su, the bill is hesap.' },
+  { p:'Choose the word for “sugar”', t:'', o:['şeker','su','hesap'], ok:'Şeker is sugar. It also means sweets.', no:'Su is water and hesap is the bill. Sugar is şeker.' },
+  { p:'What does this mean?', t:'Su, lütfen.', o:['Water, please.','Tea, please.','Sugar, please.'], ok:'Su is water.', no:'Su is water. Tea is çay, sugar is şeker.' },
+  { p:'Choose the word for “the bill”', t:'', o:['hesap','şeker','çay'], ok:'Hesap is the bill.', no:'Şeker is sugar and çay is tea. The bill is hesap.' },
+  { p:'What does this mean?', t:'Şekerli mi?', o:['With sugar?','Is it hot?','Is it water?'], ok:'-li means “with”: şekerli, with sugar.', no:'Şekerli means with sugar. “Is it hot?” is Sıcak mı?' },
+  { p:'What does this mean?', t:'İki çay, lütfen.', o:['Two teas, please.','One tea, please.','Two waters, please.'], ok:'İki is two. The noun stays singular after a number.', no:'İki is two, and çay is tea. Two waters is iki su.' },
+  { p:'Choose the word for “please”', t:'', o:['lütfen','teşekkürler','hesap'], ok:'Lütfen is please.', no:'Teşekkürler is thanks. Please is lütfen.' },
+  { p:'What does this mean?', t:'Hesap, lütfen.', o:['The bill, please.','The menu, please.','Water, please.'], ok:'Hesap is the bill.', no:'Hesap is the bill. The menu is menü.' },
+];
+const practiceEx = words.map((w, i) => ({ p:'What does this mean?', t:w.tr, o:[w.en, words[(i+5)%12].en, words[(i+9)%12].en],
+  ok:`${w.tr} means ${w.en}.`, no:`${w.tr} means ${w.en}.` }));
+let lessonDone = 0, lessonFinished = false;
+
+// self-check: sample numbers agree with each other
+const doneLessons = () => units.reduce((s, u) => s + u.done, 0);
+console.assert(doneLessons() === 19 && units.length * LESSONS_PER_UNIT === 80, 'course totals');
+console.assert(units[2].done === 3 && lessonEx.length === LESSONS_PER_UNIT, 'today = unit 3 lesson 4 of 8');
+console.assert(new Set(practiceEx.flatMap(e => [e.o.join('|')])).size === 12 && practiceEx.every(e => new Set(e.o).size === 3), 'practice options distinct');
+
+/* rendering */
+function unitRow(u, i) {
+  const lead = u.done === LESSONS_PER_UNIT
+    ? '<span class="done-ic"><i class="ph-fill ph-check-circle" aria-hidden="true"></i></span>'
+    : `<span class="pie" style="--p:${u.done / LESSONS_PER_UNIT}" aria-hidden="true"></span>`;
+  return `<div class="row">${lead}<div class="txt"><div class="tr" lang="tr">${i + 1}. ${u.tr}</div><div class="en">${u.en}</div></div>
+    <span class="end num">${u.done} of ${LESSONS_PER_UNIT}</span></div>`;
+}
+function courseHead() {
+  const d = doneLessons(), t = units.length * LESSONS_PER_UNIT;
+  return `<div class="course-row"><div class="top"><span style="font:var(--t-head)">Turkish A1</span><span class="num" style="font:var(--t-sub);color:var(--ink-2)">${d} of ${t} lessons</span></div>
+    <div class="bar" role="img" aria-label="${d} of ${t} lessons done"><span style="width:${d / t * 100}%"></span></div></div>`;
+}
+function wordRow(w, i) {
+  return `<div class="row"><div class="txt"><div class="tr" lang="tr">${w.tr}</div><div class="en">${w.en}</div></div>
+    <span class="end num">${w.miss} misses</span>
+    <button class="icon-btn" type="button" data-say="${i}" aria-label="Play ${w.tr}"><i class="ph ph-speaker-high" aria-hidden="true"></i></button></div>`;
+}
+const practiseRow = `<button class="row action" type="button" data-practise><i class="ph ph-cards" aria-hidden="true"></i>
+  <span class="txt">Practise ${words.length} words</span><span class="end">About 3 min</span><i class="ph ph-caret-right" aria-hidden="true"></i></button>`;
+
+function renderWeek(popToday) {
+  const today = (new Date().getDay() + 6) % 7; // Monday = 0
+  const L = ['M','T','W','T','F','S','S'], names = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  let n = 0, cells = '';
+  for (let i = 0; i < 7; i++) {
+    const on = (i < today && !(today > 2 && i === 1)) || (i === today && lessonFinished); // sample: one rest day this week
+    if (on) n++;
+    cells += `<div><div class="l" aria-hidden="true">${L[i]}</div><div class="c${on ? ' on' : ''}${i === today ? ' today' : ''}${i === today && popToday ? ' pop' : ''}"
+      role="img" aria-label="${names[i]}${i === today ? ', today' : ''}: ${on ? 'lesson done' : i > today ? 'not yet' : 'no lesson'}">${on ? '<i class="ph ph-check" aria-hidden="true"></i>' : ''}</div></div>`;
+  }
+  $('#week').innerHTML = `<div class="top">This week<span class="num">${n} of 5 days</span></div><div class="days">${cells}</div>`;
+}
+function renderCard() {
+  $('#card-segs').innerHTML = Array.from({ length: LESSONS_PER_UNIT }, (_, i) => `<span class="${i < lessonDone ? 'on' : ''}"></span>`).join('');
+  $('#card-progress').textContent = `${lessonDone} of ${LESSONS_PER_UNIT} exercises`;
+  $('#card-start-label').textContent = lessonDone ? 'Continue lesson' : 'Start lesson';
+  $('#card').classList.toggle('done', lessonFinished);
+  $('#card').setAttribute('aria-label', lessonFinished ? 'Unit 3, Lesson 4, Bir çay, lütfen. Done for today.'
+    : `${lessonDone ? 'Continue' : 'Start'} Unit 3, Lesson 4, Bir çay, lütfen. ${lessonDone} of 8 exercises done, about 5 minutes.`);
+}
+function render(popToday) {
+  $('#weak-home').innerHTML = words.slice(0, 3).map(wordRow).join('') + practiseRow;
+  $('#weak-all').innerHTML = practiseRow + words.map(wordRow).join('');
+  $('#weak-count').textContent = `${words.length} words`;
+  $('#course-home').innerHTML = courseHead() + units.slice(0, 4).map(unitRow).join('') +
+    `<button class="row action" type="button" data-tab="course"><span class="txt">All ${units.length} units</span><i class="ph ph-caret-right" aria-hidden="true"></i></button>`;
+  $('#course-all').innerHTML = courseHead() + units.map(unitRow).join('');
+  renderWeek(popToday); renderCard();
+}
+$('#date').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+render();
+
+/* states by hash */
+const states = ['loading', 'empty', 'error', 'offline'];
+const sync = () => { const s = location.hash.slice(1); html.dataset.state = states.includes(s) ? s : 'content'; };
+addEventListener('hashchange', sync); sync();
+$('#retry').onclick = e => { const b = e.currentTarget; b.lastElementChild.textContent = 'Loading…'; b.setAttribute('aria-disabled', 'true');
+  setTimeout(() => { b.lastElementChild.textContent = 'Try again'; b.removeAttribute('aria-disabled'); history.replaceState(null, '', location.pathname + location.search); sync(); }, 900); };
+
+/* tabs, collapsing nav bar */
+function showTab(name) {
+  document.querySelectorAll('.view').forEach(v => v.hidden = v.id !== 'v-' + name);
+  document.querySelectorAll('.tabbar button').forEach(b => {
+    const on = b.dataset.tab === name; b.toggleAttribute('aria-current', on); if (on) b.setAttribute('aria-current', 'page');
+    const ic = b.querySelector('i'); ic.className = (on ? 'ph-fill ' : 'ph ') + [...ic.classList].find(c => c.startsWith('ph-') && c !== 'ph-fill');
+  });
+}
+document.querySelectorAll('.scroll').forEach(s => s.addEventListener('scroll', () => s.parentElement.classList.toggle('scrolled', s.scrollTop > 48), { passive: true }));
+
+/* audio: system tr-TR voice when present; text is always on screen */
+function say(text) { try { const u = new SpeechSynthesisUtterance(text); u.lang = 'tr-TR'; u.rate = .9; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) {} }
+
+/* toast */
+let toastT;
+function toast(msg) { $('#toast-text').textContent = msg; $('#toast').hidden = false; clearTimeout(toastT); toastT = setTimeout(() => $('#toast').hidden = true, 5000); }
+
+/* lesson / practice flow */
+let mode = 'lesson', idx = 0, sel = -1, checked = false, set = lessonEx, rot = [];
+function vt(update, named) {
+  if (reduce || !document.startViewTransition) { update(); return; }
+  const t = document.startViewTransition(update);
+  t.finished.finally(() => named.forEach(el => el.style.viewTransitionName = ''));
+}
+function openFlow(m) {
+  cancelDemo();
+  mode = m; set = m === 'lesson' ? lessonEx : practiceEx; idx = m === 'lesson' ? lessonDone : 0;
+  $('#lv-head').hidden = m !== 'lesson'; $('#lv-plain').hidden = m === 'lesson';
+  $('#lv-segs').innerHTML = set.map(() => '<span></span>').join('');
+  const cardImg = $('#card-img'), cardTitle = $('#card-title'), lvImg = $('#lv-head'), lvTitle = $('#lv-h');
+  const fromCard = m === 'lesson' && !$('#v-today').hidden;
+  if (fromCard) { if (cardImg) cardImg.parentElement.style.viewTransitionName = 'lphoto'; cardTitle.style.viewTransitionName = 'ltitle'; }
+  vt(() => {
+    if (fromCard) { if (cardImg) cardImg.parentElement.style.viewTransitionName = ''; cardTitle.style.viewTransitionName = '';
+      lvImg.style.viewTransitionName = 'lphoto'; lvTitle.style.viewTransitionName = 'ltitle'; }
+    $('#lesson').hidden = false; document.querySelectorAll('.view, .tabbar').forEach(v => v.inert = true);
+    showEx();
+  }, [lvImg, lvTitle]);
+  setTimeout(() => (m === 'lesson' ? lvTitle : $('#lv-h2')).focus({ preventScroll: true }), 30);
+}
+function closeFlow(finished) {
+  const answered = finished ? set.length : idx + (checked ? 1 : 0); // a checked answer counts as done
+  if (mode === 'lesson') { lessonDone = Math.max(lessonDone, answered); if (finished) { lessonFinished = true; units[2].done = 4; } }
+  const cardSlot = $('#card-img') && $('#card-img').parentElement, cardTitle = $('#card-title'), lvImg = $('#lv-head'), lvTitle = $('#lv-h');
+  const toCard = mode === 'lesson' && !$('#v-today').hidden;
+  if (toCard) { lvImg.style.viewTransitionName = 'lphoto'; lvTitle.style.viewTransitionName = 'ltitle'; }
+  vt(() => {
+    if (toCard) { lvImg.style.viewTransitionName = ''; lvTitle.style.viewTransitionName = '';
+      if (cardSlot) cardSlot.style.viewTransitionName = 'lphoto'; cardTitle.style.viewTransitionName = 'ltitle'; }
+    $('#lesson').hidden = true; document.querySelectorAll('.view, .tabbar').forEach(v => v.inert = false);
+    render(finished && mode === 'lesson');
+  }, [cardSlot, cardTitle].filter(Boolean));
+  if (mode === 'lesson') toast(finished ? 'Lesson 4 done. Unit 3 is now 4 of 8.' : lessonDone ? `Saved. ${lessonDone} of 8 exercises done.` : 'Lesson closed.');
+  else toast(finished ? `Practised ${words.length} words.` : `Saved. ${answered} of ${words.length} words practised.`);
+  setTimeout(() => (mode === 'lesson' ? $('#card') : $('#h-today')).focus({ preventScroll: true }), 30);
+}
+function showEx() {
+  const e = set[idx], r = idx % 3; sel = -1; checked = false;
+  rot = [0, 1, 2].map(k => (k - r + 3) % 3); // rot[pos] = source index; the right answer lands at position r
+  $('#lv-count').textContent = `${idx + 1} of ${set.length}`;
+  [...$('#lv-segs').children].forEach((s, i) => s.classList.toggle('on', i < idx));
+  $('#lv-prompt').textContent = e.p;
+  $('#lv-phrase').textContent = e.t;
+  $('#lv-say').setAttribute('aria-label', `Play ${e.t || e.o[0]}`);
+  $('#lv-phrase-row').style.display = e.t ? '' : 'none';
+  $('#lv-opts').innerHTML = rot.map((src, pos) => `<button class="opt" type="button" role="radio" aria-checked="false" data-pos="${pos}"${mode === 'lesson' && !e.t ? ' lang="tr"' : ''}>
+    <span>${e.o[src]}</span><i class="ph-fill ph-check-circle" aria-hidden="true"></i><i class="ph-fill ph-x-circle" aria-hidden="true"></i></button>`).join('');
+  $('#fb').hidden = true; $('#hint').textContent = ''; $('#lv-go').textContent = 'Check';
+}
+function choose(pos) {
+  if (checked) return; sel = pos; $('#hint').textContent = '';
+  document.querySelectorAll('.opt').forEach(o => o.setAttribute('aria-checked', String(+o.dataset.pos === pos)));
+}
+function check() {
+  if (sel < 0) { $('#hint').textContent = 'Choose an answer first.'; return; }
+  const e = set[idx], right = rot[sel] === 0, rightPos = rot.indexOf(0); checked = true;
+  document.querySelectorAll('.opt').forEach(o => { const p = +o.dataset.pos; o.setAttribute('aria-checked', String(p === sel));
+    if (p === rightPos) o.classList.add('right'); else if (p === sel) o.classList.add('wrong'); });
+  const fb = $('#fb'); fb.className = 'fb ' + (right ? 'ok' : 'no');
+  $('#fb-ic').className = 'ph-fill ' + (right ? 'ph-check-circle' : 'ph-x-circle');
+  $('#fb-h').textContent = right ? 'Correct' : 'Not quite';
+  $('#fb-p').textContent = right ? e.ok : e.no;
+  fb.hidden = false; $('#lv-go').textContent = 'Continue';
+  if (navigator.vibrate) navigator.vibrate(right ? 12 : [20, 40, 20]);
+  [...$('#lv-segs').children][idx].classList.add('on');
+}
+function next() { idx++; if (idx >= set.length) { closeFlow(true); return; } showEx(); $('#lv-prompt').focus?.(); }
+
+$('#card').onclick = () => { if (!lessonFinished) openFlow('lesson'); };
+$('#lv-close').onclick = () => closeFlow(false);
+$('#lv-go').onclick = () => checked ? next() : check();
+$('#lv-opts').onclick = ev => { const o = ev.target.closest('.opt'); if (o) choose(+o.dataset.pos); };
+$('#lv-say').onclick = () => { const e = set[idx]; say(e.t || e.o[0]); };
+addEventListener('keydown', ev => { if (ev.key === 'Escape' && !$('#lesson').hidden) closeFlow(false); });
+document.addEventListener('click', ev => {
+  const t = ev.target.closest('[data-tab]'); if (t) { showTab(t.dataset.tab); $('#h-' + t.dataset.tab).focus({ preventScroll: true }); }
+  const p = ev.target.closest('[data-practise]'); if (p) openFlow('practice');
+  const s = ev.target.closest('[data-say]'); if (s) say(words[+s.dataset.say].tr);
+});
+
+/* auto-demo: open today's lesson from the card, answer the first exercise. Skipped under Reduce Motion or on first touch. */
+let demo = [];
+function cancelDemo() { if (!demo.running) { demo.forEach(clearTimeout); demo = []; } }
+addEventListener('pointerdown', () => { demo.running = false; cancelDemo(); }, { once: true, capture: true });
+if (!reduce && html.dataset.state === 'content' && !q.has('nodemo')) {
+  const at = (ms, f) => demo.push(setTimeout(() => { demo.running = true; f(); demo.running = false; }, ms));
+  at(2200, () => $('#card').classList.add('lift'));
+  at(2450, () => { $('#card').classList.remove('lift'); openFlow('lesson'); });
+  at(3900, () => choose(rot.indexOf(0)));
+  at(4800, () => check());
+}
+</script>
+</body>
+</html>

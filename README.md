@@ -10,27 +10,59 @@ Kişisel kullanım için AI ajan skill'leri. Açık standart olan `SKILL.md` bi�
 
 iOS (SwiftUI, UIKit), Android (Jetpack Compose), Flutter ve React Native / Expo için.
 
-AI yapımı arayüzü ele veren tek şey "seçilmemiş" görünmesi değil; modelin kendi zevki de tanınıyor. Aynı birkaç font (Fraunces, Inter), vektörle elle çizilmiş resim ve ikonlar, renkli bir alan üstüne alttan yükselen yuvarlak köşeli bir kart, yumuşak parıltılar, orta noktayla dizilmiş künyeler, her şeyi anlatan cümleler. Bunlara bakmaya alışmış biri ekranı bir saniyede tanır.
+AI yapımı arayüzü ele veren üç şey var: seçilmemiş varsayılanlar, modelin kendi zevki (aynı birkaç font, vektörle çizilmiş resim ve ikonlar, renkli bir alan üstüne yükselen yuvarlak kart, parıltılar, orta noktayla dizilmiş künyeler) ve zevke karşı verilen ilacın kendisi: rastgele seçim. 3.x sürümü yazı tipini, rengi, iskeleti ve efekti ayrı ayrı zar atarak dağıtıyordu. Sonuç tutarsızdı (siyah üstünde mor ve serif bir koşu özeti, bordo bir müzik çalar), kullanıcı beğenmedi ve kör testte ekranların yaklaşık yüzde 80'i yine AI sanıldı. Gri boş kutular (fotoğraf, kapak ve haritanın olması gereken yerde) ekranları bitmemiş gösteriyordu, ve her prototip tek bir durağan ekrandı.
 
-Bu yüzden skill, zevkin göründüğü kararları modelden alır:
+Kutlanan uygulamalar tersini yapıyor: konudan başlıyor ve tek bir tutarlı sistem türetiyor. Beyaz ya da koyu zemin, ölçülü tek vurgu, tek yazı ailesi (çoğu zaman sistem fontu), bir imge kuralı ve tek bir imza etkileşimi. Skill 4 (şu an 4.1) bunu işe çeviriyor:
 
-1. **Kartlar dağıtılır.** `scripts/deal.mjs` ürün adından tohumlanan bir el dağıtır: yazı tipi (90 aile; modellerin sık seçtiği 21 aile yasak), ikon seti (gerçek setler: Phosphor, Tabler, Remix, Material Symbols, Bootstrap), yerleşim iskeleti (15 tür), gezinme, köşe ailesi, zemin, palet yapısı, efekt bütçesi (yarısı tamamen düz), metin sesi, merkez öğe türü, renk tonu aralığı ve ilk görünüm. Aynı ürün hep aynı eli alır; iki ürün aynı eli almaz. El bağlayıcıdır, gerekçesi yazılmak şartıyla bir kez yeniden dağıtılabilir.
-2. **Model malzeme üretmez.** İkon çizmez, resim çizmez. Fotoğraf, kapak ya da harita gereken yerde içinde yazı olmayan düz bir alan bırakır ve raporda ne konacağını söyler.
-3. **Metin anlatmaz, etiketler.** Ekran başına en fazla bir açıklama cümlesi, kısa etiketler, sıradan örnek veri ("Morning Run", sıradan müşteri adları), ekranda yapım notu yok.
-4. **Fikir hâlâ ürünün.** Ürünün kendi dünyasından tek bir fikir; artık resimle değil yapıyla, veriyle ve sözcüklerle görünür.
-5. **Taban.** Dokunma hedefleri, metin ölçekleme, kontrast, durumlar, geri hareketi, karanlık kalıpların reddi.
+1. **Yön dağıtılır, zar atılmaz.** `scripts/deal.mjs` ürün adı ve nişle, on araştırılmış yönden (yerli sessiz yardımcı, veri kahraman, ağırbaşlı koyu, fotoğraflı editoryal, tek gürültülü marka rengi, yuvarlak alışkanlık, okuma odası, sessiz duyusal, profesyonel araç, sosyal afiş) nişe uyan iki ya da üçünden birini seçer. Yön tek bir yazı tipi ailesi (okuma odasında metin yüzü artı sistem fontu), açık ve koyu için renk değerleri (kontrast kodda denetlenmiş), ikon seti, imge kuralı, imza anı ve "kötü sürüm" uyarısı getirir. Yerleşim dağıtılmaz: nişin lider uygulamalarının düzeni korunur. Yön bağlayıcıdır, gerekçesi yazılmak şartıyla bir kez yeniden dağıtılabilir.
+2. **Gerçek malzeme, gri kutu değil.** Çizilmiş resim ve ikon yok, boş yuva yok: `assets/imagery.md` içinde tek tek doğrulanmış 162 Unsplash fotoğrafı, kamu malı sanat eserleri, anahtarsız gerçek harita (MapLibre ile OpenFreeMap) ve içerikten örneklenen renk. Her görsel yuvasında "asla gri" deseni: fotoğrafa yakın bir renk, yumuşak giriş, hatada gizleme.
+3. **Prototip UX'i gösterir.** Ana görevin bir sonraki adımı da kurulur (sepet sayfası, inceleme sayfası, sıradaki profil), durumlar URL hash'iyle açılır (`#loading`, `#empty`, `#error`, `#offline`), geri alma, dürüst toplam (ücretler toplamın yanında), iki-üç saniye sonra ana eylemi bir kez yapan otomatik demo. Her niş için ilk ekranın cevaplaması gereken soru `references/ux-check.md` içinde.
+4. **Tek imza anı, bitmiş.** Ekranın akılda kalan tek etkileşimi, gerçek içerik üzerinde: yaylı sayfa, paylaşılan öğe geçişi, grafikte parmakla gezinme, sayı yuvarlanması. Kalan her şeyde yalnızca basma geri bildirimi. Her ekranda ürün adı ve tek bir marka yüzeyi var (vurgu yalnızca bir düğmede kalırsa ekran "wireframe" gibi okunuyor); tasarlanan görünüm (açık ya da koyu) sistem ayarından bağımsız açılıyor.
+5. **Metin anlatmaz, etiketler.** Ekran başına en fazla bir açıklama cümlesi, kısa etiketler, sıradan örnek veri, uydurma kişi adları, ekranda yapım notu yok.
+6. **Fikir hâlâ ürünün.** Ürünün kendi dünyasından tek bir fikir; yapı, veri ve sözcüklerle görünür.
+7. **Taban.** Dokunma hedefleri, metin ölçekleme, kontrast, durumlar, geri hareketi, karanlık kalıpların reddi.
 
 ### Ne üretiyor
 
-Aşağıdaki sekiz ekranın her biri tek bir istekle, **Claude Opus 5.5 (high)** tarafından, skill (3.1) yüklüyken üretildi. Hiçbiri elle düzeltilmedi. Gri alanlar gerçek fotoğrafın, kapağın ya da haritanın geleceği yerler.
+Aşağıdaki sekiz ekranın her biri tek bir istekle, **Claude Opus 5.5 (high)** tarafından, skill 4.1 yüklüyken üretildi. Hiçbiri elle düzeltilmedi. Görüntüler açılıştan 1,5 saniye sonrası; prototiplerin her biri ana görevi bir adım ileri taşıyor (sepet sayfası, inceleme sayfası, nefes seansı, sıradaki profil).
 
-![mobile-ui-craft 3 ile](docs/previews/v3-with-skill.png)
+![mobile-ui-craft 4.1 ile](docs/previews/v4-with-skill.png)
 
 Aynı sekiz istek, aynı model, skill olmadan:
 
 ![Skill olmadan](docs/previews/v3-without-skill.png)
 
-Prototipler [`docs/prototypes/v3/`](docs/prototypes/v3) klasöründe; tarayıcıda açıp dokunabilirsin. Bunlar native ekran değil, HTML prototiplerdir; fontlar ve kontroller native karşılıklarının yaklaşık halidir.
+Prototipler [`docs/prototypes/v4/`](docs/prototypes/v4) klasöründe (3.1 çıktıları [`docs/prototypes/v3/`](docs/prototypes/v3) içinde); tarayıcıda açıp dokunabilirsin. Bunlar native ekran değil, HTML prototiplerdir; fontlar ve kontroller native karşılıklarının yaklaşık halidir.
+
+### Ölçüm: sürüm 4
+
+Bu sefer üç şey ölçüldü, iki tur halinde, sekiz nişte, hepsi kör: **AI tespiti** (yukarıdaki 3.x testiyle aynı yöntem: dört ekran, gerçek uygulama dahil, iki hakem, artı sekiz ekranlık sayfalar), **beğeni** ("wow, bu uygulamayı isterim" 0-10) ve **UX** (görev ne kadar iyi görülüyor, başparmakla erişim, durumlar, geri bildirim, dürüst fiyat; 0-10). Kalite hakemleri her adayı üç anda gördü: açılış, etkileşimden sonra ve sayfa sonu. Hakemler Opus 5.5 (high); üretim de Opus 5.5 (high).
+
+**Tur 1: 4.0, 3.1 ve skill'siz**
+
+| | Ortalama AI olasılığı | "En AI" seçilme (16) | Sekiz ekranlık sayfa | Beğeni | UX | En iyi / en kötü (16) |
+|---|---|---|---|---|---|---|
+| Skill 4.0 | **69** | **0** | **45, 35** | 6.6 | **7.3** | 4 / 5 |
+| Skill 3.1 | 77 | 2 | 70, 55 | 4.6 | 6.6 | 0 / 11 |
+| Skill'siz | 91 | 14 | 85, 88 | **7.9** | **7.3** | 12 / 0 |
+| Gerçek uygulama | 5 | 0 | | | | |
+
+**Tur 2: 4.1, 4.0 ve skill'siz** (4.1, tur 1'in hakem notlarından çıkan düzeltmeler)
+
+| | Ortalama AI olasılığı | "En AI" seçilme (16) | Sekiz ekranlık sayfa | Beğeni | UX | En iyi / en kötü (16) |
+|---|---|---|---|---|---|---|
+| Skill 4.1 | 77 | 0 | 78, 70 | 6.1 | 6.7 | 1 / 7 |
+| Skill 4.0 | **73** | **0** | **70, 58** | 6.1 | **7.0** | 4 / 7 |
+| Skill'siz | 91 | 16 | 88, 86 | **7.6** | 6.9 | 11 / 2 |
+| Gerçek uygulama | 4 | 0 | | | | |
+
+Bu sonuçlar okunurken:
+
+- **AI izlenimi belirgin düştü, ama sıfırlanmadı.** 32 kararın hiçbirinde 4.x "en AI" seçilmedi; skill'siz 30 kez seçildi. Sekiz ekranlık sayfada 4.0 ilk turda 45 ve 35 aldı (3.1: 70 ve 55). Hakemlerin gerekçesi: gerçek fotoğraf ve harita, sistem fontu, her uygulamaya kendi vurgu rengi, "küçük bir yayımlanmış uygulama gibi". Yine de ortalama 70 civarında: gerçek uygulama 4-5 alıyor ve bu farkın büyük kısmı pazarlama görsellerindeki gerçek marka ve fotoğraftan geliyor.
+- **Beğenide skill'siz hâlâ önde, ve bu bir değiş tokuş.** Skill'siz ekranların hepsi aynı krem zemin, kiremit vurgu, serif başlık ve vektör illüstrasyonu kullanıyor. Hakemler bunu çekici buluyor (7.6-7.9), ama aynı hakemler onu 91 ile AI sayıyor ve "tek bir elden çıkmış" diyor (9/10). Ekran görüntüsünde "wow" toplayan görünüm, tam da AI diye tanınan görünüm. 4.x bunun yerine gerçek uygulamaların diline yaklaşıyor; bedeli, hakemlerin sık yazdığı "temiz ama jenerik" notu.
+- **UX'te skill'siz ile başa baş, 3.1'in belirgin önünde.** 4.x her prototipte görevin bir sonraki adımını, durumları ve geri almayı kuruyor; hakemlerin en çok övdüğü yerler dürüst toplamlar, tutarlı rakamlar ve görünür etkileşim.
+- **4.1 ortalamayı yükseltmedi.** Tasarlanan görünümün sistemden bağımsız açılması finans ve uyku ekranlarının beğenisini artırdı (finans 4,5'ten 7'ye, uyku 4,5'ten 6'ya). Ama "ünlü tablo yerine soyut fotoğraf" kapak kuralı müzik ekranını düşürdü (8'den 5'e; hakemler soyut fotoğrafı sıradan gradyan sandı). Bu kural ölçümden sonra "öznesi olan fotoğraf" olarak düzeltildi; düzeltme yeniden ölçülmedi. Aynı 4.0 ekranları iki turda 69 ve 73, beğenide 6,6 ve 6,1 aldı: hakem gürültüsü yaklaşık ±4 ve ±0,5, yani 4.0 ile 4.1 arasındaki farklar bu gürültünün içinde.
+- **Sınırlar.** Niş başına tek üretim; hakemler üretici ile aynı model ailesinden; etkileşim yalnızca üç kareden değerlendirildi; gerçek uygulama görselleri pazarlama ekranları; hiçbir tasarım cihazda denenmedi ve hiçbir insan tasarımcı puanlamadı.
 
 ### Ölçüm: kör AI tespit testi
 
@@ -143,7 +175,7 @@ Skill her işte dört şeyi belirler ve yalnızca ilgili dosyaları okur:
 | Şerit | Tam yön, devralınmış tasarım sistemi, yerel cila | |
 | Platform | iOS, Android, Flutter, React Native (+ iki platforma tek koddan) | `references/ios.md` vb. |
 | Niş | 24 niş: fintech, kripto, fitness, meditasyon, verimlilik, notlar, sosyal, flört, e-ticaret, yemek, seyahat, eğitim, çocuk, medya, haber, AI asistan, araçlar, yaratıcı araçlar, akıllı ev, sağlık, emlak, oyun, B2B/saha, kamu | `references/niche-*.md` |
-| Görev | Tasarım, yeniden stillendirme, inceleme, hareket, akışlar, önizleme | `signature`, `craft`, `slop-tells`, `review`, `motion-haptics`, `ux-flows`, `preview` |
+| Görev | Tasarım, yeniden stillendirme, inceleme, hareket, akışlar, önizleme | `signature`, `ux-check`, `craft`, `slop-tells`, `review`, `motion-haptics`, `ux-flows`, `preview` |
 
 Dört kadran soyut sıfatları ölçülebilir seçimlere çevirir:
 
@@ -152,7 +184,7 @@ Dört kadran soyut sıfatları ölçülebilir seçimlere çevirir:
 - **W Sıcaklık** (1 resmî ve keskin, 5 samimi ve yuvarlak): köşeler, metin sesi, karakter.
 - **X İfade** (1 sistem bileşenleri ve platform görünümü, 5 her şey ürüne özel): varsayılan 3. Saha, kurumsal, kamu ve klinik araçlarda ya da sade bir sonuç istendiğinde 1-2'ye iner.
 
-Ajan kod yazmadan önce eli dağıtır ve kısa bir brief doldurur (ürün, niş, kadranlar, fikir, dağıtılan el, merkez öğe, renk tonunun kaynağı, hareket, kaçınılan klişe, reddedilen karanlık kalıplar), planı altı testle sınar, önce dağıtılan iskeleti kurar, sonra render alıp on soruluk parmak izi kontrolünü yapar.
+Ajan kod yazmadan önce yönü dağıtır ve kısa bir brief doldurur (ürün, niş, kadranlar, fikir, dağıtılan yön, ilk ekranın cevabı, kurulan sonraki adım, gerçek malzeme, kaçınılan klişe, reddedilen karanlık kalıplar), planı yedi testle sınar (sonuncusu UX testi), önce nişin geleneksel yerleşimini gerçek malzemeyle kurar, sonra imza anını ve durumları ekler, render alıp UX kontrolünü ve on soruluk parmak izi kontrolünü yapar.
 
 Nişler davranışı belirler (kullanıcının o andaki hali, güven sinyalleri, tasarlanacak durumlar, reddedilecek kalıplar); yüzeyin ne kadar cesur olacağını İfade kadranı belirler.
 
@@ -160,19 +192,21 @@ Nişler davranışı belirler (kullanıcının o andaki hali, güven sinyalleri,
 
 ```
 skills/mobile-ui-craft/
-  SKILL.md              iş akışı, yönlendirme tabloları, dört kadran, 13 maddelik taban, niş dizini
+  SKILL.md              iş akışı, yönlendirme tabloları, dört kadran, 13 maddelik taban, niş dizini (niş kimlikleriyle)
   references/
-    signature.md        eli dağıtma, merkez öğe, yazı, renk, ikon, metin, parmak izi kontrolü
+    signature.md        yönü dağıtma, gerçek malzeme, imza anı, yazı, renk, metin, parmak izi kontrolü
+    ux-check.md         24 niş için ilk ekran sorusu, tek ekran ve akış denetimi, prototipte UX gösterme
     ios.md android.md flutter.md react-native.md cross-platform.md
     craft.md slop-tells.md motion-haptics.md ux-flows.md preview.md review.md
     niche-*.md          24 niş dosyası
   assets/
     always-on.md        CLAUDE.md / AGENTS.md için on satırlık kural bloğu
+    imagery.md          doğrulanmış fotoğraf, kapak ve sanat eseri kataloğu, lisans ve kullanım kuralları
     phone-frame.html    HTML prototip için telefon çerçevesi (iOS ve Android)
   scripts/
-    deal.mjs            ürün adından yazı tipi, ikon seti, iskelet, renk aralığı ve efekt bütçesini dağıtır
-    capture.mjs         prototipi gerçek telefon boyutunda, gerçek zamanlı, birkaç anda yakalar
-    slop-scan.mjs       Swift, Kotlin, Dart, TSX ve HTML kaynağında seçilmemiş varsayılanları sayar
+    deal.mjs            yön dağıtıcı: ürün adı ve nişten yönü, yazı tipini, vurguyu, ikon setini ve imza anını seçer; kontrastı kodda denetler
+    capture.mjs         prototipi gerçek telefon boyutunda, gerçek zamanlı yakalar; fotoğrafları, yazı tiplerini ve haritayı bekler
+    slop-scan.mjs       Swift, Kotlin, Dart, TSX ve HTML kaynağında seçilmemiş varsayılanları sayar (gri yuva, Lucide, gradyan metin dahil)
   evals/                dokuz test senaryosu
 tests/lint.mjs          skill yapısını doğrulayan lint
 docs/previews/          bu sayfadaki görseller
@@ -183,11 +217,11 @@ RESEARCH.md             araştırma özeti ve eleştiri -> tasarım kararı tabl
 Script'ler bağımlılıksızdır (Node 18+) ve tek başına kullanılabilir:
 
 ```bash
-node skills/mobile-ui-craft/scripts/deal.mjs --seed "Pano" --platform ios
+node skills/mobile-ui-craft/scripts/deal.mjs --seed "Sofra" --niche food-delivery
 ```
 
 ```bash
-node skills/mobile-ui-craft/scripts/capture.mjs docs/prototypes/v3/language.html shots/soz --at 1200,3000,6500
+node skills/mobile-ui-craft/scripts/capture.mjs docs/prototypes/v3/language.html shots/soz --at 1200,3000,6500 --scroll-end
 ```
 
 ```bash
@@ -223,6 +257,8 @@ cd skills/mobile-ui-craft && claude plugin eval . --allow-tools Write,Edit,Bash 
 - **1.0** platforma uygunluk ve AI işaretlerinin temizlenmesi üzerine kuruluydu. Sonnet ile yapılan iddia tabanlı testte skill'li koşular 46/47, skill'siz koşular 27/47 aldı; ama çıktılar "daha temiz" olmaktan öteye geçmiyordu.
 - **2.0** bu geri bildirim üzerine yeniden yazıldı: fikir ve merkez öğe zorunlu, İfade kadranı eklendi, hareketli prototip ve gerçek zamanlı yakalama geldi. Yukarıdaki "Sürüm 2 ölçümü" bu sürüme aittir.
 - **3.0** "hâlâ AI-slop duruyor" geri bildirimi üzerine: yazı tipi, ikon, iskelet ve efekt artık modelin değil dağıtım script'inin seçimi; model resim ve ikon çizmiyor. **3.1** ilk AI tespit testinin bulduklarını ekledi: ekranda yapım notu yok, metin anlatmıyor, sıradan örnek veri, dağıtılan renk aralığı ve ilk görünüm, yakalamada açık mod sabit.
+- **4.0** kullanıcının 3.1 çıktısını hoş bulmaması ve kör testte hâlâ yaklaşık yüzde 80 AI sanılması üzerine: rastgele dağıtım yerine nişe göre araştırılmış tutarlı yönler (10 yön, 24 niş), gri boş kutular yerine gerçek malzeme (doğrulanmış fotoğraf, gerçek harita, içerikten örneklenen renk), görevi bir adım ileri taşıyan ve durumları gösteren prototipler, tek bir bitmiş imza anı. `deal.mjs` artık yön dağıtıcı ve kontrastı kodda denetliyor; `assets/imagery.md` ve `references/ux-check.md` eklendi; `capture.mjs` görselleri ve haritayı bekliyor; `slop-scan.mjs` gri yuva, Lucide, gradyan metin, sol kenar şeritli kart ve avatar servislerini yakalıyor. Sabit genişlikli rakamı olmayan üç yazı tipi (Albert Sans, Libre Franklin, Fredoka) Chrome'da ölçülerek katalogdan çıkarıldı.
+- **4.1** 4.0 ölçümündeki hakem notlarından: tasarlanan görünüm sistemden bağımsız açılır, her ekranda ürün adı ve bir marka yüzeyi, otomatik demo ana eylemi yapar ve sonucu ekranda kalır, "ücretler dahil" yazan toplam ücretleri gösterir, çubukların altından içerik okunmaz, fotoğraf yalnızca katalogdaki tarifi uyan öğeye konur, kapaklar ünlü tablo ya da bulanık soyut değil, örnek adlar ünlü örnek setlerinden (Northwind, Acme) değil, satış noktaları manzara cümlesi değil düz bilgi.
 
 ### Araştırma
 

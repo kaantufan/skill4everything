@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en" data-platform="ios" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kadans run summary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.9.0/dist/maplibre-gl.css">
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.9.0/dist/maplibre-gl.js"></script>
+<script>
+  // the dealt appearance is light; ?theme=dark shows the other one
+  const qt = new URLSearchParams(location.search).get('theme');
+  if (qt === 'dark' || qt === 'light') document.documentElement.dataset.theme = qt;
+</script>
+<style>
+  /* device frame (from assets/phone-frame.html) */
+  :root { --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px; --chrome: #000; }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--ground); color: var(--ink); }
+  .statusbar { position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 30; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none; font-family: -apple-system, "SF Pro Text", system-ui, sans-serif; }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  .home-indicator { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 30; width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none; }
+  #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+</style>
+<style>
+  /* PRODUCT TOKENS: data-canvas direction, dealt for "Kadans" */
+  :root {
+    --font: "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif;
+    --ground: #F7F9FC; --raised: #FFFFFF; --ink: #0B1220; --ink-2: #4A5568; --line: #DCE3EC;
+    --accent: #18A06E; --on-accent: #0B1220; --positive: #18A06E; --negative: #E5484D;
+    --bar: color-mix(in oklab, var(--ink-2) 32%, var(--ground));
+    --scrim: rgb(11 18 32 / .32);
+    --r-lg: 16px; --r-sm: 12px;
+    --s1: 8px; --s2: 12px; --s3: 16px; --s4: 24px; --s5: 32px;
+    --hero: 600 72px/1 var(--font); --title: 600 22px/1.25 var(--font); --body: 400 16px/1.4 var(--font); --label: 500 13px/1.3 var(--font);
+    --ease: cubic-bezier(.22,1,.36,1);
+    --bar-h: calc(12px + 52px + var(--safe-bottom));
+  }
+  [data-theme="dark"] {
+    --ground: #0B1630; --raised: #15213F; --ink: #F2F5FA; --ink-2: #A3AFC6; --line: #26345A;
+    --accent: #19A974; --on-accent: #0B1220; --positive: #19A974; --negative: #E5484D;
+    --scrim: rgb(0 0 0 / .5);
+  }
+</style>
+<style>
+  .num { font-variant-numeric: tabular-nums; }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; touch-action: manipulation; transition: transform .12s var(--ease), opacity .12s; -webkit-tap-highlight-color: transparent; }
+  button:active:not([disabled]) { transform: scale(.97); }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+  button[disabled] { cursor: default; }
+  h1, h2, h3, p { margin: 0; }
+
+  .scroll { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding-bottom: calc(var(--bar-h) + var(--s4)); }
+
+  /* route map: the image of this screen */
+  .mapwrap { position: relative; height: 264px; background: #E6EBE6; } /* slop-ok: fallback sampled from the basemap's land tone, shown only until tiles load */
+  [data-theme="dark"] .mapwrap { background: #17223D; }
+  #map { position: absolute; inset: 0; }
+  .maplibregl-ctrl-attrib { font: 400 11px/1.3 var(--font); }
+  .mapbtn { position: absolute; top: calc(var(--safe-top) + 4px); left: var(--s3); z-index: 5; height: 44px; padding: 0 var(--s3); border-radius: 22px; background: var(--raised); color: var(--ink); font: 600 16px/1 var(--font); box-shadow: 0 1px 3px rgb(0 0 0 / .18); }
+  .mapnote { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; gap: var(--s1); padding: calc(var(--safe-top) + 52px) var(--s4) var(--s3); text-align: center; background: var(--ground); }
+  .mapnote > * { flex-shrink: 0; }
+  .pill i { font-size: 18px; }
+  .mapnote p { font: var(--body); color: var(--ink-2); max-width: 280px; }
+  .mapnote h2 { font: var(--title); }
+  .pill { display: inline-flex; align-items: center; gap: 6px; margin-top: var(--s1); height: 44px; padding: 0 var(--s4); border-radius: 22px; border: 1.5px solid var(--line); background: var(--raised); font: 600 16px/1 var(--font); }
+  .pin { width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 6px solid #0B1220; box-shadow: 0 1px 4px rgb(0 0 0 / .35); }
+
+  .offline { display: none; margin: var(--s3) var(--s3) 0; padding: var(--s2) var(--s3); border-radius: var(--r-sm); background: var(--raised); border: 1px solid var(--line); font: var(--body); align-items: center; gap: var(--s2); }
+  .offline i { font-size: 22px; color: var(--ink-2); }
+
+  .head { padding: var(--s3) var(--s3) 0; }
+  .head h1 { font: var(--title); }
+  .meta { font: var(--label); color: var(--ink-2); margin-top: 4px; font-size: 15px; font-weight: 400; }
+
+  .hero { padding: var(--s3) var(--s3) 0; display: flex; justify-content: space-between; align-items: flex-end; gap: var(--s3); }
+  .hero .side { display: grid; gap: var(--s2); min-width: 120px; padding-bottom: 4px; }
+  .lbl { font: var(--label); color: var(--ink-2); }
+  .hero .fig { font: var(--hero); letter-spacing: -.03em; margin-top: 4px; }
+  .v { font: var(--title); margin-top: 2px; white-space: nowrap; }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s3) var(--s2); padding: var(--s3) var(--s3) 0; }
+
+  section { padding: var(--s5) var(--s3) 0; }
+  section.pace { padding-top: var(--s4); }
+  section h2 { font: var(--title); }
+  .sechead { display: flex; justify-content: space-between; align-items: baseline; }
+
+  /* pace chart + scrub (signature moment) */
+  .chart { position: relative; margin-top: var(--s1); height: 132px; touch-action: pan-y; cursor: ew-resize; border-radius: 8px; }
+  .bubble { position: absolute; top: 0; left: 0; display: grid; padding: 4px 10px; border-radius: 10px; background: var(--ink); color: var(--ground); white-space: nowrap; opacity: 0; transition: opacity .12s; pointer-events: none; }
+  .bubble b { font: 600 16px/1.25 var(--font); }
+  .bubble span { font: 500 13px/1.25 var(--font); opacity: .85; }
+  .scrubbing .bubble { opacity: 1; }
+  .chart svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .chart .area { fill: var(--accent); opacity: .14; }
+  .chart .ln { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .chart .grid { stroke: var(--line); stroke-width: 1; }
+  .chart .avg { stroke: var(--ink-2); stroke-width: 1; stroke-dasharray: 3 4; }
+  .chart .tick { font: 500 11px var(--font); fill: var(--ink-2); }
+  .chart .band { fill: var(--accent); opacity: 0; transition: opacity .2s var(--ease); }
+  .cursor { opacity: 0; transition: opacity .12s; }
+  .scrubbing .cursor { opacity: 1; }
+  .cursor line { stroke: var(--ink); stroke-width: 1.5; }
+  .cursor circle { fill: var(--ink); stroke: var(--ground); stroke-width: 3; }
+
+  /* splits */
+  .splits { margin-top: var(--s2); border-top: 1px solid var(--line); }
+  .shead, .srow { display: grid; grid-template-columns: 52px 76px 1fr 64px; align-items: center; column-gap: var(--s2); }
+  .shead { height: 36px; font: var(--label); color: var(--ink-2); border-bottom: 1px solid var(--line); }
+  .shead span:last-child, .srow .el { text-align: right; }
+  .srow { width: 100%; min-height: 56px; text-align: left; border-bottom: 1px solid var(--line); font: var(--body); }
+  .srow .k { color: var(--ink-2); }
+  .srow .p { font-weight: 600; }
+  .srow .track { height: 10px; position: relative; }
+  .srow .fill { position: absolute; inset: 0 auto 0 0; border-radius: 5px; background: var(--bar); }
+  .srow.best .fill { background: var(--accent); }
+  .srow .tag { position: absolute; left: calc(var(--w-fill) + 8px); top: 50%; transform: translateY(-50%); font: var(--label); color: var(--ink); white-space: nowrap; }
+  .srow .el { color: var(--ink-2); }
+  .source { padding: var(--s4) var(--s3) 0; font: var(--label); color: var(--ink-2); }
+
+  /* compact bar once the map has scrolled away, so nothing reads under the status bar */
+  .navbar { position: absolute; inset: 0 0 auto 0; z-index: 9; height: calc(var(--safe-top) + 44px); padding-top: var(--safe-top); display: flex; align-items: center; justify-content: center; background: var(--raised); border-bottom: 1px solid var(--line); font: 600 17px/1 var(--font); opacity: 0; transition: opacity .16s var(--ease); pointer-events: none; }
+  .navbar.show { opacity: 1; }
+
+  /* bottom bar */
+  .bar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 10; padding: 12px var(--s3) var(--safe-bottom); background: var(--raised); border-top: 1px solid var(--line); }
+  .primary { width: 100%; height: 52px; border-radius: var(--r-sm); background: var(--accent); color: var(--on-accent); font: 600 17px/1 var(--font); display: flex; align-items: center; justify-content: center; gap: var(--s1); }
+  .primary i { font-size: 20px; }
+  .primary[disabled] { background: var(--ground); color: var(--ink); border: 1.5px solid var(--line); }
+  .spin { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid currentColor; border-right-color: transparent; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(1turn); } }
+
+  .toast { position: absolute; left: var(--s3); right: var(--s3); bottom: calc(var(--bar-h) + var(--s2)); z-index: 12; padding: 14px var(--s3); border-radius: var(--r-sm); background: var(--ink); color: var(--ground); font: 500 16px/1.3 var(--font); display: flex; gap: var(--s2); align-items: center; opacity: 0; transform: translateY(8px); transition: opacity .2s var(--ease), transform .2s var(--ease); pointer-events: none; }
+  .toast.show { opacity: 1; transform: none; }
+
+  /* sheet */
+  .scrim { position: absolute; inset: 0; z-index: 20; background: var(--scrim); opacity: 0; transition: opacity .24s var(--ease); }
+  .scrim.open { opacity: 1; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 21; background: var(--raised); border-radius: var(--r-lg) var(--r-lg) 0 0; padding: 0 var(--s3) calc(var(--safe-bottom) + var(--s2)); transform: translateY(105%); transition: transform .28s var(--ease); box-shadow: 0 -1px 0 var(--line); }
+  .sheet.open { transform: none; }
+  .grab { height: 28px; display: flex; justify-content: center; align-items: center; touch-action: none; cursor: grab; }
+  .grab span { width: 36px; height: 5px; border-radius: 3px; background: var(--line); }
+  .shtop { display: flex; justify-content: space-between; align-items: center; }
+  .shtop h2 { font: var(--title); }
+  .icon-btn { width: 44px; height: 44px; margin-right: -10px; border-radius: 22px; display: grid; place-items: center; font-size: 22px; color: var(--ink-2); }
+  .sh-fig { display: flex; align-items: baseline; gap: var(--s2); margin-top: var(--s3); }
+  .sh-fig .fig { font: var(--hero); letter-spacing: -.03em; }
+  .best-tag { font: var(--label); color: var(--on-accent); background: var(--accent); padding: 4px 10px; border-radius: 12px; }
+  .sh-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s3) var(--s2); margin-top: var(--s4); }
+  .sh-grid .v { font: 600 18px/1.3 var(--font); margin-top: 2px; }
+  .sh-nav { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); margin-top: var(--s4); }
+  .sec { height: 48px; border-radius: var(--r-sm); border: 1.5px solid var(--line); font: 600 16px/1 var(--font); display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .sec[disabled] { opacity: .4; }
+  .danger { background: var(--negative); color: #0B1220; border: 0; }
+  .sh-text { font: var(--body); color: var(--ink-2); margin-top: var(--s2); }
+  .sh-stack { display: grid; gap: var(--s2); margin-top: var(--s4); }
+
+  .gone { display: none; position: absolute; inset: 0; z-index: 15; background: var(--ground); flex-direction: column; align-items: center; justify-content: center; gap: var(--s2); padding: var(--s4); text-align: center; }
+  .gone h1 { font: var(--title); }
+  .gone p { font: var(--body); color: var(--ink-2); }
+
+  /* states by URL hash */
+  [data-state="loading"] .v, [data-state="loading"] .fig, [data-state="loading"] .srow span, [data-state="loading"] .head h1, [data-state="loading"] .meta, [data-state="loading"] #avgLbl { color: transparent !important; background: var(--line); border-radius: 6px; }
+  [data-state="loading"] .chart svg, [data-state="loading"] #map, [data-state="loading"] .fill { visibility: hidden; }
+  [data-state="loading"] .chart { background: var(--line); }
+  [data-state="loading"] .mapwrap { animation: pulse 1.4s ease-in-out infinite alternate; }
+  @keyframes pulse { to { opacity: .55; } }
+  [data-state="empty"] #map, [data-state="error"] #map { visibility: hidden; }
+  [data-state="empty"] .note-empty, [data-state="error"] .note-error { display: flex; }
+  [data-state="offline"] .offline { display: flex; }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+</style>
+</head>
+<body>
+  <div class="statusbar" aria-hidden="true">
+    <span id="clock">10:08</span>
+    <svg viewBox="0 0 66 12">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" stroke="currentColor" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen">
+    <div class="scroll" id="scroll">
+      <div class="mapwrap">
+        <div id="map" role="img" aria-label="Route map: loop from Moda along the coast to Fenerbahçe and back"></div>
+        <div class="mapnote note-empty">
+          <h2>No route for this run</h2>
+          <p>Location was off. Distance came from Apple Watch.</p>
+          <button class="pill" id="locBtn">Location settings</button>
+        </div>
+        <div class="mapnote note-error">
+          <h2>Route didn't load</h2>
+          <p>Your stats are kept on this iPhone.</p>
+          <button class="pill" id="retryBtn"><i class="ph ph-arrow-clockwise" aria-hidden="true"></i> Try again</button>
+        </div>
+        <button class="mapbtn" id="discardBtn">Discard</button>
+      </div>
+
+      <div class="offline" role="status"><i class="ph ph-wifi-slash" aria-hidden="true"></i><span>Offline. Saving keeps this run on your iPhone until you reconnect.</span></div>
+
+      <div class="head">
+        <h1>Morning Run</h1>
+        <p class="meta">Today 07:12 · Kadıköy, Istanbul</p>
+      </div>
+
+      <div class="hero">
+        <div><div class="lbl">Kilometres</div><div class="fig num" id="dist">8.64</div></div>
+        <div class="side">
+          <div><div class="lbl">Time</div><div class="v num" id="sTime">48:29</div></div>
+          <div><div class="lbl">Avg pace</div><div class="v num" id="sPace">5:37 /km</div></div>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div><div class="lbl">Cadence</div><div class="v num" id="sCad">171 spm</div></div>
+        <div><div class="lbl">Avg heart rate</div><div class="v num" id="sHr">153 bpm</div></div>
+        <div><div class="lbl">Elevation gain</div><div class="v num" id="sElev">49 m</div></div>
+      </div>
+
+      <section aria-labelledby="paceH" class="pace">
+        <div class="sechead"><h2 id="paceH">Pace</h2><span class="lbl num" id="avgLbl">Avg 5:37 /km</span></div>
+        <div class="chart" id="chart" tabindex="0" role="slider" aria-label="Pace along the run" aria-valuemin="0" aria-valuemax="8.64" aria-valuenow="0">
+          <svg id="svg" viewBox="0 0 361 132" preserveAspectRatio="none" aria-hidden="true"></svg>
+          <div class="bubble" id="bubble" aria-hidden="true"><b class="num" id="bP">5:16 /km</b><span class="num" id="bD">5.55 km, 31:27</span></div>
+        </div>
+      </section>
+
+      <section aria-labelledby="splitH">
+        <h2 id="splitH">Splits</h2>
+        <div class="splits">
+          <div class="shead" aria-hidden="true"><span>Km</span><span>Pace</span><span></span><span>Elev</span></div>
+          <div id="rows"></div>
+        </div>
+      </section>
+
+      <p class="source">Recorded by Kadans on Apple Watch. Private to you.</p>
+    </div>
+
+    <div class="navbar" id="navbar" aria-hidden="true"><span>Morning Run</span></div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"><i class="ph ph-check" aria-hidden="true"></i><span id="toastText"></span></div>
+
+    <div class="bar">
+      <button class="primary" id="saveBtn">Save run</button>
+    </div>
+
+    <div class="gone" id="gone">
+      <h1 tabindex="-1">Run discarded</h1>
+      <p>It's been removed from this iPhone and Apple Watch.</p>
+      <button class="pill" onclick="location.reload()">Back to Today</button>
+    </div>
+
+    <div class="scrim" id="scrim" hidden></div>
+    <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shTitle" hidden>
+      <div class="grab" id="grab" aria-hidden="true"><span></span></div>
+      <div id="shBody"></div>
+    </div>
+  </main>
+
+  <div class="home-indicator"></div>
+
+<script>
+document.getElementById('clock').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, '');
+
+/* ---------- sample data (one run; real data comes from HealthKit / the watch) ---------- */
+const ROUTE = [[29.02561,40.98438],[29.02585,40.98429],[29.02605,40.98423],[29.02658,40.98402],[29.02689,40.98443],[29.027,40.98439],[29.02706,40.98439],[29.0271,40.98438],[29.02718,40.98435],[29.02722,40.98432],[29.02738,40.98414],[29.02762,40.98391],[29.02796,40.9838],[29.02807,40.98377],[29.02885,40.98356],[29.0297,40.98333],[29.02984,40.9833],[29.03022,40.98324],[29.03067,40.98316],[29.03074,40.98314],[29.03118,40.98307],[29.03189,40.98293],[29.0321,40.98289],[29.03216,40.98289],[29.03229,40.98291],[29.03233,40.98293],[29.03243,40.98297],[29.0328,40.98309],[29.03292,40.98318],[29.03297,40.98319],[29.033,40.98322],[29.03302,40.98323],[29.03305,40.98327],[29.03308,40.98335],[29.03309,40.98345],[29.03311,40.98354],[29.03311,40.98357],[29.03318,40.98491],[29.03319,40.98522],[29.03319,40.98524],[29.03319,40.98526],[29.03319,40.98529],[29.03324,40.98595],[29.03327,40.98654],[29.03341,40.98681],[29.03361,40.98699],[29.0337,40.98704],[29.03386,40.9871],[29.03403,40.98712],[29.03412,40.98713],[29.03437,40.98715],[29.03467,40.98717],[29.03502,40.98719],[29.03517,40.98719],[29.03524,40.98719],[29.03533,40.98718],[29.03541,40.98718],[29.03549,40.98717],[29.03556,40.98716],[29.03562,40.98714],[29.03568,40.98713],[29.03572,40.98711],[29.03578,40.98709],[29.03585,40.98705],[29.03593,40.98701],[29.03601,40.98697],[29.0361,40.98692],[29.03616,40.98688],[29.03622,40.98685],[29.03627,40.98681],[29.03631,40.98678],[29.03635,40.98674],[29.03638,40.98671],[29.03641,40.98667],[29.03646,40.98662],[29.03665,40.98637],[29.0369,40.98605],[29.03693,40.98602],[29.03696,40.98598],[29.03699,40.98595],[29.03701,40.98593],[29.03705,40.9859],[29.03708,40.98587],[29.03713,40.98583],[29.03742,40.9856],[29.0377,40.98537],[29.03808,40.98507],[29.03853,40.98473],[29.03889,40.98446],[29.03938,40.9841],[29.03942,40.98407],[29.03944,40.98406],[29.03946,40.98405],[29.0395,40.98402],[29.03957,40.98398],[29.03962,40.98395],[29.03967,40.98393],[29.03978,40.98387],[29.03981,40.98384],[29.03984,40.9838],[29.03987,40.98377],[29.03991,40.98371],[29.03994,40.98366],[29.03997,40.98361],[29.04003,40.98352],[29.04008,40.98343],[29.04036,40.98297],[29.04072,40.98237],[29.0409,40.98208],[29.04094,40.98202],[29.04098,40.98196],[29.04102,40.98191],[29.04106,40.98184],[29.04132,40.98149],[29.04135,40.98144],[29.04137,40.9814],[29.0414,40.98136],[29.04143,40.98132],[29.04145,40.98128],[29.04147,40.98125],[29.04148,40.98122],[29.0415,40.98118],[29.04152,40.98114],[29.04153,40.98109],[29.04154,40.98105],[29.04155,40.981],[29.04155,40.98094],[29.04156,40.98088],[29.04156,40.98084],[29.04156,40.98078],[29.04152,40.98018],[29.04151,40.97996],[29.0415,40.97984],[29.04149,40.97965],[29.04149,40.97954],[29.04149,40.97942],[29.04148,40.97934],[29.04148,40.97928],[29.04149,40.97921],[29.0415,40.97915],[29.04151,40.97908],[29.04152,40.97902],[29.04153,40.97896],[29.04155,40.97889],[29.0416,40.97867],[29.04166,40.97845],[29.04177,40.97812],[29.04183,40.97788],[29.0419,40.97766],[29.04192,40.97758],[29.04195,40.97751],[29.04198,40.97744],[29.04199,40.97741],[29.042,40.97737],[29.04202,40.97733],[29.04214,40.97709],[29.04241,40.97656],[29.04244,40.97649],[29.0426,40.97621],[29.04262,40.97617],[29.04263,40.97613],[29.04266,40.97606],[29.04268,40.97603],[29.04268,40.97602],[29.04268,40.97601],[29.04269,40.97599],[29.04269,40.97598],[29.04269,40.97596],[29.0427,40.97594],[29.0427,40.97591],[29.0427,40.97588],[29.0427,40.97584],[29.0427,40.97579],[29.04269,40.97575],[29.04269,40.97571],[29.04268,40.97566],[29.04268,40.97563],[29.04267,40.9756],[29.04267,40.97558],[29.04259,40.97528],[29.04249,40.97495],[29.04248,40.97492],[29.04247,40.97489],[29.04238,40.97468],[29.04228,40.9744],[29.04208,40.9739],[29.04205,40.97382],[29.04192,40.97361],[29.04169,40.97344],[29.0414,40.97331],[29.04088,40.97312],[29.04026,40.97287],[29.04003,40.97258],[29.03986,40.97236],[29.03954,40.97195],[29.03904,40.9713],[29.03819,40.97023],[29.03784,40.96977],[29.03765,40.96957],[29.03758,40.96953],[29.03753,40.96951],[29.03744,40.96948],[29.03725,40.9694],[29.03717,40.96938],[29.03692,40.96933],[29.03677,40.96931],[29.0367,40.96927],[29.03652,40.96925],[29.03643,40.96924],[29.0364,40.96924],[29.03631,40.96923],[29.03631,40.96919],[29.03621,40.96885],[29.03616,40.96874],[29.03605,40.96866],[29.03592,40.96857],[29.03578,40.96848],[29.03603,40.96827],[29.03603,40.96827],[29.03616,40.96836],[29.03592,40.96857],[29.03605,40.96866],[29.03616,40.96874],[29.03636,40.9686],[29.03639,40.96871],[29.03643,40.9692],[29.03643,40.96924],[29.03652,40.96925],[29.0367,40.96927],[29.03678,40.96924],[29.03686,40.96925],[29.03723,40.96931],[29.03727,40.96932],[29.0375,40.96935],[29.03766,40.96937],[29.03782,40.96932],[29.03882,40.96902],[29.03891,40.969],[29.03899,40.969],[29.03905,40.96901],[29.03912,40.96906],[29.03918,40.96912],[29.03945,40.96946],[29.0395,40.9695],[29.03958,40.96952],[29.03984,40.96962],[29.04279,40.97068],[29.04379,40.97043],[29.04389,40.97041],[29.0445,40.97193],[29.04499,40.97284],[29.04501,40.97289],[29.04504,40.97293],[29.04507,40.97299],[29.04511,40.97304],[29.04521,40.97318],[29.04524,40.97321],[29.04526,40.97325],[29.0453,40.9733],[29.04565,40.97375],[29.04577,40.97391],[29.04621,40.97452],[29.04641,40.9748],[29.04674,40.97526],[29.04747,40.9762],[29.04776,40.97658],[29.04783,40.97675],[29.04789,40.97692],[29.04794,40.97709],[29.04796,40.97717],[29.04792,40.9772],[29.04745,40.97751],[29.04742,40.97754],[29.0469,40.97794],[29.04667,40.97812],[29.04661,40.97817],[29.04654,40.97821],[29.04648,40.97825],[29.04633,40.97836],[29.04623,40.97843],[29.04608,40.97853],[29.04511,40.97918],[29.04507,40.97921],[29.04503,40.97923],[29.04499,40.97925],[29.04496,40.97927],[29.0449,40.9793],[29.04414,40.97965],[29.04392,40.97975],[29.04292,40.98022],[29.04285,40.98024],[29.0428,40.98027],[29.04275,40.9803],[29.0427,40.98032],[29.04264,40.98036],[29.04258,40.98039],[29.04253,40.98042],[29.04247,40.98046],[29.04243,40.98049],[29.04239,40.98052],[29.04235,40.98056],[29.0423,40.9806],[29.04225,40.98064],[29.04219,40.9807],[29.04215,40.98074],[29.04209,40.9808],[29.04201,40.98089],[29.04199,40.9809],[29.04198,40.9809],[29.04197,40.98091],[29.04196,40.98092],[29.04194,40.98092],[29.04192,40.98093],[29.0419,40.98094],[29.04188,40.98094],[29.04186,40.98094],[29.04185,40.98095],[29.04183,40.98095],[29.0418,40.98095],[29.04177,40.98096],[29.04174,40.98096],[29.04172,40.98096],[29.0417,40.98095],[29.04168,40.98095],[29.04166,40.98094],[29.04165,40.98094],[29.04164,40.98093],[29.04163,40.98092],[29.04162,40.98092],[29.04161,40.98091],[29.04161,40.9809],[29.0416,40.98089],[29.04159,40.98087],[29.04158,40.98086],[29.04158,40.98085],[29.04157,40.98083],[29.04157,40.98081],[29.04156,40.98078],[29.04152,40.98018],[29.04151,40.97996],[29.0415,40.97984],[29.04031,40.97991],[29.03956,40.9798],[29.03937,40.97977],[29.03866,40.98053],[29.03817,40.98104],[29.0378,40.98139],[29.03755,40.98163],[29.03727,40.98186],[29.03725,40.9819],[29.03721,40.98193],[29.03696,40.98216],[29.03665,40.98241],[29.03647,40.98254],[29.03642,40.98262],[29.03644,40.98289],[29.03652,40.98312],[29.03647,40.98356],[29.03642,40.9838],[29.03633,40.9842],[29.03628,40.98454],[29.03632,40.98468],[29.03763,40.98534],[29.0377,40.98537],[29.03777,40.98541],[29.03757,40.98556],[29.0375,40.98562],[29.03744,40.98566],[29.0374,40.98569],[29.03728,40.9858],[29.03723,40.98584],[29.03717,40.98589],[29.03715,40.98591],[29.03712,40.98594],[29.03709,40.98597],[29.03698,40.98609],[29.03672,40.9864],[29.03657,40.98658],[29.03652,40.98664],[29.03647,40.98669],[29.03644,40.98672],[29.0364,40.98676],[29.03636,40.9868],[29.0363,40.98685],[29.03624,40.98689],[29.03619,40.98693],[29.03615,40.98696],[29.03609,40.98699],[29.036,40.98704],[29.03595,40.98707],[29.03589,40.9871],[29.03584,40.98712],[29.03579,40.98715],[29.03574,40.98716],[29.03569,40.98718],[29.03566,40.98719],[29.03562,40.9872],[29.03558,40.98721],[29.03555,40.98722],[29.03551,40.98722],[29.03546,40.98723],[29.0354,40.98723],[29.03533,40.98724],[29.03527,40.98724],[29.03519,40.98724],[29.0351,40.98724],[29.03501,40.98723],[29.03466,40.98722],[29.03437,40.98721],[29.0343,40.98721],[29.03424,40.98724],[29.03413,40.98732],[29.03398,40.98758],[29.03393,40.9876],[29.03388,40.98761],[29.03383,40.98761],[29.03378,40.98759],[29.03366,40.98759],[29.03355,40.98761],[29.03307,40.9878],[29.0328,40.98793],[29.03198,40.98827],[29.03194,40.98829],[29.03188,40.98831],[29.0311,40.9886],[29.03081,40.98871],[29.03058,40.98878],[29.03022,40.9889],[29.02974,40.98905],[29.02886,40.98929],[29.02882,40.9893],[29.02878,40.98931],[29.02829,40.9894],[29.02823,40.98942],[29.02775,40.9895],[29.02751,40.98956],[29.02709,40.98967],[29.02691,40.98927],[29.02673,40.98862],[29.02733,40.98855],[29.02723,40.98836],[29.02705,40.98799]];
+// seconds per km for each split; the last split is a partial 0.64 km
+const SPLITS = [
+  { d: 1, p: 345, el: -12, hr: 141, cad: 168 }, { d: 1, p: 338, el: 3, hr: 148, cad: 170 },
+  { d: 1, p: 333, el: 0, hr: null, cad: 171 }, { d: 1, p: 341, el: 5, hr: 151, cad: 169 },
+  { d: 1, p: 352, el: 21, hr: 158, cad: 166 }, { d: 1, p: 322, el: -14, hr: 156, cad: 176 },
+  { d: 1, p: 330, el: 9, hr: 154, cad: 174 }, { d: 1, p: 336, el: 11, hr: 157, cad: 172 },
+  { d: 0.64, p: 331, el: -8, hr: 159, cad: 173 },
+];
+let acc = 0, accT = 0;
+SPLITS.forEach((s, i) => { s.i = i; s.t = s.p * s.d; s.from = acc; acc += s.d; accT += s.t; s.to = acc; s.end = accT; });
+const DIST = +acc.toFixed(2), TIME = accT, AVG = TIME / DIST;
+const BEST = SPLITS.filter(s => s.d === 1).reduce((a, b) => (b.p < a.p ? b : a));
+
+const mmss = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = String(s % 60).padStart(2, '0'); return h ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`; };
+const signed = n => (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n) + ' m';
+const hrs = SPLITS.filter(s => s.hr), mean = a => a.reduce((x, y) => x + y, 0) / a.length;
+
+// every figure on screen derives from SPLITS, so they agree; check the visible ones anyway
+const set = (id, v) => (document.getElementById(id).textContent = v);
+set('dist', DIST.toFixed(2)); set('sTime', mmss(TIME)); set('sPace', mmss(AVG) + ' /km');
+set('sCad', Math.round(mean(SPLITS.map(s => s.cad))) + ' spm');
+set('sElev', SPLITS.reduce((a, s) => a + Math.max(0, s.el), 0) + ' m');
+set('sHr', Math.round(mean(hrs.map(s => s.hr))) + ' bpm'); set('avgLbl', 'Avg ' + mmss(AVG) + ' /km');
+console.assert(mmss(TIME) === '48:29' && mmss(AVG) === '5:37' && DIST === 8.64, 'summary figures disagree');
+console.assert(Math.abs(SPLITS.reduce((a, s) => a + s.t, 0) - TIME) < 1e-6, 'splits do not add up to the time');
+
+/* pace samples every ~100 m, seeded so every render is identical; each km's samples average to its split */
+function rng(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const rand = rng(1172), SAMPLES = [];
+let prevN = 0;
+SPLITS.forEach(s => {
+  const n = Math.max(1, Math.round(s.d * 10)), noise = [];
+  for (let j = 0; j < n; j++) { prevN = prevN * .7 + (rand() - .5) * 9; noise.push(prevN); }
+  const m = mean(noise);
+  noise.forEach((v, j) => { const len = s.d / n, p = s.p + v - m; SAMPLES.push({ a: s.from + j * len, b: s.from + (j + 1) * len, p, t: p * len }); });
+});
+let cum = 0; SAMPLES.forEach(x => { x.t0 = cum; cum += x.t; });
+
+function at(d) { // pace and elapsed time at distance d
+  const x = SAMPLES.find(s => d <= s.b) || SAMPLES[SAMPLES.length - 1];
+  return { p: x.p, t: x.t0 + (Math.min(d, x.b) - x.a) * x.p };
+}
+
+/* ---------- route geometry ---------- */
+const hav = (a, b) => { const R = 6371, r = Math.PI / 180, dLat = (b[1] - a[1]) * r, dLon = (b[0] - a[0]) * r; const h = Math.sin(dLat / 2) ** 2 + Math.cos(a[1] * r) * Math.cos(b[1] * r) * Math.sin(dLon / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
+const CUM = [0]; for (let i = 1; i < ROUTE.length; i++) CUM.push(CUM[i - 1] + hav(ROUTE[i - 1], ROUTE[i]));
+const RLEN = CUM[CUM.length - 1];
+function pointAt(d) {
+  const target = Math.min(1, d / DIST) * RLEN;
+  let i = CUM.findIndex(c => c >= target); if (i <= 0) return ROUTE[0];
+  const f = (target - CUM[i - 1]) / (CUM[i] - CUM[i - 1] || 1);
+  return [ROUTE[i - 1][0] + (ROUTE[i][0] - ROUTE[i - 1][0]) * f, ROUTE[i - 1][1] + (ROUTE[i][1] - ROUTE[i - 1][1]) * f];
+}
+function slice(a, b) {
+  const ta = a / DIST * RLEN, tb = b / DIST * RLEN;
+  return [pointAt(a), ...ROUTE.filter((_, i) => CUM[i] > ta && CUM[i] < tb), pointAt(b)];
+}
+
+/* ---------- map ---------- */
+const root = document.documentElement, dark = () => root.dataset.theme === 'dark';
+const css = n => getComputedStyle(root).getPropertyValue(n).trim();
+let map, marker, mapReady = false;
+function line(coords) { return { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } }; }
+function initMap() {
+  if (!window.maplibregl) { root.dataset.state = 'error'; return; }
+  map = new maplibregl.Map({ container: 'map', style: 'https://tiles.openfreemap.org/styles/' + (dark() ? 'dark' : 'positron'),
+    center: ROUTE[0], zoom: 13, attributionControl: { compact: true }, interactive: false });
+  map.fitBounds(bbox(ROUTE), { padding: { top: 72, bottom: 30, left: 132, right: 40 }, animate: false });
+  map.on('load', () => {
+    // keep attribution visible but collapsed to its (i) button
+    document.querySelectorAll('.maplibregl-ctrl-attrib').forEach(a => a.classList.remove('maplibregl-compact-show'));
+    map.addSource('r', { type: 'geojson', data: line(ROUTE) });
+    map.addSource('seg', { type: 'geojson', data: line([]) });
+    map.addSource('ends', { type: 'geojson', data: { type: 'FeatureCollection', features: [
+      { type: 'Feature', properties: { k: 's' }, geometry: { type: 'Point', coordinates: ROUTE[0] } },
+      { type: 'Feature', properties: { k: 'f' }, geometry: { type: 'Point', coordinates: ROUTE[ROUTE.length - 1] } }] } });
+    const lay = { 'line-cap': 'round', 'line-join': 'round' };
+    map.addLayer({ id: 'rc', type: 'line', source: 'r', layout: lay, paint: { 'line-color': dark() ? '#0B1630' : '#ffffff', 'line-width': 8 } });
+    map.addLayer({ id: 'r', type: 'line', source: 'r', layout: lay, paint: { 'line-color': css('--accent'), 'line-width': 4.5, 'line-opacity-transition': { duration: 200 }, 'line-opacity': 1 } });
+    map.addLayer({ id: 'segc', type: 'line', source: 'seg', layout: lay, paint: { 'line-color': dark() ? '#0B1630' : '#ffffff', 'line-width': 11 } });
+    map.addLayer({ id: 'seg', type: 'line', source: 'seg', layout: lay, paint: { 'line-color': css('--accent'), 'line-width': 7 } });
+    map.addLayer({ id: 'ends', type: 'circle', source: 'ends', paint: { 'circle-radius': 6, 'circle-stroke-width': 3, 'circle-stroke-color': '#ffffff',
+      'circle-color': ['match', ['get', 'k'], 's', css('--accent'), '#0B1220'] } });
+    const el = document.createElement('div'); el.className = 'pin';
+    marker = new maplibregl.Marker({ element: el }).setLngLat(ROUTE[0]); mapReady = true;
+  });
+  map.on('error', e => { if (!mapReady && e && e.error && /style|fetch/i.test(String(e.error.message))) root.dataset.state = 'error'; });
+  map.on('idle', () => { root.dataset.mapReady = '1'; });
+}
+function bbox(c) { const xs = c.map(p => p[0]), ys = c.map(p => p[1]); return [[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]]; }
+function highlight(s) {
+  if (!mapReady) return;
+  map.getSource('seg').setData(line(s ? slice(s.from, s.to) : []));
+  map.setPaintProperty('r', 'line-opacity', s ? .35 : 1);
+}
+
+/* ---------- pace chart + scrub ---------- */
+const W = 361, H = 132, TOP = 46, BOT = 112; // top 46 leaves room for the readout bubble
+const PMIN = Math.min(...SAMPLES.map(s => s.p)) - 6, PMAX = Math.max(...SAMPLES.map(s => s.p)) + 6;
+const X = d => d / DIST * W, Y = p => TOP + (p - PMIN) / (PMAX - PMIN) * (BOT - TOP); // faster sits higher
+function drawChart() {
+  const pts = SAMPLES.map(s => [X((s.a + s.b) / 2), Y(s.p)]);
+  pts.unshift([0, pts[0][1]]); pts.push([W, pts[pts.length - 1][1]]);
+  let d = `M${pts[0][0]} ${pts[0][1]}`;
+  for (let i = 1; i < pts.length; i++) { const [x0, y0] = pts[i - 1], [x1, y1] = pts[i], mx = (x0 + x1) / 2; d += ` C${mx} ${y0} ${mx} ${y1} ${x1} ${y1}`; }
+  let g = '';
+  for (let k = 1; k <= Math.floor(DIST); k++) g += `<line class="grid" x1="${X(k)}" x2="${X(k)}" y1="${TOP}" y2="${BOT}"/><text class="tick" x="${X(k)}" y="${H - 4}" text-anchor="middle">${k}</text>`;
+  const bands = SPLITS.map(s => `<rect class="band" data-i="${s.i}" x="${X(s.from)}" y="${TOP}" width="${X(s.to) - X(s.from)}" height="${BOT - TOP}"/>`).join('');
+  document.getElementById('svg').innerHTML = `${bands}${g}
+    <path class="area" d="${d} L${W} ${BOT} L0 ${BOT}Z"/>
+    <line class="avg" x1="0" x2="${W}" y1="${Y(AVG)}" y2="${Y(AVG)}"/>
+    <path class="ln" d="${d}" vector-effect="non-scaling-stroke"/>
+    <g class="cursor"><line id="cx" x1="0" x2="0" y1="${TOP - 6}" y2="${BOT}" vector-effect="non-scaling-stroke"/><circle id="cd" r="5" cx="0" cy="0"/></g>`;
+}
+drawChart();
+
+const chart = document.getElementById('chart');
+const bubble = document.getElementById('bubble');
+let cur = null;
+function scrubTo(d) {
+  d = Math.max(0, Math.min(DIST, d)); cur = d;
+  const { p, t } = at(d);
+  chart.classList.add('scrubbing');
+  const x = X(d), y = Y(p);
+  document.getElementById('cx').setAttribute('x1', x); document.getElementById('cx').setAttribute('x2', x);
+  const c = document.getElementById('cd'); c.setAttribute('cx', x); c.setAttribute('cy', y);
+  document.getElementById('bP').textContent = mmss(p) + ' /km';
+  document.getElementById('bD').textContent = d.toFixed(2) + ' km, ' + mmss(t);
+  const cw = chart.clientWidth, bw = bubble.offsetWidth, px = x / W * cw;
+  bubble.style.transform = `translateX(${Math.max(0, Math.min(cw - bw, px - bw / 2))}px)`;
+  chart.setAttribute('aria-valuenow', d.toFixed(2));
+  chart.setAttribute('aria-valuetext', `${d.toFixed(2)} kilometres, pace ${mmss(p)} per kilometre, elapsed ${mmss(t)}`);
+  if (mapReady && root.dataset.state !== 'empty') { marker.setLngLat(pointAt(d)); if (!marker._map) marker.addTo(map); }
+}
+function release() {
+  cur = null; chart.classList.remove('scrubbing');
+  chart.setAttribute('aria-valuetext', `Whole run, ${DIST} kilometres, average pace ${mmss(AVG)}`);
+  if (marker) marker.remove();
+}
+const dAtX = e => { const r = chart.getBoundingClientRect(); return (e.clientX - r.left) / r.width * DIST; };
+chart.addEventListener('pointerdown', e => { cancelDemo(); chart.setPointerCapture(e.pointerId); scrubTo(dAtX(e)); });
+chart.addEventListener('pointermove', e => { if (chart.hasPointerCapture(e.pointerId)) scrubTo(dAtX(e)); });
+chart.addEventListener('pointerup', release); chart.addEventListener('pointercancel', release);
+chart.addEventListener('keydown', e => {
+  const step = { ArrowRight: .1, ArrowUp: .1, ArrowLeft: -.1, ArrowDown: -.1 }[e.key];
+  if (step) { cancelDemo(); scrubTo((cur ?? 0) + step); e.preventDefault(); }
+  else if (e.key === 'Home') { scrubTo(0); e.preventDefault(); } else if (e.key === 'End') { scrubTo(DIST); e.preventDefault(); }
+  else if (e.key === 'Escape') release();
+});
+chart.addEventListener('blur', () => { if (!demo) release(); });
+release();
+
+/* ---------- splits ---------- */
+const PS = SPLITS.map(s => s.p), slow = Math.max(...PS), fast = Math.min(...PS);
+document.getElementById('rows').innerHTML = SPLITS.map(s => {
+  const w = 30 + 42 * (slow - s.p) / (slow - fast), best = s === BEST; // max 72% leaves room for the tag
+  const k = s.d === 1 ? s.i + 1 : s.d.toFixed(2);
+  return `<button class="srow${best ? ' best' : ''}" data-i="${s.i}" aria-label="${s.d === 1 ? 'Kilometre ' + k : 'Last ' + k + ' kilometres'}, ${mmss(s.p)} per kilometre${best ? ', fastest' : ''}, elevation ${signed(s.el)}">
+    <span class="k num">${k}</span><span class="p num">${mmss(s.p)}</span>
+    <span class="track" style="--w-fill:${w}%"><span class="fill" style="width:${w}%"></span>${best ? '<span class="tag">Fastest</span>' : ''}</span>
+    <span class="el num">${signed(s.el)}</span></button>`;
+}).join('');
+document.getElementById('rows').addEventListener('click', e => { const b = e.target.closest('.srow'); if (b) openSplit(SPLITS[+b.dataset.i], b); });
+
+/* ---------- sheet ---------- */
+const sheet = document.getElementById('sheet'), scrim = document.getElementById('scrim'), body = document.getElementById('shBody'), scroller = document.getElementById('scroll');
+let opener = null, sheetKind = null;
+function showSheet(html, kind, from) {
+  cancelDemo(); release();
+  body.innerHTML = html; sheetKind = kind; if (from) opener = from;
+  scrim.hidden = false; sheet.hidden = false;
+  requestAnimationFrame(() => { scrim.classList.add('open'); sheet.classList.add('open'); });
+  body.querySelector('h2').focus({ preventScroll: true });
+}
+function closeSheet() {
+  if (sheet.hidden) return;
+  sheet.classList.remove('open'); scrim.classList.remove('open'); sheet.style.transform = '';
+  document.querySelectorAll('.band').forEach(b => (b.style.opacity = 0)); highlight(null);
+  setTimeout(() => { sheet.hidden = true; scrim.hidden = true; }, 280);
+  if (opener) opener.focus({ preventScroll: true }); sheetKind = null;
+}
+function splitHTML(s) {
+  const name = s.d === 1 ? `Kilometre ${s.i + 1}` : `Last ${s.d.toFixed(2)} km`;
+  const diff = Math.round(AVG - s.p), vs = diff === 0 ? 'Even' : `${Math.abs(diff)} s ${diff > 0 ? 'faster' : 'slower'}`;
+  const prev = SPLITS[s.i - 1], next = SPLITS[s.i + 1];
+  const nm = x => (x.d === 1 ? `Km ${x.i + 1}` : `Last ${x.d.toFixed(2)}`);
+  return `<div class="shtop"><h2 id="shTitle" tabindex="-1">${name}</h2><button class="icon-btn" data-close aria-label="Close"><i class="ph ph-x" aria-hidden="true"></i></button></div>
+    <div class="lbl" style="margin-top:4px">Pace per km</div>
+    <div class="sh-fig"><span class="fig num">${mmss(s.p)}</span>${s === BEST ? '<span class="best-tag">Fastest</span>' : ''}</div>
+    <div class="sh-grid">
+      <div><div class="lbl">Split time</div><div class="v num">${mmss(s.t)}</div></div>
+      <div><div class="lbl">Elapsed</div><div class="v num">${mmss(s.end)}</div></div>
+      <div><div class="lbl">Vs avg pace</div><div class="v num">${vs}</div></div>
+      <div><div class="lbl">Elevation</div><div class="v num">${signed(s.el)}</div></div>
+      <div><div class="lbl">Cadence</div><div class="v num">${s.cad} spm</div></div>
+      <div><div class="lbl">Heart rate</div><div class="v num">${s.hr ? s.hr + ' bpm' : 'No reading'}</div></div>
+    </div>
+    <div class="sh-nav">
+      <button class="sec" data-go="${s.i - 1}" ${prev ? '' : 'disabled aria-disabled="true"'}><i class="ph ph-caret-left" aria-hidden="true"></i>${prev ? nm(prev) : 'First km'}</button>
+      <button class="sec" data-go="${s.i + 1}" ${next ? '' : 'disabled aria-disabled="true"'}>${next ? nm(next) : 'Last split'}<i class="ph ph-caret-right" aria-hidden="true"></i></button>
+    </div>`;
+}
+function openSplit(s, from) {
+  cancelDemo(); release();
+  // bring the map into view above the sheet so the highlighted kilometre is visible
+  scroller.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  document.querySelectorAll('.band').forEach(b => (b.style.opacity = +b.dataset.i === s.i ? .1 : 0));
+  highlight(s);
+  if (sheetKind === 'split') { body.innerHTML = splitHTML(s); body.querySelector('h2').focus({ preventScroll: true }); }
+  else showSheet(splitHTML(s), 'split', from);
+}
+body.addEventListener('click', e => {
+  if (e.target.closest('[data-close]')) return closeSheet();
+  const go = e.target.closest('[data-go]'); if (go && !go.disabled) return openSplit(SPLITS[+go.dataset.go]);
+  if (e.target.closest('#confirmDiscard')) return discard();
+});
+scrim.addEventListener('click', closeSheet);
+addEventListener('keydown', e => { if (e.key === 'Escape' && !sheet.hidden) closeSheet(); });
+
+// drag the handle down to dismiss; follows the finger, commits past 90 pt or on a fast flick
+(() => {
+  const grab = document.getElementById('grab'); let y0 = 0, y = 0, t0 = 0;
+  grab.addEventListener('pointerdown', e => { grab.setPointerCapture(e.pointerId); y0 = e.clientY; t0 = e.timeStamp; y = 0; sheet.style.transition = 'none'; });
+  grab.addEventListener('pointermove', e => { if (!grab.hasPointerCapture(e.pointerId)) return; const dy = e.clientY - y0; y = dy < 0 ? dy * .25 : dy; sheet.style.transform = `translateY(${y}px)`; });
+  const end = e => { sheet.style.transition = ''; const v = y / Math.max(1, e.timeStamp - t0); if (y > 90 || v > .6) closeSheet(); else sheet.style.transform = ''; };
+  grab.addEventListener('pointerup', end); grab.addEventListener('pointercancel', end);
+})();
+
+/* ---------- save / discard ---------- */
+const saveBtn = document.getElementById('saveBtn'), toast = document.getElementById('toast');
+let toastTimer;
+function say(text, ms = 5000) { document.getElementById('toastText').textContent = text; toast.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('show'), ms); }
+saveBtn.addEventListener('click', () => {
+  saveBtn.disabled = true; saveBtn.innerHTML = '<span class="spin" aria-hidden="true"></span>Saving…';
+  setTimeout(() => {
+    saveBtn.innerHTML = '<i class="ph ph-check" aria-hidden="true"></i>Saved';
+    document.getElementById('discardBtn').hidden = true;
+    say(root.dataset.state === 'offline' ? 'Saved on this iPhone. Syncs when you reconnect.' : 'Saved to Runs');
+  }, 700);
+});
+document.getElementById('discardBtn').addEventListener('click', e => showSheet(
+  `<div class="shtop"><h2 id="shTitle" tabindex="-1">Discard this run?</h2><button class="icon-btn" data-close aria-label="Close"><i class="ph ph-x" aria-hidden="true"></i></button></div>
+   <p class="sh-text">${DIST.toFixed(2)} km in ${mmss(TIME)} will be deleted from this iPhone and Apple Watch. This can't be undone.</p>
+   <div class="sh-stack"><button class="sec danger" id="confirmDiscard">Discard ${DIST.toFixed(2)} km run</button><button class="sec" data-close>Keep run</button></div>`, 'discard', e.currentTarget));
+function discard() { closeSheet(); const g = document.getElementById('gone'); g.style.display = 'flex'; g.querySelector('h1').focus(); }
+
+const navbar = document.getElementById('navbar');
+scroller.addEventListener('scroll', () => navbar.classList.toggle('show', scroller.scrollTop > 210), { passive: true });
+
+document.getElementById('retryBtn').addEventListener('click', () => { location.hash = ''; });
+document.getElementById('locBtn').addEventListener('click', () => say('Opens Settings, Privacy, Location for Kadans'));
+
+/* ---------- states by URL hash ---------- */
+const states = ['loading', 'empty', 'error', 'offline'];
+const sync = () => { const s = location.hash.slice(1); root.dataset.state = states.includes(s) ? s : 'content'; if (s === 'empty') release(); };
+addEventListener('hashchange', sync); sync();
+initMap();
+
+/* ---------- auto-demo: one scrub to the fastest kilometre, held on screen ---------- */
+let demo = null;
+function cancelDemo() { if (demo) { cancelAnimationFrame(demo.raf); clearTimeout(demo.to); demo = null; } }
+if (!matchMedia('(prefers-reduced-motion: reduce)').matches && root.dataset.state === 'content') {
+  demo = { to: setTimeout(() => {
+    const t0 = performance.now(), target = BEST.from + .55;
+    (function f(t) { if (!demo) return; const k = Math.min(1, (t - t0) / 1400), e = 1 - Math.pow(1 - k, 3);
+      scrubTo(.2 + (target - .2) * e); if (k < 1) demo.raf = requestAnimationFrame(f);
+      else demo.to = setTimeout(() => { demo = null; release(); }, 7000); })(t0);
+  }, 2300) };
+}
+</script>
+</body>
+</html>

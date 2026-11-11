@@ -1,0 +1,547 @@
+<!doctype html>
+<!-- Dusk / Tonight. HTML mockup of an iOS screen at 393x852. States: #loading #empty #error #offline. Query: ?theme=light, ?t=HH:MM -->
+<html lang="en" data-platform="ios" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dusk - Tonight</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css">
+<style>
+  :root {
+    --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif;
+    --chrome: #000;
+  }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--ground); color: var(--ink); }
+  .statusbar { position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 30; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none; font-variant-numeric: tabular-nums; }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  .home-indicator { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 30; width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none; }
+  #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+</style>
+<style>
+  /* ===== DUSK TOKENS (dealt: data-canvas, system face, data blue). The only place raw values live. ===== */
+  :root {
+    --ground: #F7F9FC; --raised: #FFFFFF; --ink: #0B1220; --ink-2: #4A5568; --line: #DCE3EC;
+    --accent: #3D8BFF; --on-accent: #0B1220; --positive: #18A06E; --negative: #E5484D;
+    --sleep-bar: #C9D3E1; --scrim: rgb(11 18 32 / .45);
+    /* type roles: hero 72/600, title 22/600, body 16/400, label 13/500 */
+    --t-hero: 600 72px/1 var(--font); --t-title: 600 22px/1.25 var(--font);
+    --t-body: 400 16px/1.45 var(--font); --t-label: 500 13px/1.3 var(--font);
+    --gutter: 20px; --gap-section: 36px; --r: 16px; --r-pill: 999px;
+    --tabbar: 49px; --mini: 64px;
+    --ease: cubic-bezier(.22,1,.36,1); --ease-breath: cubic-bezier(.45,0,.55,1);
+  }
+  [data-theme="dark"] {
+    --ground: #0B1630; /* replaced live by the time-of-night tint */
+    --raised: color-mix(in oklab, var(--ground), #F2F5FA 7%);
+    --ink: #F2F5FA; --ink-2: #A3AFC6; --line: color-mix(in oklab, var(--ground), #F2F5FA 14%);
+    --accent: #3D8BFF; --on-accent: #0B1220; --positive: #19A974; --negative: #E5484D;
+    --sleep-bar: color-mix(in oklab, var(--ground), #F2F5FA 24%); --scrim: rgb(0 0 0 / .55);
+  }
+  body { transition: background-color 60s linear; }
+
+  /* ===== layout ===== */
+  .scroller { position: absolute; inset: var(--safe-top) 0 0 0; overflow-y: auto; scrollbar-width: none;
+    padding: 4px var(--gutter) calc(var(--tabbar) + var(--safe-bottom) + 32px); }
+  [data-playing] .scroller { padding-bottom: calc(var(--tabbar) + var(--safe-bottom) + var(--mini) + 40px); }
+  .topfill { position: absolute; inset: 0 0 auto 0; height: var(--safe-top); background: var(--ground); z-index: 20; }
+  .nav { display: flex; align-items: center; justify-content: space-between; height: 44px; }
+  .wordmark { font: 600 17px/1 var(--font); letter-spacing: -.01em; color: var(--ink); }
+  h1 { font: 700 34px/1.15 var(--font); letter-spacing: -.02em; margin: 6px 0 2px; }
+  .date { font: var(--t-body); color: var(--ink-2); margin: 0; }
+  h2 { font: var(--t-title); margin: 0; }
+  section { margin-top: var(--gap-section); }
+  .row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .label { font: var(--t-label); color: var(--ink-2); }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* ===== controls ===== */
+  button, select, input { font: inherit; color: inherit; }
+  button, .tap { -webkit-tap-highlight-color: transparent; touch-action: manipulation; transition: transform .12s var(--ease), background-color .2s var(--ease), opacity .2s; }
+  button:active:not(:disabled), button.pressing { transform: scale(.97); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .icon-btn { width: 44px; height: 44px; display: grid; place-items: center; border: 0; background: transparent; border-radius: var(--r-pill); font-size: 24px; color: var(--ink); cursor: pointer; }
+  .icon-btn:active { background: var(--raised); }
+  .primary { width: 100%; min-height: 56px; border: 0; border-radius: var(--r); background: var(--accent); color: var(--on-accent); font: 600 17px/1 var(--font); display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
+  .primary:active { background: color-mix(in oklab, var(--accent), #000 12%); }
+  .text-btn { min-height: 44px; padding: 0 4px; border: 0; background: transparent; color: var(--accent); font: 600 16px/1 var(--font); cursor: pointer; }
+  button:disabled { cursor: default; }
+
+  /* ===== hero: sleep window ===== */
+  .hero { margin-top: 28px; }
+  .hero-num { font: var(--t-hero); letter-spacing: -.03em; font-variant-numeric: tabular-nums; margin: 8px 0 10px; white-space: nowrap; }
+  .hero-sub { font: var(--t-body); color: var(--ink-2); margin: 0; }
+  .hero-sub b { color: var(--ink); font-weight: 600; }
+  .strip { position: relative; height: 14px; margin-top: 22px; border-radius: 7px; background: var(--accent); overflow: hidden; }
+  .strip i { position: absolute; top: 0; bottom: 0; left: 0; display: block; }
+  .strip .seg-session { background: var(--ink); }
+  .strip .seg-settle { background: var(--ink-2); }
+  .ticks { position: relative; height: 34px; margin-top: 4px; }
+  .ticks span { position: absolute; top: 4px; font: var(--t-label); color: var(--ink-2); transform: translateX(-50%); font-variant-numeric: tabular-nums; }
+  .ticks span::before { content: ""; position: absolute; left: 50%; top: -8px; width: 1px; height: 6px; background: var(--line); }
+  .ticks .end-l { transform: none; left: 0; } .ticks .end-l::before { left: 0; }
+  .ticks .end-r { transform: none; right: 0; left: auto !important; } .ticks .end-r::before { left: auto; right: 0; }
+  .legend { display: flex; gap: 18px; margin-top: 2px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; font: var(--t-label); color: var(--ink-2); }
+  .legend span::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: var(--c); }
+
+  /* ===== breathe card ===== */
+  .card { background: var(--raised); border-radius: var(--r); padding: 20px; margin-top: 14px; }
+  .session-title { font: 600 20px/1.25 var(--font); margin: 0; }
+  .session-meta { font: var(--t-body); color: var(--ink-2); margin: 4px 0 18px; }
+
+  /* ===== sounds ===== */
+  .sounds { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .sound { min-height: 72px; border: 1px solid var(--line); background: var(--raised); border-radius: var(--r); padding: 12px 14px; display: flex; align-items: center; gap: 12px; text-align: left; cursor: pointer; }
+  .sound i { font-size: 26px; color: var(--ink-2); }
+  .sound b { display: block; font: 600 16px/1.2 var(--font); }
+  .sound small { display: block; font: var(--t-label); color: var(--ink-2); margin-top: 2px; }
+  .sound[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in oklab, var(--raised), var(--accent) 16%); }
+  .sound[aria-pressed="true"] i { color: var(--accent); }
+  .sound:disabled { opacity: .5; }
+  .timer { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 16px; }
+  .timer .label { grid-column: 1 / -1; }
+  .chip { min-height: 44px; min-width: 0; padding: 0 8px; border-radius: var(--r-pill); border: 1px solid var(--line); background: transparent; font: 500 15px/1 var(--font); cursor: pointer; font-variant-numeric: tabular-nums; }
+  .chip[aria-pressed="true"] { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+
+  /* ===== log chart ===== */
+  .chart { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; align-items: end; height: 176px; margin-top: 16px; }
+  .col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 6px; }
+  .col .v { font: 500 12px/1 var(--font); color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .col .bar { width: 100%; max-width: 30px; border-radius: 6px; background: var(--sleep-bar); transition: height .3s var(--ease); }
+  .col.last .bar { background: var(--accent); } .col.last .v { color: var(--ink); }
+  .col.none .bar { background: transparent; border: 1.5px dashed var(--line); height: 28px; }
+  .col .d { font: var(--t-label); color: var(--ink-2); }
+  .col.last .d { color: var(--ink); }
+  .log-empty { padding: 22px 20px; }
+  .chart[hidden], .log-empty[hidden] { display: none; }
+  .log-empty p { margin: 0 0 16px; font: var(--t-body); color: var(--ink-2); }
+
+  /* ===== states ===== */
+  .state-msg { display: none; }
+  .skel { display: none; border-radius: var(--r); background: var(--raised); }
+  html[data-state="loading"] .skel { display: block; }
+  html[data-state="loading"] .needs-data { display: none; }
+  @media (prefers-reduced-motion: no-preference) { .skel { animation: pulse 1.4s ease-in-out infinite; } @keyframes pulse { 50% { opacity: .55; } } }
+  html[data-state="error"] .sounds, html[data-state="error"] .timer { display: none; }
+  html[data-state="error"] .msg-error, html[data-state="offline"] .msg-offline { display: block; }
+  .msg-error { margin-top: 14px; }
+  .msg-error p { margin: 0 0 12px; font: var(--t-body); color: var(--ink-2); }
+  .msg-error p b { color: var(--ink); font-weight: 600; display: block; }
+  .msg-offline { font: var(--t-label); color: var(--ink-2); display: none; margin-top: 6px; }
+  .msg-offline i { vertical-align: -2px; }
+
+  /* ===== mini player + tab bar ===== */
+  .mini { position: absolute; left: 12px; right: 12px; bottom: calc(var(--tabbar) + var(--safe-bottom) + 8px); height: var(--mini); z-index: 15;
+    background: var(--raised); border: 1px solid var(--line); border-radius: var(--r);
+    display: flex; align-items: center; gap: 8px; padding: 0 6px 0 16px; box-shadow: 0 8px 24px rgb(0 0 0 / .25);
+    transition: opacity .2s var(--ease), transform .2s var(--ease); }
+  .mini[hidden] { display: flex; opacity: 0; transform: translateY(12px); pointer-events: none; }
+  .mini .what { flex: 1; min-width: 0; }
+  .mini b { display: block; font: 600 16px/1.2 var(--font); }
+  .mini small { display: block; font: var(--t-label); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .tabbar { position: absolute; inset: auto 0 0 0; height: calc(var(--tabbar) + var(--safe-bottom)); padding-bottom: var(--safe-bottom); z-index: 16;
+    background: var(--ground); border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(4, 1fr); }
+  .tabbar a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--ink-2); text-decoration: none; font: 500 10px/1 var(--font); min-height: 44px; }
+  .tabbar a i { font-size: 26px; }
+  .tabbar a[aria-current="page"] { color: var(--accent); }
+
+  /* ===== toast ===== */
+  .toast { position: absolute; left: 12px; right: 12px; bottom: calc(var(--tabbar) + var(--safe-bottom) + 8px); z-index: 25; min-height: 52px;
+    background: var(--ink); color: var(--ground); border-radius: var(--r); display: flex; align-items: center; gap: 8px; padding: 4px 6px 4px 16px; font: 500 15px/1.3 var(--font);
+    transition: opacity .2s var(--ease), transform .2s var(--ease); }
+  .toast span { flex: 1; }
+  .toast button { min-height: 44px; padding: 0 12px; border: 0; background: transparent; color: var(--ground); font: 700 15px/1 var(--font); cursor: pointer; text-decoration: underline; }
+  .toast[hidden] { display: flex; opacity: 0; transform: translateY(10px); pointer-events: none; }
+  [data-playing] .toast { bottom: calc(var(--tabbar) + var(--safe-bottom) + var(--mini) + 16px); }
+
+  /* ===== session view (second view) ===== */
+  .session { position: absolute; inset: 0; z-index: 22; background: color-mix(in oklab, var(--ground), #000 35%); display: flex; flex-direction: column;
+    padding: var(--safe-top) var(--gutter) calc(var(--safe-bottom) + 20px); transition: opacity .26s var(--ease), transform .26s var(--ease); }
+  .session[hidden] { display: flex; opacity: 0; transform: scale(.98); pointer-events: none; visibility: hidden; transition: opacity .26s var(--ease), transform .26s var(--ease), visibility 0s .26s; }
+  .s-top { display: flex; align-items: center; justify-content: space-between; height: 44px; }
+  .s-top .text-btn { color: var(--ink); font-weight: 500; }
+  .s-top h2 { font: 600 17px/1 var(--font); }
+  .s-top .spacer { width: 44px; }
+  .breath { flex: 1; display: grid; place-items: center; position: relative; }
+  .ring-wrap { width: 280px; height: 280px; display: grid; place-items: center; position: relative; }
+  .ring-track { position: absolute; inset: 0; border-radius: 50%; border: 1.5px solid var(--line); }
+  .ring { position: absolute; inset: 0; border-radius: 50%; background: color-mix(in oklab, var(--accent), transparent 78%); border: 2px solid var(--accent); transform: scale(.55); will-change: transform; }
+  .phase { position: relative; text-align: center; }
+  .phase b { display: block; font: var(--t-title); }
+  .phase span { display: block; font: 600 48px/1.1 var(--font); font-variant-numeric: tabular-nums; margin-top: 4px; }
+  .progress { height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+  .progress i { display: block; height: 100%; width: 0; background: var(--accent); }
+  .times { display: flex; justify-content: space-between; margin-top: 8px; }
+  .s-controls { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-top: 18px; }
+  .play { width: 72px; height: 72px; border-radius: 50%; border: 0; background: var(--ink); color: var(--ground); font-size: 30px; display: grid; place-items: center; cursor: pointer; }
+  .s-controls .icon-btn { justify-self: end; }
+
+  /* ===== log sheet ===== */
+  .scrim { position: absolute; inset: 0; background: var(--scrim); z-index: 40; transition: opacity .22s var(--ease); }
+  .scrim[hidden] { display: block; opacity: 0; pointer-events: none; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 41; background: var(--raised); border-radius: 20px 20px 0 0; padding: 8px var(--gutter) calc(var(--safe-bottom) + 16px);
+    transition: transform .3s var(--ease); }
+  .sheet[hidden] { display: block; transform: translateY(105%); }
+  .handle { width: 36px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto 6px; }
+  .sheet .row { align-items: center; }
+  .field { margin-top: 16px; }
+  .field label { display: block; font: var(--t-label); color: var(--ink-2); margin-bottom: 6px; }
+  .field select, .field input { width: 100%; min-height: 48px; border-radius: 12px; border: 1px solid var(--line); background: var(--ground); padding: 0 14px; font: 400 17px/1 var(--font); font-variant-numeric: tabular-nums; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .dur { margin: 16px 0; font: var(--t-body); color: var(--ink-2); }
+  .dur b { color: var(--ink); font-weight: 600; }
+  .err { color: var(--negative); font: var(--t-label); margin: 6px 0 0; min-height: 0; }
+  .field input[aria-invalid="true"] { border-color: var(--negative); }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+</style>
+</head>
+<body>
+  <div class="statusbar">
+    <span id="clock">23:04</span>
+    <svg viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" stroke="currentColor" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen">
+    <div class="topfill"></div>
+    <div class="scroller" id="scroller">
+      <div class="nav">
+        <span class="wordmark">Dusk</span>
+              </div>
+      <h1>Tonight</h1>
+      <p class="date" id="date">Wednesday 11 November</p>
+
+      <!-- HERO: the night you have left, as a figure and a strip -->
+      <div class="hero" aria-labelledby="winLabel">
+        <span class="label" id="winLabel">Sleep window</span>
+        <div class="hero-num" id="heroNum" role="img" aria-label="7 hours 35 minutes">7 h 35 m</div>
+        <p class="hero-sub" id="heroSub">Asleep about <b class="num">23:25</b>, alarm <b class="num">07:00</b></p>
+        <div class="strip" id="strip" aria-hidden="true"><i class="seg-settle"></i><i class="seg-session"></i></div>
+        <div class="ticks" id="ticks" aria-hidden="true"></div>
+        <div class="legend" aria-hidden="true">
+          <span style="--c: var(--ink)">Breathe</span>
+          <span style="--c: var(--ink-2)">Settle</span>
+          <span style="--c: var(--accent)">Sleep</span>
+        </div>
+      </div>
+
+      <!-- BREATHE: the one recommended session -->
+      <section aria-labelledby="breatheH">
+        <h2 id="breatheH">Breathe</h2>
+        <div class="card">
+          <div class="row"><p class="session-title">Slow exhale</p><span class="label num">6 min</span></div>
+          <p class="session-meta">In for 4, out for 6</p>
+          <button class="primary" id="startBtn"><i class="ph-fill ph-play"></i>Start</button>
+        </div>
+      </section>
+
+      <!-- SOUNDS with a sleep timer -->
+      <section aria-labelledby="soundsH">
+        <div class="row"><h2 id="soundsH">Sleep sounds</h2></div>
+        <p class="msg-offline"><i class="ph ph-wifi-slash"></i> Offline. Rain and Brown noise are downloaded.</p>
+        <div class="skel" style="height:154px;margin-top:14px"></div>
+        <div class="sounds needs-data" id="sounds">
+          <button class="sound" data-id="rain" data-name="Rain" aria-pressed="false"><i class="ph ph-cloud-rain"></i><span><b>Rain</b><small>Steady</small></span></button>
+          <button class="sound" data-id="brown" data-name="Brown noise" aria-pressed="false"><i class="ph ph-waveform"></i><span><b>Brown noise</b><small>Low, even</small></span></button>
+          <button class="sound" data-id="fan" data-name="Fan" aria-pressed="false" data-online><i class="ph ph-fan"></i><span><b>Fan</b><small>Low hum</small></span></button>
+          <button class="sound" data-id="ocean" data-name="Ocean" aria-pressed="false" data-online><i class="ph ph-waves"></i><span><b>Ocean</b><small>Slow waves</small></span></button>
+        </div>
+        <div class="timer needs-data" role="group" aria-label="Sleep timer">
+          <span class="label">Timer</span>
+          <button class="chip" data-min="15" aria-pressed="false">15 min</button>
+          <button class="chip" data-min="30" aria-pressed="true">30 min</button>
+          <button class="chip" data-min="60" aria-pressed="false">60 min</button>
+          <button class="chip" data-min="0" aria-pressed="false">Off</button>
+        </div>
+        <div class="state-msg msg-error card" role="alert">
+          <p><b>Sounds didn't load</b>Check your connection, then try again. Breathing still works.</p>
+          <button class="text-btn" id="retryBtn">Try again</button>
+        </div>
+      </section>
+
+      <!-- LOG -->
+      <section aria-labelledby="logH">
+        <div class="row" style="align-items:center"><h2 id="logH">Last 7 nights</h2><button class="text-btn needs-data" id="logBtn">Log a night</button></div>
+        <p class="label num needs-data" id="avg" style="margin:4px 0 0">Average 7 h 0 m, 6 of 7 nights logged</p>
+        <div class="skel" style="height:176px;margin-top:16px"></div>
+        <div class="chart needs-data" id="chart"></div>
+        <div class="card log-empty needs-data" id="logEmpty" hidden>
+          <p>Nights you log show up here, with your average.</p>
+          <button class="primary" id="logFirstBtn">Log last night</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- mini player for sounds -->
+    <div class="mini" id="mini" hidden role="region" aria-label="Now playing">
+      <div class="what"><b id="miniName">Rain</b><small id="miniSub">Stops 23:34, fades out</small></div>
+      <button class="icon-btn" id="miniPause" aria-label="Pause"><i class="ph-fill ph-pause"></i></button>
+      <button class="icon-btn" id="miniStop" aria-label="Stop sound"><i class="ph ph-x"></i></button>
+    </div>
+
+    <nav class="tabbar" aria-label="Tabs">
+      <a href="#" aria-current="page"><i class="ph-fill ph-moon-stars"></i>Tonight</a>
+      <a href="#"><i class="ph ph-wind"></i>Breathe</a>
+      <a href="#"><i class="ph ph-speaker-high"></i>Sounds</a>
+      <a href="#"><i class="ph ph-chart-bar"></i>Log</a>
+    </nav>
+
+    <div class="toast" id="toast" hidden role="status" aria-live="polite"><span id="toastText"></span><button id="toastUndo" hidden>Undo</button></div>
+
+    <!-- SECOND VIEW: the breathing session -->
+    <div class="session" id="session" hidden role="dialog" aria-modal="true" aria-labelledby="sTitle">
+      <div class="s-top">
+        <button class="text-btn" id="endBtn">End</button>
+        <h2 id="sTitle" tabindex="-1">Slow exhale</h2>
+        <span class="spacer"></span>
+      </div>
+      <div class="breath">
+        <div class="ring-wrap">
+          <div class="ring-track"></div>
+          <div class="ring" id="ring"></div>
+          <div class="phase"><b id="phase" aria-live="polite">Breathe in</b><span id="count" aria-hidden="true">4</span></div>
+        </div>
+      </div>
+      <div class="progress" aria-hidden="true"><i id="prog"></i></div>
+      <div class="times label num"><span id="elapsed">0:00</span><span>6:00</span></div>
+      <div class="s-controls">
+        <span></span>
+        <button class="play" id="pauseBtn" aria-label="Pause"><i class="ph-fill ph-pause"></i></button>
+        <button class="icon-btn" id="cuesBtn" aria-pressed="true" aria-label="Sound cues"><i class="ph ph-speaker-high"></i></button>
+      </div>
+    </div>
+
+    <!-- log sheet -->
+    <div class="scrim" id="scrim" hidden></div>
+    <form class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetH" novalidate>
+      <div class="handle" aria-hidden="true"></div>
+      <div class="row"><h2 id="sheetH" tabindex="-1">Log a night</h2><button type="button" class="icon-btn" id="sheetClose" aria-label="Close"><i class="ph ph-x"></i></button></div>
+      <div class="field"><label for="night">Night</label><select id="night"></select></div>
+      <div class="pair">
+        <div class="field"><label for="bed">Fell asleep</label><input id="bed" type="time" value="23:30" required></div>
+        <div class="field"><label for="wake">Woke up</label><input id="wake" type="time" value="07:00" required></div>
+      </div>
+      <p class="err" id="timeErr" role="alert"></p>
+      <p class="dur">Slept <b class="num" id="durOut">7 h 30 m</b></p>
+      <button class="primary" type="submit" id="saveBtn">Save</button>
+    </form>
+  </main>
+
+  <div class="home-indicator"></div>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s), $$ = (s) => [...document.querySelectorAll(s)];
+  const root = document.documentElement, q = new URLSearchParams(location.search);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const DEMO = true;
+  if (q.get('theme') === 'light' || q.get('theme') === 'dark') root.dataset.theme = q.get('theme');
+
+  /* ---------- time ---------- */
+  // shortcut: outside 20:00-04:00 the prototype pretends it is 23:04 so the screen reads as bedtime; ?t=HH:MM pins any time
+  const real = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60; };
+  const pin = /^(\d{1,2}):(\d{2})$/.exec(q.get('t') || '');
+  const base = pin ? +pin[1] * 60 + +pin[2] : (real() >= 1200 || real() < 240 ? null : 23 * 60 + 4);
+  const t0 = Date.now();
+  const nowMin = () => base == null ? real() : base + (Date.now() - t0) / 60000;
+  const night = (m) => { m = ((m % 1440) + 1440) % 1440; return m < 720 ? m + 1440 : m; };   // minutes on a 12:00-to-12:00 night axis
+  const hhmm = (m) => { m = Math.floor(((m % 1440) + 1440) % 1440); return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+  const dur = (m) => `${Math.floor(m / 60)} h ${m % 60} m`;
+  const durSpoken = (m) => `${Math.floor(m / 60)} hours ${m % 60} minutes`;
+
+  const ALARM = 7 * 60, SESSION = 6, SETTLE = 15;
+
+  // ground follows the sky: early evening blue, deep navy at bedtime, near-black after midnight
+  const SKY = [[1200, '#1B2D57'], [1380, '#0B1630'], [1500, '#0D0F2A'], [1680, '#08091A']];
+  function sky(n) {
+    if (n <= SKY[0][0]) return SKY[0][1];
+    for (let i = 1; i < SKY.length; i++) if (n <= SKY[i][0]) {
+      const p = Math.round((n - SKY[i - 1][0]) / (SKY[i][0] - SKY[i - 1][0]) * 100);
+      return `color-mix(in oklab, ${SKY[i - 1][1]}, ${SKY[i][1]} ${p}%)`;
+    }
+    return SKY[SKY.length - 1][1];
+  }
+
+  function renderTime() {
+    const now = nowMin(), n = night(now), alarm = night(ALARM) + (night(ALARM) <= n ? 1440 : 0);
+    const asleep = n + SESSION + SETTLE, win = Math.max(0, Math.round(alarm - asleep));
+    $('#clock').textContent = hhmm(now).replace(/^0/, '');
+    $('#heroNum').textContent = dur(win);
+    $('#heroNum').style.fontSize = dur(win).length > 8 ? '60px' : '';   // '10 h 35 m' would clip at 72px on a 393pt screen
+    $('#heroNum').setAttribute('aria-label', durSpoken(win));
+    $('#heroSub').innerHTML = `Asleep about <b class="num">${hhmm(asleep)}</b>, alarm <b class="num">${hhmm(ALARM)}</b>`;
+    const span = alarm - n, pct = (m) => Math.min(100, (m / span) * 100);
+    $('.seg-session').style.width = pct(SESSION) + '%';
+    $('.seg-settle').style.width = pct(SESSION + SETTLE) + '%';
+    let ticks = `<span class="end-l">${hhmm(now)}</span><span class="end-r" style="left:100%">${hhmm(ALARM)}</span>`;
+    for (let h = Math.ceil(n / 60) * 60; h < alarm; h += 60) {
+      const x = (h - n) / span * 100;
+      if (h % 120 === 0 && x > 16 && x < 86) ticks += `<span style="left:${x}%">${hhmm(h)}</span>`;
+    }
+    $('#ticks').innerHTML = ticks;
+    if (root.dataset.theme === 'dark') root.style.setProperty('--ground', sky(n));
+    const d = new Date(); if (night(real()) >= 1440 && base == null) d.setDate(d.getDate() - 1);   // after midnight, "tonight" is still the evening's date
+    $('#date').textContent = d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+  renderTime(); setInterval(renderTime, 20000);
+
+  /* ---------- states by hash ---------- */
+  const states = ['loading', 'empty', 'error', 'offline'];
+  const state = () => root.dataset.state;
+  function sync() {
+    const s = location.hash.slice(1); root.dataset.state = states.includes(s) ? s : 'content';
+    log = state() === 'empty' ? Array(7).fill(null) : SAMPLE.slice();
+    $$('.sound[data-online]').forEach((b) => { b.disabled = state() === 'offline'; b.querySelector('small').textContent = state() === 'offline' ? 'Needs a connection' : b.dataset.desc; });
+    renderLog();
+  }
+
+  /* ---------- sleep log (sample data, minutes asleep; null = no entry) ---------- */
+  const SAMPLE = [400, 475, 500, null, 365, 430, 350];
+  let log = SAMPLE.slice();
+  const nightDates = () => { const out = []; for (let k = 7; k >= 1; k--) { const d = new Date(); d.setDate(d.getDate() - k); out.push(d); } return out; };
+  const wd = (d, long) => d.toLocaleDateString('en-GB', { weekday: long ? 'long' : 'short' });
+  const short = (m) => `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}`;
+  function renderLog() {
+    const days = nightDates(), vals = log.filter((v) => v != null);
+    const empty = vals.length === 0;
+    $('#chart').hidden = empty; $('#logEmpty').hidden = !empty; $('#avg').hidden = empty; $('#logBtn').hidden = empty;
+    const avg = vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
+    $('#avg').textContent = `Average ${dur(avg)}, ${vals.length} of 7 nights logged`;
+    $('#chart').innerHTML = log.map((v, i) => {
+      const last = i === 6, name = last ? 'Last night' : wd(days[i], true);
+      return `<div class="col${last ? ' last' : ''}${v == null ? ' none' : ''}" role="img" aria-label="${name}, ${v == null ? 'no entry' : durSpoken(v)}">
+        <span class="v">${v == null ? '–' : short(v)}</span>
+        <span class="bar" style="height:${v == null ? 28 : Math.round(v / 600 * 120)}px"></span>
+        <span class="d">${wd(days[i])}</span></div>`;
+    }).join('');
+    // self-check: the average shown is the average of the bars shown
+    console.assert(vals.length === 0 || avg === Math.round(vals.reduce((a, b) => a + b, 0) / vals.length), 'average mismatch');
+  }
+  $$('.sound').forEach((b) => b.dataset.desc = b.querySelector('small').textContent);
+  addEventListener('hashchange', sync); sync();
+  console.assert(Math.round(SAMPLE.filter((v) => v != null).reduce((a, b) => a + b) / 6) === 420, 'sample average should be 7 h 0 m');
+
+  /* ---------- toast with optional undo ---------- */
+  let toastTimer;
+  function toast(text, undo) {
+    $('#toastText').textContent = text; $('#toastUndo').hidden = !undo; $('#toastUndo').onclick = () => { undo(); hideToast(); };
+    $('#toast').hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(hideToast, undo ? 7000 : 4000);
+  }
+  const hideToast = () => { $('#toast').hidden = true; };
+
+  /* ---------- sounds + timer ---------- */
+  let playing = null, timerMin = 30, paused = false, startedAt = 0;
+  function renderMini() {
+    $$('.sound').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.id === playing)));
+    $$('.chip').forEach((c) => c.setAttribute('aria-pressed', String(+c.dataset.min === timerMin)));
+    if (playing) root.dataset.playing = ''; else delete root.dataset.playing;
+    $('#mini').hidden = !playing;
+    if (!playing) return;
+    $('#miniName').textContent = $(`.sound[data-id="${playing}"]`).dataset.name;
+    $('#miniSub').textContent = paused ? 'Paused' : timerMin ? `Stops ${hhmm(startedAt + timerMin)}, fades out` : 'No timer';
+    $('#miniPause').innerHTML = paused ? '<i class="ph-fill ph-play"></i>' : '<i class="ph-fill ph-pause"></i>';
+    $('#miniPause').setAttribute('aria-label', paused ? 'Play' : 'Pause');
+  }
+  $$('.sound').forEach((b) => b.addEventListener('click', () => {
+    playing = playing === b.dataset.id ? null : b.dataset.id; paused = false; startedAt = nowMin(); renderMini();
+  }));
+  $$('.chip').forEach((c) => c.addEventListener('click', () => { timerMin = +c.dataset.min; startedAt = nowMin(); renderMini(); }));
+  $('#miniPause').addEventListener('click', () => { paused = !paused; renderMini(); });
+  $('#miniStop').addEventListener('click', () => { playing = null; renderMini(); });
+  $('#retryBtn').addEventListener('click', (e) => { e.target.textContent = 'Trying again...'; e.target.disabled = true;
+    setTimeout(() => { e.target.textContent = 'Try again'; e.target.disabled = false; history.replaceState(null, '', location.pathname + location.search); sync(); }, 700); });
+  renderMini();
+
+  /* ---------- breathing session ---------- */
+  const IN = 4000, OUT = 6000, CYCLE = IN + OUT, TOTAL = SESSION * 60000;
+  let elapsed = 0, running = false, open = false, last = 0;
+  const ease = (p) => .5 - .5 * Math.cos(Math.PI * p);
+  const mmss = (ms) => { const s = Math.floor(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+  function frame(t) {
+    if (!open) return;
+    if (running) elapsed += t - last; last = t;
+    if (elapsed >= TOTAL) return closeSession(true);
+    const c = elapsed % CYCLE, inhale = c < IN, p = inhale ? c / IN : (c - IN) / OUT;
+    const scale = inhale ? .55 + .45 * ease(p) : 1 - .45 * ease(p);
+    $('#ring').style.transform = `scale(${reduce ? .8 : scale})`;
+    const label = inhale ? 'Breathe in' : 'Breathe out';
+    if ($('#phase').textContent !== label) $('#phase').textContent = label;
+    $('#count').textContent = Math.ceil(((inhale ? IN : CYCLE) - c) / 1000);
+    $('#prog').style.width = (elapsed / TOTAL * 100) + '%';
+    $('#elapsed').textContent = mmss(elapsed);
+    requestAnimationFrame(frame);
+  }
+  function setRunning(r) {
+    running = r;
+    $('#pauseBtn').innerHTML = r ? '<i class="ph-fill ph-pause"></i>' : '<i class="ph-fill ph-play"></i>';
+    $('#pauseBtn').setAttribute('aria-label', r ? 'Pause' : 'Resume');
+  }
+  function openSession() {
+    elapsed = 0; open = true; setRunning(true); hideToast();
+    $('#session').hidden = false; $('#sTitle').focus({ preventScroll: true });
+    last = performance.now(); requestAnimationFrame(frame);
+  }
+  function closeSession(done) {
+    open = false; $('#session').hidden = true; $('#startBtn').focus({ preventScroll: true });
+    toast(done ? 'Slow exhale finished' : `Ended at ${mmss(elapsed)} of 6:00`);
+  }
+  $('#startBtn').addEventListener('click', () => { demoCancelled = true; openSession(); });
+  $('#endBtn').addEventListener('click', () => closeSession(false));
+  $('#pauseBtn').addEventListener('click', () => setRunning(!running));
+  $('#cuesBtn').addEventListener('click', (e) => { const b = e.currentTarget, on = b.getAttribute('aria-pressed') !== 'true';
+    b.setAttribute('aria-pressed', String(on)); b.innerHTML = `<i class="ph ${on ? 'ph-speaker-high' : 'ph-speaker-slash'}"></i>`; });
+
+  /* ---------- log sheet ---------- */
+  let lastFocus;
+  function minutesBetween(a, b) { const [ah, am] = a.split(':').map(Number), [bh, bm] = b.split(':').map(Number); return (((bh * 60 + bm) - (ah * 60 + am)) + 1440) % 1440; }
+  function checkTimes(show) {
+    const m = minutesBetween($('#bed').value || '00:00', $('#wake').value || '00:00');
+    const bad = !$('#bed').value || !$('#wake').value ? 'Enter both times' : m < 30 ? 'Woke up must be at least 30 minutes after falling asleep' : m > 16 * 60 ? 'That is over 16 hours. Check both times' : '';
+    $('#durOut').textContent = bad ? '–' : dur(m);
+    if (show) { $('#timeErr').textContent = bad; $('#wake').setAttribute('aria-invalid', String(!!bad)); }
+    return bad ? null : m;
+  }
+  function openSheet() {
+    lastFocus = document.activeElement; const days = nightDates();
+    const firstEmpty = log.findIndex((v) => v == null);
+    $('#night').innerHTML = days.map((d, i) => `<option value="${i}">${i === 6 ? 'Last night' : wd(d, true)}${log[i] != null ? ', ' + dur(log[i]) : ''}</option>`).join('');
+    $('#night').value = String(state() === 'empty' || firstEmpty < 0 ? 6 : firstEmpty);
+    $('#timeErr').textContent = ''; $('#wake').setAttribute('aria-invalid', 'false'); checkTimes(false);
+    $('#scrim').hidden = false; $('#sheet').hidden = false; $('#sheetH').focus({ preventScroll: true });
+  }
+  function closeSheet() { $('#scrim').hidden = true; $('#sheet').hidden = true; lastFocus && lastFocus.focus({ preventScroll: true }); }
+  $('#logBtn').addEventListener('click', openSheet); $('#logFirstBtn').addEventListener('click', openSheet);
+  $('#sheetClose').addEventListener('click', closeSheet); $('#scrim').addEventListener('click', closeSheet);
+  $('#bed').addEventListener('input', () => checkTimes(false)); $('#wake').addEventListener('input', () => checkTimes(false));
+  $('#wake').addEventListener('blur', () => checkTimes(true)); $('#bed').addEventListener('blur', () => checkTimes(true));
+  $('#sheet').addEventListener('submit', (e) => {
+    e.preventDefault(); const m = checkTimes(true); if (m == null) return;
+    const i = +$('#night').value, prev = log[i]; log[i] = m; renderLog(); closeSheet();
+    const name = i === 6 ? 'Last night' : wd(nightDates()[i], true);
+    toast(`${name} logged, ${dur(m)}`, () => { log[i] = prev; renderLog(); });
+  });
+  $$('.tabbar a').forEach((a) => a.addEventListener('click', (e) => e.preventDefault()));
+  addEventListener('keydown', (e) => { if (e.key !== 'Escape') return; if (!$('#sheet').hidden) closeSheet(); else if (open) closeSession(false); });
+
+  /* ---------- auto-demo: start tonight's session once ---------- */
+  let demoCancelled = false;
+  ['pointerdown', 'keydown'].forEach((ev) => addEventListener(ev, () => { demoCancelled = true; }, { once: true, capture: true }));
+  if (DEMO && !reduce && state() === 'content') setTimeout(() => {
+    if (demoCancelled) return; const b = $('#startBtn'); b.classList.add('pressing');
+    setTimeout(() => { b.classList.remove('pressing'); if (!demoCancelled) openSession(); }, 140);
+  }, 2400);
+})();
+</script>
+</body>
+</html>

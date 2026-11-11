@@ -1,0 +1,583 @@
+<!doctype html>
+<!-- Kıvılcım: discovery screen prototype (HTML mockup, iOS 393x852). Sample data and Unsplash photos. -->
+<html lang="tr" data-platform="ios" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kıvılcım</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css">
+<script>
+  // the dealt appearance is light; ?theme=dark shows the other one
+  { const t = new URLSearchParams(location.search).get('theme'); if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t; }
+</script>
+<style>
+  :root {
+    --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px;
+    --font: -apple-system, "SF Pro Text", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+    --chrome: #000;
+  }
+  [data-platform="android"] {
+    --w: 412px; --h: 915px; --safe-top: 40px; --safe-bottom: 24px;
+    --font: Roboto, "Google Sans", "Segoe UI", system-ui, sans-serif;
+  }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--screen-bg); color: var(--screen-fg); }
+  .statusbar {
+    position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 10;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none;
+  }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  [data-platform="ios"] .statusbar .android, [data-platform="android"] .statusbar .ios { display: none; }
+  .home-indicator {
+    position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 40;
+    width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none;
+  }
+  #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+</style>
+<style>
+  /* PRODUCT TOKENS (dealt: photo-editorial, Schibsted Grotesk, action black, Phosphor) */
+  @property --tint { syntax: '<color>'; inherits: true; initial-value: #c9b29b; }
+  :root {
+    --font: "Schibsted Grotesk", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif;
+    --ground: #FFFFFF; --raised: #F7F7F7; --ink: #1A1A1A; --ink-2: #5F5F5F; --line: #EBEBEB;
+    --accent: #111111; --on-accent: #FFFFFF; --positive: #1F7A4C; --negative: #D93B30;
+    --tint-mix: 20%;
+    --screen-bg: var(--ground); --screen-fg: var(--ink);
+    /* type roles */
+    --t-title: 700 28px/1.15 var(--font); --t-section: 600 20px/1.25 var(--font);
+    --t-body: 400 16px/1.4 var(--font); --t-meta: 400 14px/1.35 var(--font);
+    --t-answer: 600 22px/1.3 var(--font);
+    /* spacing, radii, motion */
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
+    --r-card: 16px; --r-chip: 12px; --r-sheet: 16px;
+    --ease: cubic-bezier(.22,1,.36,1); --fast: 120ms; --ui: 220ms;
+    --tab-h: 49px; --fab: 60px;
+  }
+  [data-theme="dark"] {
+    --ground: #0A0A0A; --raised: #1A1A1A; --ink: #FFFFFF; --ink-2: #B3B3B3; --line: #2A2A2A;
+    --accent: #FFFFFF; --on-accent: #0A0A0A; --positive: #3DB87A; --negative: #F0605A;
+    --tint-mix: 26%;
+  }
+
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; touch-action: manipulation;
+           transition: transform var(--fast) var(--ease), opacity var(--fast) var(--ease); -webkit-tap-highlight-color: transparent; }
+  button:active, button.pressed { transform: scale(.96); }
+  button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+  button:disabled { opacity: .45; cursor: default; }
+  h1, h2, h3, p { margin: 0; }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* top bar */
+  .top { padding: var(--safe-top) var(--s4) 0; height: calc(var(--safe-top) + 52px); display: flex; align-items: center; justify-content: space-between;
+         background: var(--ground); border-bottom: 1px solid transparent; transition: border-color var(--ui); flex: none; z-index: 5; }
+  .top.scrolled { border-bottom-color: var(--line); }
+  .wordmark { font: var(--t-title); letter-spacing: -0.02em; }
+  .icon-btn { width: 44px; height: 44px; border-radius: 22px; display: grid; place-items: center; font-size: 24px; }
+  .icon-btn:active { background: var(--raised); }
+
+  /* feed */
+  .feed { flex: 1; overflow-y: auto; overflow-x: hidden; position: relative; scrollbar-width: none; }
+  .feed::-webkit-scrollbar { display: none; }
+  .pane { display: none; }
+  [data-tab="discover"] #discover, [data-tab="likes"] #likes, [data-tab="chats"] #chats, [data-tab="me"] #me { display: block; }
+
+  /* never-grey image slot */
+  .pic { position: relative; overflow: hidden; background: var(--c, #b49a80); }
+  .pic img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .4s ease-out; display: block; }
+  .pic img.in { opacity: 1; }
+
+  /* hero: full-bleed photo pager */
+  .hero { position: relative; height: 410px; overflow: hidden; background: var(--tint); }
+  .pager { position: absolute; inset: 0; }
+  .slide .pic { position: absolute; inset: 0; }
+  .slide { position: absolute; inset: 0; opacity: 0; transition: opacity var(--ui) var(--ease); }
+  .slide.on { opacity: 1; }
+  @supports (animation-timeline: scroll()) {
+    .pager { animation: par linear both; animation-timeline: scroll(nearest); animation-range: 0 410px; }
+    @keyframes par { to { transform: translateY(110px) scale(1.08); } }
+  }
+  .zone { position: absolute; top: 0; bottom: 120px; width: 50%; z-index: 2; }
+  .zone:active { transform: none; }
+  .zone.prev { left: 0; } .zone.next { right: 0; }
+  .zone:focus-visible { outline-offset: -4px; outline-color: #fff; }
+  .count { position: absolute; top: var(--s3); right: var(--s3); z-index: 3; padding: 4px 10px; border-radius: 12px;
+           background: rgb(0 0 0 / .55); color: #fff; font: 600 14px/1.3 var(--font); font-variant-numeric: tabular-nums; pointer-events: none; }
+  .scrim { position: absolute; inset: auto 0 0 0; height: 200px; background: linear-gradient(rgb(0 0 0 / 0), rgb(0 0 0 / .45) 40%, rgb(0 0 0 / .78)); pointer-events: none; z-index: 1; }
+  .ident { position: absolute; left: var(--s4); right: 72px; bottom: var(--s4); z-index: 3; color: #fff; }
+  .ident h2 { font: var(--t-title); letter-spacing: -0.02em; font-size: 32px; outline: none; overflow-wrap: anywhere; }
+  .ident .row { display: flex; align-items: center; gap: var(--s2); margin-top: 6px; font: var(--t-body); flex-wrap: wrap; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; font: 600 14px/1 var(--font); padding: 5px 8px 5px 6px; border-radius: 10px; background: rgb(255 255 255 / .2); }
+  .badge i { font-size: 16px; }
+  .flag { position: absolute; right: var(--s3); bottom: var(--s3); z-index: 3; width: 48px; height: 48px; border-radius: 24px;
+          display: grid; place-items: center; font-size: 22px; color: #fff; background: rgb(0 0 0 / .35); }
+
+  /* shared interests: the brand surface, tinted from the photo */
+  .shared { margin: var(--s4); padding: var(--s4); border-radius: var(--r-card); background: color-mix(in oklab, var(--tint) var(--tint-mix), var(--ground)); transition: background .6s ease-out; }
+  .shared h3 { font: var(--t-section); }
+  .chips { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s3); padding: 0; list-style: none; }
+  .chips li { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: var(--r-chip); font: var(--t-meta); border: 1px solid color-mix(in oklab, var(--ink) 18%, transparent); color: var(--ink-2); }
+  .chips li.yes { background: var(--ground); border-color: transparent; color: var(--ink); font-weight: 600; }
+  .chips li.yes i { font-size: 18px; }
+
+  .card { margin: 0 var(--s4) var(--s4); border-radius: var(--r-card); background: var(--raised); }
+  .prompt { position: relative; padding: var(--s5) var(--s4) var(--s4) var(--s5); }
+  .prompt .q { font: var(--t-meta); color: var(--ink-2); }
+  .prompt .a { font: var(--t-answer); margin-top: var(--s2); padding-right: 8px; overflow-wrap: anywhere; }
+  .prompt .like-item { display: flex; justify-content: flex-end; margin-top: var(--s3); }
+  .heart-sm { width: 48px; height: 48px; border-radius: 24px; display: grid; place-items: center; font-size: 22px; background: var(--ground); border: 1px solid var(--line); }
+
+  .basics { list-style: none; padding: var(--s2) var(--s4); margin: 0 var(--s4) var(--s4); }
+  .basics li { display: flex; align-items: center; gap: var(--s3); min-height: 52px; font: var(--t-body); }
+  .basics li + li { border-top: 1px solid var(--line); }
+  .basics i { font-size: 22px; color: var(--ink-2); }
+  .report { display: flex; align-items: center; justify-content: center; gap: var(--s2); width: calc(100% - 32px); margin: var(--s2) var(--s4) 0; height: 48px; color: var(--ink-2); font: var(--t-meta); }
+  .report i { font-size: 18px; }
+  .tail { height: calc(var(--fab) + 40px); }
+
+  /* floating like / pass */
+  .actions { position: absolute; left: var(--s4); right: var(--s4); bottom: calc(var(--tab-h) + var(--safe-bottom) + var(--s4)); display: flex; justify-content: space-between; pointer-events: none; z-index: 6; }
+  .fab { pointer-events: auto; width: var(--fab); height: var(--fab); border-radius: 50%; display: grid; place-items: center; font-size: 28px; box-shadow: 0 2px 10px rgb(0 0 0 / .16); }
+  .fab.pass { background: var(--ground); color: var(--ink); border: 1px solid var(--line); }
+  .fab.like { background: var(--accent); color: var(--on-accent); }
+
+  /* tab bar */
+  .tabs { flex: none; height: calc(var(--tab-h) + var(--safe-bottom)); padding-bottom: var(--safe-bottom); display: flex; background: var(--ground); border-top: 1px solid var(--line); z-index: 7; }
+  .tabs button { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: 500 11px/1.2 var(--font); color: var(--ink-2); min-height: 49px; }
+  .tabs button i { font-size: 26px; }
+  .tabs button[aria-current="page"] { color: var(--ink); font-weight: 700; }
+
+  /* snackbar */
+  .snack { position: absolute; left: var(--s4); right: var(--s4); bottom: calc(var(--tab-h) + var(--safe-bottom) + var(--fab) + var(--s4) + var(--s3)); z-index: 8;
+           display: flex; align-items: center; gap: var(--s3); min-height: 52px; padding: 4px 4px 4px var(--s4); border-radius: 14px; background: var(--ink); color: var(--ground); font: var(--t-meta);
+           opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity .18s var(--ease), transform .18s var(--ease); }
+  .snack.show { opacity: 1; transform: none; pointer-events: auto; }
+  .snack span { flex: 1; }
+  .snack button { height: 44px; padding: 0 14px; border-radius: 10px; font-weight: 700; color: var(--ground); }
+  .snack button:active { background: color-mix(in oklab, var(--ground) 15%, transparent); }
+
+  /* sheets */
+  .scrim-m { position: absolute; inset: 0; background: rgb(0 0 0 / .4); z-index: 20; opacity: 0; transition: opacity var(--ui) var(--ease); }
+  .scrim-m.show { opacity: 1; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 21; background: var(--ground); border-radius: var(--r-sheet) var(--r-sheet) 0 0; padding: 0 var(--s4) calc(var(--safe-bottom) + var(--s4));
+           transform: translateY(105%); transition: transform 280ms var(--ease); max-height: calc(100% - var(--safe-top) - 8px); overflow-y: auto; }
+  .sheet.show { transform: none; }
+  .grab { padding-top: 6px; touch-action: none; cursor: grab; }
+  .handle { width: 36px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto 6px; }
+  .sh-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); min-height: 48px; }
+  .sh-head h2 { font: var(--t-section); outline: none; }
+  .quote { display: flex; gap: var(--s3); align-items: center; padding: var(--s3); border-radius: var(--r-card); background: var(--raised); margin-top: var(--s2); }
+  .quote .pic { width: 64px; height: 80px; border-radius: 10px; flex: none; }
+  .quote .q { font: var(--t-meta); color: var(--ink-2); }
+  .quote .a { font: 600 17px/1.3 var(--font); margin-top: 2px; }
+  .field { margin-top: var(--s5); }
+  .field label, .lbl { display: flex; justify-content: space-between; font: 600 14px/1.3 var(--font); }
+  .field label span { color: var(--ink-2); font-weight: 400; }
+  textarea { width: 100%; margin-top: var(--s2); min-height: 88px; resize: none; border-radius: 12px; border: 1px solid var(--line); background: var(--raised); color: var(--ink); padding: 12px; font: var(--t-body); }
+  .hint { font: var(--t-meta); color: var(--ink-2); margin-top: 6px; display: flex; justify-content: space-between; }
+  .err { display: none; gap: 8px; align-items: flex-start; margin-top: var(--s3); padding: 12px; border-radius: 12px; color: var(--negative); background: color-mix(in oklab, var(--negative) 10%, var(--ground)); font: var(--t-meta); }
+  .err.show { display: flex; }
+  .err i { font-size: 20px; flex: none; }
+  .primary { width: 100%; height: 52px; margin-top: var(--s5); border-radius: 14px; background: var(--accent); color: var(--on-accent); font: 600 17px/1 var(--font); display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .secondary { width: 100%; height: 52px; margin-top: var(--s3); border-radius: 14px; border: 1px solid var(--line); font: 600 17px/1 var(--font); display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .danger { color: var(--negative); }
+  .spin { width: 18px; height: 18px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: rot .7s linear infinite; }
+  @keyframes rot { to { transform: rotate(360deg); } }
+  .opt { display: flex; align-items: center; gap: var(--s3); min-height: 52px; font: var(--t-body); border-bottom: 1px solid var(--line); }
+  .opt input { width: 22px; height: 22px; accent-color: var(--accent); margin: 0; }
+  .sub { font: var(--t-meta); color: var(--ink-2); margin-top: 4px; }
+  input[type=range] { width: 100%; height: 44px; accent-color: var(--accent); margin: 0; }
+
+  /* states */
+  .state { display: none; padding: var(--s6) var(--s5); text-align: left; }
+  .state h2 { font: var(--t-title); letter-spacing: -0.02em; margin-top: var(--s4); outline: none; }
+  .state p { font: var(--t-body); color: var(--ink-2); margin-top: var(--s2); max-width: 32ch; }
+  .state > i { font-size: 40px; color: var(--ink); }
+  .state .primary { width: auto; padding: 0 var(--s5); display: inline-flex; }
+  html[data-state="loading"] #v-loading, html[data-state="empty"] #v-empty, html[data-state="error"] #v-error, html[data-state="location"] #v-location { display: block; }
+  html:not([data-state="content"]):not([data-state="offline"]) #profile, html:not([data-state="content"]):not([data-state="offline"]) .actions { display: none; }
+  .offline { display: none; align-items: center; gap: var(--s2); padding: 10px var(--s4); background: var(--raised); font: var(--t-meta); border-bottom: 1px solid var(--line); }
+  .offline i { font-size: 18px; }
+  html[data-state="offline"] .offline { display: flex; }
+  [data-tab]:not([data-tab="discover"]) .actions { display: none; }
+  .skel { background: var(--raised); border-radius: var(--r-card); animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .55; } }
+  #v-loading { padding: 0; }
+  .tabpane { padding: var(--s5) var(--s4); }
+  .tabpane h2 { font: var(--t-title); letter-spacing: -0.02em; outline: none; }
+  .tabpane p { font: var(--t-body); color: var(--ink-2); margin-top: var(--s2); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    .pager { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="statusbar">
+    <span id="clock">10:08</span>
+    <svg class="android" viewBox="0 -2 46 14" aria-hidden="true">
+      <path d="M8 12 0.6 3.4a11 11 0 0 1 14.8 0z"/><path d="M20 12h12V0z"/>
+      <rect x="38" y="0" width="7" height="12" rx="1.6"/><rect x="40" y="-1.6" width="3" height="2" rx=".6"/>
+    </svg>
+    <svg class="ios" viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" stroke="currentColor" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen" data-tab="discover">
+    <header class="top" id="top">
+      <h1 class="wordmark">Kıvılcım</h1>
+      <button class="icon-btn" id="filterBtn" aria-label="Filtreler"><i class="ph ph-sliders-horizontal" aria-hidden="true"></i></button>
+    </header>
+
+    <div class="feed" id="feed">
+      <section class="pane" id="discover" aria-label="Keşfet">
+        <div class="offline" role="status"><i class="ph ph-wifi-slash" aria-hidden="true"></i>Çevrimdışısın. Son yüklenen profili görüyorsun.</div>
+        <article id="profile" aria-live="off"></article>
+
+        <div class="state" id="v-loading" aria-busy="true" aria-label="Profil yükleniyor">
+          <div class="skel" style="height:410px;border-radius:0"></div>
+          <div class="skel" style="height:110px;margin:16px"></div>
+          <div class="skel" style="height:140px;margin:0 16px"></div>
+        </div>
+        <div class="state" id="v-empty">
+          <i class="ph ph-users-three" aria-hidden="true"></i>
+          <h2 tabindex="-1">Şimdilik herkesi gördün</h2>
+          <p id="emptyText">Filtrelerine uyan herkes bu kadar. Yeni katılanlar burada görünür.</p>
+          <button class="primary" id="widen"><i class="ph ph-arrows-out-simple" aria-hidden="true"></i>Mesafeyi genişlet</button>
+        </div>
+        <div class="state" id="v-error">
+          <i class="ph ph-cloud-x" aria-hidden="true"></i>
+          <h2 tabindex="-1">Profiller yüklenemedi</h2>
+          <p>Sunucuya ulaşamadık. Bağlantını kontrol edip tekrar dene.</p>
+          <button class="primary" data-retry><i class="ph ph-arrow-clockwise" aria-hidden="true"></i>Tekrar dene</button>
+        </div>
+        <div class="state" id="v-location">
+          <i class="ph ph-map-pin-simple-slash" aria-hidden="true"></i>
+          <h2 tabindex="-1">Konum kapalı</h2>
+          <p>Yakındaki kişileri göstermek için semtini bilmemiz gerekiyor. Tam konumun kimseyle paylaşılmaz.</p>
+          <button class="primary" data-retry><i class="ph ph-gear" aria-hidden="true"></i>Ayarlar'da konumu aç</button>
+        </div>
+      </section>
+
+      <section class="pane tabpane" id="likes" aria-labelledby="likesH">
+        <h2 id="likesH" tabindex="-1">Beğeniler</h2>
+        <p>Henüz seni beğenen yok. Biri beğendiğinde burada, adıyla ve fotoğrafıyla görünür.</p>
+      </section>
+      <section class="pane tabpane" id="chats" aria-labelledby="chatsH">
+        <h2 id="chatsH" tabindex="-1">Sohbetler</h2>
+        <p>Henüz eşleşmen yok. Karşılıklı beğenide sohbet burada açılır.</p>
+      </section>
+      <section class="pane tabpane" id="me" aria-labelledby="meH">
+        <h2 id="meH" tabindex="-1">İlgi alanların</h2>
+        <p>Keşfet'teki ortak noktalar bunlardan hesaplanır.</p>
+        <ul class="chips" id="myChips"></ul>
+      </section>
+    </div>
+
+    <div class="actions" id="actions">
+      <button class="fab pass" id="passBtn" aria-label="Geç"><i class="ph ph-x" aria-hidden="true"></i></button>
+      <button class="fab like" id="likeBtn" aria-label="Beğen"><i class="ph-fill ph-heart" aria-hidden="true"></i></button>
+    </div>
+
+    <div class="snack" id="snack" role="status" aria-live="polite"><span id="snackText"></span><button id="undoBtn">Geri al</button></div>
+
+    <nav class="tabs" aria-label="Ana menü">
+      <button data-go="discover" aria-current="page"><i class="ph-fill ph-compass" aria-hidden="true"></i>Keşfet</button>
+      <button data-go="likes"><i class="ph ph-heart" aria-hidden="true"></i>Beğeniler</button>
+      <button data-go="chats"><i class="ph ph-chat-circle" aria-hidden="true"></i>Sohbetler</button>
+      <button data-go="me"><i class="ph ph-user-circle" aria-hidden="true"></i>Profil</button>
+    </nav>
+
+    <div class="scrim-m" id="scrimM" hidden></div>
+    <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shTitle" hidden></div>
+  </main>
+
+  <div class="home-indicator"></div>
+  <script>document.getElementById('clock').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, '');</script>
+
+<script>
+/* ---------- sample data (made-up people, Unsplash photos) ---------- */
+const ME = ['Koşu', 'Kahve', 'Sinema', 'Kamp', 'Bisiklet'];
+const U = (id, w = 800, h = 960) => `https://images.unsplash.com/photo-${id}?w=${w}&h=${h}&q=80&auto=format&fit=crop&crop=faces`;
+const PROFILES = [
+  { name: 'Defne', dat: "Defne'ye", acc: "Defne'yi", age: 29, district: 'Kadıköy', verified: true, job: 'Mimar', looking: 'Uzun süreli ilişki',
+    interests: ['Koşu', 'Kahve', 'Film fotoğrafçılığı', 'Bouldering', 'Caz'],
+    photos: [
+      { id: '1580489944761-15a19d654956', c: '#c4b2a2', alt: 'Defne beyaz gömlekle gülümsüyor' },
+      { id: '1476480862126-209bfaa8edc8', c: '#b9754a', alt: 'Merdivende turuncu koşu ayakkabıları' },
+      { id: '1509042239860-f550ce710b93', c: '#7c5c46', alt: 'Masada iki latte' } ],
+    prompts: [
+      { q: 'Pazar sabahı beni bulabileceğin yer', a: 'Moda sahilinde koşarken, sonra bir kahvecide.' },
+      { q: 'Birlikte denemek istediğim şey', a: 'Belgrad Ormanı’nda 10K, ardından kahvaltı.' },
+      { q: 'Son sevdiğim film', a: 'Kuru Otlar Üstüne.' } ] },
+  { name: 'Zeynep', dat: "Zeynep'e", acc: "Zeynep'i", age: 31, district: 'Beşiktaş', verified: true, job: 'Yazılım geliştirici', looking: 'Henüz karar vermedim',
+    interests: ['Kamp', 'Sinema', 'Seramik', 'Yüzme'],
+    photos: [
+      { id: '1544005313-94ddf0286df2', c: '#a99583', alt: 'Zeynep çizgili tişörtle gülümsüyor' },
+      { id: '1469854523086-cc02fe5d8800', c: '#6f7f8a', alt: 'Yolda karavan' },
+      { id: '1501785888041-af3ef285b470', c: '#4f7480', alt: 'Dağ gölü' } ],
+    prompts: [
+      { q: 'Bir hafta sonum genelde', a: 'Cumartesi seramik atölyesi, pazar sinema.' },
+      { q: 'En sevdiğim kamp yeri', a: 'Kazdağları, ağustosta.' },
+      { q: 'Benimle anlaşırsın, eğer', a: 'Film bitmeden telefona bakmıyorsan.' } ] },
+  { name: 'Ayşegül Nur', dat: "Ayşegül Nur'a", acc: "Ayşegül Nur'u", age: 27, district: 'Üsküdar', verified: false, job: null, looking: 'Uzun süreli ilişki',
+    interests: ['Kahve', 'Kitap kulübü', 'Yoga'],
+    photos: [ { id: '1531746020798-e6953c6e8e04', c: '#d6a3ad', alt: 'Ayşegül Nur pembe bir duvarın önünde' } ],
+    prompts: [
+      { q: 'Bu aralar okuduğum', a: 'Sait Faik, Semaver.' },
+      { q: 'Mükemmel bir gün', a: 'Kuzguncuk’ta kahve, sonra vapurla Karaköy’e.' } ] }
+];
+const filters = { km: 10, min: 25, max: 35 };
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const root = document.documentElement, screenEl = $('#screen'), feed = $('#feed'), profileEl = $('#profile');
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const sharedOf = p => p.interests.filter(i => ME.includes(i));
+const img = (ph, w, h) => `<div class="pic" style="--c:${ph.c}"><img src="${U(ph.id, w, h)}" alt="${esc(ph.alt)}" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()"></div>`;
+
+async function dominant(im) {
+  await im.decode(); const c = document.createElement('canvas'); c.width = c.height = 24;
+  const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(im, 0, 0, 24, 24);
+  const d = x.getImageData(0, 0, 24, 24).data, bins = {};
+  for (let i = 0; i < d.length; i += 4) { const r = d[i], g = d[i + 1], b = d[i + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+    if (mx < 40 || mn > 225 || mx - mn < 28) continue;
+    const k = (r >> 4) + ',' + (g >> 4) + ',' + (b >> 4); (bins[k] ??= [0, 0, 0, 0]); const v = bins[k]; v[0]++; v[1] += r; v[2] += g; v[3] += b; }
+  const top = Object.values(bins).sort((a, b) => b[0] - a[0])[0];
+  return top ? `rgb(${top[1] / top[0] | 0} ${top[2] / top[0] | 0} ${top[3] / top[0] | 0})` : null;
+}
+
+/* ---------- deck state ---------- */
+let idx = 0, photo = 0, past = [];   // past: {idx, kind}
+const liked = new Set();
+
+function render() {
+  const p = PROFILES[idx];
+  if (!p) { root.dataset.state = 'empty'; $('#emptyText').textContent = `Filtrelerine uyan, ${filters.km} km içindeki ve ${filters.min}–${filters.max} yaş arası herkesi gördün. Yeni katılanlar burada görünür.`; return; }
+  const shared = sharedOf(p), n = p.photos.length;
+  photo = 0;
+  const basics = [['ph-map-pin', p.district], ['ph-briefcase', p.job], ['ph-heart-half', p.looking]].filter(b => b[1]);
+  const promptHTML = (pr, i) => `
+    <div class="card prompt">
+      <p class="q">${esc(pr.q)}</p><p class="a">${esc(pr.a)}</p>
+      <div class="like-item"><button class="heart-sm" data-like-prompt="${i}" aria-label="Bu cevabı beğen: ${esc(pr.q)}"><i class="ph ph-heart" aria-hidden="true"></i></button></div>
+    </div>`;
+  profileEl.innerHTML = `
+    <section class="hero" aria-label="${esc(p.name)} fotoğrafları">
+      <div class="pager">${p.photos.map((ph, i) => `<div class="slide${i ? '' : ' on'}">${img(ph, 800, 960)}</div>`).join('')}</div>
+      ${n > 1 ? `<span class="count" id="count" role="status">1/${n}</span>
+        <button class="zone prev" data-page="-1" aria-label="Önceki fotoğraf"></button>
+        <button class="zone next" data-page="1" aria-label="Sonraki fotoğraf"></button>` : ''}
+      <div class="scrim"></div>
+      <div class="ident">
+        <h2 id="pname" tabindex="-1">${esc(p.name)}, ${p.age}</h2>
+        <div class="row">${p.verified ? `<span class="badge"><i class="ph-fill ph-seal-check" aria-hidden="true"></i>Doğrulanmış</span>` : ''}<span>${esc(p.district)}</span></div>
+      </div>
+      <button class="flag" data-report aria-label="${esc(p.name)} için bildir veya engelle"><i class="ph ph-flag" aria-hidden="true"></i></button>
+    </section>
+    <section class="shared" aria-labelledby="sharedH">
+      <h3 id="sharedH">${shared.length ? `${shared.length} ortak ilgi alanınız` : 'Ortak ilgi alanınız yok'}</h3>
+      <ul class="chips">${p.interests.map(i => ME.includes(i)
+        ? `<li class="yes"><i class="ph-fill ph-check-circle" aria-hidden="true"></i>${esc(i)}<span class="vh"> (ortak)</span></li>`
+        : `<li>${esc(i)}</li>`).join('')}</ul>
+    </section>
+    ${promptHTML(p.prompts[0], 0)}
+    <ul class="card basics" aria-label="Hakkında">${basics.map(b => `<li><i class="ph ${b[0]}" aria-hidden="true"></i>${esc(b[1])}</li>`).join('')}</ul>
+    ${p.prompts.slice(1).map((pr, i) => promptHTML(pr, i + 1)).join('')}
+    <button class="report" data-report><i class="ph ph-flag" aria-hidden="true"></i>${esc(p.acc)} bildir veya engelle</button>
+    <div class="tail"></div>`;
+  // numbers agree: the heading count equals the ticked chips
+  console.assert(profileEl.querySelectorAll('.chips li.yes').length === shared.length, 'shared count mismatch');
+  feed.scrollTop = 0;
+  screenEl.style.setProperty('--tint', p.photos[0].c);
+  const first = profileEl.querySelector('.slide.on img');
+  first && dominant(first).then(c => { if (c && PROFILES[idx] === p) screenEl.style.setProperty('--tint', c); }).catch(() => {});
+}
+
+function page(dir) {
+  const p = PROFILES[idx], n = p.photos.length, next = Math.max(0, Math.min(n - 1, photo + dir));
+  if (next === photo) return;
+  photo = next;
+  profileEl.querySelectorAll('.slide').forEach((s, i) => s.classList.toggle('on', i === photo));
+  $('#count').textContent = `${photo + 1}/${n}`;
+}
+
+/* move to the next person: short fade, no card toss */
+function advance(kind, msg) {
+  past.push({ idx, kind });
+  const go = () => { idx++; render(); if (PROFILES[idx]) $('#pname')?.focus({ preventScroll: true }); };
+  if (reduce || !profileEl.animate) { go(); }
+  else {
+    const out = profileEl.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: `translateX(${kind === 'pass' ? -24 : 0}px) scale(.985)` }], { duration: 160, easing: 'ease-in', fill: 'forwards' });
+    out.onfinish = () => { go(); out.cancel(); profileEl.animate([{ opacity: 0, transform: 'translateY(12px) scale(.985)' }, { opacity: 1, transform: 'none' }], { duration: 240, easing: 'cubic-bezier(.22,1,.36,1)' }); };
+  }
+  snack(msg, kind === 'report' ? null : undo);
+}
+function undo() {
+  const last = past.pop(); if (!last) return;
+  if (last.kind === 'like') liked.delete(PROFILES[last.idx].name);
+  idx = last.idx; root.dataset.state = stateFromHash(); render(); hideSnack(); $('#pname')?.focus({ preventScroll: true });
+}
+
+let snackTimer;
+function snack(text, onUndo) {
+  $('#snackText').textContent = text;
+  const b = $('#undoBtn'); b.hidden = !onUndo; b.onclick = onUndo;
+  $('#snack').classList.add('show'); clearTimeout(snackTimer); snackTimer = setTimeout(hideSnack, 6500);
+}
+function hideSnack() { $('#snack').classList.remove('show'); }
+
+/* ---------- sheets ---------- */
+let returnFocus = null;
+function openSheet(html, from) {
+  const sh = $('#sheet'), sc = $('#scrimM');
+  returnFocus = from || document.activeElement;
+  sh.innerHTML = `<div class="grab"><div class="handle"></div></div>${html}`;
+  sh.hidden = false; sc.hidden = false;
+  requestAnimationFrame(() => requestAnimationFrame(() => { sh.classList.add('show'); sc.classList.add('show'); }));
+  sh.querySelector('#shTitle')?.focus({ preventScroll: true });
+  sh.querySelector('[data-close]')?.addEventListener('click', closeSheet);
+  bindDrag(sh);
+}
+function closeSheet() {
+  const sh = $('#sheet'), sc = $('#scrimM'); if (sh.hidden) return;
+  sh.classList.remove('show'); sc.classList.remove('show'); sh.style.transform = '';
+  setTimeout(() => { sh.hidden = true; sc.hidden = true; }, reduce ? 0 : 280);
+  returnFocus?.focus?.({ preventScroll: true });
+}
+const head = t => `<div class="sh-head"><h2 id="shTitle" tabindex="-1">${t}</h2><button class="icon-btn" data-close aria-label="Kapat"><i class="ph ph-x" aria-hidden="true"></i></button></div>`;
+
+function bindDrag(sh) {
+  const g = sh.querySelector('.grab'); let y = 0, last = 0, lt = 0, vy = 0, on = false;
+  g.onpointerdown = e => { on = true; g.setPointerCapture(e.pointerId); sh.style.transition = 'none'; y = 0; last = e.clientY; lt = e.timeStamp; };
+  g.onpointermove = e => { if (!on) return; const dy = e.clientY - last; y += (y + dy < 0) ? dy * .3 : dy; vy = dy / ((e.timeStamp - lt) || 1); last = e.clientY; lt = e.timeStamp; sh.style.transform = `translateY(${y}px)`; };
+  g.onpointerup = g.onpointercancel = () => { if (!on) return; on = false; sh.style.transition = '';
+    if (y + vy * 180 > 140) closeSheet(); else sh.style.transform = ''; };
+}
+
+function openLike(promptIdx, from) {
+  const p = PROFILES[idx], pr = promptIdx == null ? null : p.prompts[promptIdx];
+  const quote = pr
+    ? `<div class="quote"><div><p class="q">${esc(pr.q)}</p><p class="a">${esc(pr.a)}</p></div></div>`
+    : `<div class="quote">${img(p.photos[photo], 128, 160)}<div><p class="q">Fotoğraf</p><p class="a">${esc(p.name)}, ${p.age}</p></div></div>`;
+  const shared = sharedOf(p);
+  openSheet(`${head(`${esc(p.dat)} beğeni gönder`)}
+    ${quote}
+    <div class="field">
+      <label for="note">Not <span>İsteğe bağlı</span></label>
+      <textarea id="note" maxlength="140" enterkeyhint="send" autocomplete="off" placeholder="${shared.length ? esc(shared[0]) + ' hakkında bir şey sor' : 'Bir şey sor'}"></textarea>
+      <div class="hint"><span>${esc(p.name)} beğeniyle birlikte notunu görür.</span><span id="noteCount">0/140</span></div>
+    </div>
+    <div class="err" id="sendErr" role="alert"><i class="ph ph-wifi-slash" aria-hidden="true"></i><span>Gönderilemedi: internet bağlantısı yok. Notun duruyor, bağlantı gelince tekrar dene.</span></div>
+    <button class="primary" id="sendLike"><i class="ph-fill ph-heart" aria-hidden="true"></i><span>Beğeni gönder</span></button>`, from);
+  const note = $('#note'); note.oninput = () => $('#noteCount').textContent = `${note.value.length}/140`;
+  $('#sendLike').onclick = sendLike;
+}
+function sendLike() {
+  const b = $('#sendLike'), p = PROFILES[idx]; if (b.disabled) return;
+  b.disabled = true; b.innerHTML = '<span class="spin" aria-hidden="true"></span><span>Gönderiliyor...</span>'; $('#sendErr').classList.remove('show');
+  setTimeout(() => {
+    if (root.dataset.state === 'offline') {
+      b.disabled = false; b.innerHTML = '<i class="ph ph-arrow-clockwise" aria-hidden="true"></i><span>Tekrar dene</span>'; $('#sendErr').classList.add('show'); return;
+    }
+    liked.add(p.name); closeSheet(); advance('like', `${p.dat} beğeni gönderildi`);
+  }, 600);
+}
+
+function openReport(from) {
+  const p = PROFILES[idx];
+  openSheet(`${head(`${esc(p.name)} hakkında`)}
+    <p class="sub">${esc(p.name)} ne yaptığını görmez.</p>
+    <button class="secondary danger" id="blockBtn"><i class="ph ph-prohibit" aria-hidden="true"></i>${esc(p.acc)} engelle</button>
+    <p class="sub" style="margin-top:8px">Birbirinizi bir daha görmezsiniz. Ayarlar'dan kaldırabilirsin.</p>
+    <fieldset style="border:0;padding:0;margin:24px 0 0"><legend class="lbl">Bildir</legend>
+      ${['Sahte profil', 'Uygunsuz fotoğraf', 'Rahatsız edici davranış', 'Reşit olmayabilir', 'Diğer'].map((r, i) => `<label class="opt"><input type="radio" name="why" value="${r}">${r}</label>`).join('')}
+    </fieldset>
+    <div class="err" id="whyErr" role="alert"><i class="ph ph-warning-circle" aria-hidden="true"></i><span>Bir neden seç.</span></div>
+    <button class="primary" id="reportBtn">Bildir ve engelle</button>`, from);
+  $('#blockBtn').onclick = () => { closeSheet(); advance('block', `${p.name} engellendi`); };
+  $('#reportBtn').onclick = () => {
+    if (!document.querySelector('input[name=why]:checked')) { $('#whyErr').classList.add('show'); return; }
+    closeSheet(); advance('report', `Bildirimin alındı. ${p.name} engellendi.`);
+  };
+}
+
+function openFilters(from) {
+  openSheet(`${head('Filtreler')}
+    <div class="field"><label for="km">Mesafe <span id="kmV">${filters.km} km</span></label><input id="km" type="range" min="2" max="80" value="${filters.km}"></div>
+    <div class="field"><label for="amin">En küçük yaş <span id="aminV">${filters.min}</span></label><input id="amin" type="range" min="18" max="70" value="${filters.min}"></div>
+    <div class="field"><label for="amax">En büyük yaş <span id="amaxV">${filters.max}</span></label><input id="amax" type="range" min="18" max="70" value="${filters.max}"></div>
+    <p class="sub" style="margin-top:16px">Tüm filtreler ücretsiz.</p>
+    <button class="primary" id="applyF">Uygula</button>`, from);
+  const km = $('#km'), a = $('#amin'), z = $('#amax');
+  km.oninput = () => $('#kmV').textContent = km.value + ' km';
+  a.oninput = () => { if (+a.value > +z.value) z.value = a.value, $('#amaxV').textContent = z.value; $('#aminV').textContent = a.value; };
+  z.oninput = () => { if (+z.value < +a.value) a.value = z.value, $('#aminV').textContent = a.value; $('#amaxV').textContent = z.value; };
+  $('#applyF').onclick = () => {
+    Object.assign(filters, { km: +km.value, min: +a.value, max: +z.value }); closeSheet();
+    if (!PROFILES[idx]) { idx = 0; past = []; root.dataset.state = 'loading'; setTimeout(() => { root.dataset.state = 'content'; render(); }, 700); }
+    snack('Filtreler güncellendi', null);
+  };
+}
+
+/* ---------- wiring ---------- */
+profileEl.addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.page) page(+t.dataset.page);
+  else if (t.dataset.likePrompt != null) openLike(+t.dataset.likePrompt, t);
+  else if ('report' in t.dataset) openReport(t);
+});
+$('#likeBtn').onclick = e => openLike(null, e.currentTarget);
+$('#passBtn').onclick = () => { const p = PROFILES[idx]; if (p) advance('pass', `${p.acc} geçtin`); };
+$('#filterBtn').onclick = e => openFilters(e.currentTarget);
+$('#widen').onclick = e => openFilters(e.currentTarget);
+$('#scrimM').onclick = closeSheet;
+addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeSheet();
+  if (!$('#sheet').hidden || e.target.closest('textarea,input')) return;
+  if (e.key === 'ArrowRight') page(1); if (e.key === 'ArrowLeft') page(-1);
+});
+feed.addEventListener('scroll', () => $('#top').classList.toggle('scrolled', feed.scrollTop > 4), { passive: true });
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.tabs button').forEach(x => { const on = x === b; x.toggleAttribute('aria-current', on); if (on) x.setAttribute('aria-current', 'page');
+    const i = x.querySelector('i'); i.className = (on ? 'ph-fill ' : 'ph ') + i.className.split(' ').find(c => c.startsWith('ph-') && c !== 'ph-fill'); });
+  screenEl.dataset.tab = b.dataset.go; feed.scrollTop = 0; hideSnack();
+  $(`#${b.dataset.go} h2`)?.focus({ preventScroll: true });
+});
+$('#myChips').innerHTML = ME.map(i => `<li class="yes"><i class="ph-fill ph-check-circle" aria-hidden="true"></i>${i}</li>`).join('');
+document.querySelectorAll('[data-retry]').forEach(b => b.onclick = () => {
+  window.history.replaceState(null, '', location.pathname + location.search);
+  root.dataset.state = 'loading'; setTimeout(() => { root.dataset.state = 'content'; render(); }, 700);
+});
+
+/* states by hash: #loading #empty #error #offline #location */
+const STATES = ['loading', 'empty', 'error', 'offline', 'location'];
+const stateFromHash = () => { const s = location.hash.slice(1); return STATES.includes(s) ? s : 'content'; };
+const sync = () => { root.dataset.state = stateFromHash(); $('#emptyText').textContent = `Filtrelerine uyan, ${filters.km} km içindeki ve ${filters.min}–${filters.max} yaş arası herkesi gördün. Yeni katılanlar burada görünür.`; if (root.dataset.state === 'content' || root.dataset.state === 'offline') render(); };
+addEventListener('hashchange', sync); sync();
+
+/* auto-demo: like the first profile once, then the next person arrives with Undo */
+if (!reduce && root.dataset.state === 'content') {
+  const press = el => { el.classList.add('pressed'); setTimeout(() => el.classList.remove('pressed'), 140); };
+  // the clock starts once photos and the face are in, like the moment a person actually sees the screen
+  addEventListener('load', () => document.fonts.ready.then(() => {
+    setTimeout(() => { if (root.dataset.state !== 'content' || !$('#sheet').hidden) return; const b = $('#likeBtn'); press(b); openLike(null, b); }, 2400);
+    setTimeout(() => { const b = $('#sendLike'); if (b) { press(b); sendLike(); } }, 4300);
+  }));
+}
+</script>
+</body>
+</html>

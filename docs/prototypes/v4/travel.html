@@ -1,0 +1,614 @@
+<!doctype html>
+<!-- Rota, listing detail. HTML mockup of a native iOS screen: fonts, materials, controls and scrolling are approximations. -->
+<html lang="en" data-platform="ios" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rota, Cave suite in Göreme</title>
+<script>{const t=new URLSearchParams(location.search).get('theme');if(t==='dark'||t==='light')document.documentElement.dataset.theme=t;}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.9.0/dist/maplibre-gl.css">
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.9.0/dist/maplibre-gl.js"></script>
+<style>
+  /* Device frame (from the skill's phone-frame.html) */
+  :root { --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px; --chrome: #000; }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  html.over-photo { --chrome: #fff; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--ground); color: var(--ink); }
+  .statusbar { position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 30; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none; transition: color .2s; font-family: -apple-system, "SF Pro Text", system-ui, sans-serif; }
+  .statusbar svg { height: 12px; fill: var(--chrome); transition: fill .2s; }
+  .home-indicator { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 30; width: 134px; height: 5px; border-radius: 3px; background: var(--chrome-home, #000); opacity: .9; pointer-events: none; }
+  [data-theme="dark"] .home-indicator { --chrome-home: #fff; }
+  #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+</style>
+<style>
+  /* PRODUCT TOKENS: dealt direction native-quiet (Rota, travel-transport, ios) */
+  :root {
+    --font: "Public Sans", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif;
+    --ground: #FFFFFF; --raised: #F2F2F7; --ink: #000000; --ink-2: #5E5E63; --line: #D8D8DC;
+    --accent: #2457C5; --on-accent: #FFFFFF; --positive: #2E7D46; --negative: #D4442E;
+    --wash: color-mix(in oklab, var(--accent) 8%, var(--ground));
+    --wash-2: color-mix(in oklab, var(--accent) 18%, var(--ground));
+    --r-group: 12px; --r-button: 10px;
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
+    --t-large: 700 34px/1.1 var(--font); --t-title: 600 22px/1.25 var(--font); --t-head: 600 17px/1.3 var(--font);
+    --t-body: 400 17px/1.4 var(--font); --t-foot: 400 13px/1.35 var(--font);
+    --ease: cubic-bezier(.22,1,.36,1);
+    --bar-h: calc(76px + var(--safe-bottom));
+  }
+  [data-theme="dark"] {
+    --ground: #000000; --raised: #1C1C1E; --ink: #FFFFFF; --ink-2: #A1A1A6; --line: #38383A;
+    --wash: color-mix(in oklab, var(--accent) 16%, var(--ground));
+    --wash-2: color-mix(in oklab, var(--accent) 34%, var(--ground));
+  }
+</style>
+<style>
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; touch-action: manipulation; transition: transform .12s var(--ease), opacity .12s; -webkit-tap-highlight-color: transparent; }
+  button:active:not(:disabled) { transform: scale(.97); }
+  button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  button:disabled { cursor: not-allowed; }
+  h1, h2, h3, p { margin: 0; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  .scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; padding-bottom: calc(var(--bar-h) + var(--s5)); scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* photos */
+  .gallery { position: relative; height: 330px; }
+  .track { display: flex; height: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+  .track::-webkit-scrollbar { display: none; }
+  .pic { position: relative; overflow: hidden; background: var(--c, #a07c62); flex: 0 0 100%; height: 100%; scroll-snap-align: start; }
+  .pic img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .4s ease-out; display: block; }
+  .pic img.in { opacity: 1; }
+  .gallery::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 130px; background: linear-gradient(rgb(0 0 0 / .45), transparent); z-index: 1; pointer-events: none; }
+  .count { position: absolute; right: var(--s4); bottom: var(--s4); z-index: 2; font: 600 13px/1 var(--font); color: #fff; background: rgb(0 0 0 / .62); padding: 7px 10px; border-radius: 8px; }
+
+  /* top controls + collapsing bar */
+  .topbar { position: absolute; inset: 0 0 auto 0; z-index: 20; height: calc(var(--safe-top) + 52px); padding: var(--safe-top) var(--s3) 0; display: flex; align-items: center; gap: var(--s2); pointer-events: none; }
+  .topbar::before { content: ""; position: absolute; inset: 0; background: var(--ground); border-bottom: .5px solid var(--line); opacity: 0; transition: opacity .2s; }
+  .topbar.solid::before { opacity: 1; }
+  .topbar > * { position: relative; pointer-events: auto; }
+  .circ { width: 44px; height: 44px; border-radius: 22px; display: grid; place-items: center; background: rgb(255 255 255 / .94); color: #000; font-size: 20px; flex: none; }
+  .topbar.solid .circ { background: transparent; color: var(--ink); }
+  .navtitle { flex: 1; min-width: 0; font: var(--t-head); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; opacity: 0; transition: opacity .2s; }
+  .topbar.solid .navtitle { opacity: 1; }
+  #save[aria-pressed="true"] i { color: var(--negative); }
+
+  /* body sections */
+  .sec { padding: var(--s5) var(--s4); border-top: .5px solid var(--line); }
+  .head { padding: var(--s5) var(--s4) var(--s4); }
+  .head h1 { font: 700 28px/1.15 var(--font); letter-spacing: -.02em; }
+  .loc { font: var(--t-body); color: var(--ink-2); margin-top: var(--s2); }
+  .facts { font: var(--t-foot); font-size: 15px; color: var(--ink); margin-top: var(--s2); }
+  .host { display: flex; align-items: center; gap: var(--s3); padding: var(--s4); border-top: .5px solid var(--line); }
+  .ava { width: 44px; height: 44px; border-radius: 22px; flex: none; --c: #b08a74; }
+  .host b { font: var(--t-head); display: block; }
+  .host span { font: var(--t-foot); color: var(--ink-2); }
+  h2 { font: var(--t-title); margin-bottom: var(--s4); }
+  .rows { display: grid; gap: var(--s4); }
+  .row { display: grid; grid-template-columns: 28px 1fr; gap: var(--s3); align-items: start; }
+  .row i { font-size: 24px; line-height: 1; margin-top: 1px; }
+  .row b { font: var(--t-head); display: block; }
+  .row span { font: var(--t-foot); font-size: 15px; color: var(--ink-2); }
+
+  /* stay card: the brand surface */
+  .stay { margin: 0 var(--s4); background: var(--wash); border-radius: var(--r-group); padding: var(--s4); }
+  .route { display: flex; gap: var(--s2); align-items: center; font: var(--t-foot); color: var(--ink-2); margin-bottom: var(--s3); }
+  .route i { color: var(--accent); font-size: 18px; }
+  .route b { color: var(--ink); font-weight: 600; }
+  .datecells { display: grid; grid-template-columns: 1fr 1fr; background: var(--ground); border-radius: var(--r-button); border: .5px solid var(--line); overflow: hidden; }
+  .cell { text-align: left; padding: 10px var(--s3); min-height: 60px; }
+  .cell + .cell { border-left: .5px solid var(--line); }
+  .cell small { display: block; font: 600 13px/1.3 var(--font); color: var(--ink-2); }
+  .cell span { font: var(--t-head); }
+  .guests { display: flex; justify-content: space-between; font: var(--t-foot); font-size: 15px; padding: var(--s3) 2px 0; color: var(--ink-2); }
+  .total { display: flex; align-items: baseline; justify-content: space-between; margin-top: var(--s4); }
+  .total .big { font: var(--t-large); letter-spacing: -.02em; }
+  .total small { font: var(--t-foot); color: var(--ink-2); }
+  .lines { margin-top: var(--s3); border-top: .5px solid var(--line); padding-top: var(--s3); display: grid; gap: 6px; font: var(--t-foot); font-size: 15px; }
+  .lines div { display: flex; justify-content: space-between; }
+  .lines .sub { color: var(--ink-2); }
+
+  .cancel p { font: var(--t-body); }
+  .cancel p + p { margin-top: var(--s2); color: var(--ink-2); font-size: 15px; }
+  .map { position: relative; height: 190px; border-radius: var(--r-group); overflow: hidden; background: #e8e4dc; }
+  [data-theme="dark"] .map { background: #1d1f22; }
+  #map { position: absolute; inset: 0; }
+  .maptext { font: var(--t-foot); font-size: 15px; color: var(--ink-2); margin-top: var(--s3); }
+  .maptext b { color: var(--ink); font-weight: 600; }
+  .muted { font: var(--t-body); color: var(--ink-2); }
+  .credit { font: var(--t-foot); color: var(--ink-2); padding: var(--s4); }
+
+  /* reserve bar */
+  .bar { position: absolute; inset: auto 0 0 0; z-index: 20; height: var(--bar-h); padding: var(--s3) var(--s4) var(--safe-bottom); background: var(--ground); border-top: .5px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
+  .barprice { text-align: left; min-height: 48px; display: flex; flex-direction: column; justify-content: center; }
+  .barprice .p { font: 700 20px/1.15 var(--font); }
+  .barprice .dt { font: var(--t-foot); font-size: 14px; color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+  .barprice .why { font: var(--t-foot); color: var(--ink-2); }
+  .cta { min-height: 50px; padding: 0 28px; border-radius: var(--r-button); background: var(--accent); color: var(--on-accent); font: var(--t-head); flex: none; }
+  .cta:disabled { background: var(--raised); color: var(--ink-2); }
+  .cta.wide { width: 100%; margin-top: var(--s4); display: flex; align-items: center; justify-content: center; gap: var(--s2); }
+  .ghost { min-height: 44px; padding: 0 var(--s3); color: var(--accent); font: var(--t-head); }
+
+  /* number roll (signature: numeric transition on the changing total) */
+  .roll { display: inline-flex; height: 1.15em; line-height: 1.15; overflow: hidden; font-variant-numeric: tabular-nums; vertical-align: bottom; }
+  .roll > span { display: block; height: 1.15em; line-height: 1.15; }
+  .roll .d { overflow: hidden; }
+  .roll .col { display: flex; flex-direction: column; transition: transform var(--ms,420ms) var(--spring, var(--ease)); }
+  .roll i { display: block; height: 1.15em; font-style: normal; }
+
+  /* toast */
+  .toast { position: absolute; left: var(--s4); right: var(--s4); bottom: calc(var(--bar-h) + var(--s3)); z-index: 25; background: #1C1C1E; color: #fff; border-radius: var(--r-group); padding: 6px 6px 6px var(--s4); display: flex; align-items: center; justify-content: space-between; gap: var(--s2); font: var(--t-foot); font-size: 15px; transition: opacity .18s var(--ease), transform .18s var(--ease); }
+  [data-theme="dark"] .toast { background: #2C2C2E; }
+  .toast[hidden] { display: flex; opacity: 0; transform: translateY(8px); pointer-events: none; }
+  .toast button { min-height: 44px; padding: 0 var(--s3); color: #8FB0FF; font-weight: 600; }
+
+  /* sheets */
+  .scrim { position: absolute; inset: 0; z-index: 40; background: rgb(0 0 0 / .4); opacity: 0; pointer-events: none; transition: opacity .22s var(--ease); }
+  .scrim.on { opacity: 1; pointer-events: auto; }
+  .sheet { position: absolute; inset: auto 0 0 0; z-index: 41; background: var(--ground); border-radius: 14px 14px 0 0; padding: 6px var(--s4) calc(var(--safe-bottom) + var(--s3)); transform: translateY(105%); transition: transform .32s var(--ease); max-height: calc(var(--h) - var(--safe-top) - 12px); overflow-y: auto; touch-action: pan-y; }
+  [data-theme="dark"] .sheet { background: var(--raised); }
+  .sheet.on { transform: none; }
+  .grab { display: block; width: 36px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto 2px; }
+  .shead { display: flex; align-items: center; justify-content: space-between; min-height: 52px; }
+  .shead h2 { margin: 0; font: var(--t-title); outline: none; }
+  .close { width: 44px; height: 44px; border-radius: 22px; display: grid; place-items: center; font-size: 20px; background: var(--raised); color: var(--ink-2); margin-right: -6px; }
+  [data-theme="dark"] .close { background: #2C2C2E; }
+
+  .cal-h { display: flex; justify-content: space-between; align-items: center; font: var(--t-head); margin: var(--s2) 0; }
+  .cal-h span { font: var(--t-foot); color: var(--ink-2); }
+  .wk, .grid { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; }
+  .wk { font: 600 13px/1 var(--font); color: var(--ink-2); padding: var(--s2) 0; }
+  .grid { row-gap: 4px; }
+  .day { height: 44px; font: 400 17px/44px var(--font); font-variant-numeric: tabular-nums; position: relative; }
+  .day.in-range { background: var(--wash-2); }
+  .day.start, .day.end { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+  .day.start { border-radius: 22px 0 0 22px; } .day.end { border-radius: 0 22px 22px 0; }
+  .day.start.only { border-radius: 22px; }
+  .day:disabled { color: var(--ink-2); text-decoration: line-through; opacity: .7; }
+  .calkey { font: var(--t-foot); color: var(--ink-2); margin-top: var(--s3); }
+  .sfoot { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); border-top: .5px solid var(--line); margin-top: var(--s4); padding-top: var(--s3); }
+  .sfoot .p { font: 700 20px/1.15 var(--font); }
+  .sfoot small { display: block; font: var(--t-foot); color: var(--ink-2); }
+
+  .rv { display: grid; grid-template-columns: 64px 1fr; gap: var(--s3); align-items: center; padding: var(--s2) 0 var(--s4); border-bottom: .5px solid var(--line); }
+  .rv .pic { width: 64px; height: 64px; border-radius: 8px; flex: none; }
+  .rv b { font: var(--t-head); display: block; }
+  .rv span { font: var(--t-foot); color: var(--ink-2); }
+  .kv { display: flex; justify-content: space-between; align-items: center; min-height: 52px; border-bottom: .5px solid var(--line); gap: var(--s3); }
+  .kv div small { display: block; font: 600 13px/1.3 var(--font); color: var(--ink-2); }
+  .kv div span { font: var(--t-body); }
+  .terms { font: var(--t-foot); font-size: 15px; color: var(--ink-2); margin-top: var(--s4); }
+  .terms b { color: var(--ink); font-weight: 600; }
+  .spin { width: 18px; height: 18px; border-radius: 9px; border: 2px solid currentColor; border-right-color: transparent; animation: sp .8s linear infinite; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  .done { text-align: left; padding: var(--s4) 0 0; }
+  .done i { font-size: 44px; color: var(--positive); }
+  .done h3 { font: var(--t-title); margin: var(--s2) 0; }
+  .done p { font: var(--t-body); color: var(--ink-2); }
+  .err[hidden] { display: none; }
+  .err { color: var(--negative); font: var(--t-foot); font-size: 15px; margin-top: var(--s3); display: flex; gap: 6px; align-items: center; }
+
+  /* states by hash */
+  .state { display: none; padding: calc(var(--safe-top) + 72px) var(--s4) 0; }
+  .state i.big { font-size: 32px; color: var(--ink-2); }
+  .state h1 { font: var(--t-title); margin: var(--s3) 0 var(--s2); }
+  .state p { font: var(--t-body); color: var(--ink-2); }
+  .state .cta { margin-top: var(--s5); }
+  [data-state="error"] .content, [data-state="loading"] .content { display: none; }
+  [data-state="error"] #st-error { display: block; }
+  [data-state="loading"] #st-loading { display: block; padding: 0; }
+  [data-state="error"] .bar, [data-state="loading"] .bar { display: none; }
+  [data-state="error"] #share, [data-state="error"] #save, [data-state="loading"] #share, [data-state="loading"] #save { visibility: hidden; }
+  .sk { background: var(--raised); border-radius: 8px; }
+  .offline { display: none; margin: var(--s4) var(--s4) 0; padding: var(--s3); border-radius: var(--r-group); background: var(--raised); font: var(--t-foot); font-size: 15px; gap: var(--s2); align-items: flex-start; }
+  .offline i { font-size: 20px; }
+  [data-state="offline"] .offline { display: flex; }
+  .unavail { display: none; font: var(--t-foot); font-size: 15px; color: var(--negative); margin-top: var(--s3); gap: 6px; align-items: center; }
+  [data-state="empty"] .unavail { display: flex; }
+  [data-state="empty"] .total, [data-state="empty"] .lines { display: none; }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+</style>
+</head>
+<body>
+  <div class="statusbar">
+    <span id="clock">10:08</span>
+    <svg viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" stroke="currentColor" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen">
+    <header class="topbar" id="topbar">
+      <button class="circ" aria-label="Back to search" onclick="history.length>1?history.back():toast('This is the first screen of the prototype')"><i class="ph ph-caret-left"></i></button>
+      <div class="navtitle" aria-hidden="true">Cave suite in Göreme</div>
+      <button class="circ" id="share" aria-label="Share this stay"><i class="ph ph-share"></i></button>
+      <button class="circ" id="save" aria-label="Save to wishlist" aria-pressed="false"><i class="ph ph-heart"></i></button>
+    </header>
+
+    <div class="scroll" id="scroll">
+      <div class="state" id="st-loading" aria-busy="true" aria-label="Loading stay">
+        <div class="sk" style="height:330px;border-radius:0"></div>
+        <div style="padding:24px 16px;display:grid;gap:12px">
+          <div class="sk" style="height:30px;width:85%"></div><div class="sk" style="height:30px;width:55%"></div>
+          <div class="sk" style="height:18px;width:60%;margin-top:6px"></div>
+          <div class="sk" style="height:150px;margin-top:20px;border-radius:12px"></div>
+        </div>
+      </div>
+      <div class="state" id="st-error" role="alert">
+        <i class="ph ph-warning-circle big" aria-hidden="true"></i>
+        <h1>Couldn’t load this stay</h1>
+        <p>The connection dropped before the listing arrived. Your dates, 4–7 Dec, are kept.</p>
+        <button class="cta" onclick="retry()">Try again</button>
+      </div>
+
+      <div class="content">
+        <section class="gallery" aria-label="Photos">
+          <div class="track" id="track">
+            <div class="pic" style="--c:#b48a66"><img src="https://images.unsplash.com/photo-1631724533937-687e6e60aafe?w=1200&q=80&auto=format&fit=crop" alt="Terrace of the cave house, cut into the rock face" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()"></div>
+            <div class="pic" style="--c:#c29a72"><img src="https://images.unsplash.com/photo-1565694286329-16c31ae20a20?w=1200&q=80&auto=format&fit=crop" alt="The fairy chimney the suite is carved into" loading="lazy" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()"></div>
+            <div class="pic" style="--c:#9f8a78"><img src="https://images.unsplash.com/photo-1559783510-c448bd7d686b?w=1200&q=80&auto=format&fit=crop" alt="Göreme valley seen from the terrace" loading="lazy" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()"></div>
+            <div class="pic" style="--c:#c99a7a"><img src="https://images.unsplash.com/photo-1695415683093-ae5f213ea898?w=1200&q=80&auto=format&fit=crop" alt="Balloons over the valley at sunrise" loading="lazy" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()"></div>
+          </div>
+          <div class="count num" id="count" aria-live="polite">1 / 4</div>
+        </section>
+
+        <div class="offline" role="status"><i class="ph ph-wifi-slash" aria-hidden="true"></i><div><b>You’re offline.</b> This is the listing as of 10:02. Reconnect to check the price and reserve.</div></div>
+
+        <div class="head">
+          <h1 id="title" tabindex="-1">Cave suite carved into a fairy chimney</h1>
+          <p class="loc">Göreme, Nevşehir, Türkiye</p>
+          <p class="facts">Sleeps 2, 1 bedroom, 1 double bed, 1 bath</p>
+        </div>
+        <div class="host">
+          <div class="pic ava"><img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=96&h=96&fit=crop&crop=faces&dpr=2" alt="" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()"></div>
+          <div><b>Hosted by Selin</b><span>Lives on site, replies in Turkish and English</span></div>
+        </div>
+
+        <section class="sec" aria-labelledby="h-special">
+          <h2 id="h-special">What makes it special</h2>
+          <div class="rows">
+            <div class="row"><i class="ph ph-mountains" aria-hidden="true"></i><div><b>Rock-cut room</b><span>Walls and vaulted ceiling carved from volcanic tuff</span></div></div>
+            <div class="row"><i class="ph ph-sun-horizon" aria-hidden="true"></i><div><b>Private terrace</b><span>East-facing, over the Göreme valley</span></div></div>
+            <div class="row"><i class="ph ph-fire" aria-hidden="true"></i><div><b>Wood stove</b><span>Logs supplied November to March</span></div></div>
+            <div class="row"><i class="ph ph-stairs" aria-hidden="true"></i><div><b>18 stone steps to the door</b><span>No step-free access</span></div></div>
+          </div>
+        </section>
+
+        <section class="sec" aria-labelledby="h-stay" style="padding-left:0;padding-right:0">
+          <h2 id="h-stay" style="padding:0 16px">Your stay</h2>
+          <div class="stay">
+            <p class="route"><i class="ph ph-path" aria-hidden="true"></i><span>Stop 2 on your Rota: <b>Istanbul, Göreme, Antalya</b></span></p>
+            <div class="datecells">
+              <button class="cell" data-open="dates" aria-label="Change check-in date"><small>Check-in</small><span id="c-in">Fri 4 Dec</span></button>
+              <button class="cell" data-open="dates" aria-label="Change check-out date"><small>Check-out</small><span id="c-out">Mon 7 Dec</span></button>
+            </div>
+            <p class="guests"><span>2 guests</span><span id="c-nights" class="num">3 nights</span></p>
+            <p class="unavail"><i class="ph ph-prohibit" aria-hidden="true"></i>These dates are taken. Choose other nights.</p>
+            <div class="total"><small>Total, all fees included</small><span class="big" id="t-big" aria-live="polite"></span></div>
+            <div class="lines num" id="lines"></div>
+          </div>
+        </section>
+
+        <section class="sec cancel" aria-labelledby="h-cancel">
+          <h2 id="h-cancel">Cancellation</h2>
+          <p id="cancel-1">Free cancellation until 27 Nov.</p>
+          <p id="cancel-2">After that, the first night (€176) is kept and the rest is refunded.</p>
+        </section>
+
+        <section class="sec" aria-labelledby="h-where">
+          <h2 id="h-where">Where you’ll be</h2>
+          <div class="map"><div id="map" role="img" aria-label="Map of Göreme with the area of the stay marked"></div></div>
+          <p class="maptext"><b>Göreme, Nevşehir, Türkiye.</b> The exact address is shared after you reserve.</p>
+        </section>
+
+        <section class="sec" aria-labelledby="h-rev">
+          <h2 id="h-rev">Reviews</h2>
+          <p class="muted">No reviews yet.</p>
+        </section>
+
+        <section class="sec" aria-labelledby="h-rules">
+          <h2 id="h-rules">House rules</h2>
+          <div class="rows">
+            <div class="row"><i class="ph ph-clock" aria-hidden="true"></i><div><b>Check-in after 15:00</b><span>Checkout before 11:00</span></div></div>
+            <div class="row"><i class="ph ph-users" aria-hidden="true"></i><div><b>2 guests maximum</b><span>No pets</span></div></div>
+          </div>
+        </section>
+        <p class="credit">Photos: Unsplash</p>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toast-t"></span><button id="toast-undo">Undo</button></div>
+
+    <footer class="bar" id="bar">
+      <button class="barprice" data-open="dates" aria-label="Change dates" id="barprice">
+        <span class="p" id="b-total"></span>
+        <span class="dt" id="b-dates">4–7 Dec, 3 nights</span>
+      </button>
+      <button class="cta" id="reserve">Reserve</button>
+    </footer>
+
+    <div class="scrim" id="scrim"></div>
+
+    <!-- dates sheet -->
+    <section class="sheet" id="sh-dates" role="dialog" aria-modal="true" aria-labelledby="hd-dates" aria-hidden="true">
+      <span class="grab" aria-hidden="true"></span>
+      <div class="shead"><h2 id="hd-dates" tabindex="-1">Dates</h2><button class="close" data-close aria-label="Close dates"><i class="ph ph-x"></i></button></div>
+      <div class="cal-h"><b>December 2026</b><span>€176 a night</span></div>
+      <div class="wk" aria-hidden="true"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+      <div class="grid" id="grid"></div>
+      <p class="calkey" id="calhint">Crossed-out nights are taken.</p>
+      <div class="sfoot">
+        <div><span class="p" id="s-total"></span><small id="s-dates" class="num"></small></div>
+        <button class="cta" id="s-save">Save dates</button>
+      </div>
+    </section>
+
+    <!-- review sheet: the next step of reserving -->
+    <section class="sheet" id="sh-review" role="dialog" aria-modal="true" aria-labelledby="hd-review" aria-hidden="true">
+      <span class="grab" aria-hidden="true"></span>
+      <div class="shead"><h2 id="hd-review" tabindex="-1">Review and reserve</h2><button class="close" data-close aria-label="Close review"><i class="ph ph-x"></i></button></div>
+      <div id="rv-body">
+        <div class="rv">
+          <div class="pic" style="--c:#b48a66"><img src="https://images.unsplash.com/photo-1631724533937-687e6e60aafe?w=200&h=200&q=80&auto=format&fit=crop" alt="" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()"></div>
+          <div><b>Cave suite carved into a fairy chimney</b><span>Göreme, hosted by Selin</span></div>
+        </div>
+        <div class="kv"><div><small>Dates</small><span id="r-dates" class="num"></span></div><button class="ghost" id="r-change">Change</button></div>
+        <div class="kv"><div><small>Guests</small><span>2 guests</span></div></div>
+        <div class="lines num" id="r-lines" style="border-top:0"></div>
+        <p class="terms" id="r-terms"></p>
+        <p class="err" id="r-err" hidden><i class="ph ph-warning-circle" aria-hidden="true"></i><span>Payment didn’t go through. Nothing was charged; try again.</span></p>
+        <button class="cta wide" id="r-pay"></button>
+      </div>
+      <div id="rv-done" class="done" hidden>
+        <i class="ph-fill ph-check-circle" aria-hidden="true"></i>
+        <h3 id="d-head" tabindex="-1">Reserved</h3>
+        <p id="d-text"></p>
+        <button class="cta wide" data-close>View trip</button>
+      </div>
+    </section>
+  </main>
+
+  <div class="home-indicator"></div>
+  <script>document.getElementById('clock').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, '');</script>
+
+<script>
+// ---------- sample data (stated as sample in the report) ----------
+const RATE = 176, CLEANING = 30, FEE_PCT = 0.08, YEAR = 2026, MONTH = 11; // December
+const TAKEN = new Set([10, 11, 12, 24, 25]);
+const MAX_NIGHTS = 14;
+const eur = n => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
+const day = d => new Date(YEAR, MONTH, d);
+const wd = d => day(d).toLocaleDateString('en-GB', { weekday: 'short' });
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = id => document.getElementById(id);
+
+function price(inD, outD) {
+  const nights = outD - inD, sub = nights * RATE, fee = Math.round(sub * FEE_PCT);
+  return { nights, sub, fee, total: sub + CLEANING + fee };
+}
+// self-check: visible total is the sum of visible lines
+for (const [a, b] of [[4, 7], [4, 8], [1, 9], [13, 27]]) { const p = price(a, b); console.assert(p.total === p.nights * RATE + CLEANING + p.fee, 'total mismatch', a, b); }
+console.assert(price(4, 7).total === 600 && price(4, 8).total === 790, 'sample totals changed');
+
+let stay = { in: 4, out: 7 };
+
+// ---------- signature: the total rolls its digits when the nights change ----------
+function spring(k = 170, c = 14, m = 1, pts = 40) {
+  const w0 = Math.sqrt(k / m), z = c / (2 * Math.sqrt(k * m)), wdm = w0 * Math.sqrt(Math.max(1e-6, 1 - z * z));
+  const x = t => z < 1 ? 1 - Math.exp(-z * w0 * t) * (Math.cos(wdm * t) + (z * w0 / wdm) * Math.sin(wdm * t)) : 1 - Math.exp(-w0 * t) * (1 + w0 * t);
+  let T = .02; while (T < 10) { if (Math.abs(1 - x(T)) < .001 && Math.abs(1 - x(T + .1)) < .001) break; T += .02; }
+  const v = []; for (let i = 0; i <= pts; i++) v.push(+x(T * i / pts).toFixed(4)); v[pts] = 1;
+  return { css: `linear(${v.join(',')})`, ms: Math.round(T * 1000) };
+}
+const sp = spring(210, 26); // near-critical: settles without visible overshoot (Energy 2)
+document.documentElement.style.setProperty('--spring', sp.css);
+document.documentElement.style.setProperty('--ms', Math.min(sp.ms, 520) + 'ms');
+
+function roll(el, text) {
+  el.setAttribute('role', 'img'); el.setAttribute('aria-label', text);
+  if (!el.classList.contains('roll')) el.classList.add('roll');
+  if (el.dataset.len !== String(text.length)) {
+    el.dataset.len = text.length;
+    el.innerHTML = [...text].map(c => /\d/.test(c) ? '<span class="d" aria-hidden="true"><span class="col">' + [...'0123456789'].map(n => '<i>' + n + '</i>').join('') + '</span></span>' : '<span aria-hidden="true">' + c + '</span>').join('');
+  }
+  let k = 0; const cols = el.querySelectorAll('.col');
+  for (const c of text) if (/\d/.test(c)) cols[k++].style.transform = 'translateY(-' + (+c * 1.15) + 'em)';
+}
+
+function rangeText(a, b) { return `${a}–${b} Dec`; }
+function linesHTML(p) {
+  return `<div><span class="sub">${eur(RATE)} × ${p.nights} night${p.nights > 1 ? 's' : ''}</span><span>${eur(p.sub)}</span></div>
+          <div><span class="sub">Cleaning</span><span>${eur(CLEANING)}</span></div>
+          <div><span class="sub">Rota service fee</span><span>${eur(p.fee)}</span></div>
+          <div style="font-weight:600"><span>Total</span><span>${eur(p.total)}</span></div>`;
+}
+function cancelBy(inD) { const d = day(inD); d.setDate(d.getDate() - 7); return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); }
+
+function render() {
+  const p = price(stay.in, stay.out);
+  roll($('t-big'), eur(p.total));
+  roll($('b-total'), eur(p.total));
+  $('c-in').textContent = `${wd(stay.in)} ${stay.in} Dec`;
+  $('c-out').textContent = `${wd(stay.out)} ${stay.out} Dec`;
+  $('c-nights').textContent = `${p.nights} night${p.nights > 1 ? 's' : ''}`;
+  $('b-dates').textContent = `${rangeText(stay.in, stay.out)}, ${p.nights} night${p.nights > 1 ? 's' : ''}`;
+  $('lines').innerHTML = linesHTML(p);
+  $('cancel-1').textContent = `Free cancellation until ${cancelBy(stay.in)}.`;
+  $('cancel-2').textContent = `After that, the first night (${eur(RATE)}) is kept and the rest is refunded.`;
+  // assert the screen agrees with itself
+  const shown = [...$('lines').children].slice(0, 3).map(r => +r.lastElementChild.textContent.replace(/\D/g, '')).reduce((a, b) => a + b, 0);
+  console.assert(shown === p.total, 'visible lines do not sum to total');
+  applyStateToBar();
+}
+
+// ---------- toast with undo ----------
+let toastTimer, undoFn = null;
+function toast(text, undo) {
+  $('toast-t').textContent = text; undoFn = undo || null;
+  $('toast-undo').hidden = !undo; $('toast').hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { $('toast').hidden = true; undoFn = null; }, 7000);
+}
+$('toast-undo').onclick = () => { const f = undoFn; $('toast').hidden = true; undoFn = null; if (f) f(); };
+
+function setDates(a, b, announce = true) {
+  const prev = { ...stay }; stay = { in: a, out: b }; render();
+  if (announce) toast(`Dates changed to ${rangeText(a, b)}`, () => { stay = prev; render(); toast(`Dates back to ${rangeText(prev.in, prev.out)}`); });
+}
+
+// ---------- save, share ----------
+$('save').onclick = function () {
+  const on = this.getAttribute('aria-pressed') !== 'true';
+  const set = v => { this.setAttribute('aria-pressed', v); this.querySelector('i').className = v ? 'ph-fill ph-heart' : 'ph ph-heart'; this.setAttribute('aria-label', v ? 'Remove from wishlist' : 'Save to wishlist'); };
+  set(on); toast(on ? 'Saved to Wishlist' : 'Removed from Wishlist', () => set(!on));
+};
+$('share').onclick = async () => {
+  const data = { title: 'Cave suite carved into a fairy chimney', url: location.href.split('#')[0] };
+  try { if (navigator.share) { await navigator.share(data); return; } await navigator.clipboard.writeText(data.url); toast('Link copied'); }
+  catch (e) { if (e && e.name !== 'AbortError') toast('Couldn’t share. Try again.'); }
+};
+
+// ---------- photos counter ----------
+$('track').addEventListener('scroll', e => { const t = e.target; $('count').textContent = `${Math.round(t.scrollLeft / t.clientWidth) + 1} / 4`; }, { passive: true });
+
+// ---------- collapsing top bar + status bar colour over the photo ----------
+const scroller = $('scroll');
+function onScroll() { const solid = scroller.scrollTop > 270 || document.documentElement.dataset.state === 'error'; $('topbar').classList.toggle('solid', solid); document.documentElement.classList.toggle('over-photo', !solid && document.documentElement.dataset.state !== 'loading'); }
+scroller.addEventListener('scroll', onScroll, { passive: true });
+
+// ---------- sheets ----------
+let openSheet = null, lastFocus = null;
+function open(id) {
+  if (openSheet) close(true);
+  lastFocus = document.activeElement; openSheet = $(id);
+  $('scrim').classList.add('on'); openSheet.classList.add('on'); openSheet.setAttribute('aria-hidden', 'false');
+  setTimeout(() => openSheet && openSheet.querySelector('h2').focus(), 60);
+}
+function close(swap) {
+  if (!openSheet) return;
+  openSheet.classList.remove('on'); openSheet.setAttribute('aria-hidden', 'true'); openSheet.style.transform = '';
+  openSheet = null;
+  if (!swap) { $('scrim').classList.remove('on'); lastFocus && lastFocus.focus && lastFocus.focus(); }
+}
+$('scrim').onclick = () => close();
+addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+document.addEventListener('click', e => {
+  const o = e.target.closest('[data-open]'); if (o && !o.disabled) { if (o.dataset.open === 'dates') openDates(); }
+  if (e.target.closest('[data-close]')) close();
+});
+// drag down to dismiss (the close button, Esc and the scrim do the same)
+document.querySelectorAll('.sheet').forEach(sh => {
+  let y0 = null, y = 0, t0 = 0;
+  sh.addEventListener('pointerdown', e => { if (e.target.closest('button') || sh.scrollTop > 0) return; y0 = e.clientY; y = 0; t0 = e.timeStamp; sh.style.transition = 'none'; sh.setPointerCapture(e.pointerId); });
+  sh.addEventListener('pointermove', e => { if (y0 === null) return; y = e.clientY - y0; sh.style.transform = `translateY(${y < 0 ? y * .25 : y}px)`; });
+  const end = e => { if (y0 === null) return; const v = y / Math.max(1, e.timeStamp - t0); y0 = null; sh.style.transition = ''; if (y > 140 || v > .6) close(); else sh.style.transform = ''; };
+  sh.addEventListener('pointerup', end); sh.addEventListener('pointercancel', end);
+});
+
+// ---------- dates sheet ----------
+let pick = { in: 4, out: 7 };
+function blockedBetween(a, b) { for (let d = a; d < b; d++) if (TAKEN.has(d)) return true; return false; }
+function buildGrid() {
+  const first = (day(1).getDay() + 6) % 7, last = new Date(YEAR, MONTH + 1, 0).getDate();
+  let h = ''; for (let i = 0; i < first; i++) h += '<span></span>';
+  for (let d = 1; d <= last; d++) {
+    // a taken night can still be a check-out day
+    const taken = TAKEN.has(d) && !(pick.in && !pick.out && d > pick.in && !blockedBetween(pick.in, d));
+    let cls = 'day';
+    if (d === pick.in) cls += ' start' + (pick.out ? '' : ' only');
+    else if (d === pick.out) cls += ' end';
+    else if (pick.out && d > pick.in && d < pick.out) cls += ' in-range';
+    const label = `${wd(d)} ${d} December${TAKEN.has(d) ? ', taken' : ''}${d === pick.in ? ', check-in' : d === pick.out ? ', check-out' : ''}`;
+    h += `<button class="${cls}" data-d="${d}" aria-label="${label}" ${taken ? 'disabled' : ''} aria-pressed="${d === pick.in || d === pick.out}">${d}</button>`;
+  }
+  $('grid').innerHTML = h;
+  const ok = pick.in && pick.out;
+  $('s-save').disabled = !ok;
+  $('calhint').textContent = ok ? 'Crossed-out nights are taken.' : 'Choose a check-out day.';
+  if (ok) { const p = price(pick.in, pick.out); roll($('s-total'), eur(p.total)); $('s-dates').textContent = `${rangeText(pick.in, pick.out)}, ${p.nights} night${p.nights > 1 ? 's' : ''}, fees included`; }
+  else { $('s-total').classList.remove('roll'); $('s-total').dataset.len = ''; $('s-total').removeAttribute('role'); $('s-total').textContent = '—'; $('s-dates').textContent = `Check-in ${pick.in} Dec`; }
+}
+$('grid').onclick = e => {
+  const b = e.target.closest('.day'); if (!b || b.disabled) return; const d = +b.dataset.d;
+  if (!pick.in || pick.out || d <= pick.in) pick = { in: d, out: null };
+  else if (blockedBetween(pick.in, d) || d - pick.in > MAX_NIGHTS) pick = { in: d, out: null };
+  else pick.out = d;
+  buildGrid();
+  const nb = $('grid').querySelector(`[data-d="${d}"]`); nb && nb.focus();
+};
+function openDates() { pick = { ...stay }; buildGrid(); open('sh-dates'); }
+$('s-save').onclick = () => { const changed = pick.in !== stay.in || pick.out !== stay.out; close(); if (changed) setDates(pick.in, pick.out); };
+
+// ---------- review sheet ----------
+function openReview() {
+  const p = price(stay.in, stay.out);
+  $('r-dates').textContent = `${wd(stay.in)} ${stay.in} – ${wd(stay.out)} ${stay.out} Dec 2026, ${p.nights} night${p.nights > 1 ? 's' : ''}`;
+  $('r-lines').innerHTML = linesHTML(p);
+  $('r-terms').innerHTML = `<b>Free cancellation until ${cancelBy(stay.in)}.</b> After that the first night (${eur(RATE)}) is kept. You’re charged ${eur(p.total)} when you reserve; nothing else is added.`;
+  $('r-pay').innerHTML = `Reserve and pay ${eur(p.total)}`; $('r-pay').disabled = false;
+  $('r-err').hidden = true; $('rv-body').hidden = false; $('rv-done').hidden = true;
+  open('sh-review');
+}
+$('reserve').onclick = openReview;
+$('r-change').onclick = openDates;
+let attempts = 0;
+$('r-pay').onclick = function () {
+  this.disabled = true; this.innerHTML = '<span class="spin" aria-hidden="true"></span>Reserving…'; $('r-err').hidden = true;
+  setTimeout(() => {
+    // add ?payfail to the URL to see the declined path once
+    if (location.search.includes('payfail') && attempts++ === 0) { this.disabled = false; this.innerHTML = `Try again, ${eur(price(stay.in, stay.out).total)}`; $('r-err').hidden = false; return; }
+    const p = price(stay.in, stay.out);
+    $('rv-body').hidden = true; $('rv-done').hidden = false;
+    $('d-text').textContent = `${rangeText(stay.in, stay.out)}, ${p.nights} nights, ${eur(p.total)} paid. Selin will message you the address and arrival details. Free cancellation until ${cancelBy(stay.in)} from Trips.`;
+    $('d-head').focus();
+  }, 1200);
+};
+
+// ---------- states by URL hash ----------
+const states = ['loading', 'empty', 'error', 'offline'];
+function applyStateToBar() {
+  const s = document.documentElement.dataset.state, r = $('reserve');
+  if (s === 'offline') { r.disabled = true; r.textContent = 'Offline'; r.setAttribute('aria-label', 'Reserve unavailable while offline'); }
+  else if (s === 'empty') { r.disabled = false; r.textContent = 'Choose dates'; r.onclick = openDates; r.removeAttribute('aria-label'); $('b-total').closest('.barprice').querySelector('.p').textContent = 'Not available'; $('b-total').classList.remove('roll'); $('b-total').dataset.len = ''; $('b-total').removeAttribute('role'); }
+  else { r.disabled = false; r.textContent = 'Reserve'; r.onclick = openReview; r.removeAttribute('aria-label'); }
+}
+function sync() { const s = location.hash.slice(1); document.documentElement.dataset.state = states.includes(s) ? s : 'content'; render(); onScroll(); }
+function retry() { location.hash = 'loading'; setTimeout(() => { history.replaceState(null, '', location.pathname + location.search); sync(); }, 900); }
+addEventListener('hashchange', sync); sync();
+
+// ---------- map (MapLibre + OpenFreeMap); text above is the non-map alternative ----------
+(function () {
+  const done = () => { document.documentElement.dataset.mapReady = '1'; };
+  if (!window.maplibregl) return done();
+  try {
+    const dark = document.documentElement.dataset.theme === 'dark';
+    const c = [34.8297, 38.6431];
+    const map = new maplibregl.Map({ container: 'map', style: `https://tiles.openfreemap.org/styles/${dark ? 'dark' : 'positron'}`, center: c, zoom: 13.4, attributionControl: { compact: true }, interactive: false });
+    map.on('load', () => {
+      document.querySelectorAll('.maplibregl-compact-show').forEach(el => el.classList.remove('maplibregl-compact-show'));
+      map.addSource('area', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'Point', coordinates: c } } });
+      map.addLayer({ id: 'area', type: 'circle', source: 'area', paint: { 'circle-radius': 34, 'circle-color': '#2457C5', 'circle-opacity': .16, 'circle-stroke-color': '#2457C5', 'circle-stroke-width': 2 } });
+      map.addLayer({ id: 'dot', type: 'circle', source: 'area', paint: { 'circle-radius': 7, 'circle-color': '#2457C5', 'circle-stroke-color': '#fff', 'circle-stroke-width': 2.5 } });
+    });
+    map.on('idle', done); map.on('error', () => setTimeout(done, 500));
+    setTimeout(done, 11000);
+  } catch (e) { done(); }
+})();
+
+// ---------- auto-demo: one night added at 2.5 s, so the total rolls 600 -> 790 ----------
+let touched = false; addEventListener('pointerdown', () => touched = true, { once: true });
+if (!reduce) setTimeout(() => { if (!touched && document.documentElement.dataset.state === 'content' && !openSheet) setDates(4, 8); }, 2500);
+</script>
+</body>
+</html>

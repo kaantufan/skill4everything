@@ -1,10 +1,10 @@
 ---
 name: mobile-ui-craft
 description: >-
-  Design, build, restyle and review mobile app UI and UX for iOS (SwiftUI, UIKit), Android (Jetpack Compose, Kotlin), Flutter and React Native or Expo, so each app gets a look of its own that does not read as AI-generated: one concept, a data-carrying hero, and typeface, icons, layout and colour that are dealt and derived instead of left to a model's taste. Use this skill whenever the task touches a mobile screen, flow, component, theme, navigation, onboarding, paywall, animation, haptics, icon set or app mockup or prototype, or the user says an app looks generic, plain, off, cheap or AI-made, even if they never say "design". Not for websites or desktop apps.
+  Design, build, restyle and review mobile app UI and UX for iOS (SwiftUI, UIKit), Android (Jetpack Compose, Kotlin), Flutter and React Native or Expo, so each app gets a coherent look of its own that does not read as AI-generated: a researched direction dealt from the niche, real photos and maps instead of drawn or empty slots, and UX that carries the task one step further with real states. Use this skill whenever the task touches a mobile screen, flow, component, theme, navigation, onboarding, paywall, animation, haptics, icon set or app mockup or prototype, or the user says an app looks generic, plain, off, cheap or AI-made, even if they never say "design". Not for websites or desktop apps.
 license: MIT
 metadata:
-  version: "3.1.0"
+  version: "4.1.0"
   baseline: "2026-11"
 ---
 
@@ -12,7 +12,7 @@ metadata:
 
 A mobile screen is remembered when it has an idea: one concept from the product's own world, built into a hero the user can see and touch, on a surface with a point of view. Generated UI fails in the opposite way. Nothing on it is wrong, but nothing was chosen: a neutral background, a rounded card with a big number, a list, a tab bar. It looks like every other app, so nobody says anything about it.
 
-There is a second failure. A model's own taste is recognisable: the same few typefaces, hand-drawn vector pictures and icons, the same coloured field with a rounded sheet, the same glow. A trained eye spots it at once. So this skill gives every screen one idea, takes the taste decisions out of your hands by dealing them from a script, replaces what you would draw with real material, and keeps the floor that makes the result usable.
+There are two more failures. A model's own taste is recognisable: the same few typefaces, hand-drawn pictures and icons, a coloured field with a rounded sheet, a glow. And random choices are incoherent: a serif running summary in purple on black, a maroon music player. So this skill deals a researched direction from the niche (one coherent surface, type, colour, imagery rule and signature interaction, taken from how celebrated apps are built), puts real material where you would draw or leave an empty slot, and asks for a prototype that demonstrates the task, not a static picture.
 
 Two rules outrank everything else here:
 
@@ -50,18 +50,18 @@ Platform files tell you what the system gives you for free and what it expects. 
 
 | Task | Read |
 |---|---|
-| Designing or building screens, a mockup or a prototype | `references/signature.md` first, then `references/craft.md` once the structure stands |
+| Designing or building screens, a mockup or a prototype | `references/signature.md` and `references/ux-check.md`. `references/craft.md` is for native builds and polish once the structure stands |
 | "Looks generic, plain, AI-made, boring", or a restyle | `references/signature.md` and `references/slop-tells.md` |
-| Review or audit without edits | `references/review.md` and `references/slop-tells.md` |
+| Review or audit without edits | `references/review.md`, `references/slop-tells.md` and `references/ux-check.md` |
 | Animation, transitions, gestures, haptics | `references/motion-haptics.md` |
 | Onboarding, sign-up, permissions, paywall, forms, navigation structure, empty and error states | `references/ux-flows.md` |
 | Rendering, capturing or checking a prototype | `references/preview.md` |
 
-Keep the reading budget: one platform file, one niche file, two task files. Loading everything dilutes the parts that matter for this task.
+Keep the reading budget: one platform file, one niche file, two task files. A prototype task reads `references/preview.md`, one niche file, `references/signature.md` and `references/ux-check.md`. Loading everything dilutes the parts that matter for this task.
 
 ## 2. Write the brief
 
-**Deal the hand first.** Run `node scripts/deal.mjs --seed "<product name>" --platform ios` (or `android`, `both`) from this skill's folder. It fixes the typeface, icon set, layout skeleton, navigation, shape, ground, palette structure, effects budget, voice, hero type, hue sector and first appearance. The hand is binding: `references/signature.md` says how to use it and when one reroll is allowed.
+**Deal the direction first.** Run `node scripts/deal.mjs --seed "<product name>" --niche <niche-id> --platform ios` (or `android`, `both`) from this skill's folder; the niche ids are in the index below. It fixes the direction, typeface, accent, colour tokens for light and dark, icon set, imagery rule and signature moment. The direction is binding: `references/signature.md` says how to use it and when one reroll is allowed.
 
 Before any UI code, write this brief. It is the mechanism that makes a banking app and a meditation app come out different, so do not skip it and do not fill it with adjectives. "Clean", "modern" and "premium" describe every generated app; replace each with a choice someone could check.
 
@@ -71,10 +71,10 @@ Platform:   stack, minimum OS, existing design system (yes / no)
 Niche:      primary niche -> stakes (trust 1-5), vulnerable users?, session (glance / short / immersive)
 Dials:      D_ E_ W_ X_  (niche preset, then what you changed and why)
 Concept:    the one idea, in a sentence with no interface words
-Hand:       the dealt cards, one line each; any reroll and the reason
-Hero:       the dealt hero type, and which real value it shows
-Source:     what in the product's own world the hue and the wording come from
-Motion:     what the primary action does to the hero
+Direction:  the dealt direction, face, accent and signature moment; any reroll and the reason
+First screen answers:  the niche question from the UX check (what the first viewport tells the user)
+Next step built:  the second view of the primary task (a cart sheet, a review sheet, the next profile)
+Material:   which real photos, covers, map or data fill every slot
 Avoiding:   the niche cliché AND the over-correction (both are in the niche file)
 Refusing:   dark patterns this niche tempts that will not be built
 ```
@@ -86,15 +86,15 @@ Refusing:   dark patterns this niche tempts that will not be built
 | **D Density** | One job per screen. Rows 64+ tall, 32-40 between sections | Rows 52-60, 24 between sections | Rows at the platform minimum, 16 between sections, dividers instead of cards |
 | **E Energy** | Near-monochrome, fades, no overshoot, no celebration | Strong colour with jobs, springs, one authored moment | Several hues, overshoot on what a finger started, celebration at real milestones |
 | **W Warmth** | Small radii (4-8), hairlines, precise neutral copy | Medium radii (10-14), plain friendly copy | Large radii (20-28), conversational copy, a character with a job |
-| **X Expression** | System components and the platform's look. Only the hue and the content are the product's | Native skeleton with the dealt hand applied in full | Custom navigation and controls built for the product, a custom data-driven hero, choreographed motion |
+| **X Expression** | System components and the platform's look. Only the accent and the content are the product's | Native skeleton with the dealt direction applied in full | Custom navigation and controls built for the product, a custom data-driven hero, choreographed motion |
 
 Values 2 and 4 sit between the columns. Sizes are in pt on iOS and dp on Android.
 
 **Expression defaults to 3.** Go to 4 or 5 only when the brief asks for a fully bespoke product, and drop to 1 or 2 when the brief asks for a quiet or strictly native result, or the product is a work tool where speed matters more than feeling (field work, enterprise, civic, clinical). From Expression 3 up, a concept is required, not optional.
 
-**Deal what taste would decide; derive the rest.** The hand settles typeface, icons, layout and effects, because left to choose you return to the same few. The concept, the hue and the words come from the product's own world: its objects, places, instruments, printed matter, even its name.
+**The direction decides the surface; the product decides the content.** The direction settles typeface, colour tokens, icons, imagery rule and motion character, because left to choose you return to the same few. The concept, the words and the real material come from the product's own world: its objects, places, instruments, printed matter, even its name.
 
-**One idea, carried everywhere.** The concept decides what the hero measures, the hue, what things are called, the order they come in and the copy. Do not reuse the concept of another product, and do not reuse the previous project's.
+**One idea, carried everywhere.** The concept decides what the hero measures, what things are called, the order they come in and the copy. Do not reuse the concept of another product, and do not reuse the previous project's.
 
 For Full direction work, save the brief as `DESIGN.md` in the project root (or add it to the existing design doc) so later sessions inherit the direction instead of deriving a different one. Ask first if the user did not ask for files.
 
@@ -104,18 +104,20 @@ Before building, answer these in one line each and revise the brief if any answe
 
 1. **One-sentence test.** Can you describe the first screen without naming an interface component? "This month as a statement that ends in what is safe to spend" passes. "A card with the balance and a list" does not.
 2. **Thumbnail test.** Shrunk among ten competing apps' screenshots, would yours be the one a person can pick out?
-3. **Any-app test.** Would this plan come out the same for a different product in this niche? Name three choices that exist only because of this product.
+3. **Any-app test.** Would this plan come out the same for a different product in this niche? Name three choices drawn from this product's content, copy and signature moment.
 4. **Cliché test.** Does it match the niche cliché, or the over-correction, from the niche file?
 5. **Job test.** Does the hero answer what the user came for within a few seconds, and is the exact figure still readable?
 6. **Brief test.** Is everything the brief asked for on the first screen or one obvious scroll away, with the hero in place? A hero that pushes the requested content out of sight has failed the brief.
+7. **UX test.** Does the first viewport answer the niche question, and is the next step of the primary task built?
 
 ## 4. Build
 
-The dealt skeleton first, then the hero, then everything else.
+The conventional niche layout with real material first, then the signature moment, then the states.
 
-1. **Lay out the dealt skeleton and its hero before anything else** and look at them alone, with the dealt typeface and icon set already loaded. If that does not carry the screen, no amount of polish on the list will.
-2. **Tokens in one place.** Colour roles, type roles, spacing steps, radii by role and motion timings live in one theme file in the stack's own idiom. Screens import tokens; they contain no raw colours or one-off sizes.
-3. **Real states and real content** while building, not after.
+1. **Lay out the screen the way the niche's leading apps do, with real photos, covers or data in every slot,** and look at it alone, with the dealt face and icon set loaded. If that does not carry the screen, no amount of polish on the list will.
+2. **Then the signature moment**, finished: interruptible, with a Reduce Motion variant.
+3. **Tokens in one place.** Colour roles, type roles, spacing steps, radii by role and motion timings live in one theme file in the stack's own idiom. Screens import tokens; they contain no raw colours or one-off sizes.
+4. **Real states and real content** while building, not after: loading, empty, error, offline.
 
 **The floor.** These thirteen hold for every screen at every Expression level. Bold design that fails them is not finished.
 
@@ -135,17 +137,19 @@ The dealt skeleton first, then the hero, then everything else.
 
 ## 5. Verify, then report
 
-1. **Render it.** Build and screenshot in a simulator or emulator when you can. Otherwise use the stack's preview tool, and otherwise an animated HTML prototype. `references/preview.md` has the commands. Look at several moments of the motion, not one frame.
-2. **Run the fingerprint check** in `references/signature.md`: ten questions about whether anything on the screen is there because you like it, talks to a builder, or shows off.
-3. **Stress the content.** A 40-character name, an empty list, a thousand items, a zero and a negative number, text 40% longer than English, the largest text size.
-4. **Scan the source.** Run `node scripts/slop-scan.mjs <source-dir>` from this skill's folder. Each hit is a prompt to check intent, not an automatic failure. Without Node, grep the signatures listed in `references/slop-tells.md`.
-5. **Stop after three fix rounds** and report what remains instead of looping.
+1. **Render it.** Build and screenshot in a simulator or emulator when you can. Otherwise use the stack's preview tool, and otherwise an animated HTML prototype. `references/preview.md` has the commands; rendering waits for images and the map. Look at several moments of the motion, not one frame.
+2. **Run the UX check** in `references/ux-check.md`: the single-screen pass on every screen and the flow pass across the task.
+3. **Run the fingerprint check** in `references/signature.md`: ten questions about whether anything on the screen is there because you like it, talks to a builder, or shows off.
+4. **Stress the content.** A 40-character name, an empty list, a thousand items, a zero and a negative number, text 40% longer than English, the largest text size.
+5. **Scan the source.** Run `node scripts/slop-scan.mjs <source-dir>` from this skill's folder. Each hit is a prompt to check intent, not an automatic failure. Without Node, grep the signatures listed in `references/slop-tells.md`.
+6. **Stop after three fix rounds** and report what remains instead of looping.
 
-Close with this report. The last two lines are required: stating what was not checked is what makes the rest believable.
+Close with this report. The first line is `Concept:` and the last two lines are required: stating what was not checked is what makes the rest believable.
 
 ```
 Concept:       <one sentence> · D_ E_ W_ X_
 Built:         <screens and files>
+UX:            <the first-screen answer, the next step built, the states covered>
 Decisions:     <3-5 choices specific to this product, each with its reason>
 Verified:      <what was rendered or run, and on what: device, simulator, preview tool, HTML prototype, code only>
 Not verified:  <what could not be checked>
@@ -154,11 +158,13 @@ Open:          <facts or assets needed from the user>
 
 ## Gotchas
 
-- **There are two failures, not one.** Timid: identical cards on a neutral background, which any app could own. Decorated: a drawn scene, a glow and a display face, which any model could have made. The way out of both is the dealt hand plus the product's own data and words.
-- **Your favourites are the tell.** The typeface you would reach for, the picture you would draw, the glow you would add: other people have seen them a thousand times. Use the hand, use real icons, draw nothing pictorial.
-- **An honest slot beats a drawn stand-in.** Where a photo or artwork belongs, a labelled neutral frame reads as unfinished; a gradient or a vector scene in its place reads as generated.
+- **Coherence beats novelty.** One direction carried through every token beats an interesting mix.
+- **Grey boxes read as unfinished.** Use real material: a photo, a cover, a map, a chart. A gradient or a vector scene in its place reads as generated.
+- **A picture is not UX.** Carry the task one step further: the cart sheet, the review step, the next profile, with states.
+- **Wow is one finished interaction on real content.** Not effects, not loops.
+- **Your favourites are the tell.** The typeface you would reach for, the picture you would draw, the glow you would add: other people have seen them a thousand times. Use the direction, real icons and real photos.
 - **A hero shows data.** An illustration beside a number is decoration. The level, angle or length is the value.
-- **Bold costs clarity unless you pay it back.** In blind judging, screens built with this skill won on identity and impact and lost on clarity whenever the hero crowded out what the brief asked for or a floating control covered content. Size the hero by the Density dial and check the brief test.
+- **Bold costs clarity unless you pay it back.** In blind judging, bold screens won on identity and impact and lost on clarity whenever the hero crowded out what the brief asked for or a floating control covered content. Size the hero by the Density dial and check the brief test.
 - **Check the glyphs.** The dealt face must contain every character the product needs, including currency signs and letters such as ğ, ş, ı and İ. A fallback glyph in the middle of a headline ruins it.
 - **A phone-sized web page is not an app.** Hero banners with marketing copy, max-width wrappers, hover states and footers inside an app are still the strongest generated tell.
 - **Models invent API names.** If an API named in a reference does not exist in the project's SDK, trust the SDK and its documentation.
@@ -171,31 +177,31 @@ Skills load only when a task triggers them, and agents skip them often: measured
 
 ## Niche index
 
-Pick the niche by the job of the screen you are working on. For a hybrid product, read the primary niche and take the stakes from the more sensitive one. If nothing fits, set the dials from three questions: how costly is a mistake (lower E, lower W), how long is a session (glance means lower D per screen), and how vulnerable is the user (calmer, plainer, more exits).
+Pick the niche by the job of the screen you are working on. The niche id is what `--niche` takes. For a hybrid product, read the primary niche and take the stakes from the more sensitive one. If nothing fits, set the dials from three questions: how costly is a mistake (lower E, lower W), how long is a session (glance means lower D per screen), and how vulnerable is the user (calmer, plainer, more exits).
 
-| File in `references/` | Covers | Preset |
-|---|---|---|
-| `niche-fintech.md` | banking, budgeting, payments, invoicing | D4 E2 W2 |
-| `niche-crypto-trading.md` | exchanges, wallets, brokerage | D5 E3 W1 |
-| `niche-fitness-health.md` | workouts, activity and nutrition tracking | D3 E4 W3 |
-| `niche-wellness-meditation.md` | meditation, sleep, mood, mental health | D1 E1 W4 |
-| `niche-productivity-habits.md` | to-do, planners, habits, focus | D3 E2 W3 |
-| `niche-notes-writing.md` | notes, journals, documents | D2 E1 W2 |
-| `niche-social-messaging.md` | feeds, communities, chat | D4 E4 W4 |
-| `niche-dating.md` | dating and matching | D2 E3 W4 |
-| `niche-ecommerce.md` | shops, marketplaces | D4 E2 W3 |
-| `niche-food-delivery.md` | delivery, restaurants, ordering | D4 E3 W4 |
-| `niche-travel-transport.md` | booking, itineraries, maps, transit | D3 E3 W3 |
-| `niche-education.md` | courses, language learning | D2 E4 W5 |
-| `niche-kids.md` | apps for children, with a parent area | D1 E4 W5 |
-| `niche-media-streaming.md` | video, music, podcasts | D3 E3 W3 |
-| `niche-news-reading.md` | news, articles, read-later | D4 E1 W1 |
-| `niche-ai-assistant.md` | chat and voice assistants | D2 E2 W3 |
-| `niche-utilities.md` | scanner, calculator, weather, converters | D2 E2 W3 |
-| `niche-creative-tools.md` | photo, video, drawing, audio editors | D3 E2 W2 |
-| `niche-smart-home.md` | device control, automation | D3 E2 W3 |
-| `niche-healthcare.md` | telemedicine, patient portals | D2 E1 W3 |
-| `niche-real-estate.md` | property search, rentals | D3 E2 W2 |
-| `niche-games-companion.md` | casual games, game companion apps | D3 E5 W5 |
-| `niche-b2b-field.md` | enterprise, field work, inventory | D4 E1 W1 |
-| `niche-government-civic.md` | public services, identity, alerts | D2 E1 W1 |
+| File in `references/` | Niche id | Covers | Preset |
+|---|---|---|---|
+| `niche-fintech.md` | `fintech` | banking, budgeting, payments, invoicing | D4 E2 W2 |
+| `niche-crypto-trading.md` | `crypto-trading` | exchanges, wallets, brokerage | D5 E3 W1 |
+| `niche-fitness-health.md` | `fitness-health` | workouts, activity and nutrition tracking | D3 E4 W3 |
+| `niche-wellness-meditation.md` | `wellness-meditation` | meditation, sleep, mood, mental health | D1 E1 W4 |
+| `niche-productivity-habits.md` | `productivity-habits` | to-do, planners, habits, focus | D3 E2 W3 |
+| `niche-notes-writing.md` | `notes-writing` | notes, journals, documents | D2 E1 W2 |
+| `niche-social-messaging.md` | `social-messaging` | feeds, communities, chat | D4 E4 W4 |
+| `niche-dating.md` | `dating` | dating and matching | D2 E3 W4 |
+| `niche-ecommerce.md` | `ecommerce` | shops, marketplaces | D4 E2 W3 |
+| `niche-food-delivery.md` | `food-delivery` | delivery, restaurants, ordering | D4 E3 W4 |
+| `niche-travel-transport.md` | `travel-transport` | booking, itineraries, maps, transit | D3 E3 W3 |
+| `niche-education.md` | `education` | courses, language learning | D2 E4 W5 |
+| `niche-kids.md` | `kids` | apps for children, with a parent area | D1 E4 W5 |
+| `niche-media-streaming.md` | `media-streaming` | video, music, podcasts | D3 E3 W3 |
+| `niche-news-reading.md` | `news-reading` | news, articles, read-later | D4 E1 W1 |
+| `niche-ai-assistant.md` | `ai-assistant` | chat and voice assistants | D2 E2 W3 |
+| `niche-utilities.md` | `utilities` | scanner, calculator, weather, converters | D2 E2 W3 |
+| `niche-creative-tools.md` | `creative-tools` | photo, video, drawing, audio editors | D3 E2 W2 |
+| `niche-smart-home.md` | `smart-home` | device control, automation | D3 E2 W3 |
+| `niche-healthcare.md` | `healthcare` | telemedicine, patient portals | D2 E1 W3 |
+| `niche-real-estate.md` | `real-estate` | property search, rentals | D3 E2 W2 |
+| `niche-games-companion.md` | `games-companion` | casual games, game companion apps | D3 E5 W5 |
+| `niche-b2b-field.md` | `b2b-field` | enterprise, field work, inventory | D4 E1 W1 |
+| `niche-government-civic.md` | `government-civic` | public services, identity, alerts | D2 E1 W1 |

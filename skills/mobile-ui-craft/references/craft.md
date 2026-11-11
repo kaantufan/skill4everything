@@ -45,9 +45,9 @@ Use this file once the structure of a screen stands. Every rule here is checkabl
 ## Typography
 
 - Use the platform text styles and let them scale. The default body size on both platforms is already tuned; do not shrink body text to fit more.
-- Follow the dealt type scheme. Most hands give the system font or a single family; do not add a second face for contrast.
+- Use the dealt face and scale. One family (the reading direction pairs a text face with the system font); do not add a second face for contrast.
 - **Tabular figures** for every number that changes or lines up: prices, timers, counters, tables. Otherwise digits jitter.
-- For big numbers, make the unit and the decimals quieter than the integer part.
+- Set a big number as one string at one size; the unit does not shrink or dim unless the platform's own app for this job does it.
 - **Truncation is designed.** Names and titles: one line, tail ellipsis. Paths, IDs and file names: middle truncation. Descriptions: two or three lines with a way to expand. Money, times and codes never truncate.
 - Avoid a single short word alone on the last line of a heading; shorten the copy.
 - Avoid weights lighter than regular; they fail in sunlight and at small sizes.
@@ -56,9 +56,9 @@ Use this file once the structure of a screen stands. Every rule here is checkabl
 ## Colour and dark mode
 
 - **Jobs for colours.** Every colour has one job: the field, the hero, action, state. A colour used on everything says nothing.
-- Tint the neutrals slightly toward the brand hue instead of using flat grey. Avoid pure black text on pure white; step each in a little.
+- Use the dealt ink and ground as given: the direction already chose them, including the pure black and white of the native look. Where you add neutrals of your own, tint them slightly toward the accent instead of flat grey.
 - Semantic colours (success, warning, error) are for state only, and always come with an icon or label.
-- **Choose the ground from the concept and the scene of use.** Neither white nor near-black is a default; both are what a screen looks like before anyone chose. Near-black with a glowing accent is the easiest way to look finished and the fastest way to look like everything else. Say which appearance you are showing and why.
+- **The ground comes from the dealt direction,** white or near-black chosen for the niche and the scene of use, not left as a default. Near-black with a glowing accent is the easiest way to look finished and the fastest way to look like everything else; the direction's tokens have no glow. Say which appearance you are showing and why.
 - **Dark mode is designed, not inverted.** Separate values per role; accents slightly less saturated; elevation by lighter surface; images and illustrations checked on the dark background.
 - Check contrast on the real background, including text over photos (add a scrim) and text over translucent material while content scrolls behind it.
 - Charts: one hue plus neutrals, the accent on the series or point being discussed, labels on the data instead of a legend where space allows.
@@ -94,7 +94,7 @@ Use this file once the structure of a screen stands. Every rule here is checkabl
 
 - One family, one weight, matched to the weight of adjacent text. Filled and outlined variants only to show selection.
 - Icons inside buttons need optical, not geometric, centring: arrows and play triangles sit slightly off-centre; reduce padding on the icon side of an icon-and-label button.
-- Images: real photography, specific commissioned art, or nothing. A grey placeholder beats a generic illustration.
+- Images: real photography, specific commissioned art, or nothing. Never a grey placeholder box and never a generic illustration. A slot has a coloured fallback close to the photo's dominant colour.
 - Avatars: photo, then initials on a restrained deterministic colour, then a generic glyph.
 - The launch screen matches the first screen's background so the app appears to open instantly.
 

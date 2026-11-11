@@ -99,6 +99,65 @@ Kullanıcı geri bildirimi: 2.0 çıktıları yazı tiplerinden başlayarak hâl
 
 İlk tespit turunun 3.0 için bulduğu işaretler yazı tipinde değil metindeydi: ekrana sızmış yapım notları, veriyi anlatan cümleler, özenli uydurma yerel veri, ürüne özel grafik gösterişi, siyah zemin üstünde tek pembe vurgu. 3.1 bunları kural yaptı ve bir sonraki turda ortalama AI olasılığı 85'ten 80'e, "en AI" seçilme 16 kararda 3'ten 0'a indi (skill'siz: 88 ve 13). Kalan işaretler (her ekranda dev sayı ve küçük birim, bazı ürüne özel grafikler) kurala çevrildi, yeniden ölçülmedi.
 
+## Sürüm 4: tutarlı yönler, gerçek malzeme, UX
+
+Kullanıcı 3.1 çıktısını hoş bulmadı ve kör testte ekranların yaklaşık yüzde 80'i hâlâ AI sanıldı. Dört araştırma kolu (A-D) aşağıdaki teşhise bakıyor.
+
+**Teşhis**
+
+- **Rastgele dağıtım tutarlılığı bozdu.** 3.x yazı tipini, rengi, yerleşimi ve efekti birbirinden bağımsız dağıtıyordu (90 yüz, 12 renk aralığı, 15 yerleşim). Çıkan şey uyumsuzdu: siyah üstünde mor ve serif bir koşu özeti, bordo bir müzik çalar, sönük mor bir dil uygulaması.
+- **Gri boş kutular.** Fotoğraf, kapak, harita ya da portre olması gereken her yerde gri bir yuva vardı; ekranlar bitmemiş görünüyordu.
+- **UX ince kaldı.** Her prototip tek bir durağan ekrandı: görev bir adım ileri taşınmıyor, durum, geri bildirim ve geri alma gösterilmiyordu.
+- **"Vay" için mekanizma lazım.** Süs yetmiyor. Gerçek içerik büyük gösterilmeli ve tek bir fiziksel etkileşim bitirilmeli.
+
+**A. Tutarlı yönler (28 uygulama incelendi)**
+
+- Bilinen yazı tiplerinin neredeyse hepsi tek aile: Things sistem fontu, Airbnb Cereal, Linear Inter, Spotify Mix. Hiyerarşi yazı tipi karşıtlığından değil boyut ve ağırlıktan geliyor.
+- Zemin beyaz ya da koyuya yakın, renk ölçülü: Halide tek sarı kullanıyor, Strava turuncuyu yalnızca ana eylemde tutuyor.
+- Görsel içerikten ya da sipariş edilmiş karakterden geliyor; veri ürünlerinde veri görselin kendisi. Hiçbir kutlanan uygulama gri yer tutucu kutu kullanmıyor.
+- Bundan on yön türetildi (yerli sessiz yardımcı, veri kahraman, ağırbaşlı koyu, fotoğraflı editoryal, tek gürültülü marka rengi, yuvarlak alışkanlık, okuma odası, sessiz duyusal, profesyonel araç, sosyal afiş). Her biri bir zemin, tek vurgu rolü, tek yazı ailesi, bir imge kuralı ve bir imza etkileşimi sabitler.
+- Apple Design Awards 2024-2026: https://www.apple.com/newsroom/2026/06/apple-reveals-winners-of-the-2026-apple-design-awards/
+- Flighty: https://developer.apple.com/news/?id=970ncww4 ve Halide: https://developer.apple.com/news/?id=x6bv1a36
+- Crouton: https://developer.apple.com/news/?id=9x75y43e ve Moonlitt: https://developer.apple.com/news/?id=v1nphz91
+- Airbnb: https://www.itsnicethat.com/articles/airbnb-app-redesign-140525 ve Duolingo yazı tipi: https://fontsinuse.com/uses/59497/duolingo-app
+
+**B. AI işaretleri ve anti-slop skill'leri**
+
+- Reddit'ten derlenmiş bir veri setinde (3,2 milyon gönderi tarandı) en sık şikâyet tek bir özellik değil, "hepsi aynı görünüyor": https://github.com/JCarterJohnson/vibecoded-design-tells
+- Adrian Krebs yaklaşık 1.590 Show HN sayfasını DOM ve CSS kurallarıyla taradı; yüzde 22'si dört ya da daha fazla kalıba uyuyor: https://adriankrebs.ch/blog/design-slop/
+- Listeye yeni girenler: gradyan metin, sol kenar şeritli "tırnak" kartlar, varsayılan Lucide ikonları, gri yer tutucu yuvalar, hiç değişmeyen durum rozetleri, yalnızca mutlu yolu gösteren ekranlar, ekranlar arası kayma.
+- En önemli bulgu ilacın yakınsaması: yasak listesi modeli bir sonraki olası seçime iter (krem zemin ve kiremit vurgu, ya da siyah zemin ve tek asit yeşili). Bu yüzden yasak listesini uzatmak yerine yön ve ürün konusundan türetme seçildi.
+- https://github.com/funboy322/avoid-ai-design ve https://nngroup.com/articles/ai-prototyping/
+- https://expo.dev/blog/how-to-apply-professional-design-principles-in-ai-app-development
+
+**C. UX**
+
+- Nielsen Norman Group, Baymard ve Apple HIG'den bir ekran denetimi (15 madde) ve bir akış denetimi (11 madde) çıkarıldı.
+- Sekiz niş için ilk ekranın cevaplaması gereken soru, kritik durumlar ve reddedilecek karanlık kalıplar araştırıldı; diğer on altı niş için aynı tablo niş dosyalarından yazıldı.
+- Ek maliyetler sepet terkinin bir numaralı nedeni (Baymard: yüzde 40), bu yüzden "dürüst toplam" prototip şartı oldu.
+- Prototipte UX göstermenin yolu durum, geçiş ve geri bildirim: ana görevin ikinci görünümü, URL hash'iyle açılan durumlar, geri al, otomatik demo.
+- Şikâyet yüzdeleri satıcı bloglarından geliyor; tema olarak okunmalı, sayı olarak değil.
+- https://www.nngroup.com/articles/mobile-app-onboarding/ ve https://baymard.com/research-articles/new-research-travel-accommodations
+- https://developer.apple.com/design/human-interface-guidelines/
+
+**D. Gerçek malzeme ve "vay"**
+
+- 176 Unsplash kimliği tek tek HTTP ile denendi, 162'si temas sayfalarında gözle kontrol edilip kataloğa girdi. Lisans: ücretsiz kullanım, atıf zorunlu değil, rakip servis kurmak yasak (https://unsplash.com/license).
+- Anahtarsız gerçek harita için MapLibre 5.9.0 ve OpenFreeMap Chromium'da denendi: https://openfreemap.org
+- Met ve Cleveland müzelerinin CC0 eserleri albüm kapağı yerine kullanılabiliyor. Art Institute of Chicago görselleri başka kaynaktan çağrılamıyor (403).
+- Renk içerikten örnekleniyor, yaylı hareket CSS `linear()` ile üretiliyor, paylaşılan öğe geçişi View Transitions ile kuruluyor.
+- Hareket ilkeleri: arayüz hareketi 300 ms altında, ease-out, parmağın taşıdığı şey yayla, sık yapılan eylem animasyonsuz. https://rauno.me/craft/interaction-design ve https://emilkowal.ski/ui/great-animations
+- Ödüllü işlerin ortak yanı tek bir tutarlı fiziksel fikir: CapWords, Tide Guide, Family, Airbnb'nin paylaşılan öğe geçişi.
+
+**Karar.** Yasak listesi ya da yazı tipi beyaz listesi ana mekanizma olmaktan çıktı. Yön nişten dağıtılıyor (nişe göre iki ya da üç aday, ağırlıklar 3, 2, 1), değerler araştırmadan geliyor, kontrast kodda sınanıyor, yerleşim nişin lider uygulamalarından alınıyor. Taban korundu; kalan her şey yönden ve ürünün içeriğinden türetiliyor. Bu karar henüz ölçülmedi.
+
+## Sürüm 4 ölçümünden öğrenilen
+
+- **Gerçek malzeme ve tutarlı yön AI izlenimini düşürdü.** Kör testte 4.0 ortalama 69-73, skill'siz 91; 32 kararın hiçbirinde 4.x "en AI" seçilmedi. Hakemlerin en sık "insan" gerekçesi gerçek fotoğraf, gerçek harita ve sistem fontu oldu.
+- **"Wow" ile "AI değil" arasında ölçülmüş bir gerilim var.** Hakemler skill'siz çıktının krem, kiremit, serif ve illüstrasyon görünümünü en çekici buldu (7,6-7,9) ve aynı görünümü en kesin AI işareti saydı (91). Kutlanan uygulamaların dili ekran görüntüsünde daha sakin duruyor; onların "wow"u hareket ve dokunuşta. Durağan kareyle yapılan bir beğeni testi bu yüzden AI estetiğini ödüllendiriyor; bu, ölçümün kendi sınırı.
+- **Hakem notlarından kurala:** marka yüzeyi olmayan ekran "wireframe" diye okunuyor; tasarlanan görünüm sistemden bağımsız açılmalı (koyu tasarlanıp açık modda gösterilen ekran en düşük puanları aldı); otomatik demo ana eylemi yapmalı ve sonucu ekranda kalmalı; kapakta ünlü tablo "pastiş", bulanık soyut fotoğraf "jenerik gradyan" okunuyor.
+- **Hakem gürültüsü:** aynı 4.0 ekranları iki ayrı turda AI olasılığında 69 ve 73, beğenide 6,6 ve 6,1 aldı. Bundan küçük farklar sonuç sayılmamalı.
+
 ## Bilinen boşluklar
 
 - Reddit ve X konuları doğrudan okunmadı.
@@ -108,3 +167,5 @@ Kullanıcı geri bildirimi: 2.0 çıktıları yazı tiplerinden başlayarak hâl
 - AI tespit testinde gerçek uygulama görselleri pazarlama görselleridir; gerçek fotoğraf ve marka içeriği onları ayırıyor, bu yüzden "gerçekten ayırt edilemez mi" sorusunu bu test cevaplayamaz.
 - Hakemler üreticiyle aynı model ailesinden; insan bir uzmanla test edilmedi.
 - Hiçbir tasarım simülatörde ya da cihazda native olarak kurulup denenmedi.
+- Sürüm 4 yönlerinin on tanesi yayımlanmış uygulama örneklerinden türetildi; renk değerleri araştırmacının önerisi ve kontrast için kodda ayarlandı, uygulamaların kendi değerleri değil.
+- Sürüm 4 henüz ölçülmedi; ölçüm README'de "Ölçüm: sürüm 4" başlığı altında bekliyor.
