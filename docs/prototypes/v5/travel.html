@@ -1,0 +1,965 @@
+<!doctype html>
+<html lang="en" data-platform="ios" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rota, listing</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.9.0/dist/maplibre-gl.css">
+<script>
+  // the dealt appearance is light; ?theme=dark shows the other one
+  { const t = new URLSearchParams(location.search).get('theme'); if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t; }
+</script>
+<style>
+  /* device frame (from the skill's phone-frame.html) */
+  :root { --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px; --chrome: #000; }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  html.chrome-light { --chrome: #fff; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: clip; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--ground); color: var(--ink); }
+  .statusbar { position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 50; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 28px 10px; font: 600 16px/1 -apple-system, "SF Pro Text", system-ui, sans-serif; color: var(--chrome); pointer-events: none; transition: color .2s ease-out; }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  .home-indicator { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 50; width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none; }
+  #screen { position: absolute; inset: 0; overflow: clip; }
+</style>
+<style>
+  /* ROTA TOKENS: direction native-quiet, Public Sans, teal accent. Screens use only these. */
+  :root {
+    --ground: #FFFFFF; --raised: #F2F2F7; --ink: #000000; --ink-2: #5E5E63; --line: #D8D8DC;
+    --accent: #0E7C6B; --on-accent: #FFFFFF; --positive: #2E7D46; --negative: #D4442E;
+    --accent-ink: #0E7C6B; --on-accent-2: rgb(255 255 255 / .86); --on-accent-line: rgb(255 255 255 / .28);
+    --scrim: rgb(0 0 0 / .4);
+    --font: "Public Sans", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif;
+    --t-large: 700 34px/1.12 var(--font);
+    --t-listing: 700 28px/1.15 var(--font);
+    --t-title: 600 22px/1.25 var(--font);
+    --t-head: 600 17px/1.3 var(--font);
+    --t-body: 400 17px/1.4 var(--font);
+    --t-sub: 400 15px/1.35 var(--font);
+    --t-foot: 400 13px/1.35 var(--font);
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
+    --r-group: 12px; --r-btn: 10px; --r-round: 22px;
+    --tap: 44px; --bar-h: calc(76px + var(--safe-bottom)); --nav-h: calc(var(--safe-top) + 52px);
+  }
+  [data-theme="dark"] {
+    --ground: #000000; --raised: #1C1C1E; --ink: #FFFFFF; --ink-2: #A1A1A6; --line: #38383A;
+    --scrim: rgb(0 0 0 / .6); --accent-ink: #3DB39E;
+  }
+
+  /* base */
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  button, .tap { transition: transform .12s cubic-bezier(.22,1,.36,1), opacity .12s ease-out; }
+  button:active:not(:disabled), .tap:active { transform: scale(.97); }
+  button:disabled { cursor: default; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+  h1, h2, h3, p, ul, dl, dd { margin: 0; padding: 0; }
+  ul { list-style: none; }
+  .num { font-variant-numeric: tabular-nums; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* never-grey image */
+  .pic { position: relative; overflow: hidden; background: var(--c, #8a7a6a); }
+  .pic img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .4s ease-out; display: block; }
+  .pic img.in { opacity: 1; }
+
+  .view { position: absolute; inset: 0; background: var(--ground); }
+  .view[hidden] { display: none; }
+  .scroller { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+  .scroller::-webkit-scrollbar { display: none; }
+
+  /* listing: photo header */
+  .navbg { position: absolute; inset: 0 0 auto 0; height: var(--nav-h); z-index: 20; background: var(--ground); border-bottom: 1px solid var(--line); opacity: 0; transition: opacity .18s ease-out; pointer-events: none; display: flex; align-items: flex-end; justify-content: center; padding: 0 116px 14px; }
+  .navbg span { font: var(--t-head); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .scrolled .navbg { opacity: 1; }
+  .topbtns { position: absolute; inset: var(--safe-top) 0 auto 0; height: 52px; z-index: 26; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--s4); pointer-events: none; }
+  .topbtns > div { display: flex; gap: var(--s3); }
+  .circ { pointer-events: auto; width: var(--tap); height: var(--tap); border-radius: 50%; background: var(--ground); color: var(--ink); display: grid; place-items: center; font-size: 20px; box-shadow: 0 1px 3px rgb(0 0 0 / .18); }
+  .scrolled .circ { box-shadow: none; background: var(--raised); }
+  .circ .ph-fill.ph-heart { color: var(--negative); }
+
+  .hero { position: relative; height: 284px; }
+  .gallery { display: flex; height: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+  .gallery::-webkit-scrollbar { display: none; }
+  .gallery .pic { flex: none; width: 100%; height: 100%; scroll-snap-align: start; }
+  .hero::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 120px; z-index: 1; pointer-events: none; background: linear-gradient(rgb(0 0 0 / .45), transparent); }
+  .count { position: absolute; right: var(--s4); bottom: var(--s3); z-index: 2; background: rgb(0 0 0 / .62); color: #fff; font: 600 13px/1 var(--font); padding: 6px 10px; border-radius: 8px; }
+
+  .pad { padding: var(--s4) var(--s4) calc(var(--bar-h) + var(--s5)); }
+  .offline-note { display: none; margin: var(--s4) var(--s4) 0; padding: var(--s3); border-radius: var(--r-group); background: var(--raised); font: var(--t-sub); gap: var(--s2); align-items: center; }
+  [data-state="offline"] .offline-note { display: flex; }
+  .offline-note i { font-size: 20px; }
+  h1#title { font: var(--t-listing); letter-spacing: -0.01em; }
+  .place { font: var(--t-sub); color: var(--ink-2); margin-top: var(--s1); }
+  .meta { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); margin-top: var(--s3); font: var(--t-sub); }
+  .rating { display: flex; align-items: center; gap: 6px; }
+  .rating .ph-star { font-size: 16px; }
+  .rating b { font-weight: 600; }
+  .hostmini { display: flex; align-items: center; gap: var(--s2); color: var(--ink-2); }
+  .hostmini .pic { width: 28px; height: 28px; border-radius: 50%; }
+
+  section { margin-top: var(--s6); }
+  section h2 { font: var(--t-title); }
+  .why { margin-top: var(--s5); background: var(--accent); color: var(--on-accent); border-radius: var(--r-group); padding: var(--s4) var(--s4) var(--s2); }
+  .why li { font: var(--t-body); padding: 10px 0; border-top: 1px solid var(--on-accent-line); }
+  .why h2 { margin-bottom: var(--s2); }
+
+  .sechead { display: flex; align-items: center; justify-content: space-between; }
+  .textbtn { color: var(--accent-ink); font: var(--t-head); min-height: var(--tap); padding: 0 var(--s2); margin-right: calc(-1 * var(--s2)); }
+  .sub { font: var(--t-sub); color: var(--ink-2); margin-top: 2px; }
+  .strip { display: flex; gap: var(--s2); overflow-x: auto; scrollbar-width: none; margin: var(--s2) calc(-1 * var(--s4)) 0; padding: 10px var(--s4) var(--s2); scroll-padding: 0 var(--s4); }
+  .strip::-webkit-scrollbar { display: none; }
+  .night { flex: none; width: 58px; min-height: 84px; border-radius: var(--r-btn); background: var(--raised); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+  .night .wd { font: var(--t-foot); color: var(--ink-2); }
+  .night .dn { font: 600 20px/1.1 var(--font); font-variant-numeric: tabular-nums; }
+  .night .pr { font: var(--t-foot); font-variant-numeric: tabular-nums; }
+  .night.on { background: var(--accent); color: var(--on-accent); transform: translateY(-6px); }
+  .night.on .wd { color: var(--on-accent-2); }
+  .night[data-booked] { background: transparent; border: 1px dashed var(--line); color: var(--ink-2); }
+  .night[data-booked] .dn { text-decoration: line-through; }
+  .night.mine { background: var(--accent); color: var(--on-accent); }
+  .night.mine .wd { color: var(--on-accent-2); }
+  .night.locked:not(.mine) { opacity: .45; }
+  @media (prefers-reduced-motion: no-preference) {
+    .night { transition: transform var(--spring-ms, 420ms) var(--spring, ease-out), background-color .15s ease-out, color .15s ease-out; }
+    .night:active:not([aria-disabled="true"]) { transform: scale(.97); }
+    .night.on:active { transform: translateY(-6px) scale(.97); }
+  }
+  @media (prefers-reduced-motion: reduce) { .night.on { transform: none; } }
+  .hint { font: var(--t-sub); color: var(--ink-2); min-height: 21px; margin-top: var(--s1); }
+
+  .lines { margin-top: var(--s3); }
+  .lines div { display: flex; justify-content: space-between; gap: var(--s3); font: var(--t-body); padding: 7px 0; }
+  .lines dt { color: var(--ink); }
+  .lines dd { font-variant-numeric: tabular-nums; }
+  .lines .night-line dt { color: var(--ink-2); }
+  .lines .total { border-top: 1px solid var(--line); margin-top: var(--s2); padding-top: var(--s3); font-weight: 600; }
+  .lines .total dt { font-weight: 600; }
+
+  .rows { margin-top: var(--s2); }
+  .rows li { font: var(--t-body); padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .rows li:last-child { border-bottom: 0; }
+  .rows li small { display: block; font: var(--t-sub); color: var(--ink-2); margin-top: 2px; }
+
+  .hostcard { display: flex; gap: var(--s4); align-items: center; background: var(--raised); border-radius: var(--r-group); padding: var(--s4); }
+  .hostcard .pic { width: 64px; height: 64px; border-radius: 50%; flex: none; }
+  .hostcard h2 { font: var(--t-head); }
+  .hostcard p { font: var(--t-sub); color: var(--ink-2); margin-top: 2px; }
+
+  #map { height: 180px; border-radius: var(--r-group); overflow: hidden; margin-top: var(--s3); background: var(--raised); position: relative; }
+  .maplibregl-ctrl-attrib { font: 11px/1.3 var(--font); }
+  .cancel { font: var(--t-body); margin-top: var(--s2); }
+  .cancel b { font-weight: 600; }
+  .credit { font: var(--t-foot); color: var(--ink-2); margin-top: var(--s6); }
+
+  /* docked bar: total, dates, Reserve */
+  .bar { position: absolute; inset: auto 0 0 0; z-index: 30; min-height: var(--bar-h); background: var(--ground); border-top: 1px solid var(--line); display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s3); padding: var(--s3) var(--s4) var(--safe-bottom); }
+  .bar .sum { text-align: left; min-height: var(--tap); padding: 2px 0; flex: 1; min-width: 0; }
+  .bar .big { font: 700 22px/1.15 var(--font); font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 6px; }
+  .bar .big small { font: var(--t-sub); color: var(--ink-2); }
+  .bar .line2 { display: block; font: var(--t-sub); color: var(--ink-2); margin-top: 3px; text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar .line2.receipt { color: var(--accent-ink); text-decoration: none; font-weight: 600; }
+  .primary { min-height: 50px; min-width: 132px; padding: 0 var(--s5); border-radius: var(--r-btn); background: var(--accent); color: var(--on-accent); font: var(--t-head); display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); }
+  .primary:disabled { background: var(--raised); color: var(--ink-2); }
+  .primary.wide { width: 100%; }
+  .secondary { min-height: 50px; padding: 0 var(--s5); border-radius: var(--r-btn); background: var(--raised); color: var(--ink); font: var(--t-head); width: 100%; }
+  .danger { color: var(--negative); font: var(--t-head); min-height: var(--tap); width: 100%; }
+  .spin { width: 18px; height: 18px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* states */
+  .skeleton, .errorview { display: none; position: absolute; inset: 0; z-index: 25; background: var(--ground); }
+  [data-state="loading"] .skeleton, [data-state="error"] .errorview { display: block; }
+  [data-state="loading"] #listing .bar, [data-state="error"] #listing .bar,
+  [data-state="loading"] #listing .topbtns > div, [data-state="error"] #listing .topbtns > div { display: none; }
+  .skeleton .b { background: var(--raised); border-radius: 8px; margin: 0 var(--s4) var(--s3); }
+  .errorview .in { position: absolute; left: var(--s5); right: var(--s5); top: 260px; text-align: center; }
+  .errorview i { font-size: 36px; color: var(--ink-2); }
+  .errorview h2 { font: var(--t-title); margin-top: var(--s3); }
+  .errorview p { font: var(--t-sub); color: var(--ink-2); margin: var(--s2) 0 var(--s5); }
+
+  /* results view */
+  #results .scroller { padding: calc(var(--safe-top) + var(--s2)) var(--s4) calc(var(--safe-bottom) + var(--s5)); }
+  #results h1 { font: var(--t-large); letter-spacing: -0.02em; }
+  #results .wordmark { font: 700 22px/1 var(--font); color: var(--accent); letter-spacing: -0.01em; display: block; margin-bottom: var(--s3); }
+  .card { display: block; width: 100%; text-align: left; margin-top: var(--s5); }
+  .card .pic { height: 210px; border-radius: var(--r-group); }
+  .card h2 { font: var(--t-head); margin-top: var(--s3); }
+  .card p { font: var(--t-sub); color: var(--ink-2); margin-top: 2px; }
+  .card .tot { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .card .tot.na { color: var(--negative); font-weight: 600; }
+
+  /* sheet */
+  .scrim { position: absolute; inset: 0; z-index: 40; background: var(--scrim); opacity: 0; pointer-events: none; transition: opacity .25s ease-out; }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+  .sheet { position: absolute; inset: auto 0 0 0; z-index: 41; max-height: calc(100% - var(--safe-top) - 12px); height: calc(100% - var(--safe-top) - 12px); background: var(--ground); border-radius: 14px 14px 0 0; display: flex; flex-direction: column; transform: translateY(110%); visibility: hidden; }
+  .sheet.open { visibility: visible; }
+  .grab { flex: none; padding: 6px var(--s4) var(--s2); touch-action: none; }
+  .handle { width: 36px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto var(--s2); }
+  .sheethead { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
+  .sheethead h2 { font: var(--t-title); outline: none; }
+  .closebtn { width: var(--tap); height: var(--tap); border-radius: 50%; background: var(--raised); display: grid; place-items: center; font-size: 18px; flex: none; }
+  .sheetbody { flex: 1; overflow-y: auto; padding: var(--s2) var(--s4) var(--s5); overscroll-behavior: contain; }
+  .sheetfoot { flex: none; padding: var(--s3) var(--s4) var(--safe-bottom); border-top: 1px solid var(--line); background: var(--ground); }
+  .sheetfoot .note { font: var(--t-foot); color: var(--ink-2); margin-top: var(--s2); text-align: center; }
+  .staymini { display: flex; gap: var(--s3); align-items: center; padding-bottom: var(--s4); border-bottom: 1px solid var(--line); }
+  .staymini .pic { width: 72px; height: 72px; border-radius: var(--r-btn); flex: none; }
+  .staymini h3 { font: var(--t-head); }
+  .staymini p { font: var(--t-sub); color: var(--ink-2); }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); padding: var(--s3) 0; border-bottom: 1px solid var(--line); min-height: 64px; }
+  .row h3 { font: var(--t-head); }
+  .row p { font: var(--t-sub); color: var(--ink-2); }
+  .stepper { display: flex; align-items: center; gap: var(--s2); }
+  .stepper button { width: var(--tap); height: var(--tap); border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; font-size: 18px; }
+  .stepper button:disabled { opacity: .35; }
+  .stepper output { min-width: 24px; text-align: center; font: var(--t-head); font-variant-numeric: tabular-nums; }
+  .box { background: var(--raised); border-radius: var(--r-group); padding: var(--s4); margin-top: var(--s4); font: var(--t-sub); }
+  .box h3 { font: var(--t-head); margin-bottom: var(--s1); }
+  .done-card { text-align: left; padding: var(--s2) 0 0; }
+  .done-card .tick { width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; font-size: 28px; }
+  .done-card .when { font: var(--t-title); margin-top: var(--s4); }
+  .confirm { margin-top: var(--s4); padding: var(--s4); border-radius: var(--r-group); border: 1px solid var(--negative); }
+  .confirm p { font: var(--t-body); margin-bottom: var(--s3); }
+  .confirm .two { display: grid; gap: var(--s2); }
+  .confirm .redbtn { min-height: 50px; border-radius: var(--r-btn); background: var(--negative); color: #fff; font: var(--t-head); }
+  ::view-transition-old(hero), ::view-transition-new(hero) { height: 100%; object-fit: cover; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+</style>
+</head>
+<body>
+  <div class="statusbar">
+    <span id="clock">10:08</span>
+    <svg viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen">
+    <!-- Results: where Back goes -->
+    <div class="view" id="results" hidden>
+      <div class="scroller">
+        <h1>Stays in Türkiye</h1>
+        <p class="sub" id="searchLine"></p>
+        <div id="cards"></div>
+      </div>
+    </div>
+
+    <!-- Listing -->
+    <div class="view" id="listing">
+      <div class="navbg" aria-hidden="true"><span id="navTitle"></span></div>
+      <div class="topbtns">
+        <button class="circ" id="backBtn" aria-label="Back to stays"><i class="ph ph-caret-left"></i></button>
+        <div>
+          <button class="circ" id="shareBtn" aria-label="Share"><i class="ph ph-export"></i></button>
+          <button class="circ" id="saveBtn" aria-label="Save" aria-pressed="false"><i class="ph ph-heart"></i></button>
+        </div>
+      </div>
+      <div class="scroller" id="lscroll">
+        <div class="hero">
+          <div class="gallery" id="gallery" tabindex="0" aria-label="Photos"></div>
+          <div class="count num" id="count" aria-live="off"></div>
+        </div>
+        <p class="offline-note"><i class="ph ph-cloud-slash" aria-hidden="true"></i><span>Offline. Prices from 10:02 today. Reconnect to reserve.</span></p>
+        <div class="pad">
+          <h1 id="title"></h1>
+          <p class="place" id="place"></p>
+          <div class="meta">
+            <span class="rating" id="rating"></span>
+            <span class="hostmini" id="hostMini"></span>
+          </div>
+
+          <section class="why" aria-labelledby="whyH">
+            <h2 id="whyH">Why it’s on Rota</h2>
+            <ul id="why"></ul>
+          </section>
+
+          <section id="datesSec" aria-labelledby="datesH">
+            <div class="sechead"><h2 id="datesH">Your dates</h2><button class="textbtn" id="clearBtn">Clear</button></div>
+            <p class="sub" id="datesLine"></p>
+            <div class="strip" id="strip" role="group" aria-label="Nights, 20 November to 3 December"></div>
+            <p class="hint" id="hint" aria-live="polite"></p>
+          </section>
+
+          <section id="priceSec" aria-labelledby="priceH">
+            <h2 id="priceH">Price for your dates</h2>
+            <dl class="lines" id="lines"></dl>
+          </section>
+
+          <section aria-labelledby="knowH">
+            <h2 id="knowH">Good to know</h2>
+            <ul class="rows" id="know"></ul>
+          </section>
+
+          <section aria-labelledby="roomH">
+            <h2 id="roomH">The room</h2>
+            <ul class="rows" id="room"></ul>
+          </section>
+
+          <section>
+            <div class="hostcard" id="hostCard"></div>
+          </section>
+
+          <section aria-labelledby="whereH">
+            <h2 id="whereH">Where you’ll stay</h2>
+            <div id="map" role="img"></div>
+            <p class="sub" id="whereLine" style="margin-top:8px"></p>
+          </section>
+
+          <section aria-labelledby="cancelH">
+            <h2 id="cancelH">Cancellation</h2>
+            <p class="cancel" id="cancel"></p>
+          </section>
+
+          <p class="credit">Photos: Unsplash. Prices in euros.</p>
+        </div>
+      </div>
+
+      <div class="bar" id="bar">
+        <button class="sum" id="sumBtn">
+          <span class="big"><span id="total" class="num"></span><small id="totalSmall"></small></span>
+          <span class="line2" id="line2"></span>
+        </button>
+        <button class="primary" id="reserveBtn">Reserve</button>
+      </div>
+
+      <div class="skeleton" aria-label="Loading stay" role="status">
+        <div class="b" style="height:300px;margin:0 0 16px;border-radius:0"></div>
+        <div class="b" style="height:30px;width:78%"></div>
+        <div class="b" style="height:18px;width:44%"></div>
+        <div class="b" style="height:170px;margin-top:24px;border-radius:12px"></div>
+        <div class="b" style="height:84px;width:60%;margin-top:24px"></div>
+      </div>
+      <div class="errorview" role="alert">
+        <div class="in">
+          <i class="ph ph-warning-circle" aria-hidden="true"></i>
+          <h2>This stay didn’t load</h2>
+          <p>The connection dropped before the prices arrived.</p>
+          <button class="primary" id="retryBtn">Try again</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="scrim" id="scrim"></div>
+    <section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetH" inert>
+      <div class="grab" id="grab">
+        <div class="handle"></div>
+        <div class="sheethead"><h2 id="sheetH" tabindex="-1">Review and pay</h2>
+          <button class="closebtn" id="closeBtn" aria-label="Close"><i class="ph ph-x"></i></button></div>
+      </div>
+      <div class="sheetbody" id="sheetBody"></div>
+      <div class="sheetfoot" id="sheetFoot"></div>
+    </section>
+    <p class="sr" id="live" aria-live="polite"></p>
+  </main>
+
+  <div class="home-indicator"></div>
+
+<script>/* motion-kit.js (mobile-ui-craft 5.0). Zero dependencies. Inline it in one <script> of the prototype; it defines window.MK.
+   Everything that should be filmable runs on WAAPI or view transitions, which scripts/capture.mjs `film:` slows down.
+   requestAnimationFrame is used only for MK.tilt smoothing (pointer-driven, not filmed); never build a filmed move on it.
+   Springs are CSS linear() easings generated at mass 1; the tokens are the Material 3 Expressive stiffness/damping pairs. */
+(() => {
+  const MK = (window.MK = { out: 'cubic-bezier(.2,.8,.2,1)' }); // out: for fades and menus, never for springs
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  MK.reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Spring as a linear() easing: stiffness k, damping ratio zeta (<= 1). ms is the time to settle within 0.2%.
+  MK.spring = (k, zeta, pts = 36) => {
+    const w0 = Math.sqrt(k), wd = w0 * Math.sqrt(Math.max(1e-6, 1 - zeta * zeta));
+    const x = zeta < 1
+      ? (t) => 1 - Math.exp(-zeta * w0 * t) * (Math.cos(wd * t) + (zeta * w0 / wd) * Math.sin(wd * t))
+      : (t) => 1 - Math.exp(-w0 * t) * (1 + w0 * t);
+    let T = 0.02;
+    while (T < 10 && !(Math.abs(1 - x(T)) < 0.002 && Math.abs(1 - x(T + 0.15)) < 0.002)) T += 0.01;
+    const v = Array.from({ length: pts + 1 }, (_, i) => +x((T * i) / pts).toFixed(3));
+    v[pts] = 1;
+    return { easing: `linear(${v.join(', ')})`, ms: Math.round(T * 1000) };
+  };
+  // spatial moves things and may overshoot; effects (opacity, colour) must not overshoot
+  MK.ease = { spatial: MK.spring(380, 0.8), fast: MK.spring(800, 0.6), slow: MK.spring(200, 0.8), effects: MK.spring(1600, 1) };
+
+  // Shared-element and state morphs. Give the two ends the same view-transition-name (unique, set only while morphing).
+  let vtStyle;
+  MK.morph = (update, opts = {}) => {
+    if (!document.startViewTransition || document.visibilityState !== 'visible') return Promise.resolve(update()).then(() => {});
+    if (!vtStyle) {
+      const e = MK.ease.spatial;
+      vtStyle = document.head.appendChild(document.createElement('style'));
+      // under Reduce Motion the named groups jump and only the page crossfades.
+      // The page fades out before the new one fades in: a simultaneous crossfade shows old and new text on top of each other.
+      vtStyle.textContent = `::view-transition-group(*){animation-duration:${e.ms}ms;animation-timing-function:${e.easing}}
+::view-transition-group(root){animation-duration:200ms;animation-timing-function:ease-out}
+::view-transition-old(root){animation:mk-vt-out 90ms ease-out both}::view-transition-new(root){animation:mk-vt-in 150ms 60ms ease-out both}
+@keyframes mk-vt-out{to{opacity:0}}@keyframes mk-vt-in{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){::view-transition-group(*){animation-duration:.01ms}::view-transition-group(root){animation-duration:150ms}}`;
+    }
+    const typed = opts.types && window.ViewTransition && 'types' in ViewTransition.prototype;
+    const vt = typed ? document.startViewTransition({ update, types: opts.types }) : document.startViewTransition(update);
+    vt.ready.catch(() => {}); // a skipped transition rejects ready; the update still ran, so finished is what we return
+    return vt.finished;
+  };
+
+  // Commit the on-screen transform and stop animations, so a grab or a new move starts from where the element is.
+  MK.freeze = (el) => {
+    const t = getComputedStyle(el).transform;
+    el.getAnimations().forEach((a) => a.cancel());
+    el.style.transform = t === 'none' ? '' : t;
+  };
+
+  // FLIP for one element or an array. Uses the translate/scale properties, so it composes with the element's own transform.
+  // Scaling distorts children and radii: flip boxes, or use MK.morph for rich content.
+  MK.flip = (targets, mutate, ease = MK.ease.spatial) => {
+    const els = [].concat(targets), red = MK.reduced();
+    const first = els.map((e) => e.getBoundingClientRect()); // measured while any earlier flip is still in flight
+    els.forEach((e) => e.getAnimations().filter((a) => a.id === 'mk-flip').forEach((a) => a.cancel()));
+    mutate();
+    return Promise.all(els.map((e, i) => {
+      const a = first[i], b = e.getBoundingClientRect();
+      if (!a.width || !b.width) return;
+      const o = { transformOrigin: '0 0' };
+      const kf = red ? [{ opacity: 0 }, { opacity: 1 }]
+        : [{ ...o, translate: `${a.left - b.left}px ${a.top - b.top}px`, scale: `${a.width / b.width} ${a.height / b.height}` }, { ...o, translate: '0 0', scale: '1 1' }];
+      const an = e.animate(kf, red ? { duration: 150, easing: 'ease-out' } : { duration: ease.ms, easing: ease.easing });
+      an.id = 'mk-flip';
+      return an.finished.catch(() => {});
+    })).then(() => {});
+  };
+
+  // Pointer drag with capture. Velocity (px/ms) comes from the last ~80 ms of movement. Returns a disposer.
+  // axis 'x' or 'y' locks the other axis and leaves that scroll direction to the browser.
+  MK.drag = (el, { axis, onStart, onMove, onEnd } = {}) => {
+    el.style.touchAction = axis === 'x' ? 'pan-y' : axis === 'y' ? 'pan-x' : 'none';
+    let id = null, x0 = 0, y0 = 0, pts = [];
+    const d = (e) => ({ dx: axis === 'y' ? 0 : e.clientX - x0, dy: axis === 'x' ? 0 : e.clientY - y0 });
+    const down = (e) => {
+      if (id !== null || (e.pointerType === 'mouse' && e.button)) return;
+      MK.freeze(el);
+      id = e.pointerId; x0 = e.clientX; y0 = e.clientY; pts = [[e.timeStamp, e.clientX, e.clientY]];
+      try { el.setPointerCapture(id); } catch { /* synthetic events have no active pointer */ }
+      onStart?.(e);
+    };
+    const move = (e) => {
+      if (e.pointerId !== id) return;
+      pts.push([e.timeStamp, e.clientX, e.clientY]);
+      onMove?.(d(e).dx, d(e).dy, e);
+    };
+    const up = (e) => {
+      if (e.pointerId !== id) return;
+      id = null;
+      const p0 = pts.find((p) => e.timeStamp - p[0] <= 80) || pts[pts.length - 1], p1 = pts[pts.length - 1], dt = p1[0] - p0[0];
+      const vx = dt > 1 && axis !== 'y' ? (p1[1] - p0[1]) / dt : 0, vy = dt > 1 && axis !== 'x' ? (p1[2] - p0[2]) / dt : 0;
+      onEnd?.({ ...d(e), vx, vy });
+    };
+    const ev = [['pointerdown', down], ['pointermove', move], ['pointerup', up], ['pointercancel', up]];
+    ev.forEach(([n, f]) => el.addEventListener(n, f));
+    return () => ev.forEach(([n, f]) => el.removeEventListener(n, f));
+  };
+
+  // Spring on x, y (px), r (deg), s (scale), seeded with the release velocity v (units per ms). The spring is simulated
+  // into WAAPI keyframes, so the move is a normal Animation: cancel it (or MK.freeze) to grab it mid-flight.
+  MK.fling = (el, { from = {}, to = {}, v = {}, k = 380, zeta = 0.8 } = {}) => {
+    if (MK.reduced()) { k = 1600; zeta = 1; v = {}; } // no overshoot, no carried momentum
+    const base = { x: 0, y: 0, r: 0, s: 1 }, tol = { x: 0.3, y: 0.3, r: 0.05, s: 0.002 };
+    const A = { ...base, ...from }, B = { ...base, ...to }, c = 2 * zeta * Math.sqrt(k), dt = 1 / 240, keys = Object.keys(base);
+    const p = { ...A }, w = Object.fromEntries(keys.map((q) => [q, (v[q] || 0) * 1000]));
+    const css = () => `translate(${p.x}px,${p.y}px) rotate(${p.r}deg) scale(${p.s})`;
+    const frames = [{ transform: css() }];
+    for (let i = 1; i < 720; i++) {
+      keys.forEach((q) => { w[q] += (-k * (p[q] - B[q]) - c * w[q]) * dt; p[q] += w[q] * dt; });
+      if (i % 4) continue;
+      if (keys.every((q) => Math.abs(p[q] - B[q]) < tol[q] && Math.abs(w[q]) < tol[q] * 8)) break;
+      frames.push({ transform: css() });
+    }
+    Object.assign(p, B);
+    const end = css();
+    frames.push({ transform: end });
+    const an = el.animate(frames, { duration: (frames.length * 1000) / 60, easing: 'linear', fill: 'forwards' });
+    an.finished.then(() => { el.style.transform = end; an.cancel(); }, () => {}); // a cancelled fling leaves the transform alone
+    return an;
+  };
+
+  // Perspective tilt that follows the pointer, low-pass smoothed (rAF, see header), spring back on leave.
+  // It owns el.style.transform: tilt an inner element if the outer one is thrown. Sets --mx/--my (0-100%) for a highlight.
+  // Returns a disposer.
+  MK.tilt = (el, { max = 10 } = {}) => {
+    let tx = 0, ty = 0, cx = 0, cy = 0, raf = 0;
+    const pose = () => `perspective(700px) rotateX(${-cy * max}deg) rotateY(${cx * max}deg)`;
+    const step = () => {
+      cx += (tx - cx) * 0.15; cy += (ty - cy) * 0.15;
+      el.style.transform = pose();
+      el.style.setProperty('--mx', `${50 + cx * 50}%`); el.style.setProperty('--my', `${50 + cy * 50}%`);
+      raf = Math.abs(tx - cx) + Math.abs(ty - cy) > 0.002 ? requestAnimationFrame(step) : 0;
+    };
+    const aim = (x, y) => { if (MK.reduced()) return; tx = clamp(x, -1, 1); ty = clamp(y, -1, 1); raf = raf || requestAnimationFrame(step); };
+    const move = (e) => { const r = el.getBoundingClientRect(); aim(((e.clientX - r.left) / r.width) * 2 - 1, ((e.clientY - r.top) / r.height) * 2 - 1); };
+    const leave = () => {
+      cancelAnimationFrame(raf); raf = 0;
+      const e = MK.ease.fast, from = pose(), cx0 = cx, cy0 = cy;
+      tx = ty = cx = cy = 0;
+      el.style.transform = '';
+      el.style.setProperty('--mx', '50%'); el.style.setProperty('--my', '50%');
+      if (!MK.reduced() && Math.abs(cx0) + Math.abs(cy0) > 0.01) el.animate([{ transform: from }, { transform: pose() }], { duration: e.ms, easing: e.easing });
+    };
+    const ev = [['pointermove', move], ['pointerleave', leave], ['pointerup', leave], ['pointercancel', leave]];
+    ev.forEach(([n, f]) => el.addEventListener(n, f));
+    el._mkAim = aim;
+    return () => { leave(); ev.forEach(([n, f]) => el.removeEventListener(n, f)); delete el._mkAim; };
+  };
+  // Gyro tilt for el, started by a tap on button (iOS asks for permission inside a user gesture; needs HTTPS, so file:// gets nothing).
+  MK.tilt.gyro = (button, el, opts) => {
+    const on = (e) => el._mkAim((e.gamma || 0) / 30, ((e.beta || 0) - 45) / 30);
+    const click = async () => {
+      const D = window.DeviceOrientationEvent;
+      if (!D || MK.reduced() || (typeof D.requestPermission === 'function' && (await D.requestPermission()) !== 'granted')) return;
+      if (!el._mkAim) MK.tilt(el, opts);
+      addEventListener('deviceorientation', on);
+    };
+    button.addEventListener('click', click);
+    return () => { button.removeEventListener('click', click); removeEventListener('deviceorientation', on); };
+  };
+
+  // Digit roll for a figure in tabular numerals: only the digits that changed slide. text is the whole formatted string.
+  // A different length rebuilds the figure with a fade. The element gets role=img and aria-label = text.
+  MK.roll = (el, text) => {
+    text = String(text);
+    el.setAttribute('role', 'img'); el.setAttribute('aria-label', text);
+    if (el.dataset.mkText === text) return;
+    const red = MK.reduced(), e = MK.ease.fast;
+    if (el.dataset.mkLen !== String(text.length)) {
+      el.dataset.mkLen = text.length;
+      el.style.cssText += ';display:inline-flex;height:1em;line-height:1;overflow:hidden;font-variant-numeric:tabular-nums';
+      el.innerHTML = [...text].map((ch) => /\d/.test(ch)
+        ? '<span aria-hidden="true" style="display:block;height:1em;overflow:hidden"><span class="mk-col" style="display:flex;flex-direction:column">'
+          + [...'0123456789'].map((n) => `<i style="display:block;height:1em;font-style:normal">${n}</i>`).join('') + '</span></span>'
+        : `<span aria-hidden="true">${ch}</span>`).join('');
+      el.querySelectorAll('.mk-col').forEach((c) => { c.dataset.d = 0; });
+      if (el.dataset.mkText !== undefined) el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: MK.out });
+    }
+    let k = 0;
+    el.querySelectorAll('.mk-col').forEach((col) => {
+      while (!/\d/.test(text[k])) k++;
+      const to = +text[k++], from = +col.dataset.d, at = (n) => `translateY(${-n}em)`;
+      col.style.transform = at(to); col.dataset.d = to;
+      if (from !== to && !red && el.dataset.mkText !== undefined) col.animate([{ transform: at(from) }, { transform: at(to) }], { duration: e.ms, easing: e.easing });
+    });
+    if (red && el.dataset.mkText !== undefined) el.animate([{ opacity: 0.4 }, { opacity: 1 }], { duration: 150, easing: MK.out });
+    el.dataset.mkText = text;
+  };
+
+  // navigator.vibrate patterns. iOS Safari has no vibrate: this is a silent no-op there, so never rely on it alone.
+  const PATTERNS = { selection: 6, light: 10, medium: 20, success: [10, 40, 10], warning: [20, 60, 20], error: [30, 50, 30, 50, 30] };
+  MK.haptic = (kind = 'light') => { try { navigator.vibrate?.(PATTERNS[kind] ?? 10); } catch { /* blocked before a user gesture */ } };
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.9.0/dist/maplibre-gl.js"></script>
+<script>
+document.getElementById('clock').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, '');
+document.documentElement.style.setProperty('--spring', MK.ease.spatial.easing);
+document.documentElement.style.setProperty('--spring-ms', MK.ease.spatial.ms + 'ms');
+
+const $ = (s) => document.querySelector(s);
+const U = (id, w = 800, h) => `https://images.unsplash.com/photo-${id}?w=${w}${h ? `&h=${h}` : ''}&q=80&auto=format&fit=crop&dpr=2`;
+const img = (p, w, h, extra = '') => `<div class="pic" style="--c:${p.c}"><img src="${U(p.id, w, h)}${extra}" alt="${p.alt || ''}" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()"></div>`;
+const money = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+const eur = (n) => money.format(n);
+const dDay = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+const dWd = new Intl.DateTimeFormat('en-GB', { weekday: 'short' });
+const dShort = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
+
+// sample data: realistic to test layout, not real listings
+const N = 14, night = (i) => new Date(2026, 10, 20 + i); // 14 nights from Fri 20 Nov 2026
+const STAYS = {
+  cave: {
+    id: 'cave', title: 'Fairy chimney cave room', place: 'Göreme, Nevşehir, Türkiye', short: 'Göreme, Cappadocia', town: 'Göreme',
+    rating: '4.91', reviews: 63, sleeps: 2,
+    photos: [
+      { id: '1631724533937-687e6e60aafe', c: '#b48a66', alt: 'Terrace of the cave house' },
+      { id: '1565694286329-16c31ae20a20', c: '#c19a74', alt: 'Rock cone with carved windows' },
+      { id: '1604156789095-3348604c0f43', c: '#9a8f8c', alt: 'Balloons over the valley' },
+      { id: '1559783510-c448bd7d686b', c: '#a58d70', alt: 'Göreme valley' },
+    ],
+    why: ['Room carved into a rock cone', 'Private terrace over Göreme valley', 'Balloon launch field 2 km away'],
+    know: [['42 stone steps to the door', 'No step-free access'], ['Shower room is 3 steps down', ''], ['No air conditioning', 'Rock walls stay around 18 °C']],
+    room: [['Sleeps 2', ''], ['1 double bed', ''], ['1 shower room', 'Private, inside the room']],
+    host: { name: 'Selin', since: 2019, line: 'Replies within a few hours', p: { id: '1573497019940-1c28c88b4f3e', c: '#7d6656' } },
+    rates: { wd: 104, fri: 132, sat: 138, sun: 112 }, cleaning: 20, booked: [5, 6],
+    center: [34.8297, 38.6431], where: 'Göreme town centre. Exact address after booking.',
+  },
+  gulet: {
+    id: 'gulet', title: 'Cabin on a 1978 wooden gulet', place: 'Bodrum, Muğla, Türkiye', short: 'Bodrum harbour', town: 'Bodrum',
+    rating: null, reviews: 0, sleeps: 2,
+    photos: [
+      { id: '1591078314943-85c674b3789b', c: '#4f7d95', alt: 'Gulets in Bodrum harbour' },
+      { id: '1595346471863-829e3fc915a1', c: '#6b8ea6', alt: 'Harbour town' },
+      { id: '1600194795031-e8c60926db4f', c: '#2f7f8c', alt: 'Boats from above' },
+      { id: '1583061386694-e364c84ba31d', c: '#5a89a4', alt: 'Bay and town' },
+    ],
+    why: ['Wooden gulet built in 1978', 'Moored in Bodrum harbour', 'Breakfast on deck'],
+    know: [['Boarding by gangway', 'No step-free access'], ['Shower is shared, on deck', 'Two cabins share it'], ['Engine noise on Saturdays', 'The boat refuels 08:00 to 09:00']],
+    room: [['Sleeps 2', ''], ['1 double berth', '1.9 m long'], ['Shared shower', '']],
+    host: { name: 'Murat', since: 2023, line: 'Replies within a day', p: { id: '1522556189639-b150ed9c4330', c: '#6f6052' } },
+    rates: { wd: 86, fri: 98, sat: 98, sun: 90 }, cleaning: 15, booked: [1],
+    center: [27.4265, 37.0344], where: 'Bodrum harbour. Exact berth after booking.',
+  },
+};
+
+const S = { stay: 'cave', sel: { s: 0, e: 3 }, anchor: null, guests: 2, saved: {}, booking: {}, sheet: null, panel: 'review', confirmCancel: false, paying: false, view: 'listing' };
+const stay = () => STAYS[S.stay];
+const priceOf = (st, i) => { const d = night(i).getDay(); return d === 5 ? st.rates.fri : d === 6 ? st.rates.sat : d === 0 ? st.rates.sun : st.rates.wd; };
+const free = (st, s, e) => st.booked.every((b) => b < s || b >= e);
+const fromPrice = (st) => Math.min(...Object.values(st.rates));
+const range = (sel) => dShort.formatRange(night(sel.s), night(sel.e));
+const nightsTxt = (n) => `${n} night${n === 1 ? '' : 's'}`;
+
+function quote(st, sel) {
+  if (!sel || !free(st, sel.s, sel.e)) return null;
+  const lines = [];
+  for (let i = sel.s; i < sel.e; i++) lines.push({ label: dDay.format(night(i)), amt: priceOf(st, i) });
+  const nights = lines.reduce((a, l) => a + l.amt, 0), fee = Math.round(nights * 0.1), total = nights + st.cleaning + fee;
+  console.assert(total === lines.reduce((a, l) => a + l.amt, 0) + st.cleaning + fee, 'total must equal the visible lines');
+  return { lines, nights, fee, cleaning: st.cleaning, total, n: lines.length };
+}
+// free cancellation ends 5 days before check-in at 12:00 local time (UTC+3)
+// shortcut: assumes check-in is more than 5 days away, true for this fixed strip; real data needs a "non-refundable" branch
+const deadline = (sel) => new Date(2026, 10, 20 + sel.s - 5);
+
+/* ---------- render ---------- */
+// The strip is built once per stay and then only repainted, so the chosen nights can lift with a spring.
+function paintStrip(el, st, booked) {
+  if (el.dataset.stay !== st.id) {
+    el.dataset.stay = st.id; let h = '';
+    for (let i = 0; i < N; i++) {
+      const d = night(i), isB = st.booked.includes(i);
+      h += `<button class="night" data-i="${i}" aria-label="${dDay.format(d)}, ${isB ? 'booked' : eur(priceOf(st, i))}" ${isB ? 'aria-disabled="true" data-booked' : ''}>
+        <span class="wd">${dWd.format(d)}</span><span class="dn">${d.getDate()}</span><span class="pr">${isB ? 'Booked' : eur(priceOf(st, i))}</span></button>`;
+    }
+    el.innerHTML = h;
+  }
+  const ok = !booked && quote(st, S.sel);
+  [...el.children].forEach((b, i) => {
+    const on = !!ok && i >= S.sel.s && i < S.sel.e, mine = !!booked && i >= booked.s && i < booked.e;
+    b.classList.toggle('on', on); b.classList.toggle('mine', mine); b.classList.toggle('locked', !!booked);
+    b.setAttribute('aria-pressed', on || mine);
+    if (booked || st.booked.includes(i)) b.setAttribute('aria-disabled', 'true'); else b.removeAttribute('aria-disabled');
+  });
+}
+function linesHTML(q) {
+  return q.lines.map((l) => `<div class="night-line"><dt>${l.label}</dt><dd>${eur(l.amt)}</dd></div>`).join('')
+    + `<div><dt>Cleaning fee</dt><dd>${eur(q.cleaning)}</dd></div>`
+    + `<div><dt>Rota service fee</dt><dd>${eur(q.fee)}</dd></div>`
+    + `<div><dt>Accommodation tax</dt><dd>Included</dd></div>`
+    + `<div class="total"><dt>Total</dt><dd>${eur(q.total)}</dd></div>`;
+}
+function cancelHTML(st, sel, q) {
+  if (!q) return `Free cancellation until 5 days before check-in, 12:00 ${st.town} time (UTC+3). After that, the first night is not refunded.`;
+  return `Free cancellation until <b>${dDay.format(deadline(sel))}, 12:00</b> ${st.town} time (UTC+3). After that, <b>${eur(q.lines[0].amt)}</b>, the first night, is not refunded.`;
+}
+
+function renderListing() {
+  const st = stay();
+  $('#title').textContent = st.title; $('#navTitle').textContent = st.title;
+  $('#place').textContent = st.place;
+  $('#rating').innerHTML = st.rating
+    ? `<i class="ph-fill ph-star" aria-hidden="true"></i><b class="num">${st.rating}</b><span>(${st.reviews} reviews)</span>`
+    : `<span>No reviews yet</span>`;
+  $('#hostMini').innerHTML = `${img(st.host.p, 64, 64, '&crop=faces')}<span>Host ${st.host.name}</span>`;
+  $('#gallery').innerHTML = st.photos.map((p) => img(p, 600, 460)).join('');
+  $('#gallery').scrollLeft = 0; updateCount();
+  $('#why').innerHTML = st.why.map((t) => `<li>${t}</li>`).join('');
+  $('#know').innerHTML = st.know.map(([a, b]) => `<li>${a}${b ? `<small>${b}</small>` : ''}</li>`).join('');
+  $('#room').innerHTML = st.room.map(([a, b]) => `<li>${a}${b ? `<small>${b}</small>` : ''}</li>`).join('');
+  $('#hostCard').innerHTML = `${img(st.host.p, 128, 128, '&crop=faces')}<div><h2>Hosted by ${st.host.name}</h2><p>Hosting on Rota since ${st.host.since}</p><p>${st.host.line}</p></div>`;
+  $('#whereLine').textContent = st.where;
+  $('#map').setAttribute('aria-label', `Map of ${st.short}, approximate area`);
+  $('#saveBtn').setAttribute('aria-pressed', !!S.saved[st.id]);
+  $('#saveBtn').innerHTML = `<i class="${S.saved[st.id] ? 'ph-fill' : 'ph'} ph-heart"></i>`;
+  moveMap();
+  update();
+}
+
+function update() {
+  const st = stay(), bk = S.booking[st.id], q = quote(st, S.sel);
+  paintStrip($('#strip'), st, bk);
+  $('#clearBtn').hidden = !!bk || !S.sel;
+  $('#datesLine').textContent = bk ? `Booked, ${range(bk)}. Cancel from your booking to change dates.`
+    : q ? `${range(S.sel)}, ${nightsTxt(q.n)}` : S.sel ? `Not available ${range(S.sel)}. Pick other nights.` : 'Add your dates';
+  $('#hint').textContent = bk ? '' : S.anchor !== null ? 'Now tap your last night' : '';
+  $('#lines').innerHTML = bk ? linesHTML(bk.q) : q ? linesHTML(q) : `<div><dt>From</dt><dd>${eur(fromPrice(st))} a night</dd></div>`;
+  $('#priceH').textContent = bk ? 'What you paid' : 'Price for your dates';
+  $('#cancel').innerHTML = cancelHTML(st, bk || S.sel, bk ? bk.q : q);
+  renderBar(st, q, bk);
+  if (S.sheet) renderSheet();
+}
+
+let receiptTimer = 0;
+function renderBar(st, q, bk) {
+  const offline = document.documentElement.dataset.state === 'offline';
+  const total = $('#total'), small = $('#totalSmall'), l2 = $('#line2'), btn = $('#reserveBtn');
+  if (bk) {
+    MK.roll(total, eur(bk.q.total)); small.textContent = 'paid';
+    l2.textContent = `Booked, ${range(bk)}`; btn.textContent = 'View booking'; btn.disabled = false;
+  } else if (q) {
+    MK.roll(total, eur(q.total)); small.textContent = 'total incl. fees';
+    l2.textContent = offline ? 'Offline. Reconnect to reserve' : `${range(S.sel)}, ${nightsTxt(q.n)}`;
+    btn.textContent = 'Reserve'; btn.disabled = offline;
+  } else {
+    MK.roll(total, eur(fromPrice(st))); small.textContent = 'a night';
+    l2.textContent = offline ? 'Offline. Reconnect to reserve' : S.sel ? 'Not available on your dates' : 'Add dates for the total'; btn.textContent = 'Choose dates'; btn.disabled = false;
+  }
+  if (!receiptTimer) l2.classList.remove('receipt');
+  $('#sumBtn').setAttribute('aria-label', `${total.getAttribute('aria-label')} ${small.textContent}, ${l2.textContent}. Show price details`);
+}
+function receipt(text) {
+  const l2 = $('#line2'); l2.textContent = text; l2.classList.add('receipt'); $('#live').textContent = text;
+  clearTimeout(receiptTimer);
+  receiptTimer = setTimeout(() => { receiptTimer = 0; update(); }, 2600);
+}
+
+/* ---------- dates: the signature (chosen nights lift, the docked total rolls) ---------- */
+function pick(i) {
+  const st = stay();
+  if (S.booking[st.id]) return;
+  if (st.booked.includes(i)) { MK.haptic('warning'); receipt(`${dDay.format(night(i))} is booked`); return; }
+  if (S.anchor !== null && i >= S.anchor && free(st, S.anchor, i + 1)) { S.sel = { s: S.anchor, e: i + 1 }; S.anchor = null; }
+  else { S.sel = { s: i, e: i + 1 }; S.anchor = i; }
+  MK.haptic('selection');
+  update();
+  $('#live').textContent = `${range(S.sel)}, total ${eur(quote(st, S.sel).total)}`;
+}
+document.addEventListener('click', (e) => {
+  const n = e.target.closest('.night');
+  if (n && !n.closest('.locked')) pick(+n.dataset.i);
+});
+$('#clearBtn').onclick = () => { S.sel = null; S.anchor = null; update(); $('#live').textContent = 'Dates cleared'; };
+
+/* ---------- photos ---------- */
+function updateCount() {
+  const g = $('#gallery'), n = stay().photos.length, k = Math.round(g.scrollLeft / (g.clientWidth || 1)) + 1;
+  $('#count').textContent = `${Math.min(k, n)} / ${n}`;
+}
+$('#gallery').addEventListener('scroll', updateCount, { passive: true });
+
+/* ---------- header ---------- */
+const lscroll = $('#lscroll');
+function chrome() {
+  const scrolled = lscroll.scrollTop > 236, st = document.documentElement.dataset.state;
+  $('#listing').classList.toggle('scrolled', scrolled);
+  document.documentElement.classList.toggle('chrome-light', S.view === 'listing' && !scrolled && st !== 'loading' && st !== 'error');
+}
+lscroll.addEventListener('scroll', chrome, { passive: true });
+$('#saveBtn').onclick = () => {
+  const st = stay(); S.saved[st.id] = !S.saved[st.id];
+  $('#saveBtn').setAttribute('aria-pressed', S.saved[st.id]);
+  $('#saveBtn').innerHTML = `<i class="${S.saved[st.id] ? 'ph-fill' : 'ph'} ph-heart"></i>`;
+  MK.haptic('light'); receipt(S.saved[st.id] ? 'Saved to Wishlist' : 'Removed from Wishlist');
+};
+$('#shareBtn').onclick = async () => {
+  const data = { title: stay().title, text: `${stay().title}, ${stay().short} on Rota`, url: location.href.split('#')[0] };
+  if (navigator.share) { try { await navigator.share(data); } catch { /* the user closed the share sheet */ } return; }
+  try { await navigator.clipboard.writeText(data.url); receipt('Link copied'); } catch { receipt('Copy failed. Try again'); }
+};
+$('#sumBtn').onclick = () => lscroll.scrollTo({ top: $('#priceSec').offsetTop - 120, behavior: MK.reduced() ? 'auto' : 'smooth' });
+$('#reserveBtn').onclick = () => {
+  const st = stay();
+  if (S.booking[st.id]) return openSheet('done');
+  if (!quote(st, S.sel)) { lscroll.scrollTo({ top: $('#datesSec').offsetTop - 120, behavior: MK.reduced() ? 'auto' : 'smooth' }); $('#strip button:not([aria-disabled])')?.focus({ preventScroll: true }); return; }
+  openSheet('review');
+};
+$('#retryBtn').onclick = () => { location.hash = ''; };
+
+/* ---------- results <-> listing, photo is the shared element ---------- */
+function renderResults() {
+  $('#searchLine').textContent = `${S.sel ? range(S.sel) : 'Any dates'}, ${S.guests} guest${S.guests > 1 ? 's' : ''}`;
+  $('#cards').innerHTML = Object.values(STAYS).map((st) => {
+    const bk = S.booking[st.id], q = quote(st, S.sel);
+    const tot = bk ? `<span class="tot">Booked, ${range(bk)}</span>`
+      : !S.sel ? `<span class="tot">From ${eur(fromPrice(st))} a night</span>`
+      : q ? `<span class="tot">${eur(q.total)} total</span>, ${nightsTxt(q.n)}, fees included`
+      : `<span class="tot na">Not available on these nights</span>`;
+    return `<button class="card" data-stay="${st.id}" aria-label="${st.title}, ${st.short}">${img(st.photos[0], 600, 460)}<h2>${st.title}</h2><p>${st.short}${st.rating ? `, rated ${st.rating}` : ', no reviews yet'}</p><p>${tot}</p></button>`;
+  }).join('');
+}
+function showResults() {
+  const src = $('#gallery img');
+  renderResults();
+  const dst = $(`.card[data-stay="${S.stay}"] img`);
+  if (src && $('#gallery').scrollLeft < 10) src.style.viewTransitionName = 'hero';
+  MK.morph(() => {
+    if (src) src.style.viewTransitionName = '';
+    if (dst && $('#gallery').scrollLeft < 10) dst.style.viewTransitionName = 'hero';
+    $('#listing').hidden = true; $('#results').hidden = false; S.view = 'results'; chrome();
+  }).then(() => { if (dst) dst.style.viewTransitionName = ''; $(`.card[data-stay="${S.stay}"]`)?.focus({ preventScroll: true }); });
+}
+$('#backBtn').onclick = showResults;
+$('#cards').addEventListener('click', (e) => {
+  const c = e.target.closest('.card'); if (!c) return;
+  const src = c.querySelector('img');
+  if (src) src.style.viewTransitionName = 'hero';
+  MK.morph(() => {
+    if (src) src.style.viewTransitionName = '';
+    if (S.stay !== c.dataset.stay) { S.stay = c.dataset.stay; S.anchor = null; lscroll.scrollTop = 0; renderListing(); }
+    const dst = $('#gallery img'); if (dst) { dst.style.viewTransitionName = 'hero'; dst.classList.add('in'); }
+    $('#results').hidden = true; $('#listing').hidden = false; S.view = 'listing'; chrome();
+  }).then(() => { const d = $('#gallery img'); if (d) d.style.viewTransitionName = ''; $('#title').setAttribute('tabindex', '-1'); $('#title').focus({ preventScroll: true }); });
+});
+
+/* ---------- review sheet ---------- */
+const sheet = $('#sheet'), scrim = $('#scrim');
+let opener = null;
+function openSheet(panel) {
+  opener = document.activeElement; S.sheet = true; S.panel = panel; S.confirmCancel = false;
+  renderSheet();
+  sheet.inert = false; sheet.classList.add('open'); scrim.classList.add('open');
+  lscroll.style.overflow = 'hidden'; $('#listing').inert = true; chrome();
+  MK.fling(sheet, { from: { y: sheet.offsetHeight }, to: { y: 0 } });
+  $('#sheetH').focus({ preventScroll: true });
+}
+function closeSheet() {
+  if (!S.sheet) return;
+  S.sheet = null; MK.freeze(sheet);
+  const y = new DOMMatrix(getComputedStyle(sheet).transform).f;
+  const an = MK.fling(sheet, { from: { y }, to: { y: sheet.offsetHeight + 20 }, k: 600, zeta: 1 });
+  scrim.classList.remove('open'); sheet.inert = true;
+  lscroll.style.overflow = ''; $('#listing').inert = false; chrome();
+  an.finished.then(() => { if (!S.sheet) sheet.classList.remove('open'); }, () => {});
+  (opener && opener.isConnected ? opener : $('#reserveBtn')).focus({ preventScroll: true });
+}
+scrim.onclick = closeSheet;
+$('#closeBtn').onclick = closeSheet;
+let y0 = 0;
+MK.drag($('#grab'), {
+  axis: 'y',
+  onStart: () => { y0 = new DOMMatrix(getComputedStyle(sheet).transform).f; },
+  onMove: (_, dy) => { const t = y0 + dy; sheet.style.transform = `translateY(${t < 0 ? t * 0.35 : t}px)`; },
+  onEnd: ({ dy, vy }) => { const t = y0 + dy; if (t + vy * 180 > 160) closeSheet(); else MK.fling(sheet, { from: { y: t < 0 ? t * 0.35 : t }, to: { y: 0 }, v: { y: vy } }); },
+});
+addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape' || !S.sheet) return;
+  if (S.confirmCancel) { S.confirmCancel = false; renderSheet(); $('#cancelBk')?.focus(); }
+  else if (S.panel === 'dates') { S.panel = 'review'; renderSheet(); $('#changeBtn')?.focus(); }
+  else closeSheet();
+});
+
+function renderSheet() {
+  const st = stay(), bk = S.booking[st.id], q = quote(st, S.sel), body = $('#sheetBody'), foot = $('#sheetFoot'), h = $('#sheetH');
+  body.dataset.panel = S.panel;
+  if (S.panel === 'dates') {
+    h.textContent = 'Change dates';
+    if (!$('#sdStrip')) {
+      body.innerHTML = `<p class="sub" id="sdLine"></p><div class="strip" id="sdStrip" role="group" aria-label="Nights"></div>
+        <p class="hint" id="sdHint"></p><dl class="lines" id="sdLines"></dl>`;
+      foot.innerHTML = `<button class="primary wide" id="datesDone"></button>`;
+      $('#datesDone').onclick = () => { S.panel = 'review'; renderSheet(); $('#changeBtn')?.focus({ preventScroll: true }); };
+    }
+    paintStrip($('#sdStrip'), st, null);
+    $('#sdLine').textContent = q ? `${range(S.sel)}, ${nightsTxt(q.n)}` : 'Tap your first night';
+    $('#sdHint').textContent = S.anchor !== null ? 'Now tap your last night' : '';
+    $('#sdLines').innerHTML = q ? linesHTML(q) : '';
+    $('#datesDone').disabled = !q;
+    $('#datesDone').textContent = q ? `Use these dates, ${eur(q.total)}` : 'Pick at least 1 night';
+    return;
+  }
+  if (S.panel === 'done' && bk) {
+    h.textContent = 'Booked';
+    body.innerHTML = `<div class="done-card" id="doneCard">
+        <div class="tick"><i class="ph ph-check" aria-hidden="true"></i></div>
+        <p class="when">${range(bk)}, ${nightsTxt(bk.q.n)}</p>
+        <p class="sub">${st.title}, ${st.short}</p></div>
+      <div class="row"><div><h3>Check-in</h3><p>${dDay.format(night(bk.s))}, from 14:00</p></div></div>
+      <div class="row"><div><h3>Check-out</h3><p>${dDay.format(night(bk.e))}, by 11:00</p></div></div>
+      <div class="row"><div><h3>Guests</h3><p>${bk.guests}</p></div></div>
+      <div class="row"><div><h3>Paid</h3><p class="num">${eur(bk.q.total)} with Visa ending 4242</p></div></div>
+      <div class="box"><h3>Cancellation</h3>${cancelHTML(st, bk, bk.q)}</div>
+      ${S.confirmCancel ? `<div class="confirm" id="confirmBox"><p>Cancel ${range(bk)} and get ${eur(bk.q.total)} back to Visa ending 4242?</p>
+        <div class="two"><button class="redbtn" id="doCancel">Cancel booking, refund ${eur(bk.q.total)}</button><button class="secondary" id="keepBk">Keep booking</button></div></div>`
+        : `<button class="danger" id="cancelBk" style="margin-top:24px">Cancel booking</button>`}`;
+    foot.innerHTML = `<button class="primary wide" id="doneBtn">Done</button>`;
+    $('#doneBtn').onclick = closeSheet;
+    if (S.confirmCancel) {
+      $('#doCancel').onclick = () => { const r = bk; delete S.booking[st.id]; S.sel = { s: r.s, e: r.e }; MK.haptic('medium'); closeSheet(); update(); receipt(`Cancelled. ${eur(r.q.total)} refunded`); };
+      $('#keepBk').onclick = () => { S.confirmCancel = false; renderSheet(); $('#cancelBk').focus(); };
+      $('#confirmBox').scrollIntoView({ block: 'nearest' });
+    } else $('#cancelBk').onclick = () => { S.confirmCancel = true; renderSheet(); $('#keepBk').focus(); };
+    return;
+  }
+  // review
+  h.textContent = 'Review and pay';
+  if (!q) { S.panel = 'dates'; return renderSheet(); }
+  const p = st.photos[0];
+  body.innerHTML = `<div class="staymini">${img(p, 144, 144)}<div><h3>${st.title}</h3><p>${st.short}</p></div></div>
+    <div class="row"><div><h3>Dates</h3><p>${range(S.sel)}, ${nightsTxt(q.n)}</p></div><button class="textbtn" id="changeBtn" ${S.paying ? 'disabled' : ''}>Change</button></div>
+    <div class="row"><div><h3>Guests</h3><p>Sleeps ${st.sleeps}</p></div>
+      <div class="stepper"><button id="gMinus" aria-label="Fewer guests" ${S.guests <= 1 ? 'disabled' : ''}><i class="ph ph-minus"></i></button>
+      <output id="gOut" aria-live="polite">${S.guests}</output>
+      <button id="gPlus" aria-label="More guests" ${S.guests >= st.sleeps ? 'disabled' : ''}><i class="ph ph-plus"></i></button></div></div>
+    <div class="box"><h3>Cancellation</h3>${cancelHTML(st, S.sel, q)}</div>
+    <dl class="lines" style="margin-top:16px">${linesHTML(q)}</dl>
+    <div class="row" style="border-bottom:0"><div><h3>Pay with</h3><p>Visa ending 4242</p></div></div>`;
+  foot.innerHTML = `<div id="payWrap"><button class="primary wide" id="payBtn" ${S.paying ? 'disabled' : ''}>${S.paying ? '<span class="spin" aria-hidden="true"></span>Paying…' : `Pay ${eur(q.total)}`}</button></div>
+    <p class="note">${eur(q.total)} is charged to Visa ending 4242 when you tap Pay.</p>`;
+  $('#changeBtn').onclick = () => { S.panel = 'dates'; renderSheet(); $('#sheetH').focus({ preventScroll: true }); };
+  $('#gMinus').onclick = () => { S.guests = Math.max(1, S.guests - 1); renderSheet(); $('#gMinus').focus(); };
+  $('#gPlus').onclick = () => { S.guests = Math.min(st.sleeps, S.guests + 1); renderSheet(); $('#gPlus').focus(); };
+  $('#payBtn').onclick = pay;
+}
+function pay() {
+  const st = stay(), q = quote(st, S.sel);
+  S.paying = true; renderSheet(); $('#live').textContent = 'Paying';
+  // stands in for the payment call
+  setTimeout(() => {
+    S.paying = false;
+    if (!S.sheet) return; // closed while paying: nothing is booked in this prototype
+    S.booking[st.id] = { s: S.sel.s, e: S.sel.e, guests: S.guests, q };
+    MK.haptic('success');
+    // the pay button is the thing that becomes the booking
+    $('#payBtn').style.viewTransitionName = 'paid';
+    MK.morph(() => { S.panel = 'done'; update(); $('#doneCard .tick').style.viewTransitionName = 'paid'; })
+      .then(() => { const d = $('#doneCard .tick'); if (d) d.style.viewTransitionName = ''; $('#sheetH').focus({ preventScroll: true }); $('#live').textContent = `Booked, ${range(S.sel)}. ${eur(q.total)} paid`; });
+  }, 1100);
+}
+
+/* ---------- map: approximate area only ---------- */
+let map = null;
+function circle([lon, lat], m) {
+  const pts = [];
+  for (let k = 0; k <= 64; k++) { const a = (k / 64) * 2 * Math.PI; pts.push([lon + (m * Math.cos(a)) / (111320 * Math.cos((lat * Math.PI) / 180)), lat + (m * Math.sin(a)) / 110540]); }
+  return { type: 'Feature', geometry: { type: 'Polygon', coordinates: [pts] } };
+}
+function moveMap() {
+  if (!map) return;
+  map.jumpTo({ center: stay().center });
+  map.getSource('area')?.setData(circle(stay().center, 450));
+}
+try {
+  const dark = document.documentElement.dataset.theme === 'dark';
+  map = new maplibregl.Map({ container: 'map', style: `https://tiles.openfreemap.org/styles/${dark ? 'dark' : 'positron'}`, center: stay().center, zoom: 13.6, attributionControl: { compact: true }, interactive: false });
+  const ac = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+  map.on('load', () => {
+    map.addSource('area', { type: 'geojson', data: circle(stay().center, 450) });
+    map.addLayer({ id: 'area-f', type: 'fill', source: 'area', paint: { 'fill-color': ac, 'fill-opacity': 0.18 } });
+    map.addLayer({ id: 'area-l', type: 'line', source: 'area', paint: { 'line-color': ac, 'line-width': 2 } });
+  });
+  map.on('idle', () => { document.documentElement.dataset.mapReady = '1'; });
+  map.on('error', () => { document.documentElement.dataset.mapReady = '1'; });
+} catch { map = null; document.documentElement.dataset.mapReady = '1'; }
+
+/* ---------- states by hash ---------- */
+const states = ['loading', 'empty', 'error', 'offline'];
+function sync() {
+  const s = location.hash.slice(1);
+  document.documentElement.dataset.state = states.includes(s) ? s : 'content';
+  if (s === 'empty') { S.sel = null; S.anchor = null; }
+  update(); chrome();
+}
+addEventListener('hashchange', sync);
+renderListing(); sync();
+</script>
+</body>
+</html>

@@ -6,6 +6,8 @@ The primary action gets one designed consequence on the hero, and the dealt sign
 
 ## Contents
 
+- The signature: real content that travels
+- Motion slop
 - Gate 1: should it animate at all
 - Gate 2: what is it for
 - Timing
@@ -16,6 +18,34 @@ The primary action gets one designed consequence on the hero, and the dealt sign
 - Reduce Motion
 - Haptics
 - Judging the result
+
+## The signature: real content that travels
+
+The one memorable interaction is a morph of real content that carries the task forward: the add button becomes the stepper and the item flies into the cart bar; the mini player grows into Now Playing with the cover as the shared element; the map pin grows into the listing sheet; a profile card is thrown with velocity and the next one scales up; a card flips in 3D to show its back. Wow here is continuity, physics and real material, not effects. One per flow. Everything else is press feedback and a short ease-out.
+
+1. **Continuity.** Morph the same object between states. Never cross-fade two different things when one can travel: the tapped thing is the thing that grows.
+2. **Interruptible and reversible.** The user can grab it mid-flight. A retargeted spring starts from the current position and velocity.
+3. **Finger first.** While dragging, the element follows the finger 1:1 (or rubber-bands at a limit). On release a spring carries the release velocity.
+4. **Spring tokens** (Material 3 Expressive, mass 1, stiffness / damping ratio). Spatial default 380 / 0.8 settles in about 420 ms with about 1.5% overshoot; fast 800 / 0.6 about 240 ms, about 9.5%; slow 200 / 0.8 about 570 ms. Effects (opacity, colour) 1600 / 1.0, about 220 ms, never overshoot. Apple's scale: bounce 0 by default, 0.15 snappy, 0.3 playful at the end of a gesture, nothing above about 0.4.
+5. **Timing still rules.** The table below holds: 100 ms feedback, 200-300 ms screen changes, up to 400 ms for large travel, exits shorter than entrances. Transform and opacity only. Keyboard-started actions do not animate.
+6. **3D only for physical objects and gestures:** card flip and tilt, a coverflow of covers or posters, a depth stack, a product or globe viewer. It answers the user's hand (drag, tilt, scroll), carries state (flipped, selected) and has a flat fallback. Use CSS perspective and preserve-3d first; WebGL only for a real lit viewer. Tilt no more than about 10 degrees.
+7. **Coverflow and helix are showcase surfaces** (library, collections, my trips), never list navigation. No celebrated app uses a helix as its primary navigation.
+8. **Shape morphs:** one or two shapes per screen. The shapes need the same command or point structure to interpolate. A breathing shape is allowed only where it paces something real, such as an exercise.
+9. **Gyro tilt** needs HTTPS and, on iOS, a tap that grants permission. Ship the pointer fallback.
+10. **Delight scales with rarity.** Celebration only at real milestones; none on money moves, trades or health readings.
+11. **Reduce Motion:** movement becomes a fade, 3D shows the flat view, nothing loops.
+
+## Motion slop
+
+These read as generated. Each is allowed only when the motion shows a state change.
+
+- Staggered fade-up on sections or list rows; scroll reveal on every block.
+- The same bounce on every control.
+- Perpetual float, bob, pulse or glow on icons, hero objects or buttons; drifting gradient orbs.
+- Typewriter headlines; count-up on every stat at load; shimmer as decoration.
+- Hover lift on cards that do nothing; parallax on every layer; looped Lottie in cards.
+
+Test: does the motion tell the user where something went or what changed? If not, remove it. The slop scan flags the detectable ones.
 
 ## Gate 1: should it animate at all
 
@@ -89,8 +119,8 @@ Keep interface motion under about 300 ms unless a large surface is travelling. E
 | 1 | Cross-fades and platform defaults only. Nothing draws attention to itself. Breathing-pace motion (several seconds per cycle) only where calm is the product |
 | 2 | Platform defaults plus quiet feedback on press and on state change |
 | 3 | Springs without overshoot on designed moments. One authored transition per flow |
-| 4 | Faster, larger motion on primary actions. Shared-element continuity between list and detail |
-| 5 | Character animation, shape changes and overshoot on gesture-driven motion. Celebration at real milestones |
+| 4 | Faster, larger motion on primary actions. Shared-element morph between list and detail, and the primary action's consequence travelling |
+| 5 | Gesture physics (throw with velocity, flip, tilt), 3D on physical objects, character animation, shape changes and overshoot on gestures. Celebration at real milestones |
 
 Whatever the dial says: no celebration on risky or sensitive actions (moving money, placing a trade, logging a health reading), and no motion that pressures the user (countdowns, shaking prompts).
 

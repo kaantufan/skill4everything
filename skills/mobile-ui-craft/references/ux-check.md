@@ -4,11 +4,44 @@ A pretty screen shows visual design. UX shows in what happens next: the task mov
 
 ## Contents
 
+- The 9 bar: the self-score
 - First screen: the question per niche
 - Single-screen pass
 - Flow pass
 - Demonstrate UX in a prototype
 - Conflicts and nuances
+
+## The 9 bar
+
+The self-score for a prototype. Drive it as a user would (the "Self usability test" in the prototype file) and look at the states at 393x852: **opening**, **eight seconds later with no input** (it must look the same), **after the primary action** (by a real tap), **after Escape or back**, and **scrolled to the end**. Judge UX only; beauty never rounds it up or down.
+
+Score each check pass, partial or fail:
+
+1. **Whole brief up top.** Every job the brief names is visible in the first viewport with its action, or one tap away, and the primary action is identifiable in 5 seconds. A job below the fold gets a compact row, not a tab.
+2. **Reach and size.** The primary action is at least 44 pt (48 dp), in the lower half, labelled with a verb and a consequence ("Set aside $350.00", "Reserve", "Start lesson"). No key control is smaller than about 1 cm.
+3. **Visible consequence.** After the primary action the screen changes in a way that explains itself: figures update, a one-line receipt says why, the control shows its new state, and a reversible action offers Undo that works. Every number says what it counts ("31% of the course", not 31% under a unit title).
+4. **Honest numbers.** Every figure on screen reconciles with the others, before and after the action. Costs, fees, inclusions and defaults are stated ("fees included" shows the fees). No claim without data on screen (a heart-rate source with no heart rate).
+5. **Nothing obscured.** In all three states no content, control or label sits under a bar, sheet, toast, home indicator or status bar. Sticky headers have a background. A toast sits above the fixed bars and never covers what it describes. The last row clears the bar.
+6. **State and legibility.** Every stateful control shows its state (stepper count on an added item, shuffle on or off, selected chip, tinted row). No dead controls: every visible control does something sensible. Charts and timelines read without a tooltip (legend matches the marks, an axis or direction cue, "Now" does not overlap). Contrast and brightness suit the context of use.
+7. **Safety and consistency.** A destructive action sits away from Back and Done, is red and at the end, with undo or a named confirmation. Report and block appear once. Copy, units, minutes, counts and language agree everywhere.
+
+**Score** = 2 + 1 per pass + 0.5 per partial, then the caps; the maximum is 9. Seven passes and no cap is a 9; a 10 needs a hands-on device test and is never self-scored. It is a prompt to fix things, not a prediction of an outside judge's number.
+
+**Hard caps**, applied after summing:
+
+| Trigger | Cap |
+|---|---|
+| The primary action shows no visible change in the post-action frame | 7 |
+| Any content, control or label hidden under a bar, sheet, toast or the status bar in any state | 8 |
+| A price, total or fee that cannot be reconciled from what is visible, or that does not say what it includes | 7 |
+| Context-of-use mismatch (a glaring light screen for a bedtime app) | 6 |
+| A destructive action in the Back or Done position with no undo or confirm | 7 |
+| A job named in the brief is on neither the first screen nor one tap away | 6 |
+| A placeholder or empty image area at the focal point | minus 1 |
+| The prototype acts by itself (adds, likes, books, skips, starts, navigates without a tap) | 7 |
+| Two or more dead controls on the main path | 7 |
+
+**State it in the report's UX line:** the score, the seven checks as P (pass), ~ (partial) or X (fail) in order, any cap triggered, the first-screen answer, the next step built, the states covered and the most valuable fix left. For example: `UX: 8.5 of 9 · P P ~ P P P P (3: Undo works, receipt line missing) · cap none · first screen: ... · next step: ... · states: ... · fix left: ...`. Fix anything under 9 and re-drive, up to three rounds, then report what remains.
 
 ## First screen: the question per niche
 
@@ -79,18 +112,17 @@ For two to five screens that make one task.
 
 ## Demonstrate UX in a prototype
 
-Every HTML prototype carries these seven. A reviewer should be able to feel at least three of: a state change, a transition, tap feedback, a reversible action, a validation moment.
+Every HTML prototype carries these ten. A reviewer should be able to feel at least three of: a state change, a transition, tap feedback, a reversible action, a validation moment.
 
 1. **Carry the primary task one step further.** Build the screen asked for, plus the next step of its main task as a second view: a sheet, or a pushed screen with a working back. Examples:
    - add a dish: the cart bar updates with the item count and total; tapping it opens a cart sheet with every fee itemised;
    - reserve: a review sheet with total price, dates and cancellation terms before paying;
    - like or pass: the next profile appears, with an Undo snackbar;
    - start a lesson: the first exercise, with an exit;
-   - safe to spend: a breakdown sheet;
-   - a queue: a queue sheet with reorder;
-   - a run's splits row: a split detail.
-2. **Every tappable has a pressed state within one frame**, `touch-action: manipulation`, a visible focus ring, and a 44 pt (iOS) or 48 dp (Android) target.
-3. **States are reachable by URL hash.** `#loading`, `#empty`, `#error` and `#offline` render those states. No demo strip is visible in the phone. The default view is the populated content. Each state says what happened and what to do. The second view of item 1 keeps its own state, not the hash.
+   - safe to spend: a breakdown sheet; a queue: a queue sheet with reorder; a run's splits row: a split detail.
+2. **The whole brief above the fold.** Each job the brief names is visible with its action in the first viewport (393x852).
+3. **Every tappable has a pressed state within one frame**, `touch-action: manipulation`, a visible focus ring, and a 44 pt (iOS) or 48 dp (Android) target.
+4. **States are reachable by URL hash.** `#loading`, `#empty`, `#error` and `#offline` render those states. No demo strip is visible in the phone. The default view is the populated content. Each state says what happened and what to do. The second view of item 1 keeps its own state, not the hash.
 
    ```js
    const states = ['loading', 'empty', 'error', 'offline'];
@@ -98,10 +130,20 @@ Every HTML prototype carries these seven. A reviewer should be able to feel at l
    addEventListener('hashchange', sync); sync();
    ```
 
-4. **Undo instead of confirm** for reversible actions (a snackbar above the tab bar, 5 to 8 seconds, and Undo really restores the item in place). A named confirmation for irreversible ones.
-5. **Honest totals.** Prices, fees and recurring costs are visible before commitment, not on the last step. A total marked "fees included" shows those fees beside it or one tap away. Every visible total is the sum of the visible prices, before and after the demo; assert it in the script.
-6. **The auto-demo.** Between 2 and 3 seconds after load the prototype performs the primary action once (add a dish, like, skip a track, start the session, change the dates), which shows the signature moment, and the changed state stays on screen until at least 9 seconds after load, so a capture at 7 seconds shows it. A demo that only scrolls does not count. Skip it under Reduce Motion. The first 2 seconds show the resting state a user sees on opening.
-7. **Accessibility.** Semantic elements (`button`, `nav`, `h1`), aria-labels on icon buttons, `aria-live` for toasts, and focus moved to the new view's heading when it opens.
+5. **Undo instead of confirm** for reversible actions, and Undo really restores the item in place. A named confirmation for irreversible ones. **Feedback has a home, never a floating toast over content:** the receipt and Undo replace a line inside the docked bar (cart bar, action bar), or appear inline where the action happened (the card becomes "$350.00 moved to Tax pot · Undo"). Floating toasts over scrolling content were the most common hands-on deduction. A cart or summary is a peek bar, with the sheet on demand.
+   - **Back is not undo.** Escape, back or close leaves a committed result in place (a logged bedtime stays logged); only the Undo control reverses it.
+   - **Keep the user's place.** Opening or closing a sheet, acting, or switching tabs and coming back never moves the page scroll: lock the page with `overflow: hidden` on the scroller (not the body), move focus with `focus({ preventScroll: true })`, and keep sheets `position: fixed` inside the phone, off-screen with `translate`, never in the document flow below the content.
+   - **Every view has an exit** in the header (close, back or Done), including a summary screen whose main actions are Save and Discard.
+   - **Escape closes the top layer only:** a menu inside a sheet closes the menu, then the sheet. An inline confirmation scrolls fully above any fixed bar.
+   - **Edit in place.** "Change dates" or "Edit" on a review sheet opens the editor inside that sheet (a step or a nested panel) and returns to the review; it never closes the sheet and drops the user on the page.
+   - **Copy follows state.** After paying, "Nothing is charged until you confirm" is gone; after a rate changes, the "28%" label changes; "hide amounts" masks every figure on every tab.
+   - **Locale.** Numbers, currency and dates use the product's locale through `Intl.NumberFormat` and `Intl.DateTimeFormat` (Turkish lira: `₺1.240,50`, 24-hour time), whatever language the copy is in.
+   - **The peak gets an end.** The task's main commit (lights out, run saved, order placed, booking paid) has a designed ending in the signature's motion language, not an instant label swap: the screen dims for lights out, the saved run settles into the log, the paid bar turns into the booking.
+6. **Honest totals.** Prices, fees and recurring costs are visible before commitment, not on the last step. A total marked "fees included" shows those fees beside it or one tap away. Every visible total is the sum of the visible prices, before and after the action; assert it in the script. The confirm step shows what will be charged, to which card, and the cancellation terms above the pay button. Once something is committed (booked, paid, saved), the inputs that made it are locked or become a "change booking" flow with the difference shown; a committed total never changes by a stray tap.
+7. **No dead controls, and every stateful control shows its state.** Every visible control does something sensible. Another tab opens a simple real view built from the same material, never an empty page and never nothing. An added item shows its stepper and count, shuffle and repeat show on or off, the selected chip, tab or row is marked, and an ambiguous icon has a text label.
+8. **Context of use.** A night screen (sleep, now playing at bedtime) is dark and dim with a warm low-glare accent, never white or electric blue; screens used in the dark stay dark-first. An outdoor screen is high contrast. The primary action is in thumb reach.
+9. **Nothing happens by itself.** No auto-demo, no timer that adds, likes, skips, books, sorts, starts a session or navigates. In blind hands-on review, a prototype that acted for the user (money set aside, a dish added, a like sent, a session started, a song skipped) was marked down in every niche, even with Undo. The screen opens at rest and waits; the signature motion plays when the user taps. Real time may run (a clock, a playing track's progress) and only that.
+10. **Accessibility.** Semantic elements (`button`, `nav`, `h1`), aria-labels on icon buttons, `aria-live` for toasts, and focus moved to the new view's heading when it opens.
 
 A sheet has a drag handle, a visible close button, Esc or back closes it, and a tap on the scrim closes a modal sheet. Do not stack sheets. A form shows a spinner and a changed label while sending ("Sending..."), keeps the typed values on error, and validates on blur.
 

@@ -46,6 +46,16 @@ Streak-loss guilt and "you broke your streak" pushes; calorie shaming; auto-publ
 - **Strava** — Apple Watch App of the Year 2025 for real-time segment tracking on the wrist. Borrow the live wrist experience. Do not copy its habit of moving long-free features behind a paid tier.
 - **Train Fitness** — a 2025 Inclusivity finalist. Borrow the attention to accessible workout use.
 
+## Details leading apps get right
+
+- The hero stat dominates (distance), then a time and pace row, with the map beside or above it showing the route and km markers, and one insight in plain words ("negative split").
+- Tapping or scrubbing the chart or the splits moves a marker along the route, with a tooltip of pace, distance and elapsed time.
+- The post-run decision is explicit: Save with a privacy picker, and Discard at the end with a named confirmation, never in the Back or Done position.
+- All splits are visible without scrolling, the fastest is highlighted, and a partial last kilometre is drawn differently and explained.
+- A map under the status bar has a scrim, and the start marker never covers a label.
+- It never claims a data source it does not show (heart rate "from the watch" with no heart rate on screen).
+- A pace chart has axis values or a direction cue ("faster is higher").
+
 ## What users complain about here
 
 Features that were free for years moved behind a subscription (Strava segment tools, and its year-in-review recap placed behind a paywall); obsessive calorie tracking and its link to disordered eating; paywalls early in onboarding, which are common in this category. A complaint about a paid barcode scanner in a popular food logger was not confirmed, so do not cite it.

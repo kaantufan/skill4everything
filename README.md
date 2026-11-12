@@ -12,27 +12,50 @@ iOS (SwiftUI, UIKit), Android (Jetpack Compose), Flutter ve React Native / Expo 
 
 AI yapımı arayüzü ele veren üç şey var: seçilmemiş varsayılanlar, modelin kendi zevki (aynı birkaç font, vektörle çizilmiş resim ve ikonlar, renkli bir alan üstüne yükselen yuvarlak kart, parıltılar, orta noktayla dizilmiş künyeler) ve zevke karşı verilen ilacın kendisi: rastgele seçim. 3.x sürümü yazı tipini, rengi, iskeleti ve efekti ayrı ayrı zar atarak dağıtıyordu. Sonuç tutarsızdı (siyah üstünde mor ve serif bir koşu özeti, bordo bir müzik çalar), kullanıcı beğenmedi ve kör testte ekranların yaklaşık yüzde 80'i yine AI sanıldı. Gri boş kutular (fotoğraf, kapak ve haritanın olması gereken yerde) ekranları bitmemiş gösteriyordu, ve her prototip tek bir durağan ekrandı.
 
-Kutlanan uygulamalar tersini yapıyor: konudan başlıyor ve tek bir tutarlı sistem türetiyor. Beyaz ya da koyu zemin, ölçülü tek vurgu, tek yazı ailesi (çoğu zaman sistem fontu), bir imge kuralı ve tek bir imza etkileşimi. Skill 4 (şu an 4.1) bunu işe çeviriyor:
+Kutlanan uygulamalar tersini yapıyor: konudan başlıyor ve tek bir tutarlı sistem türetiyor. Beyaz ya da koyu zemin, ölçülü tek vurgu, tek yazı ailesi (çoğu zaman sistem fontu), bir imge kuralı ve tek bir imza etkileşimi. Skill 5 bunu işe çeviriyor:
 
 1. **Yön dağıtılır, zar atılmaz.** `scripts/deal.mjs` ürün adı ve nişle, on araştırılmış yönden (yerli sessiz yardımcı, veri kahraman, ağırbaşlı koyu, fotoğraflı editoryal, tek gürültülü marka rengi, yuvarlak alışkanlık, okuma odası, sessiz duyusal, profesyonel araç, sosyal afiş) nişe uyan iki ya da üçünden birini seçer. Yön tek bir yazı tipi ailesi (okuma odasında metin yüzü artı sistem fontu), açık ve koyu için renk değerleri (kontrast kodda denetlenmiş), ikon seti, imge kuralı, imza anı ve "kötü sürüm" uyarısı getirir. Yerleşim dağıtılmaz: nişin lider uygulamalarının düzeni korunur. Yön bağlayıcıdır, gerekçesi yazılmak şartıyla bir kez yeniden dağıtılabilir.
 2. **Gerçek malzeme, gri kutu değil.** Çizilmiş resim ve ikon yok, boş yuva yok: `assets/imagery.md` içinde tek tek doğrulanmış 162 Unsplash fotoğrafı, kamu malı sanat eserleri, anahtarsız gerçek harita (MapLibre ile OpenFreeMap) ve içerikten örneklenen renk. Her görsel yuvasında "asla gri" deseni: fotoğrafa yakın bir renk, yumuşak giriş, hatada gizleme.
-3. **Prototip UX'i gösterir.** Ana görevin bir sonraki adımı da kurulur (sepet sayfası, inceleme sayfası, sıradaki profil), durumlar URL hash'iyle açılır (`#loading`, `#empty`, `#error`, `#offline`), geri alma, dürüst toplam (ücretler toplamın yanında), iki-üç saniye sonra ana eylemi bir kez yapan otomatik demo. Her niş için ilk ekranın cevaplaması gereken soru `references/ux-check.md` içinde.
-4. **Tek imza anı, bitmiş.** Ekranın akılda kalan tek etkileşimi, gerçek içerik üzerinde: yaylı sayfa, paylaşılan öğe geçişi, grafikte parmakla gezinme, sayı yuvarlanması. Kalan her şeyde yalnızca basma geri bildirimi. Her ekranda ürün adı ve tek bir marka yüzeyi var (vurgu yalnızca bir düğmede kalırsa ekran "wireframe" gibi okunuyor); tasarlanan görünüm (açık ya da koyu) sistem ayarından bağımsız açılıyor.
-5. **Metin anlatmaz, etiketler.** Ekran başına en fazla bir açıklama cümlesi, kısa etiketler, sıradan örnek veri, uydurma kişi adları, ekranda yapım notu yok.
-6. **Fikir hâlâ ürünün.** Ürünün kendi dünyasından tek bir fikir; yapı, veri ve sözcüklerle görünür.
-7. **Taban.** Dokunma hedefleri, metin ölçekleme, kontrast, durumlar, geri hareketi, karanlık kalıpların reddi.
+3. **Prototip kullanılır, bakılmaz.** Ana görevin sonraki adımı kurulur (sepet sayfası, inceleme ve ödeme, nefes seansı, sıradaki profil), diğer sekmeler gerçek birer görünüm açar, ölü kontrol yok. Durumlar URL hash'iyle açılır (`#loading`, `#empty`, `#error`, `#offline`). Geri bildirim içeriğin üstüne binen bir bildirimde değil, sabit çubukta ya da eylemin olduğu satırda durur; geri alma gerçekten geri alır, Esc ve geri tuşu kaydedileni silmez, sayfa kaydırma konumu korunur, hiçbir şey kendiliğinden olmaz. Ajan bitirmeden önce prototipi `capture.mjs --steps` ile kendisi sürer, kareleri ve geçiş filmini inceler ve yedi maddelik "9 çıtası"na göre puanlar (`references/ux-check.md`).
+4. **İmza hareketi: aynı nesne yolculuk eder.** Nişe göre dağıtılan tek bir hareket, gerçek içerik üzerinde: "+" düğmesi adet seçiciye dönüşür ve yemek fotoğrafı sepete uçar, kartın üstündeki küçük halka tam ekran nefes şekline büyür, sıradaki kapak ana kapağa büyür, yalnızca değişen rakamlar yuvarlanır. Yaylar Apple ve Material 3 Expressive'in yayımlanmış değerleriyle, her an kesilebilir, Azaltılmış Hareket sürümüyle. 3D yalnızca elde tutulabilecek nesneler için (kart çevirme, kapak akışı, derinlik yığını); sarmal ve kapak akışı yalnızca vitrin. `assets/motion-kit.js` bunları test edilmiş, bağımlılıksız küçük bir kitle veriyor. Her ekranda ürün adı ve ekranın yaklaşık beşte birini kaplayan tek bir marka yüzeyi var.
+5. **Tipografi ve sembol izleri engellenir.** İtalik başlık, başlık üstünde küçük harf aralıklı etiket, başlık ya da kart kenarında dikey çizgi, etiket önünde süs noktası, ikon yerine Unicode sembol (→ ✓ ★ ✦ ▲), düğme sonunda ok, 01/02 numaralı etiketler, her başlığa süs ikonu ve modelin hazır metafor ikonları (yıldız parıltısı, roket, şimşek, alev, yaprak). `slop-scan.mjs` bunları "engelleyici" grupta yakalar ve rapor verilmeden temizlenmeleri gerekir; yıldızlı puan ve seçili durumdaki tik gibi gerçek uygulama gelenekleri serbest.
+6. **Metin anlatmaz, etiketler.** Ekran başına en fazla bir açıklama cümlesi, kısa etiketler, sıradan örnek veri, uydurma kişi adları, ekranda yapım notu yok.
+7. **Fikir hâlâ ürünün.** Ürünün kendi dünyasından tek bir fikir; yapı, veri ve sözcüklerle görünür.
+8. **Taban.** Dokunma hedefleri, metin ölçekleme, kontrast, durumlar, geri hareketi, karanlık kalıpların reddi.
 
 ### Ne üretiyor
 
-Aşağıdaki sekiz ekranın her biri tek bir istekle, **Claude Opus 5.5 (high)** tarafından, skill 4.1 yüklüyken üretildi. Hiçbiri elle düzeltilmedi. Görüntüler açılıştan 1,5 saniye sonrası; prototiplerin her biri ana görevi bir adım ileri taşıyor (sepet sayfası, inceleme sayfası, nefes seansı, sıradaki profil).
+Aşağıdaki sekiz ekranın her biri tek bir istekle, **Claude Opus 5.5 (high)** tarafından, skill 5 yüklüyken üretildi. Hiçbiri elle düzeltilmedi. Görüntüler açılış anı; her prototip ana görevi sonuna kadar götürüyor (sepet ve sipariş, ödeme ve rezervasyon, nefes seansı ve ışık kapama, kaydetme ve geri alma).
 
-![mobile-ui-craft 4.1 ile](docs/previews/v4-with-skill.png)
+![mobile-ui-craft 5 ile](docs/previews/v5-with-skill.png)
+
+İmza hareketleri, 10 kat yavaşlatılmış film şeridi olarak (yukarıdan aşağı: nefes halkası tam ekrana büyüyor; yemek fotoğrafı sepete uçuyor ve toplam yuvarlanıyor; vergi ayrılınca yalnızca değişen rakamlar kayıyor):
+
+![İmza hareketleri](docs/previews/v5-motion.png)
 
 Aynı sekiz istek, aynı model, skill olmadan:
 
 ![Skill olmadan](docs/previews/v3-without-skill.png)
 
-Prototipler [`docs/prototypes/v4/`](docs/prototypes/v4) klasöründe (3.1 çıktıları [`docs/prototypes/v3/`](docs/prototypes/v3) içinde); tarayıcıda açıp dokunabilirsin. Bunlar native ekran değil, HTML prototiplerdir; fontlar ve kontroller native karşılıklarının yaklaşık halidir.
+Prototipler [`docs/prototypes/v5/`](docs/prototypes/v5) klasöründe (4.1 ve 3.1 çıktıları [`docs/prototypes/v4/`](docs/prototypes/v4) ve [`docs/prototypes/v3/`](docs/prototypes/v3) içinde); tarayıcıda açıp dokunabilirsin. Bunlar native ekran değil, HTML prototiplerdir; fontlar ve kontroller native karşılıklarının yaklaşık halidir.
+
+### Ölçüm: sürüm 5 (hakemler prototipi kullanarak puanladı)
+
+Sürüm 4'te UX üç durağan kareden puanlanıyordu. Bu kez her Opus 5.5 (high) hakemi her adayı `capture.mjs --steps` ile kendisi kullandı: ana görevi denedi, geçişi 10 kat yavaş filme aldı, geri ve Esc'e bastı, sekmeleri ve diğer kontrolleri denedi, sayfanın sonuna indi. UX yedi maddelik bir ölçütle ve tavan kurallarıyla puanlandı (örnek: kendi kendine iş yapan prototip en fazla 7, iki ölü kontrol en fazla 7, içeriğin üstüne binen bildirim en fazla 8). Kaynak kod okunmadı, adaylar kördü, her nişte iki hakem vardı. Skill üç tur geliştirildi; her turun hakem notları bir sonrakinin kuralı oldu.
+
+| Tur | Skill sürümü | Beğeni | UX | En iyi (16) | Aynı turda skill'siz (beğeni / UX) |
+|---|---|---|---|---|---|
+| 1 | 5.0 | 6.8 | 7.5 | 16 | 6.8 / 4.9 |
+| 2 | 5.1 | 6.4 | 8.3 | 14 | 6.9 / 4.7 |
+| 3 | 5.2 (bu sürüm) | 6.7 | 8.2 | 11 (5.1 ile yarışırken) | 6.9 / 4.9 |
+
+Aynı etkileşimli testte sürüm 4.1, birinci turda beğenide 5.6, UX'te 5.6 aldı.
+
+- **UX 9'a niş bazında ulaştı, ortalamada ulaşmadı.** Son sürüm finans, koşu ve seyahatte iki hakemden de 9 aldı; 16 kararın 9'u "9". Ortalama 8.2-8.3'te sabitlendi. Kalan kesintiler kural eksiği değil, tek seferlik hatalar: yemekte Geri Al'ın sayfa düzenini bozması, müzikte şarkı sözüne dokununca şarkının değişmesi, dilde "zayıf kelimeler" sayısına "iyi" kelimelerin karışması. Skill'in kendi kuralı gereği üç düzeltme turundan sonra durdum.
+- **En büyük sıçrama kendi kuralımızı silmekten geldi.** Sürüm 4'ün "otomatik demo"su durağan karelerde etkileşimi göstermek içindi; hakemler prototipi kullanınca bu, uygulamanın kullanıcı adına para ayırması, sepete yemek eklemesi, beğeni göndermesi olarak okundu ve her nişte puan kırdırdı. 5.1 "hiçbir şey kendiliğinden olmaz" kuralını getirdi; ardından en sık kesinti olan içeriğin üstüne binen bildirimler sabit çubuğa ya da satır içine taşındı.
+- **Beğenide skill'siz ile başa baş.** Sürüm 4'te beğenide geride kalınıyordu (6.1-6.6'ya karşı 7.6-7.9); bu testte fark 0.2-0.5'e indi. Hakemler hareketi filmde görebildi: kapağın büyümesi, nefes halkasının tam ekrana açılması, yalnızca değişen rakamların kayması övüldü. Skill'sizin çekiciliği yine sıcak krem zemin, serif başlık ve çizimlerden geliyor; ama prototiplerinin çoğu dokununca hiçbir şey yapmıyor (UX 4.7-4.9).
+- **AI izlenimi değişmedi.** Durağan karelerle yapılan kör AI testinde 5.2 ortalama 79, 4.1 76, skill'siz 91, gerçek uygulama 7 aldı; 16 kararın hiçbirinde 5.2 "en AI" seçilmedi. Hareket ve 3D katmanı AI izlenimini artırmadı. Hakemlerin 5.2 için yazdığı izler: uygulama adının vurgu renginde yazılması ve tasarımı anlatan yardımcı cümleler ("Son çubuk: son 0,46 km...").
+- **Sınırlar.** Hakemler üretici ile aynı model ailesinden; her turda niş başına tek üretim; etkileşim başsız Chrome'da, dokunma öykünmesiyle; hiçbir prototip cihazda denenmedi ve hiçbir insan puanlamadı. Ölçüt sürüm 5 için yazıldı, bu yüzden sürüm 4'ün durağan kare puanlarıyla doğrudan karşılaştırılamaz; karşılaştırma aynı turdaki skill'siz ve 4.1 adaylarıyla yapıldı.
 
 ### Ölçüm: sürüm 4
 
@@ -203,10 +226,11 @@ skills/mobile-ui-craft/
     always-on.md        CLAUDE.md / AGENTS.md için on satırlık kural bloğu
     imagery.md          doğrulanmış fotoğraf, kapak ve sanat eseri kataloğu, lisans ve kullanım kuralları
     phone-frame.html    HTML prototip için telefon çerçevesi (iOS ve Android)
+    motion-kit.js       prototipe gömülen hareket kiti: yay eğrileri, paylaşılan öğe geçişi, FLIP, sürükle ve fırlat, eğim, rakam yuvarlama
   scripts/
-    deal.mjs            yön dağıtıcı: ürün adı ve nişten yönü, yazı tipini, vurguyu, ikon setini ve imza anını seçer; kontrastı kodda denetler
-    capture.mjs         prototipi gerçek telefon boyutunda, gerçek zamanlı yakalar; fotoğrafları, yazı tiplerini ve haritayı bekler
-    slop-scan.mjs       Swift, Kotlin, Dart, TSX ve HTML kaynağında seçilmemiş varsayılanları sayar (gri yuva, Lucide, gradyan metin dahil)
+    deal.mjs            yön dağıtıcı: ürün adı ve nişten yönü, yazı tipini, vurguyu, ikon setini, nişin imza hareketini ve yönün ayrıntı hareketini seçer; kontrastı kodda denetler
+    capture.mjs         prototipi gerçek telefon boyutunda yakalar; --steps ile dokunur, sürükler, tuşa basar, durumları açar ve geçişleri yavaşlatılmış film şeridi olarak kaydeder
+    slop-scan.mjs       Swift, Kotlin, Dart, TSX ve HTML kaynağında seçilmemiş varsayılanları sayar; italik başlık, üst etiket, kenar çizgisi, Unicode sembol ikonları ve hareket izleri "engelleyici" grupta
   evals/                dokuz test senaryosu
 tests/lint.mjs          skill yapısını doğrulayan lint
 docs/previews/          bu sayfadaki görseller
@@ -221,7 +245,7 @@ node skills/mobile-ui-craft/scripts/deal.mjs --seed "Sofra" --niche food-deliver
 ```
 
 ```bash
-node skills/mobile-ui-craft/scripts/capture.mjs docs/prototypes/v3/language.html shots/soz --at 1200,3000,6500 --scroll-end
+node skills/mobile-ui-craft/scripts/capture.mjs docs/prototypes/v5/food.html shots/sofra --steps "shot:open;tap:text=Add Adana;film:add,4000,6;key:Escape;scroll:end;shot:end"
 ```
 
 ```bash
@@ -259,6 +283,7 @@ cd skills/mobile-ui-craft && claude plugin eval . --allow-tools Write,Edit,Bash 
 - **3.0** "hâlâ AI-slop duruyor" geri bildirimi üzerine: yazı tipi, ikon, iskelet ve efekt artık modelin değil dağıtım script'inin seçimi; model resim ve ikon çizmiyor. **3.1** ilk AI tespit testinin bulduklarını ekledi: ekranda yapım notu yok, metin anlatmıyor, sıradan örnek veri, dağıtılan renk aralığı ve ilk görünüm, yakalamada açık mod sabit.
 - **4.0** kullanıcının 3.1 çıktısını hoş bulmaması ve kör testte hâlâ yaklaşık yüzde 80 AI sanılması üzerine: rastgele dağıtım yerine nişe göre araştırılmış tutarlı yönler (10 yön, 24 niş), gri boş kutular yerine gerçek malzeme (doğrulanmış fotoğraf, gerçek harita, içerikten örneklenen renk), görevi bir adım ileri taşıyan ve durumları gösteren prototipler, tek bir bitmiş imza anı. `deal.mjs` artık yön dağıtıcı ve kontrastı kodda denetliyor; `assets/imagery.md` ve `references/ux-check.md` eklendi; `capture.mjs` görselleri ve haritayı bekliyor; `slop-scan.mjs` gri yuva, Lucide, gradyan metin, sol kenar şeritli kart ve avatar servislerini yakalıyor. Sabit genişlikli rakamı olmayan üç yazı tipi (Albert Sans, Libre Franklin, Fredoka) Chrome'da ölçülerek katalogdan çıkarıldı.
 - **4.1** 4.0 ölçümündeki hakem notlarından: tasarlanan görünüm sistemden bağımsız açılır, her ekranda ürün adı ve bir marka yüzeyi, otomatik demo ana eylemi yapar ve sonucu ekranda kalır, "ücretler dahil" yazan toplam ücretleri gösterir, çubukların altından içerik okunmaz, fotoğraf yalnızca katalogdaki tarifi uyan öğeye konur, kapaklar ünlü tablo ya da bulanık soyut değil, örnek adlar ünlü örnek setlerinden (Northwind, Acme) değil, satış noktaları manzara cümlesi değil düz bilgi.
+- **5.0** "UX'te ciddi gelişme, 3D, morph, geçişler ve AI-slop tipografinin engellenmesi" isteği üzerine. Hareket: nişe göre dağıtılan imza hareketi (aynı nesne yolculuk eder), Apple ve Material 3 Expressive yay değerleri, test edilmiş `assets/motion-kit.js`, 3D yalnızca fiziksel nesneler için, hareket izleri (sırayla belirme, sürekli parlama, yüzen öğe, daktilo, sayaç) tarayıcıda. UX: yedi maddelik "9 çıtası" ve tavan kuralları, prototipi `capture.mjs --steps` ile kendin kullanma, ölü kontrol yok, hiçbir şey kendiliğinden olmaz (otomatik demo kaldırıldı), geri bildirim sabit çubukta ya da satır içinde, Esc kaydedileni silmez, düzenleme sayfa içinde, metin duruma göre değişir, yerel sayı ve para biçimi, ana işin tasarlanmış bir sonu var; sekiz nişe "lider uygulamaların doğru yaptığı ayrıntılar". Tipografi ve sembol: 15 yeni engelleyici kural. `capture.mjs` paralel koşularda çakışmayan port ve yalnızca görünür öğeye dokunma.
 
 ### Araştırma
 
@@ -266,7 +291,7 @@ Skill yazılmadan önce yaklaşık 90 skill reposu, platform kılavuzları, AI-s
 
 ### Sınırlar
 
-- Prototipler HTML'dir. Hiçbir ekran simülatörde ya da cihazda denenmedi; SwiftUI, Compose ve React Native için kod üretimi test edilmedi (Flutter için bir senaryo `flutter analyze`'dan geçti, o da 1.0 ile).
+- Prototipler HTML'dir. Hareket ve dokunma yalnızca başsız Chrome'da, dokunma öykünmesiyle denendi; Safari, gerçek parmak hissi ve titreşim (iOS Safari `navigator.vibrate`'i yok sayar) denenmedi. Hiçbir ekran simülatörde ya da cihazda denenmedi; SwiftUI, Compose ve React Native için kod üretimi test edilmedi (Flutter için bir senaryo `flutter analyze`'dan geçti, o da 1.0 ile).
 - İddialı bir prototipi native koda çevirmek, sistem bileşenleriyle kurmaktan daha fazla iştir; özel gezinme ve kontrollerde erişilebilirlik elle sağlanmalıdır.
 - Platform bilgisi 2026-11 itibarıyla kontrol edildi. Daha yeni bir SDK ile çelişirse SDK ve resmi belge geçerlidir.
 - Araştırmada Reddit ve X doğrudan okunamadı.

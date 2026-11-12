@@ -47,6 +47,16 @@ Loss-aversion guilt notifications; heart or energy walls that push payment in th
 - **Speechify** — Apple Design Award 2025 for Inclusivity. Borrow the full support for large text and screen readers for dyslexia, attention differences and low vision.
 - **Pingo AI** — a Google Play Hidden Gem of 2025 in this category.
 
+## Details leading apps get right
+
+- All three jobs sit above the fold: today's lesson, course progress (a unit stepper and percent done) and weak words with a Practise button.
+- The lesson card gives its honest scope (time, new words, "0 of 8 exercises") and a sample phrase with audio.
+- One lesson is enough to keep the streak. In one analysis of streak designs, users who needed only one lesson were more than 40% more likely to keep a seven-day streak, and streak freezes brought 200,000 more daily returners; the same article warns a streak count can eclipse learning.
+- After a lesson the next lesson stays a filled primary action, not an outline.
+- The correct or incorrect sheet has audio replay and a short reason, then a full-width Continue.
+- Numbers agree everywhere: minutes, exercise counts, unit numbers.
+- Weak words use a strength meter that is explained, not punitive miss counts, and the Practise button is not hidden behind a tab badge.
+
 ## What users complain about here
 
 Streak chasing without real learning; shallow depth past beginner level; cluttered, engagement-first interfaces; AI-first replacement of human content. Paywalls in onboarding are very common in education apps.

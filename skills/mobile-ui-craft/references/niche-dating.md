@@ -46,6 +46,16 @@ Paywalling basic filters; price discrimination without disclosure; hidden "rose 
 - **Commonly cited: Hinge** — profile prompts that give people something to talk about. Borrow the idea of prompt-led profiles.
 - **Commonly cited: Bumble** — design efforts aimed at reducing swipe fatigue. The detail is unverified, so treat it as a direction, not a model.
 
+## Details leading apps get right
+
+- Likes attach to specific content. Hinge reported in 2024 that likes on text prompts were 47% more likely to lead to a date than likes on photos.
+- The structure follows the premise: shared interests sit right under the photo, shared items are checked and the rest greyed, and each prompt can carry a tag for what you share.
+- Pass and Like are a large, labelled, pinned bar that never covers content. Floating buttons over the first prompt cut its text.
+- A like gives feedback: the next profile appears with a "Liked: name / Undo" toast, undo over confirm.
+- The header collapses to name, age and a verified badge on scroll.
+- Report and block appear once, at the end of the profile, not beside the like zone.
+- Copy is localised to the app's language, and photos are real or convincing; grey boxes cost the most in blind judging.
+
 ## What users complain about here
 
 Paywalls everywhere: paid tiers on Tinder, Bumble and Hinge hide features that used to be basic, and locked "standouts" carousels; swipe fatigue (a poll reported secondhand put it at a large majority of young adults, so treat the figure as indicative only); forced accounts and permissions before value.

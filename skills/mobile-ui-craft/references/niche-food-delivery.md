@@ -45,6 +45,16 @@ Service and delivery fees that first appear at checkout; tip prompts that are pr
 - **Commonly cited: DoorDash and Uber Eats** — a clear order state machine and live tracking, one primary action per state. The research marks these as unverified, so use the structure as a pattern, not a model to copy line by line.
 - **The regulators' direction** — show the all-in total up front. It is the pricing principle to build in, whichever app you admire.
 
+## Details leading apps get right
+
+- Fee honesty is the lever. Fee, minimum and free-delivery threshold show up front, and the cart says whether the total includes delivery. Baymard reports that 40% of shoppers abandon a cart because of extra costs.
+- The header carries name, cuisine, rating with its count, open until, and a strip of time, fee and minimum.
+- Sticky category tabs have a scroll-spy that matches the visible section, and a sticky cart bar with count and total sits in thumb reach.
+- In-card quantity steppers show the cart state on the menu itself.
+- Minimum-order progress reads correctly (an almost-full bar must not look empty), and "Add X for free delivery" matches the cart maths.
+- Allergens are listed per dish, a VAT note is present, and every photo matches its dish.
+- The cart does not bury the menu: a peek bar first, the sheet on demand.
+
 ## What users complain about here
 
 Stacked fees (service, delivery, small-order, and tax lines) that make the final price differ from the menu; tipping prompts with hidden or tiny skip buttons and high presets; and late-revealed charges. Research cites several fee settlements and a 2026 regulatory proceeding, which shows the pressure is real.

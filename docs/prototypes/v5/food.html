@@ -1,0 +1,881 @@
+<!doctype html>
+<html lang="en" data-platform="ios" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sofra · Kardeşler Ocakbaşı</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css">
+<style>
+  /* device frame (from assets/phone-frame.html) */
+  :root { --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px; --chrome: #000; }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--ground); color: var(--ink); }
+  .statusbar { position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 60; display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none; font-family: -apple-system, "SF Pro Text", system-ui, sans-serif; }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  .home-indicator { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 60; width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none; }
+  #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+  html:not(.solid):not(.listing) .statusbar { --chrome: #fff; }
+</style>
+<style>
+  /* SOFRA TOKENS: dealt direction brand-signal, Barlow, green. One place for colour, type, space, radii, motion. */
+  :root {
+    --ground: #FFFFFF; --raised: #F5F5F5; --ink: #121212; --ink-2: #5C5C5C; --line: #E6E6E6;
+    --accent: #1E9E4A; --on-accent: #121212; --positive: #1E9E4A; --negative: #D93025;
+    --scrim: rgb(0 0 0 / .45);
+    --font: "Barlow", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif;
+    --t-hero: 800 38px/1 var(--font); --t-title: 800 30px/1.1 var(--font); --t-section: 700 18px/1.25 var(--font);
+    --t-body: 400 16px/1.35 var(--font); --t-body-strong: 700 16px/1.3 var(--font); --t-small: 400 15px/1.35 var(--font); --t-label: 600 13px/1.3 var(--font);
+    --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 20px; --s-6: 24px;
+    --r-ctl: 10px; --r-thumb: 10px; --r-card: 12px; --r-pill: 22px;
+    --hero-h: 200px; --bar-h: 52px; --tabs-h: 60px;
+    --dock-h: calc(var(--s-2) + 40px + 56px + var(--s-2) + var(--safe-bottom));
+  }
+  [data-theme="dark"] {
+    --ground: #121212; --raised: #1E1E1E; --ink: #FFFFFF; --ink-2: #ABABAB; --line: #2C2C2C;
+    --accent: #1E9E4A; --on-accent: #121212; --positive: #1E9E4A; --negative: #FF6B5E; --scrim: rgb(0 0 0 / .6);
+  }
+
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; touch-action: manipulation;
+    transition: transform .12s cubic-bezier(.22,1,.36,1); -webkit-tap-highlight-color: transparent; }
+  button:active:not([aria-disabled="true"]) { transform: scale(.97); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+  h1, h2, h3, p { margin: 0; }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* never-grey image */
+  .pic { position: relative; overflow: hidden; background: var(--c); }
+  .pic img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; transition: opacity .4s ease-out; }
+  .pic img.in { opacity: 1; }
+
+  /* scroller */
+  .scroll { position: relative; flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; padding-bottom: calc(var(--dock-h) + var(--s-6)); }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  .hero { height: var(--hero-h); }
+  .hero::after { content: ""; position: absolute; inset: 0 0 auto 0; height: 120px; background: linear-gradient(rgb(0 0 0 / .55), transparent); pointer-events: none; }
+
+  .info { padding: var(--s-4) var(--s-5) var(--s-3); }
+  .info h1 { font: var(--t-title); letter-spacing: -0.02em; }
+  .info .cuisine { font: var(--t-body); color: var(--ink-2); margin-top: var(--s-1); }
+  .info .meta { display: flex; justify-content: space-between; align-items: center; margin-top: var(--s-2); font: var(--t-body); }
+  .rating { display: flex; align-items: center; gap: 6px; }
+  .rating b { font-weight: 700; }
+  .rating span { color: var(--ink-2); }
+  .hours { color: var(--ink-2); }
+
+  /* brand surface: the delivery facts */
+  .band { margin: var(--s-1) var(--s-4) var(--s-2); padding: var(--s-4); border-radius: var(--r-card); background: var(--accent); color: var(--on-accent); }
+  .band .top { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--s-4); }
+  .band .lbl { font: var(--t-label); }
+  .band .eta { font: var(--t-hero); letter-spacing: -0.02em; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .band dl { margin: 0; display: grid; grid-template-columns: auto auto; gap: 2px var(--s-3); font: var(--t-label); font-size: 15px; text-align: right; }
+  .band dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .band .bottom { display: flex; justify-content: space-between; align-items: center; margin-top: var(--s-3); padding-top: var(--s-3); border-top: 1px solid rgb(0 0 0 / .18); font: var(--t-label); font-size: 14px; }
+  .band .courier { display: flex; align-items: center; gap: 6px; }
+  .band .courier i { font-size: 18px; }
+  .band .closed { display: none; }
+
+  /* sticky category tabs with scroll-spy */
+  .tabs { position: sticky; top: calc(var(--safe-top) + var(--bar-h)); z-index: 5; height: var(--tabs-h); display: flex; gap: var(--s-2); align-items: center;
+    padding: 0 var(--s-4); overflow-x: auto; scrollbar-width: none; background: var(--ground); border-bottom: 1px solid var(--line); }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs button { flex: none; height: 44px; padding: 0 var(--s-4); border-radius: var(--r-ctl); background: var(--raised); font: var(--t-body-strong); font-size: 15px; white-space: nowrap; }
+  .tabs button[aria-current="true"] { background: var(--accent); color: var(--on-accent); }
+
+  /* menu */
+  .sec { padding: var(--s-4) var(--s-4) 0; }
+  .sec h2 { font: var(--t-section); padding: var(--s-2) 0 var(--s-1); }
+  .dish { display: flex; gap: var(--s-3); padding: var(--s-3) 0 var(--s-4); border-bottom: 1px solid var(--line); }
+  .dish:last-child { border-bottom: 0; }
+  .dish .txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .dish h3 { font: var(--t-body-strong); }
+  .dish .desc { font: var(--t-small); color: var(--ink-2); }
+  .dish .price { font: var(--t-body); font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .dish .all { font: var(--t-label); color: var(--ink-2); }
+  .dish .so { font: var(--t-label); color: var(--negative); }
+  .dish.sold h3, .dish.sold .price { color: var(--ink-2); }
+  .media { position: relative; flex: none; width: 104px; height: 104px; align-self: flex-start; }
+  .media .pic { width: 104px; height: 104px; border-radius: var(--r-thumb); }
+  .media.nophoto { height: 44px; align-self: flex-end; }
+
+  /* the add button that becomes the stepper: one object, clipped open from the right */
+  .qty { position: absolute; right: -4px; bottom: -6px; width: 120px; height: 44px; display: flex; align-items: center; justify-content: space-between;
+    background: var(--raised); border-radius: var(--r-pill);
+    clip-path: inset(0 0 0 calc(100% - 44px) round var(--r-pill)); transition: clip-path var(--q-ms, 240ms) var(--q-ease, ease-out); }
+  .media.nophoto .qty { right: 0; bottom: 0; }
+  .qty.on { clip-path: inset(0 round var(--r-pill)); }
+  .qty button { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; font-size: 20px; }
+  .qty .plus { color: var(--ink); }
+  .qty.on .plus, .qty.on .minus { color: var(--ink); }
+  .qty .n { font: var(--t-body-strong); font-variant-numeric: tabular-nums; min-width: 20px; text-align: center; }
+  .qty .minus, .qty .n { opacity: 0; transition: opacity .15s ease-out; }
+  .qty.on .minus, .qty.on .n { opacity: 1; }
+  .ghost { position: absolute; z-index: 45; object-fit: cover; pointer-events: none; transform-origin: 0 0; border-radius: var(--r-thumb); opacity: 1 !important; }
+
+  .foot { padding: var(--s-6) var(--s-4) 0; font: var(--t-label); color: var(--ink-2); }
+
+  /* top bar over the photo, solid once the photo is gone */
+  .topbar { position: absolute; inset: 0 0 auto 0; z-index: 20; height: calc(var(--safe-top) + var(--bar-h)); padding: var(--safe-top) var(--s-3) 0;
+    display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); transition: background-color .2s ease-out, border-color .2s ease-out; border-bottom: 1px solid transparent; }
+  .solid .topbar { background: var(--ground); border-bottom-color: var(--line); }
+  .topbar .t { flex: 1; text-align: center; font: var(--t-body-strong); opacity: 0; transition: opacity .2s ease-out; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .solid .topbar .t { opacity: 1; }
+  .round { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--ground); font-size: 22px; flex: none; }
+  .solid .round { background: transparent; }
+  .round[aria-pressed="true"] { color: var(--accent); }
+
+  /* the docked cart */
+  .dock { position: absolute; inset: auto 0 0 0; z-index: 20; padding: var(--s-2) var(--s-4) calc(var(--s-2) + var(--safe-bottom)); background: var(--ground); border-top: 1px solid var(--line); }
+  .dinfo { height: 40px; display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); font: var(--t-label); font-size: 14px; color: var(--ink-2); }
+  .dinfo .msg { flex: 1; min-width: 0; }
+  .dinfo .msg b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .undo { height: 44px; padding: 0 var(--s-3); font: var(--t-body-strong); color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+  .segs { display: flex; gap: 3px; width: 100px; flex: none; }
+  .segs[hidden] { display: none; }
+  .segs span { flex: 1; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+  .segs i { display: block; height: 100%; background: var(--accent); transform-origin: left; transform: scaleX(var(--f, 0)); transition: transform var(--s-ms, 420ms) var(--s-ease, ease-out); }
+  .cartbtn { width: 100%; height: 56px; border-radius: var(--r-card); display: flex; align-items: center; gap: var(--s-3); padding: 0 var(--s-4); text-align: left;
+    background: var(--raised); color: var(--ink); transition: background-color .2s ease-out, transform .12s cubic-bezier(.22,1,.36,1); }
+  .cartbtn.full { background: var(--accent); color: var(--on-accent); }
+  .cartbtn .ic { font-size: 22px; }
+  .cartbtn .lbl { flex: 1; display: flex; flex-direction: column; }
+  .cartbtn .lbl b { font: var(--t-body-strong); }
+  .cartbtn .lbl small { font: var(--t-label); }
+  .cartbtn .sum { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
+  .cartbtn .sum b { font: 800 20px/1 var(--font); font-variant-numeric: tabular-nums; }
+  .cartbtn .sum small { font: var(--t-label); margin-top: 3px; }
+  .stack { display: flex; flex-direction: row-reverse; justify-content: flex-end; }
+  .stack:empty { display: none; }
+  .stack .pic { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--accent); margin-left: -10px; }
+  .stack .pic:last-child { margin-left: 0; }
+  .stack .pic.landing { opacity: 0; }
+  .cartbtn:not(.full) .stack { display: none; }
+
+  /* cart sheet */
+  .scrim { position: absolute; inset: 0; z-index: 30; background: var(--scrim); opacity: 0; pointer-events: none; transition: opacity .25s ease-out; }
+  .sheet-open .scrim { opacity: 1; pointer-events: auto; }
+  .sheet { position: absolute; inset: auto 0 0 0; z-index: 31; height: calc(var(--h) - var(--safe-top) - 24px); background: var(--ground); border-radius: 14px 14px 0 0;
+    display: flex; flex-direction: column; transform: translateY(105%); transition: transform 280ms cubic-bezier(.2,.8,.2,1), visibility 0s linear 280ms; visibility: hidden; }
+  .sheet-open .sheet { transform: translateY(0); visibility: visible; transition: transform 320ms cubic-bezier(.2,.8,.2,1), visibility 0s; }
+  .grab { padding: var(--s-2) var(--s-5) var(--s-3); touch-action: none; cursor: grab; }
+  .grab .handle { width: 36px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto var(--s-3); }
+  .grab h2 { font: var(--t-title); letter-spacing: -0.02em; }
+  .grab p { font: var(--t-body); color: var(--ink-2); margin-top: 2px; }
+  .sheet .close { position: absolute; top: 18px; right: var(--s-3); background: var(--raised); }
+  .sbody { flex: 1; overflow-y: auto; padding: 0 var(--s-5) var(--s-4); scrollbar-width: none; }
+  .line { display: flex; align-items: center; gap: var(--s-3); padding: var(--s-3) 0; border-bottom: 1px solid var(--line); }
+  .line .pic { width: 52px; height: 52px; border-radius: var(--r-thumb); flex: none; }
+  .line .nm { flex: 1; min-width: 0; }
+  .line .nm b { display: block; font: var(--t-body-strong); }
+  .line .nm span { font: var(--t-label); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .line .qty { position: static; clip-path: none; width: 116px; flex: none; }
+  .line .qty .minus, .line .qty .n { opacity: 1; }
+  .fees { margin-top: var(--s-3); }
+  .fees .row { display: flex; justify-content: space-between; align-items: center; min-height: 36px; font: var(--t-body); }
+  .fees .row span:last-child { font-variant-numeric: tabular-nums; }
+  .fees .total { font: var(--t-section); font-size: 20px; border-top: 1px solid var(--line); margin-top: var(--s-2); padding-top: var(--s-2); }
+  .fees .note { font: var(--t-label); color: var(--ink-2); }
+  .tip { display: flex; gap: var(--s-2); margin: var(--s-1) 0 var(--s-2); }
+  .tip button { flex: 1; height: 44px; border-radius: var(--r-ctl); background: var(--raised); font: var(--t-body-strong); font-size: 15px; font-variant-numeric: tabular-nums; }
+  .tip button[aria-pressed="true"] { background: var(--ink); color: var(--ground); }
+  .facts { margin-top: var(--s-4); display: grid; gap: var(--s-2); }
+  .facts div { display: flex; gap: var(--s-3); align-items: center; font: var(--t-body); }
+  .facts i { font-size: 22px; color: var(--ink-2); }
+  .facts small { display: block; font: var(--t-label); color: var(--ink-2); }
+  .sfoot { padding: var(--s-2) var(--s-5) calc(var(--s-2) + var(--safe-bottom)); border-top: 1px solid var(--line); }
+  .sfoot .dinfo { height: auto; min-height: 36px; }
+  .primary { width: 100%; height: 56px; border-radius: var(--r-card); background: var(--accent); color: var(--on-accent); font: var(--t-body-strong); font-size: 18px;
+    display: flex; align-items: center; justify-content: center; gap: var(--s-2); font-variant-numeric: tabular-nums; }
+  .primary[aria-disabled="true"] { background: var(--raised); color: var(--ink-2); }
+  .spin { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid currentColor; border-right-color: transparent; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .emptycart { padding: var(--s-6) 0; display: grid; gap: var(--s-2); }
+  .emptycart b { font: var(--t-section); }
+  .emptycart p { font: var(--t-body); color: var(--ink-2); }
+  .placed { display: grid; gap: var(--s-3); padding-top: var(--s-2); }
+  .placed .when { font: var(--t-hero); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .placed .lbl { font: var(--t-label); color: var(--ink-2); }
+  .steps { list-style: none; margin: var(--s-2) 0 0; padding: 0; display: grid; gap: 2px; }
+  .steps li { display: flex; align-items: center; gap: var(--s-3); min-height: 40px; font: var(--t-body); color: var(--ink-2); }
+  .steps li i { font-size: 22px; }
+  .steps li.done, .steps li.now { color: var(--ink); }
+  .steps li.done i { color: var(--accent); }
+  .steps li.now { font-weight: 700; }
+  .pop { transition: opacity .2s ease-out, transform .2s ease-out; }
+  @starting-style { .pop { opacity: 0; transform: translateY(8px) scale(.98); } }
+
+  /* restaurants list (back) */
+  .list { position: absolute; inset: 0; z-index: 25; background: var(--ground); padding: calc(var(--safe-top) + var(--s-3)) var(--s-4) 0; }
+  .list h2 { font: var(--t-title); letter-spacing: -0.02em; }
+  .list > p { font: var(--t-body); color: var(--ink-2); margin: 2px 0 var(--s-4); }
+  .card { display: block; width: 100%; text-align: left; }
+  .card .pic { height: 180px; border-radius: var(--r-card); }
+  .card b { display: block; font: var(--t-section); margin-top: var(--s-2); }
+  .card span { display: block; font: var(--t-body); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  ::view-transition-old(hero), ::view-transition-new(hero) { height: 100%; object-fit: cover; }
+
+  /* states (by URL hash) */
+  .skel, .stmsg, .offline { display: none; }
+  .sk { background: var(--raised); border-radius: 8px; }
+  .skel { padding: var(--s-4); gap: var(--s-4); }
+  .skel .r { display: flex; gap: var(--s-3); }
+  .skel .r div:first-child { flex: 1; display: grid; gap: 8px; align-content: start; }
+  .stmsg { padding: var(--s-6) var(--s-5); gap: var(--s-2); }
+  .stmsg b { font: var(--t-section); }
+  .stmsg p { font: var(--t-body); color: var(--ink-2); }
+  .stmsg button { justify-self: start; margin-top: var(--s-2); height: 48px; padding: 0 var(--s-5); border-radius: var(--r-card); background: var(--accent); color: var(--on-accent); font: var(--t-body-strong); }
+  .offline { margin: 0 var(--s-4) var(--s-2); padding: var(--s-3); border-radius: var(--r-ctl); background: var(--raised); font: var(--t-label); font-size: 14px; align-items: center; gap: var(--s-2); }
+  .offline i { font-size: 20px; }
+  [data-state="loading"] .skel { display: grid; }
+  [data-state="empty"] .st-empty, [data-state="error"] .st-error { display: grid; }
+  [data-state="offline"] .offline { display: flex; }
+  [data-state="loading"] #menu, [data-state="empty"] #menu, [data-state="error"] #menu,
+  [data-state="loading"] .tabs, [data-state="empty"] .tabs, [data-state="error"] .tabs { display: none; }
+  [data-state="closed"] .band { background: var(--raised); color: var(--ink); }
+  [data-state="closed"] .band .open { display: none; }
+  [data-state="closed"] .band .closed { display: block; }
+  [data-state="closed"] .qty { display: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    .qty .minus, .qty .n, .scrim, .sheet { transition-duration: .15s !important; }
+    .sheet { transition-property: opacity, visibility !important; transform: none !important; opacity: 0; }
+    .sheet-open .sheet { opacity: 1; }
+    .spin { animation: none; border-right-color: currentColor; opacity: .5; }
+  }
+</style>
+</head>
+<body>
+<div class="statusbar">
+  <span id="clock">10:08</span>
+  <svg class="ios" viewBox="0 0 66 12" aria-hidden="true">
+    <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+    <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+    <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+    <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" style="stroke: var(--chrome)" opacity=".5"/>
+    <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+  </svg>
+</div>
+
+<main id="screen">
+  <div class="scroll" id="scroll">
+    <div class="pic hero" style="--c:#b49a7c">
+      <img id="heroImg" src="https://images.unsplash.com/photo-1653611540493-b3a896319fbf?w=1200&q=80&auto=format&fit=crop" alt="Mezze and grill dishes on a table"
+           crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()">
+    </div>
+
+    <section class="info" aria-labelledby="rname">
+      <h1 id="rname">Kardeşler Ocakbaşı</h1>
+      <p class="cuisine">Kebab, grill, mezze in Kadıköy</p>
+      <div class="meta">
+        <span class="rating"><i class="ph-fill ph-star" aria-hidden="true"></i><b class="num">4,6</b><span class="num">(1.284 ratings)</span></span>
+        <span class="hours num">Open until 23:30</span>
+      </div>
+    </section>
+
+    <section class="band" aria-label="Delivery">
+      <div class="open">
+        <div class="top">
+          <div><p class="lbl">Arrives in</p><p class="eta">25–35 min</p></div>
+          <dl>
+            <dt>Delivery</dt><dd id="feeTxt">₺29,90</dd>
+            <dt>Minimum</dt><dd id="minTxt">₺150,00</dd>
+          </dl>
+        </div>
+        <div class="bottom">
+          <span id="freeTxt">Free delivery over ₺400,00</span>
+          <span class="courier"><i class="ph ph-moped" aria-hidden="true"></i>Sofra courier</span>
+        </div>
+      </div>
+      <div class="closed">
+        <p class="lbl">Closed now</p><p class="eta">Opens 11:00</p>
+        <div class="bottom" style="border-top-color:var(--line)"><span>Menu is shown for browsing. Ordering opens at 11:00.</span></div>
+      </div>
+    </section>
+
+    <div class="offline" role="status"><i class="ph ph-wifi-slash" aria-hidden="true"></i><span>You're offline. Menu saved at <b id="offTime" class="num">20:41</b>. Placing the order needs a connection.</span></div>
+
+    <nav class="tabs" id="tabs" aria-label="Menu sections"></nav>
+    <div id="menu"></div>
+
+    <div class="skel" aria-label="Loading menu" role="status">
+      <div class="sk" style="height:44px;width:70%"></div>
+      <div class="r"><div><div class="sk" style="height:18px;width:60%"></div><div class="sk" style="height:14px"></div><div class="sk" style="height:14px;width:40%"></div></div><div class="sk" style="width:104px;height:104px"></div></div>
+      <div class="r"><div><div class="sk" style="height:18px;width:50%"></div><div class="sk" style="height:14px"></div><div class="sk" style="height:14px;width:30%"></div></div><div class="sk" style="width:104px;height:104px"></div></div>
+      <div class="r"><div><div class="sk" style="height:18px;width:55%"></div><div class="sk" style="height:14px"></div><div class="sk" style="height:14px;width:35%"></div></div><div class="sk" style="width:104px;height:104px"></div></div>
+    </div>
+    <div class="stmsg st-empty"><b>No dishes on the menu right now</b><p>Kardeşler Ocakbaşı hasn't published today's menu yet.</p><button type="button" data-act="list">See other restaurants</button></div>
+    <div class="stmsg st-error"><b>The menu didn't load</b><p>Check your connection, then try again. Your cart is kept.</p><button type="button" data-act="retry">Try again</button></div>
+
+    <p class="foot">Prices include VAT. Allergens are listed per dish; ask the restaurant if you have a severe allergy. Photos: Unsplash.</p>
+  </div>
+
+  <header class="topbar" id="topbar">
+    <button class="round" type="button" data-act="list" aria-label="Back to restaurants"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
+    <span class="t" aria-hidden="true">Kardeşler Ocakbaşı</span>
+    <button class="round" type="button" id="fav" aria-pressed="false" aria-label="Save to favourites"><i class="ph ph-heart" aria-hidden="true"></i></button>
+  </header>
+
+  <div class="dock" id="dock">
+    <div class="dinfo" id="dinfo"><span class="msg" id="dmsg"></span><span class="segs" id="segs" aria-hidden="true"><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></span><button class="undo" type="button" id="undo" hidden>Undo</button></div>
+    <button class="cartbtn" id="cartBtn" type="button" aria-haspopup="dialog">
+      <span class="stack" id="stack"></span>
+      <i class="ph ph-tote ic" id="cartIc" aria-hidden="true"></i>
+      <span class="lbl"><b id="cartLbl">Cart is empty</b><small id="cartSub">Add dishes from the menu</small></span>
+      <span class="sum"><b id="cartTotal" class="num">₺0,00</b><small id="cartTotSub"></small></span>
+    </button>
+  </div>
+
+  <div class="scrim" id="scrim"></div>
+  <section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="grab" id="grab"><div class="handle"></div><h2 id="sheetTitle" tabindex="-1">Cart</h2><p>Kardeşler Ocakbaşı</p></div>
+    <button class="round close" type="button" data-act="close" aria-label="Close cart"><i class="ph ph-x" aria-hidden="true"></i></button>
+    <div class="sbody" id="sbody"></div>
+    <div class="sfoot" id="sfoot"><div class="dinfo"><span class="msg" id="smsg"></span><button class="undo" type="button" id="sundo" hidden>Undo</button></div><button class="primary" type="button" id="placeBtn">Place order</button></div>
+  </section>
+
+  <section class="list" id="list" hidden aria-labelledby="listTitle">
+    <h2 id="listTitle" tabindex="-1">Restaurants</h2>
+    <p>Delivering to Moda, Kadıköy</p>
+    <button class="card" type="button" data-act="back">
+      <div class="pic" style="--c:#b49a7c"><img id="listImg" src="https://images.unsplash.com/photo-1653611540493-b3a896319fbf?w=800&q=80&auto=format&fit=crop" alt="" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()"></div>
+      <b>Kardeşler Ocakbaşı</b>
+      <span>25–35 min, ₺29,90 delivery, 4,6 (1.284)</span>
+    </button>
+  </section>
+</main>
+
+<div class="home-indicator"></div>
+<div class="vh" aria-live="polite" id="live"></div>
+
+<script>/* motion-kit.js (mobile-ui-craft 5.0). Zero dependencies. Inline it in one <script> of the prototype; it defines window.MK.
+   Everything that should be filmable runs on WAAPI or view transitions, which scripts/capture.mjs `film:` slows down.
+   requestAnimationFrame is used only for MK.tilt smoothing (pointer-driven, not filmed); never build a filmed move on it.
+   Springs are CSS linear() easings generated at mass 1; the tokens are the Material 3 Expressive stiffness/damping pairs. */
+(() => {
+  const MK = (window.MK = { out: 'cubic-bezier(.2,.8,.2,1)' }); // out: for fades and menus, never for springs
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  MK.reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Spring as a linear() easing: stiffness k, damping ratio zeta (<= 1). ms is the time to settle within 0.2%.
+  MK.spring = (k, zeta, pts = 36) => {
+    const w0 = Math.sqrt(k), wd = w0 * Math.sqrt(Math.max(1e-6, 1 - zeta * zeta));
+    const x = zeta < 1
+      ? (t) => 1 - Math.exp(-zeta * w0 * t) * (Math.cos(wd * t) + (zeta * w0 / wd) * Math.sin(wd * t))
+      : (t) => 1 - Math.exp(-w0 * t) * (1 + w0 * t);
+    let T = 0.02;
+    while (T < 10 && !(Math.abs(1 - x(T)) < 0.002 && Math.abs(1 - x(T + 0.15)) < 0.002)) T += 0.01;
+    const v = Array.from({ length: pts + 1 }, (_, i) => +x((T * i) / pts).toFixed(3));
+    v[pts] = 1;
+    return { easing: `linear(${v.join(', ')})`, ms: Math.round(T * 1000) };
+  };
+  // spatial moves things and may overshoot; effects (opacity, colour) must not overshoot
+  MK.ease = { spatial: MK.spring(380, 0.8), fast: MK.spring(800, 0.6), slow: MK.spring(200, 0.8), effects: MK.spring(1600, 1) };
+
+  // Shared-element and state morphs. Give the two ends the same view-transition-name (unique, set only while morphing).
+  let vtStyle;
+  MK.morph = (update, opts = {}) => {
+    if (!document.startViewTransition || document.visibilityState !== 'visible') return Promise.resolve(update()).then(() => {});
+    if (!vtStyle) {
+      const e = MK.ease.spatial;
+      vtStyle = document.head.appendChild(document.createElement('style'));
+      // under Reduce Motion the named groups jump and only the page crossfades.
+      // The page fades out before the new one fades in: a simultaneous crossfade shows old and new text on top of each other.
+      vtStyle.textContent = `::view-transition-group(*){animation-duration:${e.ms}ms;animation-timing-function:${e.easing}}
+::view-transition-group(root){animation-duration:200ms;animation-timing-function:ease-out}
+::view-transition-old(root){animation:mk-vt-out 90ms ease-out both}::view-transition-new(root){animation:mk-vt-in 150ms 60ms ease-out both}
+@keyframes mk-vt-out{to{opacity:0}}@keyframes mk-vt-in{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){::view-transition-group(*){animation-duration:.01ms}::view-transition-group(root){animation-duration:150ms}}`;
+    }
+    const typed = opts.types && window.ViewTransition && 'types' in ViewTransition.prototype;
+    const vt = typed ? document.startViewTransition({ update, types: opts.types }) : document.startViewTransition(update);
+    vt.ready.catch(() => {}); // a skipped transition rejects ready; the update still ran, so finished is what we return
+    return vt.finished;
+  };
+
+  // Commit the on-screen transform and stop animations, so a grab or a new move starts from where the element is.
+  MK.freeze = (el) => {
+    const t = getComputedStyle(el).transform;
+    el.getAnimations().forEach((a) => a.cancel());
+    el.style.transform = t === 'none' ? '' : t;
+  };
+
+  // FLIP for one element or an array. Uses the translate/scale properties, so it composes with the element's own transform.
+  // Scaling distorts children and radii: flip boxes, or use MK.morph for rich content.
+  MK.flip = (targets, mutate, ease = MK.ease.spatial) => {
+    const els = [].concat(targets), red = MK.reduced();
+    const first = els.map((e) => e.getBoundingClientRect()); // measured while any earlier flip is still in flight
+    els.forEach((e) => e.getAnimations().filter((a) => a.id === 'mk-flip').forEach((a) => a.cancel()));
+    mutate();
+    return Promise.all(els.map((e, i) => {
+      const a = first[i], b = e.getBoundingClientRect();
+      if (!a.width || !b.width) return;
+      const o = { transformOrigin: '0 0' };
+      const kf = red ? [{ opacity: 0 }, { opacity: 1 }]
+        : [{ ...o, translate: `${a.left - b.left}px ${a.top - b.top}px`, scale: `${a.width / b.width} ${a.height / b.height}` }, { ...o, translate: '0 0', scale: '1 1' }];
+      const an = e.animate(kf, red ? { duration: 150, easing: 'ease-out' } : { duration: ease.ms, easing: ease.easing });
+      an.id = 'mk-flip';
+      return an.finished.catch(() => {});
+    })).then(() => {});
+  };
+
+  // Pointer drag with capture. Velocity (px/ms) comes from the last ~80 ms of movement. Returns a disposer.
+  // axis 'x' or 'y' locks the other axis and leaves that scroll direction to the browser.
+  MK.drag = (el, { axis, onStart, onMove, onEnd } = {}) => {
+    el.style.touchAction = axis === 'x' ? 'pan-y' : axis === 'y' ? 'pan-x' : 'none';
+    let id = null, x0 = 0, y0 = 0, pts = [];
+    const d = (e) => ({ dx: axis === 'y' ? 0 : e.clientX - x0, dy: axis === 'x' ? 0 : e.clientY - y0 });
+    const down = (e) => {
+      if (id !== null || (e.pointerType === 'mouse' && e.button)) return;
+      MK.freeze(el);
+      id = e.pointerId; x0 = e.clientX; y0 = e.clientY; pts = [[e.timeStamp, e.clientX, e.clientY]];
+      try { el.setPointerCapture(id); } catch { /* synthetic events have no active pointer */ }
+      onStart?.(e);
+    };
+    const move = (e) => {
+      if (e.pointerId !== id) return;
+      pts.push([e.timeStamp, e.clientX, e.clientY]);
+      onMove?.(d(e).dx, d(e).dy, e);
+    };
+    const up = (e) => {
+      if (e.pointerId !== id) return;
+      id = null;
+      const p0 = pts.find((p) => e.timeStamp - p[0] <= 80) || pts[pts.length - 1], p1 = pts[pts.length - 1], dt = p1[0] - p0[0];
+      const vx = dt > 1 && axis !== 'y' ? (p1[1] - p0[1]) / dt : 0, vy = dt > 1 && axis !== 'x' ? (p1[2] - p0[2]) / dt : 0;
+      onEnd?.({ ...d(e), vx, vy });
+    };
+    const ev = [['pointerdown', down], ['pointermove', move], ['pointerup', up], ['pointercancel', up]];
+    ev.forEach(([n, f]) => el.addEventListener(n, f));
+    return () => ev.forEach(([n, f]) => el.removeEventListener(n, f));
+  };
+
+  // Spring on x, y (px), r (deg), s (scale), seeded with the release velocity v (units per ms). The spring is simulated
+  // into WAAPI keyframes, so the move is a normal Animation: cancel it (or MK.freeze) to grab it mid-flight.
+  MK.fling = (el, { from = {}, to = {}, v = {}, k = 380, zeta = 0.8 } = {}) => {
+    if (MK.reduced()) { k = 1600; zeta = 1; v = {}; } // no overshoot, no carried momentum
+    const base = { x: 0, y: 0, r: 0, s: 1 }, tol = { x: 0.3, y: 0.3, r: 0.05, s: 0.002 };
+    const A = { ...base, ...from }, B = { ...base, ...to }, c = 2 * zeta * Math.sqrt(k), dt = 1 / 240, keys = Object.keys(base);
+    const p = { ...A }, w = Object.fromEntries(keys.map((q) => [q, (v[q] || 0) * 1000]));
+    const css = () => `translate(${p.x}px,${p.y}px) rotate(${p.r}deg) scale(${p.s})`;
+    const frames = [{ transform: css() }];
+    for (let i = 1; i < 720; i++) {
+      keys.forEach((q) => { w[q] += (-k * (p[q] - B[q]) - c * w[q]) * dt; p[q] += w[q] * dt; });
+      if (i % 4) continue;
+      if (keys.every((q) => Math.abs(p[q] - B[q]) < tol[q] && Math.abs(w[q]) < tol[q] * 8)) break;
+      frames.push({ transform: css() });
+    }
+    Object.assign(p, B);
+    const end = css();
+    frames.push({ transform: end });
+    const an = el.animate(frames, { duration: (frames.length * 1000) / 60, easing: 'linear', fill: 'forwards' });
+    an.finished.then(() => { el.style.transform = end; an.cancel(); }, () => {}); // a cancelled fling leaves the transform alone
+    return an;
+  };
+
+  // Perspective tilt that follows the pointer, low-pass smoothed (rAF, see header), spring back on leave.
+  // It owns el.style.transform: tilt an inner element if the outer one is thrown. Sets --mx/--my (0-100%) for a highlight.
+  // Returns a disposer.
+  MK.tilt = (el, { max = 10 } = {}) => {
+    let tx = 0, ty = 0, cx = 0, cy = 0, raf = 0;
+    const pose = () => `perspective(700px) rotateX(${-cy * max}deg) rotateY(${cx * max}deg)`;
+    const step = () => {
+      cx += (tx - cx) * 0.15; cy += (ty - cy) * 0.15;
+      el.style.transform = pose();
+      el.style.setProperty('--mx', `${50 + cx * 50}%`); el.style.setProperty('--my', `${50 + cy * 50}%`);
+      raf = Math.abs(tx - cx) + Math.abs(ty - cy) > 0.002 ? requestAnimationFrame(step) : 0;
+    };
+    const aim = (x, y) => { if (MK.reduced()) return; tx = clamp(x, -1, 1); ty = clamp(y, -1, 1); raf = raf || requestAnimationFrame(step); };
+    const move = (e) => { const r = el.getBoundingClientRect(); aim(((e.clientX - r.left) / r.width) * 2 - 1, ((e.clientY - r.top) / r.height) * 2 - 1); };
+    const leave = () => {
+      cancelAnimationFrame(raf); raf = 0;
+      const e = MK.ease.fast, from = pose(), cx0 = cx, cy0 = cy;
+      tx = ty = cx = cy = 0;
+      el.style.transform = '';
+      el.style.setProperty('--mx', '50%'); el.style.setProperty('--my', '50%');
+      if (!MK.reduced() && Math.abs(cx0) + Math.abs(cy0) > 0.01) el.animate([{ transform: from }, { transform: pose() }], { duration: e.ms, easing: e.easing });
+    };
+    const ev = [['pointermove', move], ['pointerleave', leave], ['pointerup', leave], ['pointercancel', leave]];
+    ev.forEach(([n, f]) => el.addEventListener(n, f));
+    el._mkAim = aim;
+    return () => { leave(); ev.forEach(([n, f]) => el.removeEventListener(n, f)); delete el._mkAim; };
+  };
+  // Gyro tilt for el, started by a tap on button (iOS asks for permission inside a user gesture; needs HTTPS, so file:// gets nothing).
+  MK.tilt.gyro = (button, el, opts) => {
+    const on = (e) => el._mkAim((e.gamma || 0) / 30, ((e.beta || 0) - 45) / 30);
+    const click = async () => {
+      const D = window.DeviceOrientationEvent;
+      if (!D || MK.reduced() || (typeof D.requestPermission === 'function' && (await D.requestPermission()) !== 'granted')) return;
+      if (!el._mkAim) MK.tilt(el, opts);
+      addEventListener('deviceorientation', on);
+    };
+    button.addEventListener('click', click);
+    return () => { button.removeEventListener('click', click); removeEventListener('deviceorientation', on); };
+  };
+
+  // Digit roll for a figure in tabular numerals: only the digits that changed slide. text is the whole formatted string.
+  // A different length rebuilds the figure with a fade. The element gets role=img and aria-label = text.
+  MK.roll = (el, text) => {
+    text = String(text);
+    el.setAttribute('role', 'img'); el.setAttribute('aria-label', text);
+    if (el.dataset.mkText === text) return;
+    const red = MK.reduced(), e = MK.ease.fast;
+    if (el.dataset.mkLen !== String(text.length)) {
+      el.dataset.mkLen = text.length;
+      el.style.cssText += ';display:inline-flex;height:1em;line-height:1;overflow:hidden;font-variant-numeric:tabular-nums';
+      el.innerHTML = [...text].map((ch) => /\d/.test(ch)
+        ? '<span aria-hidden="true" style="display:block;height:1em;overflow:hidden"><span class="mk-col" style="display:flex;flex-direction:column">'
+          + [...'0123456789'].map((n) => `<i style="display:block;height:1em;font-style:normal">${n}</i>`).join('') + '</span></span>'
+        : `<span aria-hidden="true">${ch}</span>`).join('');
+      el.querySelectorAll('.mk-col').forEach((c) => { c.dataset.d = 0; });
+      if (el.dataset.mkText !== undefined) el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: MK.out });
+    }
+    let k = 0;
+    el.querySelectorAll('.mk-col').forEach((col) => {
+      while (!/\d/.test(text[k])) k++;
+      const to = +text[k++], from = +col.dataset.d, at = (n) => `translateY(${-n}em)`;
+      col.style.transform = at(to); col.dataset.d = to;
+      if (from !== to && !red && el.dataset.mkText !== undefined) col.animate([{ transform: at(from) }, { transform: at(to) }], { duration: e.ms, easing: e.easing });
+    });
+    if (red && el.dataset.mkText !== undefined) el.animate([{ opacity: 0.4 }, { opacity: 1 }], { duration: 150, easing: MK.out });
+    el.dataset.mkText = text;
+  };
+
+  // navigator.vibrate patterns. iOS Safari has no vibrate: this is a silent no-op there, so never rely on it alone.
+  const PATTERNS = { selection: 6, light: 10, medium: 20, success: [10, 40, 10], warning: [20, 60, 20], error: [30, 50, 30, 50, 30] };
+  MK.haptic = (kind = 'light') => { try { navigator.vibrate?.(PATTERNS[kind] ?? 10); } catch { /* blocked before a user gesture */ } };
+})();
+</script>
+<script>
+document.getElementById('clock').textContent = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+const root = document.documentElement, $ = (id) => document.getElementById(id);
+const theme = new URLSearchParams(location.search).get('theme'); if (theme === 'dark' || theme === 'light') root.dataset.theme = theme;
+
+// Sample data for layout only: prices in kuruş, so totals add up exactly.
+const MIN = 15000, FREE = 40000, FEE = 2990, TIPS = [0, 1000, 2000, 3000];
+const U = (id, w) => `https://images.unsplash.com/photo-${id}?w=${w}&q=80&auto=format&fit=crop&dpr=2`;
+const SECTIONS = [['grill', 'Grill'], ['wraps', 'Dürüm & lahmacun'], ['mezze', 'Mezze & salads'], ['drinks', 'Drinks']];
+const DISHES = [
+  { s: 'grill', id: 'adana', name: 'Adana kebap', desc: 'Hand-minced lamb on lavaş, grilled pepper, tomato and rice', all: 'Gluten', p: 34000, img: '1620167790054-de54f34308bb', c: '#c8a27f' },
+  { s: 'grill', id: 'karisik', name: 'Karışık ızgara', desc: 'Adana, chicken and lamb skewers with dips, for two', all: 'Gluten, milk', p: 56000, img: '1555939594-58d7cb561ad1', c: '#6b4a35' },
+  { s: 'grill', id: 'kofte', name: 'Izgara köfte', desc: 'Grilled meatballs with green salad', all: 'Gluten, egg', p: 29000, img: '1529042410759-befb1204b468', c: '#7d6a4f' },
+  { s: 'grill', id: 'sis', name: 'Kuzu şiş', desc: 'Lamb skewers with fries and tomato', all: 'None declared', p: 38000, img: '1603360946369-dc9bb6258143', c: '#6e3b25' },
+  { s: 'grill', id: 'pirzola', name: 'Kuzu pirzola', desc: 'Lamb chops with bulgur pilav', all: 'Gluten', p: 64000, sold: true },
+  { s: 'wraps', id: 'tavuk', name: 'Tavuk dürüm', desc: 'Chicken, tomato, onion and parsley in lavaş', all: 'Gluten', p: 19000, img: '1529006557810-274b9b2fc783', c: '#c9b49a' },
+  { s: 'wraps', id: 'doner', name: 'Döner dürüm', desc: 'Beef döner, greens and tomato', all: 'Gluten, milk', p: 23000, img: '1699728088614-7d1d4277414b', c: '#7a5a44' },
+  { s: 'wraps', id: 'lahmacun', name: 'Lahmacun', desc: 'Thin crust, minced lamb, parsley and lemon', all: 'Gluten', p: 9500 },
+  { s: 'wraps', id: 'patlican', name: 'Patlıcanlı kebap with közlenmiş biber and yoğurt', desc: 'Aubergine and minced lamb on the skewer', all: 'Gluten, milk', p: 42000 },
+  { s: 'mezze', id: 'humus', name: 'Humus', desc: 'Chickpeas, tahini and olive oil, with flatbread', all: 'Sesame, gluten', p: 13000, img: '1715194288597-cd4df523776e', c: '#d9c7ae' },
+  { s: 'mezze', id: 'mezze', name: 'Mezze tabağı', desc: 'Five cold mezze of the day', all: 'Milk, sesame, nuts', p: 26000, img: '1542528180-0c79567c66de', c: '#3b3f4a' },
+  { s: 'mezze', id: 'salata', name: 'Mevsim salata', desc: 'Lettuce, cucumber, tomato and red onion', all: 'None declared', p: 12000, img: '1523986371872-9d3ba2e2a389', c: '#8a9a6a' },
+  { s: 'drinks', id: 'ayran', name: 'Ayran', desc: '300 ml', all: 'Milk', p: 3500 },
+  { s: 'drinks', id: 'cay', name: 'Çay', desc: 'Tea glass', all: 'None declared', p: 2000, img: '1690063860120-3521cead6c1c', c: '#8a4a2a' },
+  { s: 'drinks', id: 'salgam', name: 'Şalgam', desc: 'Turnip juice, hot or mild', all: 'None declared', p: 4000 },
+];
+const byId = Object.fromEntries(DISHES.map((d) => [d.id, d]));
+const money = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' });
+const fmt = (k) => money.format(k / 100);
+const hm = new Intl.DateTimeFormat('tr-TR', { hour: '2-digit', minute: '2-digit' });
+
+// motion tokens from the kit: the stepper opens and the dish lands on fast, damped springs (under 300 ms); progress fills on the spatial spring
+const FLY = MK.spring(900, 0.85), Q = MK.spring(900, 0.9);
+root.style.setProperty('--q-ms', `${Q.ms}ms`); root.style.setProperty('--q-ease', Q.easing);
+root.style.setProperty('--s-ms', `${MK.ease.spatial.ms}ms`); root.style.setProperty('--s-ease', MK.ease.spatial.easing);
+
+let cart = new Map(); // id -> qty, insertion order = order added
+let receiptInSheet = false, tip = 0, last = null, placed = null, receiptTimer = 0, landing = new Set();
+
+const calc = () => {
+  let sub = 0, count = 0;
+  cart.forEach((q, id) => { sub += byId[id].p * q; count += q; });
+  const del = sub === 0 || sub >= FREE ? 0 : FEE, t = sub ? tip : 0;
+  return { sub, del, tip: t, total: sub + del + t, count };
+};
+// self-check: the visible total is always food + delivery + tip
+const check = () => {
+  const c = calc(); let lines = 0; cart.forEach((q, id) => { lines += byId[id].p * q; });
+  console.assert(lines === c.sub && c.total === c.sub + c.del + c.tip, 'total mismatch', c);
+  const shown = $('cartTotal').getAttribute('aria-label') || $('cartTotal').textContent;
+  console.assert(shown === fmt(c.total), 'bar total mismatch', shown, fmt(c.total));
+};
+
+$('feeTxt').textContent = fmt(FEE); $('minTxt').textContent = fmt(MIN); $('freeTxt').textContent = `Free delivery over ${fmt(FREE)}`;
+$('offTime').textContent = hm.format(Date.now() - 12 * 60000);
+
+// ---------- menu ----------
+const qtyHtml = (d) => `<div class="qty" data-id="${d.id}">
+  <button type="button" class="minus" data-act="dec" data-id="${d.id}" inert><i class="ph ph-minus" aria-hidden="true"></i></button>
+  <span class="n" aria-hidden="true">0</span>
+  <button type="button" class="plus" data-act="inc" data-id="${d.id}" aria-label="Add ${d.name}, ${fmt(d.p)}"><i class="ph ph-plus" aria-hidden="true"></i></button></div>`;
+const photo = (d, w, alt = d.name) => `<div class="pic" style="--c:${d.c}"><img src="${U(d.img, w)}" alt="${alt}" loading="lazy" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()"></div>`;
+$('tabs').innerHTML = SECTIONS.map(([id, t], i) => `<button type="button" data-sec="${id}" aria-current="${i === 0}">${t}</button>`).join('');
+$('menu').innerHTML = SECTIONS.map(([sid, t]) => `<section class="sec" id="s-${sid}" aria-labelledby="h-${sid}"><h2 id="h-${sid}">${t}</h2>${
+  DISHES.filter((d) => d.s === sid).map((d) => `<article class="dish${d.sold ? ' sold' : ''}" id="d-${d.id}">
+    <div class="txt"><h3>${d.name}</h3><p class="desc">${d.desc}</p><p class="price">${fmt(d.p)}</p>
+      ${d.sold ? '<p class="so">Sold out today</p>' : ''}<p class="all">Allergens: ${d.all.toLowerCase()}</p></div>
+    ${d.sold ? (d.img ? `<div class="media">${photo(d, 240)}</div>` : '')
+      : `<div class="media${d.img ? '' : ' nophoto'}">${d.img ? photo(d, 240) : ''}${qtyHtml(d)}</div>`}
+  </article>`).join('')}</section>`).join('');
+
+const syncDish = (id) => {
+  const d = byId[id], q = cart.get(id) || 0;
+  document.querySelectorAll(`.qty[data-id="${id}"]`).forEach((el) => {
+    const inMenu = !el.closest('.line');
+    if (inMenu) el.classList.toggle('on', q > 0);
+    el.querySelector('.n').textContent = q;
+    const minus = el.querySelector('.minus');
+    if (inMenu) minus.inert = q === 0;
+    minus.innerHTML = `<i class="ph ${q === 1 ? 'ph-trash' : 'ph-minus'}" aria-hidden="true"></i>`;
+    minus.setAttribute('aria-label', q === 1 ? `Remove ${d.name}` : `Remove one ${d.name}`);
+    el.querySelector('.plus').setAttribute('aria-label', q ? `Add another ${d.name}, ${q} in cart` : `Add ${d.name}, ${fmt(d.p)}`);
+  });
+};
+
+// ---------- dock ----------
+const progressMsg = (c) => {
+  if (root.dataset.state === 'closed') return 'Closed now. Ordering opens at <b>11:00</b>';
+  if (placed && !c.count) return `Order placed. Arrives <b>${placed.window}</b>`;
+  if (!c.count) return `Minimum order <b>${fmt(MIN)}</b>. Free delivery over <b>${fmt(FREE)}</b>`;
+  if (c.sub < MIN) return `<b>${fmt(MIN - c.sub)}</b> more to reach the ${fmt(MIN)} minimum`;
+  if (c.sub < FREE) return `<b>${fmt(FREE - c.sub)}</b> more for free delivery`;
+  return `<b>Free delivery</b> on this order`;
+};
+const setSegs = (sub) => $('segs').querySelectorAll('i').forEach((el, i) => el.style.setProperty('--f', Math.max(0, Math.min(1, (sub - i * 10000) / 10000))));
+
+const syncDock = (rollDelay = 0) => {
+  const c = calc(), full = c.count > 0, btn = $('cartBtn');
+  btn.classList.toggle('full', full);
+  $('cartIc').hidden = full;
+  $('cartLbl').textContent = full ? 'View cart' : (placed ? 'View order' : 'Cart is empty');
+  $('cartSub').textContent = full ? `${c.count} ${c.count === 1 ? 'item' : 'items'}` : (placed ? placed.window : 'Add dishes from the menu');
+  $('cartTotSub').textContent = full ? (c.del ? 'incl. delivery' : 'free delivery') + (c.tip ? ', tip' : '') : '';
+  btn.setAttribute('aria-label', full ? `View cart, ${c.count} items, total ${fmt(c.total)} including delivery` : placed ? `View order, arrives ${placed.window}` : 'Cart is empty');
+  // the table that gathers in the bar: up to three latest dishes with photos
+  const ids = [...cart.keys()].filter((id) => byId[id].img).slice(-3);
+  $('stack').innerHTML = ids.map((id) => `<span class="pic${landing.has(id) ? ' landing' : ''}" data-id="${id}" style="--c:${byId[id].c}"><img class="in" src="${U(byId[id].img, 64)}" alt=""></span>`).join('');
+  const roll = () => { MK.roll($('cartTotal'), fmt(calc().total)); check(); };
+  rollDelay ? setTimeout(roll, rollDelay) : roll();
+  if (!receiptTimer) { $('dmsg').innerHTML = progressMsg(c); $('segs').hidden = !c.count; $('undo').hidden = true; }
+  setSegs(c.sub);
+};
+
+const receipt = (text) => {
+  clearTimeout(receiptTimer); receiptInSheet = sheetOpen();
+  for (const [m, u] of receiptInSheet ? [['dmsg', 'undo'], ['smsg', 'sundo']] : [['dmsg', 'undo']]) { $(m).textContent = text; $(u).hidden = false; }
+  $('segs').hidden = true;
+  receiptTimer = setTimeout(() => { receiptTimer = 0; syncDock(); syncFoot(); }, 5000);
+};
+const announce = (t) => { $('live').textContent = ''; requestAnimationFrame(() => { $('live').textContent = t; }); };
+
+// the signature: the dish photo flies into the cart bar while the button opens into the stepper
+const fly = (id, img) => {
+  const tgt = $('stack').querySelector(`[data-id="${id}"]`);
+  const done = () => { landing.delete(id); $('stack').querySelector(`[data-id="${id}"]`)?.classList.remove('landing'); };
+  if (!tgt) return done();
+  const a = img.getBoundingClientRect(), b = tgt.getBoundingClientRect(), o = document.body.getBoundingClientRect();
+  const g = img.cloneNode(); g.className = 'ghost'; g.removeAttribute('onload'); g.removeAttribute('onerror'); g.alt = '';
+  Object.assign(g.style, { left: `${a.left - o.left}px`, top: `${a.top - o.top}px`, width: `${a.width}px`, height: `${a.height}px` });
+  document.body.append(g);
+  const e = FLY;
+  const an = g.animate([{ transform: 'translate(0,0) scale(1)', borderRadius: '10px' },
+    { transform: `translate(${b.left - a.left}px,${b.top - a.top}px) scale(${b.width / a.width})`, borderRadius: `${a.width / 2}px` }],
+    { duration: e.ms, easing: e.easing });
+  const end = () => { g.remove(); done(); };
+  an.finished.then(end, end);
+};
+
+const setQty = (id, q, { from, undo = true } = {}) => {
+  const d = byId[id], prev = cart.get(id) || 0;
+  if (q <= 0) cart.delete(id); else cart.set(id, q);
+  syncDish(id);
+  const flyIn = q > prev && from && d.img && from.classList.contains('in') && !MK.reduced();
+  if (flyIn && prev === 0) landing.add(id);
+  syncDock(flyIn ? Math.round(FLY.ms * 0.7) : 0); // the total rolls as the dish lands
+  if (flyIn) fly(id, from);
+  if (sheetOpen()) renderSheet();
+  if (undo) {
+    last = { id, prev };
+    receipt(q > prev ? `${d.name} added` : q === 0 ? `${d.name} removed` : `One ${d.name} removed`);
+  }
+  const c = calc();
+  announce(`${q > prev ? 'Added' : 'Removed'} ${d.name}. Cart ${c.count} items, ${fmt(c.total)}.`);
+  MK.haptic(q > prev ? 'light' : 'selection');
+};
+
+$('undo').onclick = $('sundo').onclick = () => {
+  if (!last) return;
+  const { id, prev } = last; last = null;
+  clearTimeout(receiptTimer); receiptTimer = 0;
+  setQty(id, prev, { undo: false });
+  syncDock(); syncFoot();
+  announce(`Undone. ${byId[id].name}: ${prev} in cart.`);
+  (document.querySelector(`#d-${id} .plus`) || $('cartBtn')).focus({ preventScroll: true });
+};
+
+// ---------- sheet ----------
+const sheetOpen = () => root.classList.contains('sheet-open');
+const offline = () => root.dataset.state === 'offline';
+const syncFoot = () => {
+  const c = calc(), b = $('placeBtn');
+  if (placed && !c.count) { b.innerHTML = 'Done'; b.removeAttribute('aria-disabled'); if (!receiptTimer) { $('smsg').textContent = ''; $('sundo').hidden = true; } return; }
+  let why = '';
+  if (!c.count) why = 'Your cart is empty.';
+  else if (c.sub < MIN) why = `Add ${fmt(MIN - c.sub)} more to reach the ${fmt(MIN)} minimum.`;
+  else if (offline()) why = "You're offline. Reconnect to place the order.";
+  else if (root.dataset.state === 'closed') why = 'Closed now. Ordering opens at 11:00.';
+  if (!receiptTimer || !receiptInSheet) { $('smsg').textContent = why || `Charged to Visa ending 4417 when you place the order.`; $('sundo').hidden = true; }
+  b.innerHTML = c.count ? `Place order <span class="num">${fmt(c.total)}</span>` : 'Browse the menu';
+  if (why && c.count) b.setAttribute('aria-disabled', 'true'); else b.removeAttribute('aria-disabled');
+};
+const renderSheet = () => {
+  const c = calc(), body = $('sbody');
+  if (placed && !c.count) {
+    $('sheetTitle').textContent = 'Order placed';
+    body.innerHTML = `<div class="placed pop"><p class="lbl">Arrives</p><p class="when">${placed.window}</p>
+      <ol class="steps" aria-label="Order status">
+        <li class="done"><i class="ph-fill ph-check-circle" aria-hidden="true"></i>Order placed at ${placed.at}</li>
+        <li class="now"><i class="ph ph-cooking-pot" aria-hidden="true"></i>Waiting for the restaurant to accept</li>
+        <li><i class="ph ph-moped" aria-hidden="true"></i>On the way</li>
+        <li><i class="ph ph-house-line" aria-hidden="true"></i>Delivered</li></ol>
+      <div class="fees">${placed.lines}<div class="row total"><span>Charged</span><span>${fmt(placed.total)}</span></div>
+      <p class="note">Visa ending 4417. Delivery to Moda Cd. 112, Kadıköy.</p></div></div>`;
+    syncFoot(); return;
+  }
+  $('sheetTitle').textContent = 'Cart';
+  if (!c.count) {
+    body.innerHTML = `<div class="emptycart"><b>Your cart is empty</b><p>Add dishes from the menu. Minimum order ${fmt(MIN)}.</p></div>`;
+    syncFoot(); return;
+  }
+  body.innerHTML = [...cart].map(([id, q]) => { const d = byId[id];
+    return `<div class="line">${d.img ? photo(d, 120, '') : ''}<div class="nm"><b>${d.name}</b><span>${q > 1 ? `${q} × ${fmt(d.p)} = ` : ''}${fmt(d.p * q)}</span></div>
+      <div class="qty on" data-id="${id}"><button type="button" class="minus" data-act="dec" data-id="${id}"></button><span class="n" aria-hidden="true">${q}</span><button type="button" class="plus" data-act="inc" data-id="${id}"><i class="ph ph-plus" aria-hidden="true"></i></button></div></div>`; }).join('')
+    + `<div class="fees">
+      <div class="row"><span>Food</span><span>${fmt(c.sub)}</span></div>
+      <div class="row"><span>Delivery</span><span>${c.del ? fmt(c.del) : 'Free'}</span></div>
+      <div class="row"><span>Courier tip</span><span>${fmt(c.tip)}</span></div>
+      <div class="tip" role="group" aria-label="Courier tip">${TIPS.map((t) => `<button type="button" data-tip="${t}" aria-pressed="${t === tip}">${t ? fmt(t).replace(',00', '') : 'No tip'}</button>`).join('')}</div>
+      <div class="row total"><span>Total</span><span id="sTotal">${fmt(c.total)}</span></div>
+      <p class="note">Prices include VAT. ${c.del ? `Delivery is free over ${fmt(FREE)}.` : ''}</p></div>
+      <div class="facts"><div><i class="ph ph-map-pin" aria-hidden="true"></i><span><small>Deliver to</small>Moda Cd. 112, Kadıköy</span></div>
+      <div><i class="ph ph-credit-card" aria-hidden="true"></i><span><small>Pay with</small>Visa ending 4417</span></div></div>`;
+  cart.forEach((_, id) => syncDish(id));
+  console.assert($('sTotal').textContent === fmt(c.total), 'sheet total mismatch');
+  syncFoot();
+};
+const lockables = () => [$('scroll'), $('dock'), $('topbar')];
+const openSheet = () => {
+  receiptInSheet = false; renderSheet();
+  root.classList.add('sheet-open'); $('scroll').style.overflow = 'hidden';
+  lockables().forEach((el) => { el.inert = true; });
+  $('sheetTitle').focus({ preventScroll: true });
+};
+const closeSheet = () => {
+  if (!sheetOpen()) return;
+  root.classList.remove('sheet-open'); $('scroll').style.overflow = '';
+  lockables().forEach((el) => { el.inert = false; });
+  $('cartBtn').focus({ preventScroll: true });
+};
+$('cartBtn').onclick = openSheet;
+$('scrim').onclick = closeSheet;
+$('placeBtn').onclick = () => {
+  const c = calc(), b = $('placeBtn');
+  if (placed && !c.count) return closeSheet();
+  if (!c.count) return closeSheet();
+  if (b.getAttribute('aria-disabled') === 'true') { $('smsg').animate([{ opacity: .3 }, { opacity: 1 }], { duration: 200, easing: MK.out }); announce($('smsg').textContent); return; }
+  b.setAttribute('aria-disabled', 'true'); b.innerHTML = '<span class="spin" aria-hidden="true"></span>Placing order';
+  setTimeout(() => {
+    const now = Date.now();
+    placed = { at: hm.format(now), window: `${hm.format(now + 25 * 60000)}–${hm.format(now + 35 * 60000)}`, total: c.total,
+      lines: [...cart].map(([id, q]) => `<div class="row"><span>${q}× ${byId[id].name}</span><span>${fmt(byId[id].p * q)}</span></div>`).join('')
+        + `<div class="row"><span>Delivery</span><span>${c.del ? fmt(c.del) : 'Free'}</span></div>` + (c.tip ? `<div class="row"><span>Courier tip</span><span>${fmt(c.tip)}</span></div>` : '') };
+    const ids = [...cart.keys()]; cart.clear(); tip = 0; last = null; clearTimeout(receiptTimer); receiptTimer = 0;
+    ids.forEach(syncDish); syncDock(); renderSheet();
+    $('sheetTitle').focus({ preventScroll: true });
+    MK.haptic('success'); announce(`Order placed. Arrives ${placed.window}.`);
+  }, 1100);
+};
+$('sbody').addEventListener('click', (e) => {
+  const t = e.target.closest('[data-tip]'); if (!t) return;
+  tip = +t.dataset.tip; renderSheet(); syncDock();
+  $('sbody').querySelector(`[data-tip="${tip}"]`).focus({ preventScroll: true });
+});
+// drag the sheet down by its header; it follows the finger and closes from the projected position
+{ let y0 = 0; const sh = $('sheet');
+  MK.drag($('grab'), { axis: 'y',
+    onStart: () => { sh.style.transition = 'none'; y0 = 0; },
+    onMove: (_, dy) => { sh.style.transform = `translateY(${dy < 0 ? dy * 0.25 : dy}px)`; },
+    onEnd: ({ dy, vy }) => { sh.style.transition = ''; sh.style.transform = ''; if (dy + vy * 180 > 180) closeSheet(); } }); }
+
+// ---------- clicks ----------
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-act],[data-sec]'); if (!b) return;
+  const { act, id } = b.dataset;
+  if (b.dataset.sec) return goSection(b.dataset.sec);
+  if (act === 'inc') { if (root.dataset.state === 'closed') return; const img = b.closest('.media')?.querySelector('img'); setQty(id, (cart.get(id) || 0) + 1, { from: img }); }
+  if (act === 'dec') setQty(id, (cart.get(id) || 0) - 1);
+  if (act === 'close') closeSheet();
+  if (act === 'retry') { location.hash = ''; }
+  if (act === 'list') openList();
+  if (act === 'back') closeList();
+});
+$('fav').onclick = () => {
+  const on = $('fav').getAttribute('aria-pressed') !== 'true';
+  $('fav').setAttribute('aria-pressed', on); $('fav').setAttribute('aria-label', on ? 'Remove from favourites' : 'Save to favourites');
+  $('fav').innerHTML = `<i class="${on ? 'ph-fill' : 'ph'} ph-heart" aria-hidden="true"></i>`;
+  announce(on ? 'Saved to favourites' : 'Removed from favourites'); MK.haptic('light');
+};
+
+// ---------- back to the list: the hero photo is the shared element ----------
+const openList = () => {
+  closeSheet();
+  $('heroImg') && ($('heroImg').style.viewTransitionName = 'hero');
+  MK.morph(() => { $('heroImg') && ($('heroImg').style.viewTransitionName = ''); $('listImg').style.viewTransitionName = 'hero'; $('list').hidden = false; root.classList.add('listing'); })
+    .then(() => { $('listImg').style.viewTransitionName = ''; $('listTitle').focus({ preventScroll: true }); });
+};
+const closeList = () => {
+  if ($('list').hidden) return;
+  $('listImg').style.viewTransitionName = 'hero';
+  MK.morph(() => { $('listImg').style.viewTransitionName = ''; $('heroImg') && ($('heroImg').style.viewTransitionName = 'hero'); $('list').hidden = true; root.classList.remove('listing'); })
+    .then(() => { $('heroImg') && ($('heroImg').style.viewTransitionName = ''); $('rname').setAttribute('tabindex', '-1'); $('rname').focus({ preventScroll: true }); });
+};
+addEventListener('keydown', (e) => { if (e.key !== 'Escape') return; if (sheetOpen()) closeSheet(); else closeList(); });
+
+// ---------- sticky tabs: scroll-spy and jump ----------
+const sc = $('scroll'), stickyH = () => parseFloat(getComputedStyle(root).getPropertyValue('--safe-top')) + 52 + 60;
+const goSection = (sid) => {
+  const s = $(`s-${sid}`), top = sc.scrollTop + s.getBoundingClientRect().top - sc.getBoundingClientRect().top - stickyH() + 1;
+  sc.scrollTo({ top, behavior: MK.reduced() ? 'auto' : 'smooth' });
+  setTab(sid);
+};
+const setTab = (sid) => {
+  $('tabs').querySelectorAll('button').forEach((b) => {
+    const on = b.dataset.sec === sid; b.setAttribute('aria-current', on);
+    if (on) { const t = $('tabs'), l = b.offsetLeft - 16; if (l < t.scrollLeft || b.offsetLeft + b.offsetWidth > t.scrollLeft + t.clientWidth) t.scrollTo({ left: l, behavior: 'smooth' }); }
+  });
+};
+let spyRaf = 0;
+sc.addEventListener('scroll', () => {
+  root.classList.toggle('solid', sc.scrollTop > 140);
+  cancelAnimationFrame(spyRaf);
+  spyRaf = requestAnimationFrame(() => {
+    const line = sc.getBoundingClientRect().top + stickyH() + 8;
+    let cur = SECTIONS[0][0];
+    SECTIONS.forEach(([sid]) => { if ($(`s-${sid}`).getBoundingClientRect().top <= line) cur = sid; });
+    if (sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 4) cur = SECTIONS[SECTIONS.length - 1][0];
+    setTab(cur);
+  });
+}, { passive: true });
+
+// ---------- states by URL hash ----------
+const STATES = ['loading', 'empty', 'error', 'offline', 'closed'];
+const sync = () => { const s = location.hash.slice(1); root.dataset.state = STATES.includes(s) ? s : 'content'; syncDock(); syncFoot(); };
+addEventListener('hashchange', sync); sync();
+</script>
+</body>
+</html>

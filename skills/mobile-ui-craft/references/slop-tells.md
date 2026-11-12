@@ -11,6 +11,7 @@ How to use this file: find hits (by eye, or with `scripts/slop-scan.mjs`), and f
 - Tier 1: anyone notices
 - Tier 2: a designer or developer notices
 - Tier 3: craft gaps
+- Type and symbol fingerprints
 - The second wave: over-corrections
 - Not tells
 - Code signatures by stack
@@ -22,7 +23,7 @@ Fix these first. A layperson reads each one as "template" within a second.
 | # | Tell | What it looks like | Do instead |
 |---|---|---|---|
 | 1 | **Template colour** | Purple-to-blue gradient; or the framework's seed colour left as shipped (the Flutter demo purple, the Compose template purples, Material baseline purple, default blue buttons) | Take one dominant colour and one accent from the product's own world, generate the platform's colour roles from them, and delete the template colours |
-| 2 | **Emoji as icons** | Emoji in tab bars, list rows, buttons, empty states; a sparkle glyph for anything "AI" | One icon family per platform, one weight. No emoji unless the brand voice explicitly uses them in copy |
+| 2 | **Emoji as icons** | Emoji in tab bars, list rows, buttons, empty states | One icon family per platform, one weight. No emoji unless the brand voice explicitly uses them in copy |
 | 3 | **Website in a phone frame** | Hero banner, centred max-width column, testimonials, FAQ, pricing grid or footer inside the app; hamburger menu as primary navigation; hover styles | Open on the task. Tab bar or navigation stack. Single column built from lists and sheets |
 | 4 | **Gradient everything** | Gradient header, gradient buttons, gradient cards, gradient text | Colour fields with a reason. A gradient is light falling from one direction, or it is data; it is never the idea itself |
 | 5 | **Fake life** | "Welcome back, Alex" with a wave, avatar and bell; stat tiles with invented numbers; stock avatar services; "John Doe", "Item 1", lorem | Lead with the user's real last state ("Resume chapter 3"). Realistic, varied sample data. Every number on screen is computed from the app's real state; a hard-coded figure is removed, not restyled, even when the task is "keep the features" |
@@ -42,29 +43,43 @@ Fix these first. A layperson reads each one as "template" within a second.
 | 14 | **Hard-coded device** | Status-bar padding as a literal number; layout computed from screen width; fixed font sizes; white and black colour literals | System insets, flexible layout, text styles, semantic colours |
 | 15 | **Grand entrance** | Every list row fades and slides in with a stagger; bounce on everything; the same press-squish on every touchable; shimmer and pulse loops; numbers that count up | One choreographed entrance, a living hero, a real consequence for the main action, and stillness everywhere else |
 | 16 | **Dashboard reflex** | Home is a grid of big-number tiles with a green delta; rainbow charts, donuts and progress rings used as decoration | Show what the user acts on. Charts use one hue plus neutrals, with the accent on the point being made |
-| 17 | **Side stripe** | A coloured bar on the left edge of cards, alerts or rows (the "fingernail" card) | Weight, background or position. Reserve edge colour for a real status system applied consistently |
-| 18 | **Icon chips** | A pastel rounded square behind every icon in every row | Remove the chip, or make it one consistent system where colour means something |
-| 19 | **Badge soup** | "NEW", "PRO", "Beta" pills and status chips on most elements | A chip only for a real state that changes. A status chip that can never change ("Live", "Verified", a pulsing dot) is fake life |
-| 20 | **Dead ends** | Buttons that do nothing; a success alert with no action behind it; a spinner that flashes for a tenth of a second; the empty state visible during first load; "Oops! Something went wrong"; the keyboard covering the main button | Wire it or remove it. Skeleton for first load. Errors say what failed and what to do |
-| 21 | **Paywall clone** | Small delayed X, three checkmark bullets, "Most popular" ring, trial toggle, weekly price, shown before any value | Structure follows the real offer. Price and period in plain text. Shown after the first success, dismissible at once |
-| 22 | **Filler copy** | "Seamless", "effortless", "unlock", "supercharge", "elevate"; buttons labelled "Submit", "Continue", "Get started" | A verb and an object for what this app literally does. If the sentence fits five hundred products, rewrite it |
-| 23 | **Lucide by default** | The same thin line icons at default size and stroke (the sparkle, arrow, zap, rocket and shield glyphs), often mixed with another set | The direction's icon set at one weight, filled only for the selected state |
-| 24 | **Happy path only** | Every screen shows full content; no loading, empty, error or offline version, no second step of the task | Design the states, and build the next step of the primary task |
-| 25 | **Drift between screens** | Radius, header, icon weight or accent change from one screen to the next | One direction, tokens in one place, checked side by side |
+| 17 | **Badge soup** | "NEW", "PRO", "Beta" pills and status chips on most elements | A chip only for a real state that changes. A status chip that can never change ("Live", "Verified", a pulsing dot) is fake life |
+| 18 | **Dead ends** | Buttons that do nothing; a success alert with no action behind it; a spinner that flashes for a tenth of a second; the empty state visible during first load; "Oops! Something went wrong"; the keyboard covering the main button | Wire it or remove it. Skeleton for first load. Errors say what failed and what to do |
+| 19 | **Paywall clone** | Small delayed X, three checkmark bullets, "Most popular" ring, trial toggle, weekly price, shown before any value | Structure follows the real offer. Price and period in plain text. Shown after the first success, dismissible at once |
+| 20 | **Filler copy** | "Seamless", "effortless", "unlock", "supercharge", "elevate"; buttons labelled "Submit", "Continue", "Get started" | A verb and an object for what this app literally does. If the sentence fits five hundred products, rewrite it |
+| 21 | **Lucide by default** | The same thin line icons at default size and stroke, often mixed with another set | The direction's icon set at one weight, filled only for the selected state |
+| 22 | **Happy path only** | Every screen shows full content; no loading, empty, error or offline version, no second step of the task | Design the states, and build the next step of the primary task |
+| 23 | **Drift between screens** | Radius, header, icon weight or accent change from one screen to the next | One direction, tokens in one place, checked side by side |
 
 ## Tier 3: craft gaps
 
 Not tells by themselves, but they separate finished from unfinished: digits that jitter because they are not tabular; no truncation plan for long names; mixed icon families or weights; a type scale whose steps are too close to read as hierarchy; grey text that fails contrast; dark mode produced by inverting light mode; translucent material placed under body content.
 
+## Type and symbol fingerprints
+
+The typographic and symbol habits a designer spots first. A hit from this group is fixed before the work is done, not checked for intent; the only exceptions are the forms named in the last column. `scripts/slop-scan.mjs` prints these as its blocking group and exits 1 while any remains.
+
+| Tell | What it looks like | What shipped apps do instead |
+|---|---|---|
+| Italic in headings and labels | An italic headline; one italic or coloured word inside a headline or title; italic chips and labels | Roman titles; emphasis by size or weight. Allowed: a quoted line, or a work's title inside body text |
+| Eyebrow or kicker | A small tracked-uppercase, coloured or eyebrow-named label above a heading; a pill "badge" above a title | The heading alone; date or place as a sentence-case line below it. Allowed: the small caps header over a grouped list |
+| Edge bar | A bar on one edge of a heading, label, stat, quote, card, alert or row: border-left or right, an inset shadow, a thin pseudo-element | Weight, size, background or position; status as an icon plus text. Allowed: timeline and route connectors, 1px dividers, grab handles |
+| Dot or bullet label | A dot or bullet in front of a small label ("Live", a dotted kicker) | No dot. Allowed: unread, online, open or closed in the state's colour, a chart legend key |
+| Glyph icon | A Unicode check, cross, star, diamond, triangle, bolt, note, arrow or chevron standing in for an icon; checkmark lists | The dealt set's icon (SF Symbols or Material Symbols natively). Allowed: a star in a rating, a check for a selected or done state, an arrow between two values |
+| Arrow on a button | "Get started →", "See all ›" | A verb and an object; the disclosure chevron is an icon at the end of the row |
+| Trend arrows | ▲ ▼ ↑ ↓ before most of the numbers on a screen (three or more) | Sign and colour ("+4.2%"); an arrow only where the platform's own app for the job shows one |
+| Numbered labels | 01 02 03 markers or an 01/04 counter | Plain 1, 2, 3 for a real sequence; nothing for a list |
+| Icon tile | An icon in a tinted rounded square or circle, three or more; an icon above or beside every heading | Icons on controls and navigation only; a bare icon or none in rows. Allowed: one consistent tile system in a settings-style list |
+| Stock-metaphor icon | Sparkles or a wand for AI, rocket, lightning, flame, leaf, shield-check, trending-up, used as decoration | Name the thing in text; where an icon is needed, the platform's own symbol for that concept. Allowed: inside a button, tab or nav; an icon that depicts the named object (a fire beside "Wood stove") |
+
 ## The second wave: over-corrections
 
-Telling a model to avoid the first wave produces a second look that is now just as recognisable: ask for something less generated and you get the next same page, a warm cream ground with a terracotta accent, or near-black with one acid-green signal, mono labels, one coloured word in the headline and 01 02 03 markers. Bans alone do not stop this drift; the choice has to be derived from a direction and the product. Each of these is fine when the product earns it and a tell when it appears by reflex:
+Telling a model to avoid the first wave produces a second look that is now just as recognisable: ask for something less generated and you get the next same page, a warm cream ground with a terracotta accent, or near-black with one acid-green signal and mono labels. Bans alone do not stop this drift; the choice has to be derived from a direction and the product. Each of these is fine when the product earns it and a tell when it appears by reflex:
 
 - Cream background, high-contrast serif headings, terracotta or clay accent.
 - Near-black background, one acid or lime accent, monospace labels.
 - Newspaper styling: hairline rules, zero radius, dense columns.
-- A tracked all-caps eyebrow above every heading; `A · B · C` strings of metadata; arrows appended to button labels; numbered `01 02 03` labels on things that are not a sequence.
-- One italic or coloured word inside a headline.
+- `A · B · C` strings of metadata. The rest of this cluster (eyebrows, italic or coloured headline words, arrows on buttons, 01 02 03) is in Type and symbol fingerprints.
 - The current fashionable free typeface, whichever it is this season.
 - Sage or emerald green as the "not purple" accent.
 - Paper grain, doodles and hand-drawn type added to look human.
@@ -80,12 +95,13 @@ Do not "fix" these:
 - Anything the dealt direction or an existing brand specifies.
 - The platform system font, tab bars, large titles, and the large corner radius of system sheets. They are the platform.
 - Coloured glyph tiles in a settings-style list, when they form one consistent system.
+- Tight tracking on large titles: the platform's own display faces do it.
 - A card, a gradient, a serif or a cream background that the brief or the subject calls for. Judge combinations and intent, never a single hit.
 - Anything specified by an existing brand or design system.
 
 ## Code signatures by stack
 
-Signals for review, never automatic failures. `scripts/slop-scan.mjs` runs these; without Node, grep them. Add `slop-ok` in a comment on a line to mark a deliberate choice.
+Signals for review, never automatic failures, except the Type and symbol fingerprints above. `scripts/slop-scan.mjs` runs these; without Node, grep them. Add `slop-ok` in a comment on a line to mark a deliberate choice.
 
 **All stacks**
 
@@ -93,6 +109,7 @@ Signals for review, never automatic failures. `scripts/slop-scan.mjs` runs these
 |---|---|
 | Template purples | hex `6366F1`, `8B5CF6`, `7C3AED`, `A855F7`, `4F46E5`, `667EEA`, `764BA2`, `6750A4`, `6650A4`, `D0BCFF` |
 | Emoji in UI source | emoji code points inside string literals |
+| Glyph at the edge of a string | `→`, `↗`, `✕`, `✦`, `▲`, `›` and the like at the start or end of a label (stack-specific rule; a string holding an arrow between two words is fine) |
 | Placeholder data | `Lorem`, `John Doe`, `Jane Smith`, `Item 1`, `pravatar`, `dicebear`, `picsum` |
 | Filler and fake-life copy | `seamless`, `effortless`, `supercharge`, `Welcome back`, `Good morning`, `Oops`, `Something went wrong` |
 | Typeface models reach for | `Inter`, `Fraunces`, `Instrument Serif`, `Space Grotesk`, `DM Sans`, `Bricolage Grotesque`, `Manrope`, `Poppins` and the rest of the list in `scripts/deal.mjs` |
@@ -100,7 +117,8 @@ Signals for review, never automatic failures. `scripts/slop-scan.mjs` runs these
 | Hand-drawn icons (prototypes) | twelve or more inline `<svg` elements (icon paths; a few hand-drawn charts are fine) |
 | Lucide by default | `lucide` in a script or link URL, `data-lucide=` |
 | Gradient text (prototypes) | `background-clip: text` |
-| Fingernail cards (prototypes) | `border-left: 3px` to `6px solid`, two or more times in a file |
+| Edge bars (prototypes) | `border-left` or `border-right` of 2px or more, an inset box-shadow, or a narrow `::before` bar on a heading, label, stat, quote, card or row |
+| Type and symbol fingerprints (prototypes) | `font-style: italic` or `<em>` in a heading or label; eyebrow or kicker classes; a dot before a label; Unicode glyphs as icons; arrows on buttons; `01` `02` labels; an icon in a tinted rounded box three times; sparkle, rocket, zap, flame, leaf, shield-check or trending-up icon classes outside controls |
 | Grey slot (prototypes, heuristic) | a neutral grey `background` (`#ccc`, `#ddd`, `#d1d1d6`, `#e5e5ea`, `#e0e0e0`, or a variable holding one) on a rule or element named photo, img, image, cover, art, thumb, avatar, hero or map |
 | Avatar services | `randomuser.me`, `ui-avatars.com` (`pravatar` is caught as placeholder data) |
 | Lighting effects (prototypes) | `filter: blur(` with a large radius, repeated `radial-gradient(`, `feTurbulence` grain |
@@ -115,6 +133,8 @@ Signals for review, never automatic failures. `scripts/slop-scan.mjs` runs these
 | Gradient decoration | `LinearGradient(` more than twice in a file; `foregroundStyle(LinearGradient` |
 | Hand-rolled chrome | `navigationBarBackButtonHidden(true)`, `.toolbar(.hidden, for: .navigationBar)` |
 | Sparkle icon | `systemName: "sparkles"`, `"wand.and.stars"` |
+| Italic title | `.italic()` on a title or headline style |
+| Stock-metaphor symbol | `systemName: "bolt"`, `"flame"`, `"leaf"`, `"checkmark.shield"` as decoration |
 | Tap on a non-button | `.onTapGesture` where a `Button` would do |
 
 **Jetpack Compose / Kotlin**
@@ -127,6 +147,8 @@ Signals for review, never automatic failures. `scripts/slop-scan.mjs` runs these
 | Gradient decoration | `Brush.linearGradient`, `Brush.verticalGradient`, `Brush.horizontalGradient` more than twice in a file |
 | One radius | many `RoundedCornerShape(16.dp)` |
 | Sparkle icon | `Icons.Default.AutoAwesome`, `Icons.Filled.AutoAwesome` |
+| Italic headline | `FontStyle.Italic` on a headline, title or display style |
+| Stock-metaphor symbol | `Icons.Default.Bolt`, `LocalFireDepartment`, `Eco`, `RocketLaunch`, `TrendingUp` as decoration |
 
 **Flutter / Dart**
 
@@ -142,6 +164,8 @@ Signals for review, never automatic failures. `scripts/slop-scan.mjs` runs these
 | Bounce | `Curves.bounce`, `Curves.elastic` |
 | Template residue | `Flutter Demo`, `You have pushed the button` |
 | Sparkle icon | `Icons.auto_awesome` |
+| Italic headline | `FontStyle.italic` on a headline, title or display style |
+| Stock-metaphor symbol | `Icons.bolt`, `local_fire_department`, `eco`, `rocket_launch`, `trending_up` as decoration |
 
 **React Native / Expo**
 
@@ -156,6 +180,7 @@ Signals for review, never automatic failures. `scripts/slop-scan.mjs` runs these
 | Grand entrance | `FadeInDown`, `FadeInUp`, `.delay(index` |
 | Dead control | `onPress={() => {}}` |
 | Web font reflex | `fontFamily: 'Inter'` |
+| Italic title | `fontStyle: 'italic'` on a title or heading style |
 | Template residue | `Open up App`, `Welcome to React Native` |
 
 What code cannot show and only a render can: whether one colour dominates, whether the hierarchy reads when blurred, whether screens share a silhouette with every other app, whether the empty and error states look designed.

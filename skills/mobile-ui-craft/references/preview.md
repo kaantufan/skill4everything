@@ -9,6 +9,7 @@ Design quality cannot be judged from source code. This file is the loop that tur
 - Looking at a render
 - HTML mockups
 - Prototype techniques (tested in Chromium)
+- Self usability test
 - Showing directions side by side
 - What a render cannot show
 
@@ -62,20 +63,14 @@ Use a mockup when there is no project yet, no toolchain to build with, or the us
 
 1. Copy `assets/phone-frame.html` from this skill. It provides the screen size, status bar, home indicator, safe-area variables and the platform system font stack, and nothing else. Set `data-platform` to `ios` or `android` and `data-theme` to the dealt appearance. The prototype opens in that appearance whatever the viewer's system setting, because the dealt one is what was designed; reach the other with a `?theme=light` or `?theme=dark` query, not with `prefers-color-scheme`. A dark-first screen that silently follows a light system shows a reviewer a look nobody designed.
 2. Put the product's tokens in the marked style block and the screen's markup inside `#screen`.
-3. Build the screen with the dealt direction's tokens, face and icon set. Use real material (photos, covers, portraits, a map) from `assets/imagery.md`; draw no icons and no pictures yourself. Meet the prototype requirements of the UX pass (the task carried one step further, states by URL hash, pressed states, undo, honest totals, the auto-demo, accessibility). Build the direction's signature moment with the techniques below. The dealt typeface may load from a web font service in a prototype; say that the native build must bundle and license it. Do not add marketing sections, hover states or anything a phone app would not have.
+3. Build the screen with the dealt direction's tokens, face and icon set. Use real material (photos, covers, portraits, a map) from `assets/imagery.md`; draw no icons and no pictures yourself. Meet the prototype requirements of the UX pass (the task carried one step further, states by URL hash, pressed states, undo, honest totals, nothing that acts by itself, accessibility). Build the dealt signature motion with the motion kit and the techniques below; it is a morph of real content, interruptible, with a Reduce Motion version. The dealt typeface may load from a web font service in a prototype; say that the native build must bundle and license it. Do not add marketing sections, hover states or anything a phone app would not have.
 4. Capture it in real time with the bundled script, which drives a local Chrome or Edge at a true phone viewport and writes one image per moment. It waits (at most 12 seconds) for fonts, every image and the map before the clock starts, so photos are in place in the first capture:
 
 ```
 node scripts/capture.mjs screen.html shots/screen --size 393x852 --at 1200,3000,6500 --scroll-end
 ```
 
-Add `--tap x,y@ms` to tap a point at a given time, `--dark` for the dark appearance, and `--scroll-end` for one more image with every scrolling area at its end. Without Node, use plain headless Chrome or Edge (it does not wait for images; add a virtual time budget):
-
-```
-chrome --headless=new --hide-scrollbars --force-device-scale-factor=2 --window-size=393,852 --screenshot=screen.png file:///ABSOLUTE/PATH/screen.html
-```
-
-Use `412,915` for the Android frame. On Windows pass a Windows path to `--screenshot` and a `file:///C:/...` URL. Add `--virtual-time-budget=3000` to capture the screen three seconds in, and repeat with other values to see several moments. Animations that start after load do not always advance in headless capture, so check the interaction in a real browser when you can and say so when you cannot.
+Add `--tap x,y@ms` to tap a point at a given time, `--dark` for the dark appearance, and `--scroll-end` for one more image with every scrolling area at its end. Without Node, plain headless Chrome or Edge works but does not wait for images: `chrome --headless=new --hide-scrollbars --force-device-scale-factor=2 --window-size=393,852 --virtual-time-budget=3000 --screenshot=screen.png file:///ABSOLUTE/PATH/screen.html` (Android frame `412,915`; on Windows use Windows paths). Motion that starts after load does not always advance there. Use the step mode of the capture script (see the self usability test), or list what you did not see.
 
 Size everything relative to the frame, never the viewport: no `vw` or `vh` units and no `position: fixed`. Some headless browsers enforce a minimum window wider than a phone, lay the page out at that width and crop the screenshot, which cuts off anything anchored to the viewport's right edge. If a capture looks cropped or off-centre, that is the cause.
 
@@ -123,7 +118,7 @@ map.on('idle',()=>{document.documentElement.dataset.mapReady='1'});
 </script>
 ```
 
-Styles: `positron` (light), `dark`, `bright` (colour), `liberty`, all at `https://tiles.openfreemap.org/styles/<name>`. For a street-following route, ask the OSRM demo server once (`https://router.project-osrm.org/route/v1/foot/lon,lat;lon,lat?overview=full&geometries=geojson`) and paste the coordinates into the file as a constant. Use the route colour from the dealt accent. To draw the route live, update the source with a growing slice of `route` inside `requestAnimationFrame`.
+Styles: `positron` (light), `dark`, `bright` (colour), `liberty`, all at `https://tiles.openfreemap.org/styles/<name>`. For a street-following route, ask the OSRM demo server once (`https://router.project-osrm.org/route/v1/foot/lon,lat;lon,lat?overview=full&geometries=geojson`) and paste the coordinates in as a constant, in the dealt accent. To draw it live, grow a slice of `route` in the source from a frame loop.
 
 **Colour sampled from content.** For washes, tints and a player background that follows the artwork. The image needs `crossorigin="anonymous"` (Unsplash, Wikimedia and the Met allow it; Cleveland does not, so hard-code its hex).
 
@@ -142,68 +137,104 @@ dominant(cover).then(col=>player.style.setProperty('--tint',col));
 // .player{background:linear-gradient(180deg,color-mix(in oklab,var(--tint) 85%,#000),#0b0b0d 70%);transition:background 600ms ease-out}
 ```
 
-Crossfade between two stacked layers when the artwork changes. In a static prototype, precompute the hex per image and store it next to the URL; it doubles as the `--c` of the never-grey slot. Check text contrast on the tinted ground.
+Crossfade two stacked layers when the artwork changes. In a static prototype precompute the hex per image next to the URL; it doubles as the never-grey `--c`. Check text contrast on the tint.
 
-**Springs.** A spring for what a finger moved, as a CSS `linear()` easing. The generator returns the easing and the duration.
+**Motion kit.** `assets/motion-kit.js` is plain JavaScript with no dependencies. Paste it into one `<script>` of the prototype so the file stays self-contained. It defines `MK`:
+
+| Call | Does |
+|---|---|
+| `MK.spring(k, zeta)` | A spring as a `linear()` easing: `{easing, ms}` |
+| `MK.ease` | `spatial` (380, .8), `fast` (800, .6), `slow` (200, .8), `effects` (1600, 1), each `{easing, ms}`. `MK.out` is the ease-out for fades |
+| `MK.morph(update, opts)` | View transition with the spatial spring on named groups; runs `update` directly where unsupported. Under Reduce Motion only the page crossfades |
+| `MK.flip(els, mutate)` | FLIP from where the elements are on screen |
+| `MK.drag(el, {axis, onStart, onMove, onEnd})` | Pointer drag; `onEnd` gets `dx, dy, vx, vy` (px/ms) |
+| `MK.fling(el, {from, to, v, k, zeta})` | Spring on x, y, r, s seeded with the release velocity; returns the Animation. `MK.freeze(el)` grabs it mid-flight |
+| `MK.tilt(el, {max})`, `MK.tilt.gyro(btn, el)` | Pointer tilt, spring back; gyro from a tap, HTTPS only |
+| `MK.roll(el, text)` | Digit roll for tabular figures; sets `aria-label` |
+| `MK.haptic(kind)` | `navigator.vibrate`; iOS Safari ignores it, never the only feedback |
+
+Everything except the tilt smoothing runs on WAAPI and view transitions, which `film:` slows down; build nothing that must be filmed on `requestAnimationFrame`. Springs are for what a finger moved or what travels; fades use `MK.out`. `MK.spring(300, .42)` overshoots about 23%: Energy 5 only. Reduce Motion is handled inside the kit (flip crossfades, fling does not overshoot, tilt and roll stand still); wrap your own CSS motion in `@media (prefers-reduced-motion: no-preference)`.
+
+**Shared element.** The tapped thing is the thing that grows. A `view-transition-name` must be unique: set it on the source before the call, move it to the destination inside `update`, clear it after. Close with the reverse.
 
 ```js
-function spring(k=170,c=14,m=1,pts=40){
-  const w0=Math.sqrt(k/m), z=c/(2*Math.sqrt(k*m)), wd=w0*Math.sqrt(Math.max(1e-6,1-z*z));
-  const x=t=>z<1?1-Math.exp(-z*w0*t)*(Math.cos(wd*t)+(z*w0/wd)*Math.sin(wd*t)):1-Math.exp(-w0*t)*(1+w0*t);
-  let T=.02; while(T<10){ if(Math.abs(1-x(T))<.001&&Math.abs(1-x(T+.1))<.001)break; T+=.02; }
-  const v=[]; for(let i=0;i<=pts;i++) v.push(+x(T*i/pts).toFixed(4)); v[pts]=1;
-  return {css:`linear(${v.join(',')})`, ms:Math.round(T*1000)};
-}
-const s=spring(220,18); el.style.setProperty('--spring',s.css); el.style.setProperty('--ms',s.ms+'ms');
-// .card{transition:transform var(--ms) var(--spring)}
-```
-
-A ready preset with about 25% overshoot, for Energy 4 or 5 only: `linear(0,0.009,0.035 2.1%,0.141,0.281 6.7%,0.723 12.9%,0.938 16.7%,1.017,1.077,1.121,1.149 24.3%,1.159,1.163,1.161,1.154 29.9%,1.129 32.8%,1.051 39.6%,1.017 43.1%,0.991,0.977 51%,0.974 53.8%,0.975 57.1%,0.997 69.8%,1.003 76.9%,1.004 83.8%,1)`. For fades and menus use `cubic-bezier(.22,1,.36,1)` at 250 ms or less.
-
-**Shared-element photo expand.** The list photo becomes the detail photo. Only one element may own the `view-transition-name` at a time. Close by running the same function in reverse.
-
-```js
-function open(card){
-  const img=card.querySelector('img'); img.style.viewTransitionName='hero';
-  const go=()=>{ detail.hidden=false; list.hidden=true; detail.querySelector('img').style.viewTransitionName='hero'; img.style.viewTransitionName=''; };
-  document.startViewTransition ? document.startViewTransition(go) : go();
+function openDetail(card){
+  const src=card.querySelector('img'), dst=detail.querySelector('img');
+  src.style.viewTransitionName='hero';
+  MK.morph(()=>{ src.style.viewTransitionName=''; dst.style.viewTransitionName='hero'; list.hidden=true; detail.hidden=false; })
+    .then(()=>{ dst.style.viewTransitionName=''; });
 }
 ```
 ```css
-::view-transition-group(hero){animation-duration:520ms;animation-timing-function:var(--spring)}
-::view-transition-old(hero),::view-transition-new(hero){object-fit:cover;height:100%}
-::view-transition-old(root),::view-transition-new(root){animation-duration:240ms}
+::view-transition-old(hero),::view-transition-new(hero){height:100%;object-fit:cover}
 ```
 
-Match radii by animating `border-radius` on the group. Wait about 700 ms before a screenshot, or call `skipTransition()` for a deterministic end frame.
+Name the picture or the container that travels, never a text block: two different texts in one group cross through each other mid-morph, which reviewers read as broken. The kit fades the old page out before the new one comes in. A view transition takes taps for its duration, so keep frequent actions (add, like, skip) on `MK.flip` or a plain transform and save `MK.morph` for opening a view. Groups sit above the page, so parent clipping does not apply. For many cards use `view-transition-name: match-element` or `view-transition-class`. A morph runs about 420 ms: film it, or wait 700 ms before a screenshot.
 
-**Header collapse and parallax (scroll-driven, no JS).** Use the frame's own scroller; `scroll(nearest)` finds the nearest scrolling ancestor.
+**Coverflow.** For covers, posters or trips: a showcase, never a list. The centre card is flat, the neighbours turn.
 
 ```css
-@supports (animation-timeline: scroll()) {
-  .hero img{animation:par linear both;animation-timeline:scroll(nearest);animation-range:0 320px}
-  @keyframes par{to{transform:translateY(80px) scale(1.12);filter:brightness(.7)}}
+.cf{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;perspective:900px;padding:0 calc(50% - 70px);scrollbar-width:none}
+.cf>.c{flex:none;width:140px;height:140px;margin:34px 0;scroll-snap-align:center}
+@media (prefers-reduced-motion:no-preference){@supports (animation-timeline:view()){
+  .cf>.c{animation:cf linear both;animation-timeline:view(inline);animation-range:cover 0% cover 100%}
+  @keyframes cf{0%{transform:translateX(30%) rotateY(55deg) scale(.8);opacity:.6}50%{transform:none}100%{transform:translateX(-30%) rotateY(-55deg) scale(.8);opacity:.6}}}}
+```
+
+**Card flip.** A physical object with two faces. Tilt the outer wrapper, flip the inner one, and add a button. Under Reduce Motion swap the faces with a fade.
+
+```css
+.card3d{perspective:700px}.inner{position:relative;transform-style:preserve-3d}
+.face{position:absolute;inset:0;backface-visibility:hidden}.back{transform:rotateY(180deg)}
+```
+```js
+let on=false; MK.tilt(card3d,{max:8});
+flipBtn.onclick=()=>{ const e=MK.ease.spatial, to=on?0:180; on=!on;
+  inner.animate([{transform:`rotateY(${on?0:180}deg)`},{transform:`rotateY(${to}deg)`}],{duration:e.ms,easing:e.easing})
+    .finished.then(()=>{ inner.style.transform=`rotateY(${to}deg)`; }); };
+```
+
+**Throw a card.** It follows the finger, release velocity decides, the next card scales up as this one leaves. Visible like and dismiss buttons run the same fling.
+
+```js
+let base={x:0,y:0};
+const pose=()=>{ const m=new DOMMatrix(getComputedStyle(card).transform); return {x:m.e,y:m.f,r:Math.atan2(m.b,m.a)*57.3}; };
+MK.drag(card,{
+  onStart:()=>{ base=pose(); },
+  onMove:(dx,dy)=>{ card.style.transform=`translate(${base.x+dx}px,${base.y+dy}px) rotate(${(base.x+dx)/14}deg)`; },
+  onEnd:({vx,vy})=>{ const p=pose(), gone=Math.abs(p.x)>110||Math.abs(vx)>.6;
+    if(gone){ const s=Math.sign(vx||p.x); MK.haptic('light');
+      MK.fling(card,{from:p,to:{x:s*520,y:p.y+vy*160,r:s*28},v:{x:vx,y:vy},k:120,zeta:1}); showNext(); }
+    else MK.fling(card,{from:p,to:{},v:{x:vx,y:vy}}); } });
+```
+
+Drive like and nope stamps from the drag distance, not from time.
+
+**Velocity-aware sheet.** It follows the finger, resists above the top, commits from the projected position and can be grabbed mid-animation. It also gets a close button and an Esc and back route.
+
+```js
+let y=0;
+MK.drag(sheet,{axis:'y', onStart:()=>{ y=new DOMMatrix(getComputedStyle(sheet).transform).f; },
+  onMove:(_,dy)=>{ const t=y+dy; sheet.style.transform=`translateY(${t<0?t*.35:t}px)`; },  // rubber band above the top
+  onEnd:({dy,vy})=>{ const t=y+dy, to=(t+vy*180>200)?400:0; MK.fling(sheet,{from:{y:t<0?t*.35:t},to:{y:to},v:{y:vy}}); } });
+```
+
+**Shape morph.** `clip-path: shape()` interpolates when both shapes have the same command sequence (Chrome 135+, Safari 18.4+, Firefox 148+). Use it for a button to pill or a breath that paces an exercise; one or two per screen. Fallback: `border-radius`.
+
+```css
+.blob{clip-path:shape(from 50% 0%, curve to 100% 50% with 77% 0% / 100% 23%, curve to 50% 100% with 100% 77% / 77% 100%, curve to 0% 50% with 23% 100% / 0% 77%, curve to 50% 0% with 0% 23% / 23% 0%, close);transition:clip-path 600ms ease-in-out}
+.blob.on{clip-path:shape(from 50% 0%, curve to 100% 50% with 95% 0% / 100% 5%, curve to 50% 100% with 100% 95% / 95% 100%, curve to 0% 50% with 5% 100% / 0% 95%, curve to 50% 0% with 0% 5% / 5% 0%, close)}
+```
+
+Only when the point counts differ, interpolate SVG paths with flubber 0.4.2 (`https://cdn.jsdelivr.net/npm/flubber@0.4.2/build/flubber.min.js`): `flubber.interpolate(a,b,{maxSegmentLength:4})(t)` returns the path. It needs a frame loop, so `film:` cannot slow it.
+
+**Collapsing header (scroll-driven, no JS).** The large title shrinks as the frame's own scroller moves; `scroll(nearest)` finds it. Parallax on every layer is slop: at most the one hero photo, inside an `overflow: hidden` box with a large source (`w=1200`).
+
+```css
+@media (prefers-reduced-motion:no-preference){@supports (animation-timeline:scroll()){
   .title{animation:shrink linear both;animation-timeline:scroll(nearest);animation-range:0 120px;transform-origin:left bottom}
-  @keyframes shrink{to{transform:scale(.55) translateY(-8px)}}
-}
+  @keyframes shrink{to{transform:scale(.55) translateY(-8px)}}}}
 ```
-
-Keep the photo inside an `overflow: hidden` box and use a large source (`w=1200`). Do not use scroll-linked rise-in for every row.
-
-**Velocity-aware sheet.** It follows the finger at once, resists above the top, commits on release from the projected position, and can be grabbed mid-animation. Uses `spring()` above.
-
-```js
-let y=0,vy=0,last=0,lastT=0;
-sheet.onpointerdown=e=>{sheet.setPointerCapture(e.pointerId);sheet.getAnimations().forEach(a=>a.cancel());last=e.clientY;lastT=e.timeStamp;};
-sheet.onpointermove=e=>{ if(!sheet.hasPointerCapture(e.pointerId))return;
-  const dy=e.clientY-last; y+=(y+dy<0)?dy*.35:dy;              // rubber band
-  vy=dy/(e.timeStamp-lastT||1); last=e.clientY; lastT=e.timeStamp; sheet.style.transform=`translateY(${y}px)`; };
-sheet.onpointerup=()=>{ const target=(y+vy*180>200)?400:0, sp=spring(260,22);
-  const a=sheet.animate([{transform:`translateY(${y}px)`},{transform:`translateY(${target}px)`}],{duration:sp.ms,easing:sp.css,fill:'forwards'});
-  a.onfinish=()=>{y=target;sheet.style.transform=`translateY(${y}px)`;a.cancel();}; };
-```
-
-Give the sheet a visible close button and an Esc and back route as well; a drag is never the only way out.
 
 **Press and entry micro-motion.** Press feedback is `scale(.97)` within one frame. Never grow from zero: start entries at 0.94 or more, from the trigger's origin.
 
@@ -212,33 +243,12 @@ button,.tap{transition:transform .12s cubic-bezier(.22,1,.36,1);touch-action:man
 button:active,.tap:active{transform:scale(.97)}
 .pop{transform-origin:var(--ox,50%) var(--oy,0%);transition:opacity .16s ease-out,transform .16s ease-out,display .16s allow-discrete}
 @starting-style{.pop{opacity:0;transform:scale(.94)}}
-.pop[hidden]{opacity:0;transform:scale(.94)}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 ```
 
-**Number roll and count-up.** A changing figure rolls its digits (tabular figures, one string). Count-up is for one first reveal only, never on every visit.
+**Number roll.** A changing figure rolls only the digits that changed: `MK.roll(el, '1.248,50')`, the whole formatted string in the product's locale and currency, in tabular figures. Count-up from zero is for one first reveal at most, never on every visit.
 
-```css
-.roll{display:inline-flex;height:1em;line-height:1;overflow:hidden;font-variant-numeric:tabular-nums}
-.roll .d{display:block;height:1em;overflow:hidden}
-.roll .col{display:flex;flex-direction:column;transition:transform var(--ms,300ms) var(--spring,cubic-bezier(.22,1,.36,1))}
-.roll i{display:block;height:1em;font-style:normal}
-```
-```js
-function roll(el,text){                       // text is the whole formatted string, e.g. "1.248,50"
-  el.setAttribute('role','img'); el.setAttribute('aria-label',text);
-  if(el.dataset.len!==String(text.length)){ el.dataset.len=text.length;
-    el.innerHTML=[...text].map(c=>/\d/.test(c)?'<span class="d" aria-hidden="true"><span class="col">'+[...'0123456789'].map(n=>'<i>'+n+'</i>').join('')+'</span></span>':'<span aria-hidden="true">'+c+'</span>').join(''); }
-  let k=0; const cols=el.querySelectorAll('.col');
-  for(const c of text) if(/\d/.test(c)) cols[k++].style.transform='translateY(-'+c+'em)';
-}
-function count(el,to,ms=900,locale='tr-TR'){ const t0=performance.now();
-  (function f(t){ const p=Math.min(1,(t-t0)/ms), e=1-Math.pow(1-p,4); el.textContent=Math.round(to*e).toLocaleString(locale); if(p<1) requestAnimationFrame(f); })(t0); }
-```
-
-Use the product's locale and currency in the string. Under Reduce Motion set the transition to none.
-
-**Hand-drawn SVG charts.** For one to three hero charts, rings, bars or sparklines, inline SVG beats a chart library: it matches the type and animates with CSS. Derive the series from a seeded generator plus a trend, never `Math.random()` per render, so captures are identical. Use one hue plus neutrals, with the accent on the point being made, and labels on the data. If a library is unavoidable (uPlot for dense time series, Chart.js otherwise), switch off the legend, the axes and the points, round the line caps, and set the font to the dealt family. A chart scrub (finger down, readout follows) is built with pointer events on the SVG.
+**Hand-drawn SVG charts.** For one to three hero charts, rings, bars or sparklines, inline SVG beats a chart library: it matches the type and animates with CSS. Derive the series from a seeded generator plus a trend, never `Math.random()` per render. One hue plus neutrals, the accent on the point being made, labels on the data. If a library is unavoidable (uPlot, Chart.js), switch off legend, axes and points and set the dealt font. A scrub (finger down, readout follows) is pointer events on the SVG.
 
 ```html
 <svg viewBox="0 0 300 100" width="100%" preserveAspectRatio="none" role="img" aria-label="Last 7 days">
@@ -250,6 +260,30 @@ Use the product's locale and currency in the string. Under Reduce Motion set the
 ```
 
 A gradient fill under a line is allowed only when it is the data's own area, in the accent at low opacity.
+
+## Self usability test
+
+Dead controls, covered content and missing states only show when the prototype is used. Before reporting, drive it with the capture script's step mode:
+
+```
+node scripts/capture.mjs screen.html out/t --steps "wait:300;shot:open;wait:8000;shot:idle;tap:text=Add;film:primary,3000,8;tap:text=View cart;wait:700;shot:next;key:Escape;wait:600;log;shot:back;tap:text=Library;wait:500;shot:tab-library;scroll:end;shot:end;hash:error;shot:error;motion:reduce;reload;wait:500;tap:text=Add;wait:700;shot:reduced"
+```
+
+1. **Open** (shot). Every job named in the brief is visible with its action in the first viewport.
+2. **Idle** (shot after 8 s with no input). It matches the open shot, except real time (a clock, a playing track). Nothing was added, liked, skipped, started or opened by itself.
+3. **Primary action** (film). The tapped thing travels and lands on its result; the stateful control and the total show the new state. The receipt and Undo sit in the docked bar or inline, never in a toast over content. No two texts overlap in any frame.
+4. **Next step** (shot). The cart, player or detail opens from what was tapped, and the page behind it did not scroll.
+5. **Escape or back, then `log`.** Focus returns to the control that opened it, the page is where it was, and anything committed is still committed; the live region says what happened.
+6. **Each tab and every other visible control** (shot). A tab opens a simple real view built from the same material; every header button, row, chip and link does something sensible. List any control you left inert, and remove it rather than leave it dead.
+7. **`scroll:end`** (shot). Nothing sits under the bars.
+8. **Each state by hash** (shot): loading, empty, error, offline, whatever the prototype has.
+9. **`motion:reduce`, reload, primary action** (shot). The consequence is still visible without movement.
+
+`film:` slows animations to 0.1x, so 300 ms of motion needs about 3000 ms of film. A `tap:` step already waits 80 ms; after a `drag:` add `wait:50` before `film:`, or an animation still starting stays on its first frame. Frame loops (`requestAnimationFrame`) are not slowed.
+
+Run `node scripts/slop-scan.mjs` on the prototype: its blocking group must be clean before you report.
+
+Open every image. Fix every collision, dead control and missing state in one batch, then drive it again, three rounds at most. Then score the prototype against the 9 bar of the UX pass, fix anything under 9, and put the score and any cap that still applies in the report.
 
 ## Showing directions side by side
 

@@ -1,0 +1,680 @@
+﻿<!doctype html>
+<!-- HTML mockup of the Söz iOS home screen. Fonts, materials, controls and scrolling approximate the native ones. -->
+<html lang="en" data-platform="ios" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Söz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css">
+<script>{ const t = new URLSearchParams(location.search).get('theme'); if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t; }</script>
+<style>
+  /* device frame (from assets/phone-frame.html) */
+  :root { --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px; --chrome: #000; }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--f); -webkit-font-smoothing: antialiased; background: var(--ground); color: var(--ink); }
+  .statusbar { position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 30; display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 28px 10px; font: 600 16px/1 -apple-system, "SF Pro Text", system-ui, sans-serif; color: var(--chrome); pointer-events: none; }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  .home-indicator { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 30; width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none; }
+  #screen { position: absolute; inset: 0; overflow: hidden; }
+</style>
+<style>
+  /* PRODUCT TOKENS (dealt direction native-quiet, Public Sans, orange). Screens use only these. */
+  :root {
+    --ground: #FFFFFF; --raised: #F2F2F7; --ink: #000000; --ink-2: #5E5E63; --line: #D8D8DC;
+    --accent: #B85C00; --on-accent: #FFFFFF; --positive: #2E7D46; --negative: #D4442E;
+    --sfx-on-accent: #FFDDBB;              /* suffix colour on the accent card, 3.7:1, used at 28px bold only */
+    --scrim: rgb(0 0 0 / .45);
+    --f: "Public Sans", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif;
+    --t-large: 700 34px/40px var(--f); --t-hero: 700 28px/34px var(--f); --t-title: 600 22px/28px var(--f);
+    --t-head: 600 17px/22px var(--f); --t-body: 400 17px/22px var(--f); --t-sub: 400 15px/20px var(--f); --t-foot: 400 13px/18px var(--f);
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px;
+    --r-card: 12px; --r-btn: 10px;
+    --tab-h: calc(49px + var(--safe-bottom));
+    --press: transform .12s cubic-bezier(.22,1,.36,1);
+  }
+  [data-theme="dark"] { --ground: #000000; --raised: #1C1C1E; --ink: #FFFFFF; --ink-2: #A1A1A6; --line: #38383A; }
+</style>
+<style>
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; touch-action: manipulation; transition: var(--press); -webkit-tap-highlight-color: transparent; }
+  button:active:not(:disabled) { transform: scale(.97); }
+  button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  button:disabled { cursor: default; }
+  h1, h2, h3, p { margin: 0; }
+  .num, .num * { font-variant-numeric: tabular-nums !important; }
+  .sfx { color: var(--accent); }
+  .ph-ico { font-size: 22px; line-height: 1; }
+
+  .view { position: absolute; inset: 0; }
+  .scroll { position: absolute; top: var(--safe-top); left: 0; right: 0; bottom: 0; overflow-y: auto; scrollbar-width: none;
+    padding: 0 var(--s4) calc(var(--tab-h) + var(--s5)); }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* header */
+  .top { display: flex; align-items: center; justify-content: space-between; height: 56px; }
+  .brand { font: var(--t-large); color: var(--accent); letter-spacing: -.02em; }
+  .bigtitle { font: var(--t-large); letter-spacing: -.02em; padding: 8px 0 12px; }
+  .week { display: flex; gap: 4px; }
+  .day { width: 28px; text-align: center; font: 600 11px/14px var(--f); color: var(--ink-2); }
+  .day b { display: grid; place-items: center; width: 28px; height: 28px; margin-top: 2px; border-radius: 50%; font: 600 13px/1 var(--f); color: var(--ink-2); }
+  .day.done b { background: var(--accent); color: var(--on-accent); }
+  .day.today b { box-shadow: inset 0 0 0 2px var(--accent); color: var(--ink); }
+  .day.today { color: var(--ink); }
+
+  /* today's lesson: the brand surface */
+  .lesson { background: var(--accent); color: var(--on-accent); border-radius: var(--r-card); overflow: hidden; margin-top: var(--s2); }
+  .pic { position: relative; overflow: hidden; background: var(--c, #6b4a2f); }
+  .pic img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .4s ease-out; display: block; }
+  .pic img.in { opacity: 1; }
+  .lesson .pic { height: 150px; }
+  .lesson.no-photo .pic { display: none; }
+  .lesson .body { padding: var(--s4); }
+  .lesson .unit { font: 600 13px/18px var(--f); }
+  .phrase { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); margin-top: var(--s2); }
+  .phrase .tr { font: var(--t-hero); letter-spacing: -.01em; }
+  .lesson .tr .sfx { color: var(--sfx-on-accent); }
+  .phrase .en { font: var(--t-sub); margin-top: 2px; }
+  .audio { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px currentColor; }
+  .lesson .scope { font: var(--t-foot); margin-top: var(--s3); }
+  .primary { display: flex; align-items: center; justify-content: center; width: 100%; height: 50px; border-radius: var(--r-btn); font: var(--t-head); margin-top: var(--s3); background: var(--accent); color: var(--on-accent); }
+  .lesson .primary { background: var(--on-accent); color: var(--accent); }
+
+  /* course progress */
+  .course { display: block; width: 100%; text-align: left; margin-top: var(--s4); padding: var(--s4); background: var(--raised); border-radius: var(--r-card); }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
+  .course h2 { font: var(--t-head); }
+  .course .pct { font: var(--t-head); }
+  .bar { display: flex; gap: 3px; margin: var(--s3) 0 var(--s2); }
+  .seg { flex: 1; height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+  .seg i { display: block; height: 100%; background: var(--accent); transform-origin: left center; }
+  .course .meta { font: var(--t-foot); color: var(--ink-2); }
+  .course .ph-caret-right { color: var(--ink-2); font-size: 17px; }
+  .receipt { font: 600 13px/18px var(--f); color: var(--ink); margin-top: var(--s1); }
+  .receipt:empty { display: none; }
+
+  /* weak words */
+  .weak { margin-top: var(--s5); }
+  .weak h2 { font: var(--t-title); }
+  .weak h2 .num { color: var(--ink-2); font-weight: 400; }
+  .ghost { height: 44px; padding: 0 var(--s4); border-radius: var(--r-btn); box-shadow: inset 0 0 0 1px var(--line); color: var(--accent); font: var(--t-head); background: var(--ground); }
+  .ghost:disabled { color: var(--ink-2); }
+  .note { font: var(--t-foot); color: var(--ink-2); margin-top: var(--s1); }
+  .words { list-style: none; margin: var(--s2) 0 0; padding: 0; }
+  .words li { display: flex; align-items: center; justify-content: space-between; min-height: 56px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .words li:last-child { border-bottom: 0; }
+  .w-tr { font: var(--t-head); }
+  .w-en { font: var(--t-sub); color: var(--ink-2); }
+  .meter { display: flex; align-items: center; gap: var(--s2); font: var(--t-foot); color: var(--ink-2); }
+  .meter span { display: flex; gap: 3px; }
+  .meter i { width: 6px; height: 16px; border-radius: 2px; background: var(--line); }
+  .meter i.on { background: var(--accent); }
+  .empty { padding: var(--s5) 0; text-align: center; color: var(--ink-2); font: var(--t-sub); }
+  .empty i { display: block; font-size: 28px; color: var(--ink-2); margin-bottom: var(--s2); }
+  .sub-h { font: var(--t-head); margin-top: var(--s5); }
+
+  /* course tab */
+  .units { list-style: none; margin: 0; padding: 0; }
+  .units li { display: flex; align-items: center; justify-content: space-between; min-height: 60px; border-bottom: 1px solid var(--line); gap: var(--s3); }
+  .units .st { font: var(--t-foot); color: var(--ink-2); display: flex; align-items: center; gap: 6px; }
+  .units .st .ph-check-circle { color: var(--positive); font-size: 20px; }
+  .units li.cur .w-tr { color: var(--accent); }
+
+  /* tab bar */
+  .tabbar { position: absolute; left: 0; right: 0; bottom: 0; height: var(--tab-h); padding-bottom: var(--safe-bottom); display: flex; background: var(--ground); border-top: 1px solid var(--line); z-index: 10; }
+  .tabbar button { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: 600 11px/13px var(--f); color: var(--ink-2); }
+  .tabbar button i { font-size: 26px; }
+  .tabbar button[aria-current="page"] { color: var(--accent); }
+
+  /* lesson / practice view */
+  .lv { position: absolute; inset: 0; background: var(--ground); z-index: 20; display: flex; flex-direction: column; }
+  .lv[hidden] { display: none; }
+  .lv-top { margin-top: var(--safe-top); height: 52px; display: flex; align-items: center; gap: var(--s3); padding: 0 var(--s4) 0 var(--s2); }
+  .iconbtn { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; }
+  .lv-bar { flex: 1; height: 8px; border-radius: 4px; background: var(--raised); overflow: hidden; }
+  .lv-bar i { display: block; height: 100%; width: 100%; background: var(--accent); transform-origin: left center; transition: transform .3s cubic-bezier(.2,.8,.2,1); }
+  .lv-count { font: var(--t-foot); color: var(--ink-2); min-width: 44px; text-align: right; }
+  .lv .pic { height: 120px; margin: 0 var(--s4); border-radius: var(--r-card); flex: none; }
+  .lv.no-photo .pic { display: none; }
+  .lv-body { padding: var(--s5) var(--s4); display: flex; flex-direction: column; flex: 1; }
+  .lv-body h2 { font: var(--t-foot); color: var(--ink-2); outline: none; }
+  .lv .phrase .tr { font: var(--t-hero); }
+  .lv .audio { color: var(--accent); }
+  .opts { display: flex; flex-direction: column; gap: var(--s3); margin-top: var(--s5); }
+  .opt { display: flex; align-items: center; justify-content: space-between; min-height: 56px; padding: 0 var(--s4); border-radius: var(--r-card); box-shadow: inset 0 0 0 1px var(--line); text-align: left; font: var(--t-body); background: var(--ground); }
+  .opt i { font-size: 22px; }
+  .opt.right { box-shadow: inset 0 0 0 2px var(--positive); }
+  .opt.right i { color: var(--positive); }
+  .opt.wrong { box-shadow: inset 0 0 0 2px var(--negative); }
+  .opt.wrong i { color: var(--negative); }
+  .opt.gone { visibility: hidden; }
+  .sum { margin-top: var(--s5); }
+  .sum h3 { font: var(--t-hero); }
+  .sum p { font: var(--t-body); color: var(--ink-2); margin-top: var(--s2); }
+  .sum .primary { margin-top: auto; }
+  .lv-body .grow { flex: 1; }
+
+  .fb { position: absolute; left: 0; right: 0; bottom: 0; background: var(--raised); border-radius: 16px 16px 0 0; padding: var(--s4) var(--s4) calc(var(--safe-bottom) + var(--s2)); z-index: 2; }
+  .fb[hidden] { display: none; }
+  .fb .opt { background: var(--ground); width: 100%; }
+  .fb-h { display: flex; align-items: center; gap: var(--s2); margin-top: var(--s4); font: 700 22px/28px var(--f); }
+  .fb-h i { font-size: 28px; }
+  .fb.ok .fb-h i { color: var(--positive); }
+  .fb.no .fb-h i { color: var(--negative); }
+  .fb-ans { font: var(--t-head); margin-top: var(--s2); }
+  .fb-why { font: var(--t-sub); color: var(--ink-2); margin-top: var(--s1); }
+  .fb-act { display: flex; gap: var(--s3); margin-top: var(--s4); }
+  .fb-act .ghost { flex: none; display: flex; align-items: center; gap: 6px; height: 50px; }
+  .fb-act .primary { margin: 0; flex: 1; }
+
+  /* states by hash */
+  .banner { display: none; align-items: center; gap: var(--s2); margin-top: var(--s2); padding: var(--s3); border-radius: var(--r-card); background: var(--raised); font: var(--t-foot); }
+  .banner i { font-size: 20px; }
+  [data-state="offline"] .banner { display: flex; }
+  .err { display: none; }
+  [data-state="error"] .lesson { display: none; }
+  [data-state="error"] .err { display: block; margin-top: var(--s2); padding: var(--s4); border-radius: var(--r-card); box-shadow: inset 0 0 0 1px var(--line); }
+  .err h2 { font: var(--t-head); margin-top: var(--s2); }
+  .err p { font: var(--t-sub); color: var(--ink-2); margin-top: var(--s1); }
+  .err i.ph { font-size: 28px; color: var(--negative); }
+  .skel { display: none; }
+  [data-state="loading"] .real { display: none; }
+  [data-state="loading"] .skel { display: block; }
+  .sk { background: var(--raised); border-radius: var(--r-card); }
+  @media (prefers-reduced-motion: no-preference) { .sk { animation: sk 1.2s ease-in-out infinite alternate; } @keyframes sk { to { opacity: .55; } } }
+  @media (prefers-reduced-motion: reduce) { *, ::view-transition-group(*) { transition-duration: .01ms !important; } }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  ::view-transition-old(photo), ::view-transition-new(photo) { height: 100%; object-fit: cover; }
+</style>
+</head>
+<body>
+<div class="statusbar">
+  <span id="clock">10:08</span>
+  <svg viewBox="0 0 66 12" aria-hidden="true">
+    <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+    <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+    <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+    <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" style="stroke: var(--chrome)" opacity=".5"/>
+    <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+  </svg>
+</div>
+
+<main id="screen">
+  <!-- TODAY -->
+  <section class="view" id="v-today" aria-label="Today">
+    <div class="scroll">
+      <header class="top">
+        <h1 class="brand">Söz</h1>
+        <div class="week" id="week" role="img"></div>
+      </header>
+
+      <div class="banner" role="status"><i class="ph ph-wifi-slash"></i><span id="off-msg">Offline. Lesson 4 is downloaded, so you can do it now. Results sync when you are back online.</span></div>
+
+      <div class="skel" aria-label="Loading">
+        <div class="sk" style="height:330px;margin-top:8px"></div>
+        <div class="sk" style="height:96px;margin-top:16px"></div>
+        <div class="sk" style="height:28px;width:60%;margin-top:24px"></div>
+        <div class="sk" style="height:56px;margin-top:12px"></div>
+      </div>
+
+      <div class="real">
+        <article class="lesson" id="card" aria-labelledby="card-unit">
+          <div class="pic" style="--c:#7a5236">
+            <img id="card-img" src="https://images.unsplash.com/photo-1647772809729-7afb10f80766?w=800&h=300&q=80&auto=format&fit=crop"
+                 alt="Breakfast table with tea glasses" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()">
+          </div>
+          <div class="body">
+            <p class="unit" id="card-unit"></p>
+            <div class="phrase">
+              <div><p class="tr" id="card-tr" lang="tr"></p><p class="en" id="card-en"></p></div>
+              <button class="audio" id="card-audio"><i class="ph ph-speaker-high ph-ico"></i></button>
+            </div>
+            <p class="scope num" id="card-scope"></p>
+            <button class="primary" id="start"></button>
+          </div>
+        </article>
+
+        <div class="err" role="alert">
+          <i class="ph ph-cloud-x"></i>
+          <h2 id="err-h">Lesson 4 did not download</h2>
+          <p>Check your connection, then try again. Your progress is saved.</p>
+          <button class="primary" id="retry">Try again</button>
+        </div>
+
+        <button class="course" id="course-btn" aria-describedby="receipt">
+          <div class="row"><h2>A1 course</h2><span class="pct num" id="pct"></span></div>
+          <div class="bar" id="bar" aria-hidden="true"></div>
+          <div class="row"><span class="meta num" id="course-meta"></span><i class="ph ph-caret-right"></i></div>
+          <p class="receipt" id="receipt" aria-live="polite"></p>
+        </button>
+
+        <section class="weak" aria-labelledby="weak-h">
+          <div class="row">
+            <h2 id="weak-h">Weak words <span class="num" id="weak-n"></span></h2>
+            <button class="ghost" id="practise"></button>
+          </div>
+          <p class="note">Strength drops when you have not seen a word for a while.</p>
+          <p class="receipt" id="p-receipt" aria-live="polite"></p>
+          <ul class="words" id="weak-list"></ul>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORDS -->
+  <section class="view" id="v-words" aria-label="Words" hidden>
+    <div class="scroll">
+      <h1 class="bigtitle">Words</h1>
+      <div class="row"><h2 class="sub-h" style="margin:0">Weak <span class="num" id="weak-n2" style="color:var(--ink-2);font-weight:400"></span></h2><button class="ghost" id="practise2"></button></div>
+      <ul class="words" id="weak-list2"></ul>
+      <h2 class="sub-h">Strong</h2>
+      <ul class="words" id="strong-list"></ul>
+    </div>
+  </section>
+
+  <!-- COURSE -->
+  <section class="view" id="v-course" aria-label="Course" hidden>
+    <div class="scroll">
+      <h1 class="bigtitle">Course</h1>
+      <p class="note num" id="course-sum" style="margin:0 0 8px"></p>
+      <ul class="units" id="units"></ul>
+    </div>
+  </section>
+
+  <nav class="tabbar" aria-label="Tabs">
+    <button data-tab="today" aria-current="page"><i class="ph-fill ph-house"></i>Today</button>
+    <button data-tab="words"><i class="ph ph-cards"></i>Words</button>
+    <button data-tab="course"><i class="ph ph-path"></i>Course</button>
+  </nav>
+
+  <!-- LESSON / PRACTICE (pushed, modal-free) -->
+  <section class="lv" id="lv" hidden aria-labelledby="lv-h">
+    <div class="lv-top">
+      <button class="iconbtn" id="lv-close" aria-label="Exit, progress is saved"><i class="ph ph-x ph-ico"></i></button>
+      <div class="lv-bar" aria-hidden="true"><i id="lv-fill"></i></div>
+      <span class="lv-count num" id="lv-count"></span>
+    </div>
+    <div class="pic" style="--c:#7a5236">
+      <img id="lv-img" src="https://images.unsplash.com/photo-1647772809729-7afb10f80766?w=800&h=300&q=80&auto=format&fit=crop"
+           alt="" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()">
+    </div>
+    <div class="lv-body" id="lv-body"></div>
+    <div class="fb" id="fb" hidden role="status" aria-live="polite">
+      <div id="fb-tile"></div>
+      <p class="fb-h" id="fb-h"></p>
+      <p class="fb-ans" id="fb-ans"></p>
+      <p class="fb-why" id="fb-why"></p>
+      <div class="fb-act">
+        <button class="ghost" id="fb-audio"><i class="ph ph-speaker-high"></i>Play</button>
+        <button class="primary" id="fb-go">Continue</button>
+      </div>
+    </div>
+  </section>
+</main>
+<div class="home-indicator"></div>
+
+<script>
+/* motion-kit.js (mobile-ui-craft 5.0), inlined */
+(() => {
+  const MK = (window.MK = { out: 'cubic-bezier(.2,.8,.2,1)' });
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  MK.reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  MK.spring = (k, zeta, pts = 36) => {
+    const w0 = Math.sqrt(k), wd = w0 * Math.sqrt(Math.max(1e-6, 1 - zeta * zeta));
+    const x = zeta < 1
+      ? (t) => 1 - Math.exp(-zeta * w0 * t) * (Math.cos(wd * t) + (zeta * w0 / wd) * Math.sin(wd * t))
+      : (t) => 1 - Math.exp(-w0 * t) * (1 + w0 * t);
+    let T = 0.02;
+    while (T < 10 && !(Math.abs(1 - x(T)) < 0.002 && Math.abs(1 - x(T + 0.15)) < 0.002)) T += 0.01;
+    const v = Array.from({ length: pts + 1 }, (_, i) => +x((T * i) / pts).toFixed(3));
+    v[pts] = 1;
+    return { easing: `linear(${v.join(', ')})`, ms: Math.round(T * 1000) };
+  };
+  MK.ease = { spatial: MK.spring(380, 0.8), fast: MK.spring(800, 0.6), slow: MK.spring(200, 0.8), effects: MK.spring(1600, 1) };
+  let vtStyle;
+  MK.morph = (update, opts = {}) => {
+    if (!document.startViewTransition || document.visibilityState !== 'visible') return Promise.resolve(update()).then(() => {});
+    if (!vtStyle) {
+      const e = MK.ease.spatial;
+      vtStyle = document.head.appendChild(document.createElement('style'));
+      vtStyle.textContent = `::view-transition-group(*){animation-duration:${e.ms}ms;animation-timing-function:${e.easing}}
+::view-transition-group(root){animation-duration:200ms;animation-timing-function:ease-out}
+::view-transition-old(root){animation:mk-vt-out 90ms ease-out both}::view-transition-new(root){animation:mk-vt-in 150ms 60ms ease-out both}
+@keyframes mk-vt-out{to{opacity:0}}@keyframes mk-vt-in{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){::view-transition-group(*){animation-duration:.01ms}::view-transition-group(root){animation-duration:150ms}}`;
+    }
+    const typed = opts.types && window.ViewTransition && 'types' in ViewTransition.prototype;
+    const vt = typed ? document.startViewTransition({ update, types: opts.types }) : document.startViewTransition(update);
+    vt.ready.catch(() => {});
+    return vt.finished;
+  };
+  MK.freeze = (el) => { const t = getComputedStyle(el).transform; el.getAnimations().forEach((a) => a.cancel()); el.style.transform = t === 'none' ? '' : t; };
+  MK.flip = (targets, mutate, ease = MK.ease.spatial) => {
+    const els = [].concat(targets), red = MK.reduced();
+    const first = els.map((e) => e.getBoundingClientRect());
+    els.forEach((e) => e.getAnimations().filter((a) => a.id === 'mk-flip').forEach((a) => a.cancel()));
+    mutate();
+    return Promise.all(els.map((e, i) => {
+      const a = first[i], b = e.getBoundingClientRect();
+      if (!a.width || !b.width) return;
+      const o = { transformOrigin: '0 0' };
+      const kf = red ? [{ opacity: 0 }, { opacity: 1 }]
+        : [{ ...o, translate: `${a.left - b.left}px ${a.top - b.top}px`, scale: `${a.width / b.width} ${a.height / b.height}` }, { ...o, translate: '0 0', scale: '1 1' }];
+      const an = e.animate(kf, red ? { duration: 150, easing: 'ease-out' } : { duration: ease.ms, easing: ease.easing });
+      an.id = 'mk-flip';
+      return an.finished.catch(() => {});
+    })).then(() => {});
+  };
+  MK.roll = (el, text) => {
+    text = String(text);
+    el.setAttribute('role', 'img'); el.setAttribute('aria-label', text);
+    if (el.dataset.mkText === text) return;
+    const red = MK.reduced(), e = MK.ease.fast;
+    if (el.dataset.mkLen !== String(text.length)) {
+      el.dataset.mkLen = text.length;
+      el.style.cssText += ';display:inline-flex;height:1em;line-height:1;overflow:hidden;font-variant-numeric:tabular-nums';
+      el.innerHTML = [...text].map((ch) => /\d/.test(ch)
+        ? '<span aria-hidden="true" style="display:block;height:1em;overflow:hidden"><span class="mk-col" style="display:flex;flex-direction:column">'
+          + [...'0123456789'].map((n) => `<i style="display:block;height:1em;font-style:normal">${n}</i>`).join('') + '</span></span>'
+        : `<span aria-hidden="true">${ch}</span>`).join('');
+      el.querySelectorAll('.mk-col').forEach((c) => { c.dataset.d = 0; });
+      if (el.dataset.mkText !== undefined) el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: MK.out });
+    }
+    let k = 0;
+    el.querySelectorAll('.mk-col').forEach((col) => {
+      while (!/\d/.test(text[k])) k++;
+      const to = +text[k++], from = +col.dataset.d, at = (n) => `translateY(${-n}em)`;
+      col.style.transform = at(to); col.dataset.d = to;
+      if (from !== to && !red && el.dataset.mkText !== undefined) col.animate([{ transform: at(from) }, { transform: at(to) }], { duration: e.ms, easing: e.easing });
+    });
+    if (red && el.dataset.mkText !== undefined) el.animate([{ opacity: 0.4 }, { opacity: 1 }], { duration: 150, easing: MK.out });
+    el.dataset.mkText = text;
+  };
+  const PATTERNS = { selection: 6, light: 10, medium: 20, success: [10, 40, 10], warning: [20, 60, 20], error: [30, 50, 30, 50, 30] };
+  MK.haptic = (kind = 'light') => { try { navigator.vibrate?.(PATTERNS[kind] ?? 10); } catch { /* blocked before a user gesture */ } };
+})();
+</script>
+
+<script>
+document.getElementById('clock').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, '');
+const $ = (id) => document.getElementById(id);
+
+/* ---------- sample data (realistic, not real figures) ---------- */
+const PER_UNIT = 6;
+const UNITS = [
+  ['Selamlaşma', 'Greetings'], ['Sayılar', 'Numbers'], ['Kahvaltı', 'Breakfast'], ['Pazarda', 'At the market'],
+  ['Yol tarifi', 'Directions'], ['Aile', 'Family'], ['Saat ve günler', 'Time and days'], ['Hava durumu', 'Weather'],
+  ['İş', 'Work'], ['Seyahat', 'Travel'], ['Doktorda', 'At the doctor'], ['Hafta sonu', 'The weekend'],
+];
+const TOTAL = UNITS.length * PER_UNIT;
+const PHOTO_UNIT = 2; // only the breakfast unit has a photo in this prototype
+// "|" marks where a suffix starts; it is shown in the accent and stripped for audio and answers
+const L4 = [
+  ['Çay iste|r mi|sin?', ['Would you like tea?', 'Do you have tea?', 'Is the tea hot?'], 0, 'İster = wants. Misin turns it into a question to you: would you like?'],
+  ['Evet, lütfen.', ['No, thanks.', 'Yes, please.', 'Yes, I do.'], 1, 'Evet = yes, lütfen = please.'],
+  ['Şeker|li mi, şeker|siz mi?', ['Is it sweet?', 'Sugar, please.', 'With sugar or without?'], 2, '-li means with, -siz means without.'],
+  ['Şeker|siz, lütfen.', ['Without sugar, please.', 'With sugar, please.', 'More sugar, please.'], 0, '-siz means without: şekersiz, without sugar.'],
+  ['Peynir iste|r mi|siniz?', ['Do you like cheese?', 'Would you like cheese?', 'Is this cheese?'], 1, '-siniz is the polite or plural form of -sin. Liking would be sever.'],
+  ['Hayır, teşekkür|ler.', ['No, thanks.', 'Not yet.', 'Yes, please.'], 0, 'Hayır = no, teşekkürler = thanks.'],
+  ['Bir çay daha, lütfen.', ['One tea, please.', 'Tea for two, please.', 'One more tea, please.'], 2, 'Daha = more: bir çay daha, one more tea.'],
+  ['Ekmek var mı?', ['Is there any bread?', 'Do you want bread?', 'Is the bread fresh?'], 0, 'Var mı = is there? Var on its own means there is.'],
+];
+const L5 = [
+  ['Hesap, lütfen.', ['The menu, please.', 'The bill, please.', 'Water, please.'], 1, 'Hesap = the bill.'],
+  ['Ne kadar?', ['How much?', 'How many?', 'What time?'], 0, 'Ne kadar = how much. How many is kaç.'],
+  ['Yüz lira.', ['Ten lira.', 'One thousand lira.', 'One hundred lira.'], 2, 'Yüz = 100, on = 10, bin = 1.000.'],
+  ['Kart|la öde|yebilir mi|yim?', ['Can I pay by card?', 'Do you have a card?', 'Can I pay in cash?'], 0, '-la = by or with. Cash is nakit.'],
+  ['Tabii.', ['Thank you.', 'Of course.', 'Maybe.'], 1, 'Tabii = of course.'],
+  ['Afiyet olsun.', ['Good morning.', 'Goodbye.', 'Enjoy your meal.'], 2, 'Said to someone eating, or after a meal.'], // slop-ok: a lesson answer choice, not a greeting header
+];
+const REVIEW = [...L4.slice(0, 4), ...L5.slice(0, 4)];
+const LESSONS = { 15: { tr: 'Çay iste|r mi|sin?', en: 'Would you like tea?', items: L4, words: 6 },
+                  16: { tr: 'Hesap, lütfen.', en: 'The bill, please.', items: L5, words: 5 } };
+const lessonAt = (n) => LESSONS[n] || { tr: REVIEW[0][0], en: REVIEW[0][1][REVIEW[0][2]], items: REVIEW, words: 0 };
+
+let done = 15;                                     // lessons finished in the course
+const saved = {};                                  // lesson index -> exercises answered, kept on exit
+const WORDS = [
+  { tr: 'şeker|siz', en: 'without sugar', s: 1 }, { tr: 'değil', en: 'not', s: 1 },
+  { tr: 'peynir|li', en: 'with cheese', s: 2 }, { tr: 'ılık', en: 'lukewarm', s: 2 },
+  { tr: 'kahvaltı|da', en: 'at breakfast', s: 2 }, { tr: 'yumurta|lar', en: 'eggs', s: 3 },
+  { tr: "İstanbul'|da", en: 'in Istanbul', s: 3 },
+  { tr: 'merhaba', en: 'hello', s: 4 }, { tr: 'teşekkür|ler', en: 'thanks', s: 4 }, { tr: 'evet', en: 'yes', s: 4 },
+  { tr: 'hayır', en: 'no', s: 4 }, { tr: 'çay', en: 'tea', s: 4 }, { tr: 'ekmek', en: 'bread', s: 4 },
+];
+// this week, Monday first; today is Thursday 12 November
+const WEEK = [['M', 'Monday', 'done'], ['T', 'Tuesday', 'done'], ['W', 'Wednesday', ''], ['T', 'Thursday', 'today'], ['F', 'Friday', ''], ['S', 'Saturday', ''], ['S', 'Sunday', '']];
+const STRENGTH = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+
+/* ---------- helpers ---------- */
+const plain = (s) => s.replace(/\|/g, '');
+const marked = (s) => s.replace(/\|([^\s?.,'’]+)/g, '<span class="sfx">$1</span>');
+const pct = (n) => Math.round((n / TOTAL) * 100);
+const state = () => document.documentElement.dataset.state;
+const weak = () => state() === 'empty' ? [] : WORDS.filter((w) => w.s < 4);
+function speak(text) {
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(plain(text)); u.lang = 'tr-TR'; u.rate = .9;
+  speechSynthesis.speak(u);
+}
+
+/* ---------- render: today ---------- */
+function renderWeek() {
+  const n = WEEK.filter((d) => d[2] === 'done').length;
+  $('week').setAttribute('aria-label', `This week: ${n} days with a lesson${WEEK[3][2] === 'today' ? ', today not yet' : ', including today'}`);
+  $('week').innerHTML = WEEK.map(([l, , st]) => `<div class="day ${st}" aria-hidden="true">${l}<b>${st === 'done' ? '<i class="ph ph-check" style="font-size:16px"></i>' : ''}</b></div>`).join('');
+}
+function renderCard() {
+  const u = Math.floor(done / PER_UNIT), l = done % PER_UNIT + 1, L = lessonAt(done), n = L.items.length, a = saved[done] || 0;
+  $('card').classList.toggle('no-photo', u !== PHOTO_UNIT);
+  $('card-unit').textContent = `Unit ${u + 1}: ${UNITS[u][1]}, Lesson ${l} of ${PER_UNIT}`;
+  $('card-tr').innerHTML = marked(L.tr); $('card-en').textContent = L.en;
+  $('card-audio').setAttribute('aria-label', `Play ${plain(L.tr)}`);
+  $('card-scope').textContent = `5 min, ${L.words ? L.words + ' new words, ' : 'review, '}${a} of ${n} exercises`;
+  $('start').textContent = a ? 'Continue lesson' : 'Start lesson';
+  $('err-h').textContent = `Lesson ${l} did not download`;
+  $('off-msg').textContent = `Offline. Lesson ${l} is downloaded, so you can do it now. Results sync when you are back online.`;
+}
+function segFill(i) { return Math.max(0, Math.min(1, (done - i * PER_UNIT) / PER_UNIT)); }
+function renderCourse() {
+  const u = Math.min(Math.floor(done / PER_UNIT), UNITS.length - 1);
+  $('bar').innerHTML = UNITS.map((_, i) => `<span class="seg"><i style="width:${segFill(i) * 100}%"></i></span>`).join('');
+  MK.roll($('pct'), pct(done) + '%');
+  $('course-meta').textContent = `Unit ${u + 1} of ${UNITS.length}, ${UNITS[u][1]}. ${done} of ${TOTAL} lessons.`;
+  $('course-btn').setAttribute('aria-label', `A1 course, ${pct(done)}% done, ${done} of ${TOTAL} lessons. Open course.`);
+  $('course-sum').textContent = `A1, ${done} of ${TOTAL} lessons, ${pct(done)}%`;
+  $('units').innerHTML = UNITS.map(([tr, en], i) => {
+    const d = Math.round(segFill(i) * PER_UNIT), cur = i === u && d < PER_UNIT;
+    const st = d === PER_UNIT ? `<i class="ph-fill ph-check-circle"></i>${d} of ${PER_UNIT}` : d || cur ? `${d} of ${PER_UNIT}` : 'Not started';
+    return `<li class="${cur ? 'cur' : ''}"><div><div class="w-tr" lang="tr">${i + 1}. ${tr}</div><div class="w-en">${en}</div></div><span class="st num">${st}</span></li>`;
+  }).join('');
+}
+const wordRow = (w) => `<li><div><div class="w-tr" lang="tr">${marked(w.tr)}</div><div class="w-en">${w.en}</div></div>
+  <div class="meter" role="img" aria-label="Strength ${w.s} of 4, ${STRENGTH[w.s]}">${STRENGTH[w.s]}<span>${[1, 2, 3, 4].map((k) => `<i class="${k <= w.s ? 'on' : ''}"></i>`).join('')}</span></div></li>`;
+const EMPTY = '<li class="empty" style="display:block;border:0"><i class="ph ph-cards"></i>No weak words right now. Words you miss in lessons show up here.</li>';
+function renderWords() {
+  const list = weak(), n = list.length, label = n ? `Practise ${n}` : 'Practise';
+  for (const [ul, cnt, btn] of [['weak-list', 'weak-n', 'practise'], ['weak-list2', 'weak-n2', 'practise2']]) {
+    $(ul).innerHTML = n ? list.map(wordRow).join('') : EMPTY;
+    $(cnt).textContent = n;
+    $(btn).textContent = label; $(btn).disabled = !n;
+    $(btn).setAttribute('aria-label', n ? `Practise ${n} weak words` : 'Practise, no weak words');
+  }
+  $('strong-list').innerHTML = WORDS.filter((w) => w.s >= 4).map(wordRow).join('');
+}
+function renderAll() { renderWeek(); renderCard(); renderCourse(); renderWords(); }
+
+/* ---------- states by hash ---------- */
+const STATES = ['loading', 'empty', 'error', 'offline'];
+const sync = () => { const s = location.hash.slice(1); document.documentElement.dataset.state = STATES.includes(s) ? s : 'content'; renderWords(); };
+addEventListener('hashchange', sync);
+$('retry').onclick = () => { history.replaceState(null, '', location.pathname + location.search); sync(); $('start').focus({ preventScroll: true }); };
+
+/* ---------- tabs ---------- */
+document.querySelectorAll('[data-tab]').forEach((b) => b.onclick = () => showTab(b.dataset.tab));
+function showTab(t) {
+  document.querySelectorAll('[data-tab]').forEach((b) => {
+    const on = b.dataset.tab === t, i = b.querySelector('i');
+    on ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current');
+    i.className = i.className.replace(/ph-fill|ph(?=\s)/, on ? 'ph-fill' : 'ph');
+  });
+  ['today', 'words', 'course'].forEach((v) => $('v-' + v).hidden = v !== t);
+}
+$('course-btn').onclick = () => showTab('course');
+
+/* ---------- lesson and practice runner ---------- */
+let S = null; // session
+function openSession(mode) {
+  const lessonMode = mode === 'lesson';
+  if (lessonMode) {
+    const L = lessonAt(done);
+    S = { mode, key: done, items: L.items, i: saved[done] || 0, right: 0, opener: $('start') };
+  } else {
+    const list = weak(); if (!list.length) return;
+    const all = WORDS.map((w) => w.en);
+    // three choices: the word's meaning and the next two meanings in the list, rotated so the answer moves
+    const items = list.map((w, k) => { const o = [w.en, all[(WORDS.indexOf(w) + 1) % all.length], all[(WORDS.indexOf(w) + 5) % all.length]];
+      const r = k % 3; const opts = [...o.slice(3 - r), ...o.slice(0, 3 - r)]; return [w.tr, opts, opts.indexOf(w.en), `${plain(w.tr)} = ${w.en}.`, w]; });
+    S = { mode, items, i: 0, right: 0, opener: document.activeElement?.id === 'practise2' ? $('practise2') : $('practise') };
+  }
+  const photo = lessonMode && Math.floor(done / PER_UNIT) === PHOTO_UNIT;
+  const src = $('card-img');
+  if (photo && src) src.style.viewTransitionName = 'photo';
+  MK.morph(() => {
+    if (src) src.style.viewTransitionName = '';
+    $('lv').classList.toggle('no-photo', !photo);
+    if (photo && $('lv-img')) $('lv-img').style.viewTransitionName = 'photo';
+    $('lv').hidden = false; renderItem();
+  }).then(() => { if ($('lv-img')) $('lv-img').style.viewTransitionName = ''; });
+}
+function renderItem() {
+  const n = S.items.length, [tr, opts] = S.items[S.i];
+  $('fb').hidden = true;
+  $('lv-fill').style.transform = `scaleX(${S.i / n})`;
+  $('lv-count').textContent = `${S.i + 1} of ${n}`;
+  $('lv-body').innerHTML = `<h2 id="lv-h" tabindex="-1">${S.mode === 'lesson' ? 'Exercise' : 'Practice'} ${S.i + 1} of ${n}. What does this mean?</h2>
+    <div class="phrase"><p class="tr" lang="tr">${marked(tr)}</p><button class="audio" id="lv-audio" aria-label="Play ${plain(tr)}"><i class="ph ph-speaker-high ph-ico"></i></button></div>
+    <div class="opts">${opts.map((o, k) => `<button class="opt" data-k="${k}"><span>${o}</span><i class="ph" aria-hidden="true"></i></button>`).join('')}</div>`;
+  $('lv-audio').onclick = () => speak(tr);
+  $('lv-body').querySelectorAll('.opt').forEach((b) => b.onclick = () => answer(b));
+  $('lv-h').focus({ preventScroll: true });
+}
+function answer(btn) {
+  const [tr, opts, a, why, w] = S.items[S.i], k = +btn.dataset.k, ok = k === a;
+  const all = [...$('lv-body').querySelectorAll('.opt')];
+  all.forEach((b) => b.disabled = true);
+  S.answered = (S.answered || 0) + 1; if (ok) S.right++;
+  if (w && ok) w.s = Math.min(4, w.s + 1);             // practice: a right answer strengthens the word, a miss does not punish
+  if (S.mode === 'lesson') saved[S.key] = S.i + 1;      // answered exercises are kept even if the learner exits now
+  btn.classList.add(ok ? 'right' : 'wrong');
+  btn.querySelector('i').className = ok ? 'ph-fill ph-check-circle' : 'ph-fill ph-x-circle';
+  if (!ok) { all[a].classList.add('right'); all[a].querySelector('i').className = 'ph-fill ph-check-circle'; }
+  MK.haptic(ok ? 'success' : 'error');
+  // signature: the chosen answer tile travels into the feedback sheet, which gives the reason
+  const first = btn.getBoundingClientRect(), clone = btn.cloneNode(true);
+  clone.removeAttribute('data-k'); clone.disabled = true;
+  $('fb-tile').replaceChildren(clone);
+  $('fb').className = 'fb ' + (ok ? 'ok' : 'no'); $('fb').hidden = false;
+  $('fb-h').innerHTML = ok ? '<i class="ph-fill ph-check-circle"></i>Correct' : '<i class="ph-fill ph-x-circle"></i>Not quite';
+  $('fb-ans').textContent = ok ? `${plain(tr)} = ${opts[a]}` : `Answer: ${opts[a]}`;
+  $('fb-why').textContent = why;
+  $('fb-audio').onclick = () => speak(tr);
+  btn.classList.add('gone');
+  const last = clone.getBoundingClientRect(), e = MK.ease.spatial;
+  if (MK.reduced()) clone.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: MK.out });
+  else clone.animate([{ transform: `translate(${first.left - last.left}px, ${first.top - last.top}px)` }, { transform: 'none' }], { duration: e.ms, easing: e.easing });
+  $('fb').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160, easing: MK.out });
+  $('lv-fill').style.transform = `scaleX(${(S.i + 1) / S.items.length})`;
+  $('fb-go').focus({ preventScroll: true });
+}
+$('fb-go').onclick = () => { S.i++; S.i < S.items.length ? renderItem() : summary(); };
+function summary() {
+  const n = S.items.length;
+  $('fb').hidden = true; $('lv-count').textContent = `${n} of ${n}`;
+  if (S.mode === 'lesson') {
+    const l = S.key % PER_UNIT + 1;
+    $('lv-body').innerHTML = `<h2 id="lv-h" tabindex="-1">Lesson ${l} complete</h2><div class="sum"><h3>${S.right} of ${n} right</h3>
+      <p>Lesson ${l} of ${PER_UNIT} in ${UNITS[Math.floor(S.key / PER_UNIT)][1]} is done. ${S.key + 1} of ${TOTAL} lessons in A1.</p></div><div class="grow"></div>
+      <button class="primary" id="lv-done">Back to Today</button>`;
+  } else {
+    const strong = S.items.filter((it) => it[4].s >= 4).length;
+    $('lv-body').innerHTML = `<h2 id="lv-h" tabindex="-1">Practice complete</h2><div class="sum"><h3>${S.right} of ${n} right</h3>
+      <p>${strong ? `${strong} ${strong === 1 ? 'word is' : 'words are'} strong now and left the weak list.` : 'Each right answer made a word stronger.'}</p></div><div class="grow"></div>
+      <button class="primary" id="lv-done">Done</button>`;
+  }
+  $('lv-done').onclick = () => closeSession(true);
+  $('lv-h').focus({ preventScroll: true });
+  MK.haptic('success');
+}
+function closeSession(finished) {
+  if (!S) return;
+  const s = S, prev = done, photo = s.mode === 'lesson' && !$('lv').classList.contains('no-photo');
+  if (s.mode === 'lesson' && finished) {
+    const l = s.key % PER_UNIT + 1;
+    done = s.key + 1; delete saved[s.key];
+    WEEK[3][2] = 'done';
+    $('receipt').textContent = `Today: Lesson ${l} done, ${s.right} of ${s.items.length} right.`;
+  }
+  if (s.mode === 'practice') $('p-receipt').textContent = `Practised ${s.answered || 0} of ${s.items.length} words, ${s.right} right.`;
+  if (photo && $('lv-img')) $('lv-img').style.viewTransitionName = 'photo';
+  S = null;
+  MK.morph(() => {
+    if ($('lv-img')) $('lv-img').style.viewTransitionName = '';
+    $('lv').hidden = true;
+    renderAll();
+    if (photo && $('card-img') && !$('card').classList.contains('no-photo')) $('card-img').style.viewTransitionName = 'photo';
+  }).then(() => {
+    if ($('card-img')) $('card-img').style.viewTransitionName = '';
+    s.opener.focus({ preventScroll: true });
+    if (done !== prev) settle(prev);
+  });
+}
+// the peak's end: the course bar fills once to the real count, today's day checks, the next lesson rises out of the card
+function settle(prev) {
+  const e = MK.ease.spatial, f = MK.ease.fast, red = MK.reduced();
+  [...$('bar').children].forEach((seg, i) => {
+    const before = Math.max(0, Math.min(1, (prev - i * PER_UNIT) / PER_UNIT)), now = segFill(i);
+    if (now === before || !now) return;
+    const fill = seg.firstChild;
+    red ? fill.animate([{ opacity: .3 }, { opacity: 1 }], { duration: 200, easing: MK.out })
+        : fill.animate([{ transform: `scaleX(${before / now})` }, { transform: 'scaleX(1)' }], { duration: e.ms, easing: e.easing });
+  });
+  const today = $('week').children[3].querySelector('b');
+  red ? today.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200 }) : today.animate([{ transform: 'scale(.6)' }, { transform: 'scale(1)' }], { duration: f.ms, easing: f.easing });
+  const body = $('card').querySelector('.body');
+  red ? body.animate([{ opacity: .3 }, { opacity: 1 }], { duration: 200, easing: MK.out })
+      : body.animate([{ transform: 'translateY(14px)', opacity: .4 }, { transform: 'none', opacity: 1 }], { duration: e.ms, easing: e.easing });
+}
+$('start').onclick = () => openSession('lesson');
+$('practise').onclick = $('practise2').onclick = (ev) => { ev.currentTarget.focus({ preventScroll: true }); openSession('practice'); };
+$('card-audio').onclick = () => speak(lessonAt(done).tr);
+$('lv-close').onclick = () => closeSession(false);
+addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape' || $('lv').hidden || !S) return;
+  if (!$('fb').hidden) $('fb-go').click(); else closeSession(false); // top layer first: the feedback sheet, then the lesson
+});
+
+renderAll(); sync();
+
+/* ---------- self-check: figures reconcile, figures are tabular ---------- */
+(() => {
+  const check = (c, m) => { if (!c) console.error('self-check: ' + m); };
+  check(pct(15) === 21 && pct(16) === 22, 'percent of course');
+  check(LESSONS[15].items.length === 8 && LESSONS[16].items.length === 6, 'exercise counts');
+  check(LESSONS[15].items.every(([, o, a]) => o.length === 3 && a >= 0 && a < 3), 'answer index');
+  check(weak().length === 7 || state() === 'empty', 'weak count');
+  document.fonts.ready.then(() => {
+    const m = (t) => { const s = document.createElement('span'); s.className = 'num'; s.style.cssText = 'position:absolute;visibility:hidden;font:600 17px "Public Sans";font-variant-numeric:tabular-nums'; s.textContent = t; document.body.append(s); const w = s.getBoundingClientRect().width; s.remove(); return w; };
+    check(Math.abs(m('0000') - m('1111')) < .5, 'tabular figures in Public Sans');
+    check(document.fonts.check('600 17px "Public Sans"', 'ğşıİ'), 'Turkish glyphs in Public Sans');
+  });
+})();
+</script>
+</body>
+</html>

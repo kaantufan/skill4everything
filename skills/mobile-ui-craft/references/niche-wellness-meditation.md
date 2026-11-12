@@ -46,6 +46,16 @@ Streak guilt and "you broke your streak" pushes; cancel-maze billing; a free tie
 - **Finch** — a gentle pet companion that makes self-care feel kind, per a design critique. Do not copy how paid limits restrict care.
 - **Calm** — recognised by Google Play in 2025 for its XR headset app. Borrow its sense of space. Do not copy the billing and cancellation friction users report.
 
+## Details leading apps get right
+
+- A night palette: near-black, a warm accent, low brightness. A light theme at 11 pm reads as glare. Calm's own writing says dimmer warm tones are less likely to interfere with melatonin, and that brightness and timing matter more than hue.
+- The whole bedtime job fits on one screen with no scroll: a countdown to lights out, one big start button, sound tiles with a selected or Off state, last night's log and "I'm going to sleep". Stacking more features overwhelms people trying to relax.
+- The session itself is calm and finger-sized: a big countdown ring ("Breathe out 6"), elapsed and total time, a large pause, End and a sound toggle.
+- Times use one format throughout, with AM or PM or 24 hour consistently, and a sparkline carries day labels.
+- A timeline shows "Now" and lights-out without the markers overlapping.
+- An alarm line gives context ("06:45, in 7 h 40 min").
+- The primary button has high contrast without a blue-white blast, and secondary grey text stays readable.
+
 ## What users complain about here
 
 Cancellation friction and confusing billing; unexpected annual renewals; free content shrinking as the product matures, so users feel they can barely try it before the paywall. These come from review-analysis sources, so describe them as patterns, not exact rates.

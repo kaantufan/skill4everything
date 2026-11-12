@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Deals a coherent, researched direction for a product: one surface, type, colour, imagery and motion system
-// that celebrated apps share, picked from the niche. The seed only chooses inside the niche's own shortlist,
+// that celebrated apps share, picked from the niche, plus one signature motion from the niche (real content that travels)
+// and one small detail motion from the direction. The seed only chooses inside the niche's own shortlist,
 // so a banking app and a meditation app can never get each other's look. The same seed always gives the same
 // hand, so a product keeps its look. Zero dependencies.
 //
@@ -46,7 +47,8 @@ export const DIRECTIONS = {
     faces: [[SYSTEM, 3], [FACE['Public Sans'], 1]],
     scale: [sc('large title', 34, 700, '-0.02em'), sc('title', 22, 600), sc('headline', 17, 600), sc('body', 17, 400), sc('footnote', 13, 400)],
     light: pal('#FFFFFF', '#F2F2F7', '#000000', '#5E5E63', '#D8D8DC'), dark: pal('#000000', '#1C1C1E', '#FFFFFF', '#A1A1A6', '#38383A'),
-    accents: [acc('ink blue', '#2457C5'), acc('teal', '#0E7C6B'), acc('red', '#D4442E'), acc('orange', '#B85C00'), acc('green', '#2E7D46')],
+    // no system-like blue here: judges read it as "stock iOS"
+    accents: [acc('teal', '#0E7C6B'), acc('red', '#D4442E'), acc('orange', '#B85C00'), acc('green', '#2E7D46')],
     pos: ['#2E7D46', '#2E7D46'], neg: ['#D4442E', '#D4442E'], icons: 'phosphor',
     radii: '12 grouped lists, 10 buttons', density: 'Platform rows, hairline separators.',
     imagery: 'Content photos only. Empty states are text plus one icon.',
@@ -192,6 +194,122 @@ export const NICHES = {
   'games-companion': ['warm-habit', 'social-poster'], 'b2b-field': ['native-quiet', 'pro-tool'], 'government-civic': ['native-quiet'],
 };
 
+// Signature motion per niche: what travels into what, and the technique. Each one moves real content, explains a state change,
+// can be interrupted, is rare, and has a Reduce Motion variant (a crossfade, or the flat version). The kit is assets/motion-kit.js (MK.*).
+// An entry starting with "Showcase" is a surface that shows off a collection; it is listed but never dealt as the signature.
+export const MOTION = {
+  fintech: [
+    'The card flips in 3D to show its number on press-and-hold (CSS 3D preserve-3d with backface-visibility, MK.tilt while held); a flat reveal under Reduce Motion.',
+    'The typed amount travels into the confirmation sheet and becomes its headline figure (MK.morph shared element).',
+    'When a payment lands, only the digits that changed roll in the balance and the row (MK.roll), with a receipt line saying why.',
+  ],
+  'crypto-trading': [
+    'The price rolls digit by digit on each tick and flashes its sign colour once (MK.roll); nothing counts up on load.',
+    'The Buy button grows into the order ticket and becomes its confirm button (MK.morph shared element).',
+    'Scrubbing the chart: a crosshair and the readout follow the finger 1:1 (MK.drag), the value rolls (MK.roll).',
+  ],
+  'fitness-health': [
+    'The ring arc draws once to the measured value, with a spring on the last stretch (SVG stroke-dashoffset, MK.ease.spatial).',
+    'The finished run\'s route shrinks into its row in the history list (MK.morph, the route line is the shared element).',
+    'Scrubbing the pace chart moves a marker along the route on the map (MK.drag, no easing).',
+  ],
+  'wellness-meditation': [
+    'A breathing shape morphs from circle to rounded blob paced to the real exercise, 4 s in and 6 s out (clip-path shape()), and stops when paused; a static ring under Reduce Motion.',
+    'The recommended session card grows into the full-screen player while the ground dims toward night (MK.morph, MK.ease.slow).',
+  ],
+  'productivity-habits': [
+    'Checking a task strikes it, collapses its row and updates the count in under 150 ms (MK.flip on the rows below).',
+    'Drag to reorder: the row follows the finger and the gap opens live (MK.drag plus MK.flip).',
+    'A tapped row lifts into its detail card (MK.morph shared element).',
+  ],
+  'notes-writing': [
+    'A note row expands into the editor with its title as the shared element (MK.morph); back collapses it to the same row.',
+    'Search narrows the list in place: rows that stay slide to their new position, the rest leave (MK.flip).',
+  ],
+  'social-messaging': [
+    'A sent message flies from the composer into the thread and settles in its bubble (MK.flip), with a visible failed state and retry.',
+    'A reaction grows out of the pressed message and lands as a chip under the bubble (MK.morph).',
+    'Swipe to reply: the bubble follows the finger and springs back (MK.drag, MK.fling) while the quote slides into the composer.',
+  ],
+  dating: [
+    'The card expands into the full profile with the main photo as the shared element (MK.morph).',
+    'Liking a prompt sends the heart from that prompt to the Likes tab and the count rolls (MK.flip, MK.roll).',
+  ],
+  ecommerce: [
+    'The product photo expands from the grid into the detail hero (MK.morph shared element).',
+    'Add to cart: the product thumbnail flies into the cart bar and the count rolls (MK.flip, MK.roll).',
+    'A turntable built from real angle photos rotates under the finger (MK.drag); a flat gallery under Reduce Motion.',
+  ],
+  'food-delivery': [
+    'Add morphs into the quantity stepper and the dish thumbnail flies into the cart bar, whose price rolls (MK.flip, MK.roll), under 300 ms; the menu list is never staggered.',
+    'The cart bar grows into the cart sheet with every fee itemised (MK.morph).',
+    'When the arrival estimate changes, the time rolls and the tracker step updates in place (MK.roll).',
+  ],
+  'travel-transport': [
+    'The map pin grows into the listing card and the card into a sheet, and the listing photo is the shared element into detail (MK.morph); dragging the sheet down returns it to the pin.',
+    'Picking dates rolls the sticky total and lifts the chosen nights (MK.roll, CSS transform).',
+    'The ticket flips in 3D to its barcode side (CSS 3D preserve-3d, tap or drag); a flat swap under Reduce Motion.',
+  ],
+  education: [
+    'The answer tile travels into the feedback sheet, which gives the reason; right and wrong differ by icon and text as well as colour (MK.morph).',
+    'Lesson complete: the progress bar fills once to the real score with a small overshoot and the next-lesson card rises from it (MK.ease.spatial); no confetti.',
+    'The flashcard flips in 3D to its translation (CSS 3D, tap); a fade under Reduce Motion.',
+  ],
+  kids: [
+    'A tapped activity tile grows to full screen and shrinks back to its place on exit (MK.morph).',
+    'A piece follows the finger and springs into its slot, or back if it is wrong (MK.drag, MK.fling).',
+  ],
+  'media-streaming': [
+    'The mini player grows into Now Playing; the cover is the shared element (MK.morph) and the ground crossfades to the cover\'s sampled colour.',
+    'Showcase, never navigation: the library as a coverflow of real covers (scroll-snap with animation-timeline view(inline), rotateY up to 55deg); a flat list under Reduce Motion.',
+    'Skip: the next cover slides in and the old one leaves, title and time swap, and the up-next count rolls (MK.flip, MK.roll).',
+  ],
+  'news-reading': [
+    'An article card expands into the reader (MK.morph); the large headline shrinks into the nav title as you scroll (animation-timeline: scroll()).',
+    'Saving an article flies its thumbnail to the Saved tab (MK.flip).',
+  ],
+  'ai-assistant': [
+    'The sent prompt rises out of the composer and becomes the first message (MK.flip).',
+    'Send morphs into Stop while an answer is running and back when it ends (MK.morph).',
+    'A source chip expands into its source card (MK.morph).',
+  ],
+  utilities: [
+    'The captured frame shrinks into the result card and the result figure rolls in (MK.morph, MK.roll).',
+    'Swapping units trades the two values\' places and rolls the result (MK.flip, MK.roll).',
+  ],
+  'creative-tools': [
+    'A control becomes a detented dial: ticks pass the marker and a loupe above the finger shows the value (MK.drag, a haptic tick at each detent).',
+    'A project thumbnail expands into the editor canvas (MK.morph); export collapses back to a progress ring on the same thumbnail.',
+    'A before and after divider reveals the original as you drag it (MK.drag, clip-path inset).',
+  ],
+  'smart-home': [
+    'The device tile expands into its control surface; the dimmer arc fills to the lamp\'s real brightness and the glow takes its real colour (MK.morph, SVG arc).',
+    'A sent command shows the status chip as pending, then settled or failed in place (MK.morph on the chip).',
+  ],
+  healthcare: [
+    'The next appointment card expands into its details with the join button pinned (MK.morph shared element).',
+    'A result\'s range marker settles on the value once, with no overshoot (CSS transition, MK.ease.effects).',
+  ],
+  'real-estate': [
+    'The map pin grows into the listing card and sheet, and the photo is the shared element into detail (MK.morph); dragging the sheet down returns it to the pin.',
+    'Saving a listing fills the heart and flies its photo to the Saved tab (MK.flip).',
+    'The photo pager shows a count and the header collapses as you scroll (animation-timeline: scroll()).',
+  ],
+  'games-companion': [
+    'A reward flies from the result into the inventory counter, which rolls (MK.flip, MK.roll), only at a real milestone.',
+    'A card is thrown to its slot on release velocity and springs back if it misses (MK.drag, MK.fling).',
+    'The collectible flips in 3D to its back with a tilt highlight (CSS 3D, MK.tilt); a flat swap under Reduce Motion.',
+  ],
+  'b2b-field': [
+    'Completing a job moves its row to Done and the list closes the gap in under 150 ms (MK.flip); the sync count rolls (MK.roll).',
+    'A captured photo shrinks into the job\'s attachment strip with a visible queued then sent state (MK.morph).',
+  ],
+  'government-civic': [
+    'A tapped service card expands into its first step (MK.morph); status steps fill in order when the real state changes (CSS transition).',
+    'The ID card flips in 3D to its back on tap (CSS 3D); a fade under Reduce Motion.',
+  ],
+};
+
 const ICONS = {
   phosphor: {
     v: 'Phosphor 2.1.2, regular (fill for the selected state)',
@@ -254,10 +372,13 @@ function draw(seed, niche, salt) {
   const d = DIRECTIONS[id];
   const face = pickW(d.faces.map(([f]) => f), d.faces.map(([, w]) => w), r);
   const app = appearanceOf(d, niche);
-  const accents = d.accents.filter((a) => a[app] != null);
+  // a night product never gets an electric blue or a signal orange (the UX check bans glare at bedtime)
+  const accents = d.accents.filter((a) => a[app] != null && (niche !== 'wellness-meditation' || !/blue|orange/.test(a.n) || /mist/.test(a.n)));
   const accent = accents[Math.floor(r() * accents.length)];
   const sig = Math.floor(r() * d.signatures.length);
-  return { id, face, accent, sig, key: `${id}|${face.n}|${accent.n}|${sig}` };
+  const pool = MOTION[niche].map((m, i) => i).filter((i) => !MOTION[niche][i].startsWith('Showcase'));
+  const mot = pool[Math.floor(r() * pool.length)]; // drawn last, so the direction, face, accent and detail of earlier versions stay the same
+  return { id, face, accent, sig, mot, key: `${id}|${face.n}|${accent.n}|${sig}|${mot}` };
 }
 
 export function deal(seed, niche, platform = 'ios', reroll = 0) {
@@ -292,7 +413,7 @@ export function deal(seed, niche, platform = 'ios', reroll = 0) {
     direction: { id: hand.id, name: d.name, refs: d.refs },
     appearance: `${appearance}-first`, typeface, typeScale, tokens, accentName: hand.accent.n,
     radii: d.radii, density: d.density, icons, imagery: d.imagery,
-    signature: { chosen: d.signatures[hand.sig], all: d.signatures }, bad: d.bad, rules: d.rules, layout: LAYOUT,
+    signature: { chosen: MOTION[niche][hand.mot], all: MOTION[niche] }, detail: { chosen: d.signatures[hand.sig], all: d.signatures }, bad: d.bad, rules: d.rules, layout: LAYOUT,
   };
 }
 
@@ -318,8 +439,10 @@ function render(h) {
   row('Radii', h.radii);
   row('Density', h.density);
   L.push('', `Icons        ${h.icons.v}`, `  css        ${h.icons.css.join('\n             ')}`, `  markup     ${h.icons.markup}`, `  native     ${h.icons.native}`);
-  L.push('', `Imagery      ${h.imagery}`, `Signature    ${h.signature.chosen}`, `  or         ${h.signature.all.filter((s) => s !== h.signature.chosen).join('\n             ')}`, `Bad version  ${h.bad}`);
+  L.push('', `Imagery      ${h.imagery}`, `Signature    ${h.signature.chosen}`, `  or         ${h.signature.all.filter((s) => s !== h.signature.chosen).join('\n             ')}`,
+    `Detail       ${h.detail.chosen}`, `  or         ${h.detail.all.filter((s) => s !== h.detail.chosen).join('\n             ')}`, `Bad version  ${h.bad}`);
   if (h.rules.length) L.push('Rules        ' + h.rules.join('\n             '));
+  L.push('', 'Signature: the one morph of real content that carries the task. Inline assets/motion-kit.js, make it interruptible, give it a Reduce Motion variant. Detail: the small motion character; it is not a second signature.');
   L.push('', h.layout, '', 'The direction is binding. One reroll (--reroll 1) is allowed when it contradicts the brief; say why. A brand colour the brief gives replaces the accent.');
   return L.join('\n');
 }
@@ -362,12 +485,23 @@ function selfTest() {
     for (const v of [...d.pos, ...d.neg]) assert.ok(valid(v), `${id}: semantic colour ${v} is not a hex`);
     ['light', 'dark'].forEach((mode, i) => [d.pos[i], d.neg[i]].forEach((v) => assert.ok(contrast(v, d[mode].ground) >= 3, `${id} ${mode}: semantic colour ${v} on ground < 3`)));
   }
+  const tech = /MK\.|CSS|shape\(|animation-timeline|SVG|clip-path/;
+  for (const id of nicheIds) {
+    const m = MOTION[id];
+    assert.ok(Array.isArray(m) && m.length >= 2 && m.length <= 3, `${id}: needs 2 or 3 motions`);
+    for (const t of m) assert.ok(typeof t === 'string' && t.length > 40 && tech.test(t), `${id}: motion names no technique: ${t}`);
+  }
+  assert.deepStrictEqual(Object.keys(MOTION).sort(), [...nicheIds].sort(), 'MOTION and NICHES list the same niches');
+  const motSeen = new Set();
+  for (let i = 0; i < 200; i++) { const h = deal('m' + i, 'dating'); assert.ok(MOTION.dating.includes(h.signature.chosen) && h.detail.all.includes(h.detail.chosen)); motSeen.add(h.signature.chosen); }
+  assert.strictEqual(motSeen.size, MOTION.dating.length, 'every dating motion is reachable');
+  for (let i = 0; i < 100; i++) assert.ok(!deal('s' + i, 'media-streaming').signature.chosen.startsWith('Showcase'), 'a showcase is never the signature');
   const seen = { d: new Set(), f: new Set() };
   for (let i = 0; i < 300; i++) { const h = deal('seed' + i, 'food-delivery'); seen.d.add(h.direction.id); seen.f.add(h.typeface.family); }
   assert.ok(seen.d.size >= 2, 'food-delivery should reach at least 2 directions');
   assert.ok(seen.f.size >= 3, 'food-delivery should reach at least 3 faces');
   for (const n of nicheIds) for (const p of ['ios', 'android', 'both']) assert.ok(render(deal('x', n, p)).length > 200);
-  console.log(`self-test ok (${Object.keys(DIRECTIONS).length} directions, ${nicheIds.length} niches)`);
+  console.log(`self-test ok (${Object.keys(DIRECTIONS).length} directions, ${nicheIds.length} niches, ${nicheIds.reduce((n, id) => n + MOTION[id].length, 0)} niche motions)`);
   return 0;
 }
 

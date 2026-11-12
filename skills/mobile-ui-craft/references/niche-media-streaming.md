@@ -47,6 +47,17 @@ Moving core transport controls without strong evidence (Spotify moved repeat and
 - **Spotify (as a caution)** — a clear case of backlash when familiar Now Playing controls moved, and of an anniversary icon change that was reverted.
 - **Commonly cited: Pocket Casts** — a clear library and queue model with themes. The research marks this as unverified, so treat it as a lead to study.
 
+## Details leading apps get right
+
+- Large artwork is the focal point, and the background tints from it and changes on skip.
+- One unmistakable primary (pause) with generous spacing, and a full-width scrubber with elapsed and remaining time at readable contrast.
+- The queue is reachable one-handed and glanceable: an up-next card with a thumbnail and count, or a labelled "Queue" pill at the bottom right. Spotify moved its queue button there in 2019 and reverted it in 2020, so keep the transport row where users expect it.
+- Shuffle and repeat show on or off, the like state is visible, and badges such as Downloaded or Explicit mean one clear thing.
+- Output device, lyrics, a "Playing from ..." line and a more menu are present.
+- Skip visibly changes the track, the art, the time and the queue count.
+- Long titles wrap cleanly; truncation is for secondary slots only.
+- Icons keep their text labels. Google's Material 3 Expressive research reports that removing text labels reduced usability.
+
 ## What users complain about here
 
 Layout changes that hide frequently used controls, such as a repeat button that moved; a changed app icon that users disliked and which was reverted; surprise upsells. These are documented in tech press coverage rather than review aggregates.

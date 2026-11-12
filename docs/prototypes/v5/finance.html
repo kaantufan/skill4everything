@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="en-US" data-platform="ios" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pano home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.51.0/dist/tabler-icons.min.css"><script>
+  // The dealt appearance is dark; ?theme=light shows the other one. It never follows the viewer's system here.
+  (function(){ var t = new URLSearchParams(location.search).get('theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; })();
+</script>
+<style>
+  /* Device chrome (from phone-frame.html) */
+  :root { --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px; --chrome: #000; }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  /* clip, not hidden: nothing (scrollIntoView included) may scroll the device itself */
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: clip; }
+  body { position: relative; font-family: var(--face); -webkit-font-smoothing: antialiased; background: var(--ground); color: var(--ink); }
+  .statusbar { position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 30; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none; font-family: -apple-system, "SF Pro Text", system-ui, sans-serif; }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  .home-indicator { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 30; width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none; }
+  #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: clip; }
+</style>
+<style>
+  /* PANO TOKENS: austere-dark, Hanken Grotesk, signal blue. Screens below use only these. */
+  :root {
+    --face: "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif;
+    --ground: #0B0B0C; --raised: #161618; --ink: #F4F4F5; --ink-2: #A1A1AA; --line: #27272A;
+    --accent: #4F7DFF; --on-accent: #0B0B0C; --positive: #3DD68C; --negative: #FF6B6B;
+    /* chart neutrals for the split bar, ordered tax > bills > spent, each 3:1+ apart from the panel except the last */
+    --seg-tax: #D4D4D8; --seg-bills: #8E8E96; --seg-spent: #52525B;
+    --t-balance: 500 48px/1 var(--face); --t-title: 600 20px/1.2 var(--face); --t-body: 400 16px/1.35 var(--face);
+    --t-label: 500 13px/1.35 var(--face); --t-amount: 500 17px/1.2 var(--face);
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
+    --r-card: 14px; --r-btn: 12px; --tabbar-h: 50px;
+    --press: transform .12s cubic-bezier(.22,1,.36,1);
+    --sheet-in: 320ms cubic-bezier(.2,.8,.2,1);
+  }
+  [data-theme="light"] {
+    --ground: #FFFFFF; --raised: #F4F4F5; --ink: #0B0B0C; --ink-2: #52525B; --line: #E4E4E7;
+    --accent: #4F7DFF; --on-accent: #0B0B0C; --positive: #15803D; --negative: #DC2626;
+    --seg-tax: #27272A; --seg-bills: #71717A; --seg-spent: #B4B4BB;
+  }
+</style>
+<style>
+  .num, .amt { font-variant-numeric: tabular-nums; }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; transition: var(--press); touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  button:active:not(:disabled) { transform: scale(.97); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button:disabled { cursor: default; opacity: .45; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  h1, h2, h3, p, ul, dl, dd { margin: 0; padding: 0; }
+  ul { list-style: none; }
+
+  /* Header: solid ground so rows never read through it */
+  .top { flex: none; padding: var(--safe-top) var(--s4) 0; background: var(--ground); position: relative; z-index: 5; }
+  .top-in { height: 60px; display: flex; align-items: center; justify-content: space-between; }
+  .brand { font: var(--t-title); color: var(--accent); letter-spacing: 0; }
+  .updated { font: var(--t-label); color: var(--ink-2); margin-top: 2px; }
+  .iconbtn { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 22px; font-size: 24px; color: var(--ink); margin-right: -10px; }
+  .iconbtn[aria-pressed="true"] { color: var(--accent); }
+
+  .scroller { flex: 1; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding: 0 var(--s4) calc(var(--tabbar-h) + var(--safe-bottom) + var(--s5)); }
+  .scroller::-webkit-scrollbar { display: none; }
+  .scroller.locked { overflow: hidden; }
+  .view[hidden] { display: none; }
+
+  /* Banners for error and offline */
+  .banner { display: none; align-items: center; gap: var(--s3); padding: var(--s3) var(--s4); border-radius: var(--r-card); background: var(--raised); font: var(--t-label); color: var(--ink); margin: var(--s1) 0 var(--s3); }
+  .banner i { font-size: 20px; color: var(--ink-2); }
+  .banner p { flex: 1; }
+  .banner .link { min-height: 44px; padding: 0 var(--s2); color: var(--accent); font-weight: 600; }
+  [data-state="error"] .banner.err, [data-state="offline"] .banner.off { display: flex; }
+
+  /* The statement: what came in, what tax holds back, what bills and spending take, ending in safe to spend */
+  .statement { background: var(--raised); border-radius: var(--r-card); overflow: hidden; margin-top: var(--s1); }
+  .split { display: flex; gap: 2px; height: 8px; margin: var(--s4) var(--s4) var(--s2); }
+  .split span { flex: 0 0 0; min-width: 3px; border-radius: 2px; }
+  .split .g-tax { background: var(--seg-tax); } .split .g-bills { background: var(--seg-bills); }
+  .split .g-spent { background: var(--seg-spent); } .split .g-safe { background: var(--accent); }
+  .rows li { display: flex; align-items: center; gap: var(--s3); min-height: 48px; padding: var(--s2) var(--s4); border-top: 1px solid var(--line); }
+  .rows li:first-child { border-top: 0; }
+  .rows .lbl { flex: 1; font: var(--t-body); }
+  .rows .lbl small { display: block; font: var(--t-label); color: var(--ink-2); }
+  .sw { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+  .sw.none { background: transparent; border: 1.5px solid var(--ink-2); }
+  .sw.tax { background: var(--seg-tax); } .sw.bills { background: var(--seg-bills); } .sw.spent { background: var(--seg-spent); }
+  .rows .amt { font: var(--t-amount); text-align: right; white-space: nowrap; }
+
+  /* Brand surface: the line the statement ends on */
+  .safe { display: block; width: 100%; text-align: left; background: var(--accent); color: var(--on-accent); padding: var(--s4) var(--s4) 18px; border-radius: 0; }
+  .safe:active:not(:disabled) { transform: none; filter: brightness(.94); }
+  .safe .row1 { display: flex; justify-content: space-between; align-items: baseline; font: var(--t-label); font-weight: 600; }
+  .safe .fig { display: block; font: var(--t-balance); letter-spacing: -.02em; margin: 10px 0 10px; min-height: 48px; }
+  .safe .fig.neg { color: var(--on-accent); }
+  .safe .per { font: var(--t-body); font-weight: 500; }
+
+  /* A payment that landed and waits for one decision */
+  .landed { margin-top: var(--s4); background: var(--raised); border-radius: var(--r-card); padding: var(--s4); }
+  .l-head { display: flex; justify-content: space-between; align-items: center; font: var(--t-label); color: var(--ink-2); }
+  .tag { font: var(--t-label); font-weight: 600; color: var(--accent); border: 1px solid var(--accent); border-radius: 6px; padding: 1px 6px; }
+  .l-main { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s3); margin-top: var(--s2); }
+  .l-main .who { font: var(--t-body); font-weight: 600; }
+  .l-main .amt { font: var(--t-amount); color: var(--positive); white-space: nowrap; }
+  .preview { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); margin-top: var(--s3); padding-top: var(--s3); border-top: 1px dashed var(--line); }
+  .preview dt { font: var(--t-label); color: var(--ink-2); }
+  .preview dd { font: var(--t-amount); margin-top: 2px; }
+  .l-note { font: var(--t-label); color: var(--ink-2); margin-top: var(--s3); }
+  .acts { display: grid; grid-template-columns: 1.4fr 1fr; gap: var(--s2); margin-top: var(--s3); }
+  .btn { min-height: 48px; border-radius: var(--r-btn); font: var(--t-body); font-weight: 600; padding: 0 var(--s3); }
+  .btn.primary { background: var(--accent); color: var(--on-accent); }
+  .btn.secondary { border: 1px solid var(--line); color: var(--ink); }
+  .receipt { display: flex; align-items: center; gap: var(--s3); }
+  .receipt p { flex: 1; font: var(--t-body); }
+  .receipt p small { display: block; font: var(--t-label); color: var(--ink-2); margin-top: 2px; }
+  .receipt .link { min-height: 44px; min-width: 64px; color: var(--accent); font-weight: 600; font-size: 16px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .receipt { transition: opacity .18s ease-out; }
+    @starting-style { .receipt { opacity: 0; } }
+  }
+
+  /* Sections */
+  .sec { margin-top: var(--s5); }
+  .sec-h { display: flex; justify-content: space-between; align-items: center; min-height: 44px; }
+  .sec-h h2 { font: var(--t-title); font-size: 17px; }
+  .sec-h .link { min-height: 44px; padding: 0 var(--s1); color: var(--accent); font: var(--t-body); font-weight: 500; }
+  .list li { display: flex; align-items: center; gap: var(--s3); min-height: 56px; padding: var(--s2) 0; border-top: 1px solid var(--line); }
+  .list li:first-child { border-top: 0; }
+  .list .ic { width: 36px; height: 36px; border-radius: 10px; background: var(--raised); display: grid; place-items: center; font-size: 20px; color: var(--ink-2); flex: none; }
+  .list .mid { flex: 1; min-width: 0; font: var(--t-body); overflow-wrap: anywhere; }
+  .list .mid small { display: block; font: var(--t-label); color: var(--ink-2); }
+  .list .amt { font: var(--t-amount); white-space: nowrap; text-align: right; }
+  .amt.in { color: var(--positive); }
+  .more { width: 100%; min-height: 48px; border-top: 1px solid var(--line); text-align: left; color: var(--accent); font: var(--t-body); font-weight: 500; }
+
+  .vh { font: 600 28px/1.15 var(--face); margin: var(--s2) 0 var(--s4); }
+  .big { background: var(--raised); border-radius: var(--r-card); padding: var(--s4); }
+  .big .k { font: var(--t-label); color: var(--ink-2); }
+  .big .v { font: var(--t-balance); letter-spacing: -.02em; margin-top: var(--s2); }
+  .facts { margin-top: var(--s3); }
+
+  /* Empty, loading */
+  .empty { background: var(--raised); border-radius: var(--r-card); padding: var(--s5) var(--s4); margin-top: var(--s4); }
+  .empty h2 { font: var(--t-title); font-size: 17px; }
+  .empty p { font: var(--t-body); color: var(--ink-2); margin: var(--s2) 0 var(--s4); }
+  .skel { display: none; }
+  .skel div { background: var(--raised); border-radius: var(--r-card); }
+  [data-state="loading"] .skel { display: block; }
+  [data-state="loading"] .real { display: none; }
+
+  /* Tab bar: opaque, above the home indicator */
+  .tabbar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; display: grid; grid-template-columns: repeat(4, 1fr); height: calc(var(--tabbar-h) + var(--safe-bottom)); padding-bottom: var(--safe-bottom); background: var(--ground); border-top: 1px solid var(--line); }
+  .tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: 500 11px/1.2 var(--face); color: var(--ink-2); min-height: 48px; }
+  .tab i { font-size: 24px; }
+  .tab[aria-current="page"] { color: var(--accent); font-weight: 600; }
+  .tab:active { transform: none; }
+
+  /* Breakdown sheet */
+  .scrim { position: absolute; inset: 0; z-index: 20; background: rgb(0 0 0 / .55); opacity: 0; pointer-events: none; transition: opacity var(--sheet-in); }
+  .scrim.on { opacity: 1; pointer-events: auto; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; top: 72px; z-index: 21; background: var(--raised); border-radius: var(--r-card) var(--r-card) 0 0; display: flex; flex-direction: column; transform: translateY(105%); transition: transform var(--sheet-in); visibility: hidden; }
+  .sheet.on { transform: none; visibility: visible; }
+  .grab { flex: none; padding: var(--s2) var(--s4) 0; touch-action: none; }
+  .handle { width: 36px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto var(--s2); }
+  .sh-top { display: flex; align-items: center; justify-content: space-between; }
+  .sh-top h2 { font: var(--t-title); }
+  .sh-body { flex: 1; overflow-y: auto; padding: 0 var(--s4) calc(var(--safe-bottom) + var(--s5)); scrollbar-width: none; }
+  .sh-body h3 { font: var(--t-label); color: var(--ink-2); font-weight: 600; margin: var(--s5) 0 var(--s1); }
+  .sh-body .list li { min-height: 48px; }
+  .sh-body .sub { font-weight: 600; }
+  .total { display: flex; justify-content: space-between; align-items: baseline; margin-top: var(--s5); padding: var(--s4); border-radius: var(--r-card); background: var(--accent); color: var(--on-accent); }
+  .total b { font: var(--t-title); }
+  .total .amt { font: 500 28px/1 var(--face); }
+  .total-per { font: var(--t-label); color: var(--ink-2); margin-top: var(--s2); }
+  @media (prefers-reduced-motion: reduce) { *, ::before, ::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+</style>
+</head>
+<body>
+  <div class="statusbar">
+    <span id="clock">10:08</span>
+    <svg viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen">
+    <header class="top">
+      <div class="top-in">
+        <div>
+          <div class="brand">Pano</div>
+          <div class="updated" id="updated">Updated 9:14</div>
+        </div>
+        <button class="iconbtn" id="hideBtn" aria-pressed="false" aria-label="Hide amounts"><i class="ti ti-eye" aria-hidden="true"></i></button>
+      </div>
+    </header>
+
+    <div class="scroller" id="scroller">
+      <div class="banner err" role="status"><i class="ti ti-cloud-off" aria-hidden="true"></i><p>Couldn't refresh from your bank. Figures are from 9:14.</p><button class="link" id="retry">Retry</button></div>
+      <div class="banner off" role="status"><i class="ti ti-wifi-off" aria-hidden="true"></i><p>Offline. Figures as of 9:14.</p></div>
+
+      <!-- HOME -->
+      <section class="view" data-view="home" aria-labelledby="h-home">
+        <h1 class="sr" id="h-home" tabindex="-1">Home</h1>
+        <div class="skel" aria-hidden="true"><div style="height:360px;margin-top:4px"></div><div style="height:210px;margin-top:16px"></div></div>
+        <div class="real">
+          <section class="statement" aria-label="November so far">
+            <div class="split" id="split" role="img"><span class="g-tax"></span><span class="g-bills"></span><span class="g-spent"></span><span class="g-safe"></span></div>
+            <ul class="rows">
+              <li><span class="sw none" aria-hidden="true"></span><span class="lbl">Came in, November</span><span class="amt" id="f-in"></span></li>
+              <li><span class="sw tax" aria-hidden="true"></span><span class="lbl">Set aside for tax<small id="f-rate">28% of taxable income</small></span><span class="amt" id="f-tax"></span></li>
+              <li><span class="sw bills" aria-hidden="true"></span><span class="lbl">Bills due by Nov 30</span><span class="amt" id="f-bills"></span></li>
+              <li><span class="sw spent" aria-hidden="true"></span><span class="lbl">Spent so far</span><span class="amt" id="f-spent"></span></li>
+            </ul>
+            <button class="safe" id="safeBtn" aria-haspopup="dialog">
+              <span class="row1"><span>Safe to spend</span><span>See breakdown</span></span>
+              <span class="fig"><span class="num" id="f-safe"></span></span>
+              <span class="per" id="f-per"></span>
+            </button>
+          </section>
+
+          <section class="landed" id="landed" aria-label="Payment to sort"></section>
+
+          <section class="sec" aria-labelledby="h-next">
+            <div class="sec-h"><h2 id="h-next">Next 7 days</h2></div>
+            <ul class="list" id="next7"></ul>
+            <button class="more" id="moreBills"></button>
+          </section>
+
+          <section class="sec" aria-labelledby="h-recent">
+            <div class="sec-h"><h2 id="h-recent">Recent activity</h2><button class="link" data-go="activity">See all</button></div>
+            <ul class="list" id="recent"></ul>
+          </section>
+        </div>
+      </section>
+
+      <!-- ACTIVITY -->
+      <section class="view" data-view="activity" aria-labelledby="h-act" hidden>
+        <h1 class="vh" id="h-act" tabindex="-1">Activity</h1>
+        <div id="actList"></div>
+      </section>
+
+      <!-- TAX -->
+      <section class="view" data-view="tax" aria-labelledby="h-tax" hidden>
+        <h1 class="vh" id="h-tax" tabindex="-1">Tax</h1>
+        <div class="big"><div class="k">Tax pot, since Jan 1</div><div class="v num" id="potFig"></div></div>
+        <ul class="list facts" id="taxFacts"></ul>
+        <section class="sec" aria-labelledby="h-taxnov"><div class="sec-h"><h2 id="h-taxnov">Set aside in November</h2></div><ul class="list" id="taxList"></ul></section>
+      </section>
+
+      <!-- INVOICES -->
+      <section class="view" data-view="invoices" aria-labelledby="h-inv" hidden>
+        <h1 class="vh" id="h-inv" tabindex="-1">Invoices</h1>
+        <ul class="list facts" id="invSum"></ul>
+        <section class="sec" aria-labelledby="h-invall"><div class="sec-h"><h2 id="h-invall">All invoices</h2></div><ul class="list" id="invList"></ul></section>
+      </section>
+    </div>
+
+    <nav class="tabbar" aria-label="Tabs">
+      <button class="tab" data-tab="home" aria-current="page"><i class="ti ti-home" data-icon="home" aria-hidden="true"></i>Home</button>
+      <button class="tab" data-tab="activity"><i class="ti ti-arrows-exchange" data-icon="arrows-exchange" aria-hidden="true"></i>Activity</button>
+      <button class="tab" data-tab="tax"><i class="ti ti-receipt-tax" data-icon="receipt-tax" aria-hidden="true"></i>Tax</button>
+      <button class="tab" data-tab="invoices"><i class="ti ti-file-invoice" data-icon="file-invoice" aria-hidden="true"></i>Invoices</button>
+    </nav>
+
+    <div class="scrim" id="scrim"></div>
+    <section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-title" aria-hidden="true">
+      <div class="grab" id="grab">
+        <div class="handle" aria-hidden="true"></div>
+        <div class="sh-top"><h2 id="sh-title" tabindex="-1">November breakdown</h2><button class="iconbtn" id="closeSheet" aria-label="Close breakdown"><i class="ti ti-x" aria-hidden="true"></i></button></div>
+      </div>
+      <div class="sh-body" id="shBody"></div>
+    </section>
+
+    <div class="sr" aria-live="polite" id="live"></div>
+  </main>
+
+  <div class="home-indicator"></div>
+  <script>document.getElementById('clock').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, '');</script>
+  <script>/* motion-kit.js (mobile-ui-craft 5.0). Zero dependencies. Inline it in one <script> of the prototype; it defines window.MK.
+   Everything that should be filmable runs on WAAPI or view transitions, which scripts/capture.mjs `film:` slows down.
+   requestAnimationFrame is used only for MK.tilt smoothing (pointer-driven, not filmed); never build a filmed move on it.
+   Springs are CSS linear() easings generated at mass 1; the tokens are the Material 3 Expressive stiffness/damping pairs. */
+(() => {
+  const MK = (window.MK = { out: 'cubic-bezier(.2,.8,.2,1)' }); // out: for fades and menus, never for springs
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  MK.reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Spring as a linear() easing: stiffness k, damping ratio zeta (<= 1). ms is the time to settle within 0.2%.
+  MK.spring = (k, zeta, pts = 36) => {
+    const w0 = Math.sqrt(k), wd = w0 * Math.sqrt(Math.max(1e-6, 1 - zeta * zeta));
+    const x = zeta < 1
+      ? (t) => 1 - Math.exp(-zeta * w0 * t) * (Math.cos(wd * t) + (zeta * w0 / wd) * Math.sin(wd * t))
+      : (t) => 1 - Math.exp(-w0 * t) * (1 + w0 * t);
+    let T = 0.02;
+    while (T < 10 && !(Math.abs(1 - x(T)) < 0.002 && Math.abs(1 - x(T + 0.15)) < 0.002)) T += 0.01;
+    const v = Array.from({ length: pts + 1 }, (_, i) => +x((T * i) / pts).toFixed(3));
+    v[pts] = 1;
+    return { easing: `linear(${v.join(', ')})`, ms: Math.round(T * 1000) };
+  };
+  // spatial moves things and may overshoot; effects (opacity, colour) must not overshoot
+  MK.ease = { spatial: MK.spring(380, 0.8), fast: MK.spring(800, 0.6), slow: MK.spring(200, 0.8), effects: MK.spring(1600, 1) };
+
+  // Shared-element and state morphs. Give the two ends the same view-transition-name (unique, set only while morphing).
+  let vtStyle;
+  MK.morph = (update, opts = {}) => {
+    if (!document.startViewTransition || document.visibilityState !== 'visible') return Promise.resolve(update()).then(() => {});
+    if (!vtStyle) {
+      const e = MK.ease.spatial;
+      vtStyle = document.head.appendChild(document.createElement('style'));
+      // under Reduce Motion the named groups jump and only the page crossfades.
+      // The page fades out before the new one fades in: a simultaneous crossfade shows old and new text on top of each other.
+      vtStyle.textContent = `::view-transition-group(*){animation-duration:${e.ms}ms;animation-timing-function:${e.easing}}
+::view-transition-group(root){animation-duration:200ms;animation-timing-function:ease-out}
+::view-transition-old(root){animation:mk-vt-out 90ms ease-out both}::view-transition-new(root){animation:mk-vt-in 150ms 60ms ease-out both}
+@keyframes mk-vt-out{to{opacity:0}}@keyframes mk-vt-in{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){::view-transition-group(*){animation-duration:.01ms}::view-transition-group(root){animation-duration:150ms}}`;
+    }
+    const typed = opts.types && window.ViewTransition && 'types' in ViewTransition.prototype;
+    const vt = typed ? document.startViewTransition({ update, types: opts.types }) : document.startViewTransition(update);
+    vt.ready.catch(() => {}); // a skipped transition rejects ready; the update still ran, so finished is what we return
+    return vt.finished;
+  };
+
+  // Commit the on-screen transform and stop animations, so a grab or a new move starts from where the element is.
+  MK.freeze = (el) => {
+    const t = getComputedStyle(el).transform;
+    el.getAnimations().forEach((a) => a.cancel());
+    el.style.transform = t === 'none' ? '' : t;
+  };
+
+  // FLIP for one element or an array. Uses the translate/scale properties, so it composes with the element's own transform.
+  // Scaling distorts children and radii: flip boxes, or use MK.morph for rich content.
+  MK.flip = (targets, mutate, ease = MK.ease.spatial) => {
+    const els = [].concat(targets), red = MK.reduced();
+    const first = els.map((e) => e.getBoundingClientRect()); // measured while any earlier flip is still in flight
+    els.forEach((e) => e.getAnimations().filter((a) => a.id === 'mk-flip').forEach((a) => a.cancel()));
+    mutate();
+    return Promise.all(els.map((e, i) => {
+      const a = first[i], b = e.getBoundingClientRect();
+      if (!a.width || !b.width) return;
+      const o = { transformOrigin: '0 0' };
+      const kf = red ? [{ opacity: 0 }, { opacity: 1 }]
+        : [{ ...o, translate: `${a.left - b.left}px ${a.top - b.top}px`, scale: `${a.width / b.width} ${a.height / b.height}` }, { ...o, translate: '0 0', scale: '1 1' }];
+      const an = e.animate(kf, red ? { duration: 150, easing: 'ease-out' } : { duration: ease.ms, easing: ease.easing });
+      an.id = 'mk-flip';
+      return an.finished.catch(() => {});
+    })).then(() => {});
+  };
+
+  // Pointer drag with capture. Velocity (px/ms) comes from the last ~80 ms of movement. Returns a disposer.
+  // axis 'x' or 'y' locks the other axis and leaves that scroll direction to the browser.
+  MK.drag = (el, { axis, onStart, onMove, onEnd } = {}) => {
+    el.style.touchAction = axis === 'x' ? 'pan-y' : axis === 'y' ? 'pan-x' : 'none';
+    let id = null, x0 = 0, y0 = 0, pts = [];
+    const d = (e) => ({ dx: axis === 'y' ? 0 : e.clientX - x0, dy: axis === 'x' ? 0 : e.clientY - y0 });
+    const down = (e) => {
+      if (id !== null || (e.pointerType === 'mouse' && e.button)) return;
+      MK.freeze(el);
+      id = e.pointerId; x0 = e.clientX; y0 = e.clientY; pts = [[e.timeStamp, e.clientX, e.clientY]];
+      try { el.setPointerCapture(id); } catch { /* synthetic events have no active pointer */ }
+      onStart?.(e);
+    };
+    const move = (e) => {
+      if (e.pointerId !== id) return;
+      pts.push([e.timeStamp, e.clientX, e.clientY]);
+      onMove?.(d(e).dx, d(e).dy, e);
+    };
+    const up = (e) => {
+      if (e.pointerId !== id) return;
+      id = null;
+      const p0 = pts.find((p) => e.timeStamp - p[0] <= 80) || pts[pts.length - 1], p1 = pts[pts.length - 1], dt = p1[0] - p0[0];
+      const vx = dt > 1 && axis !== 'y' ? (p1[1] - p0[1]) / dt : 0, vy = dt > 1 && axis !== 'x' ? (p1[2] - p0[2]) / dt : 0;
+      onEnd?.({ ...d(e), vx, vy });
+    };
+    const ev = [['pointerdown', down], ['pointermove', move], ['pointerup', up], ['pointercancel', up]];
+    ev.forEach(([n, f]) => el.addEventListener(n, f));
+    return () => ev.forEach(([n, f]) => el.removeEventListener(n, f));
+  };
+
+  // Spring on x, y (px), r (deg), s (scale), seeded with the release velocity v (units per ms). The spring is simulated
+  // into WAAPI keyframes, so the move is a normal Animation: cancel it (or MK.freeze) to grab it mid-flight.
+  MK.fling = (el, { from = {}, to = {}, v = {}, k = 380, zeta = 0.8 } = {}) => {
+    if (MK.reduced()) { k = 1600; zeta = 1; v = {}; } // no overshoot, no carried momentum
+    const base = { x: 0, y: 0, r: 0, s: 1 }, tol = { x: 0.3, y: 0.3, r: 0.05, s: 0.002 };
+    const A = { ...base, ...from }, B = { ...base, ...to }, c = 2 * zeta * Math.sqrt(k), dt = 1 / 240, keys = Object.keys(base);
+    const p = { ...A }, w = Object.fromEntries(keys.map((q) => [q, (v[q] || 0) * 1000]));
+    const css = () => `translate(${p.x}px,${p.y}px) rotate(${p.r}deg) scale(${p.s})`;
+    const frames = [{ transform: css() }];
+    for (let i = 1; i < 720; i++) {
+      keys.forEach((q) => { w[q] += (-k * (p[q] - B[q]) - c * w[q]) * dt; p[q] += w[q] * dt; });
+      if (i % 4) continue;
+      if (keys.every((q) => Math.abs(p[q] - B[q]) < tol[q] && Math.abs(w[q]) < tol[q] * 8)) break;
+      frames.push({ transform: css() });
+    }
+    Object.assign(p, B);
+    const end = css();
+    frames.push({ transform: end });
+    const an = el.animate(frames, { duration: (frames.length * 1000) / 60, easing: 'linear', fill: 'forwards' });
+    an.finished.then(() => { el.style.transform = end; an.cancel(); }, () => {}); // a cancelled fling leaves the transform alone
+    return an;
+  };
+
+  // Perspective tilt that follows the pointer, low-pass smoothed (rAF, see header), spring back on leave.
+  // It owns el.style.transform: tilt an inner element if the outer one is thrown. Sets --mx/--my (0-100%) for a highlight.
+  // Returns a disposer.
+  MK.tilt = (el, { max = 10 } = {}) => {
+    let tx = 0, ty = 0, cx = 0, cy = 0, raf = 0;
+    const pose = () => `perspective(700px) rotateX(${-cy * max}deg) rotateY(${cx * max}deg)`;
+    const step = () => {
+      cx += (tx - cx) * 0.15; cy += (ty - cy) * 0.15;
+      el.style.transform = pose();
+      el.style.setProperty('--mx', `${50 + cx * 50}%`); el.style.setProperty('--my', `${50 + cy * 50}%`);
+      raf = Math.abs(tx - cx) + Math.abs(ty - cy) > 0.002 ? requestAnimationFrame(step) : 0;
+    };
+    const aim = (x, y) => { if (MK.reduced()) return; tx = clamp(x, -1, 1); ty = clamp(y, -1, 1); raf = raf || requestAnimationFrame(step); };
+    const move = (e) => { const r = el.getBoundingClientRect(); aim(((e.clientX - r.left) / r.width) * 2 - 1, ((e.clientY - r.top) / r.height) * 2 - 1); };
+    const leave = () => {
+      cancelAnimationFrame(raf); raf = 0;
+      const e = MK.ease.fast, from = pose(), cx0 = cx, cy0 = cy;
+      tx = ty = cx = cy = 0;
+      el.style.transform = '';
+      el.style.setProperty('--mx', '50%'); el.style.setProperty('--my', '50%');
+      if (!MK.reduced() && Math.abs(cx0) + Math.abs(cy0) > 0.01) el.animate([{ transform: from }, { transform: pose() }], { duration: e.ms, easing: e.easing });
+    };
+    const ev = [['pointermove', move], ['pointerleave', leave], ['pointerup', leave], ['pointercancel', leave]];
+    ev.forEach(([n, f]) => el.addEventListener(n, f));
+    el._mkAim = aim;
+    return () => { leave(); ev.forEach(([n, f]) => el.removeEventListener(n, f)); delete el._mkAim; };
+  };
+  // Gyro tilt for el, started by a tap on button (iOS asks for permission inside a user gesture; needs HTTPS, so file:// gets nothing).
+  MK.tilt.gyro = (button, el, opts) => {
+    const on = (e) => el._mkAim((e.gamma || 0) / 30, ((e.beta || 0) - 45) / 30);
+    const click = async () => {
+      const D = window.DeviceOrientationEvent;
+      if (!D || MK.reduced() || (typeof D.requestPermission === 'function' && (await D.requestPermission()) !== 'granted')) return;
+      if (!el._mkAim) MK.tilt(el, opts);
+      addEventListener('deviceorientation', on);
+    };
+    button.addEventListener('click', click);
+    return () => { button.removeEventListener('click', click); removeEventListener('deviceorientation', on); };
+  };
+
+  // Digit roll for a figure in tabular numerals: only the digits that changed slide. text is the whole formatted string.
+  // A different length rebuilds the figure with a fade. The element gets role=img and aria-label = text.
+  MK.roll = (el, text) => {
+    text = String(text);
+    el.setAttribute('role', 'img'); el.setAttribute('aria-label', text);
+    if (el.dataset.mkText === text) return;
+    const red = MK.reduced(), e = MK.ease.fast;
+    if (el.dataset.mkLen !== String(text.length)) {
+      el.dataset.mkLen = text.length;
+      el.style.cssText += ';display:inline-flex;height:1em;line-height:1;overflow:hidden;font-variant-numeric:tabular-nums';
+      el.innerHTML = [...text].map((ch) => /\d/.test(ch)
+        ? '<span aria-hidden="true" style="display:block;height:1em;overflow:hidden"><span class="mk-col" style="display:flex;flex-direction:column">'
+          + [...'0123456789'].map((n) => `<i style="display:block;height:1em;font-style:normal">${n}</i>`).join('') + '</span></span>'
+        : `<span aria-hidden="true">${ch}</span>`).join('');
+      el.querySelectorAll('.mk-col').forEach((c) => { c.dataset.d = 0; });
+      if (el.dataset.mkText !== undefined) el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: MK.out });
+    }
+    let k = 0;
+    el.querySelectorAll('.mk-col').forEach((col) => {
+      while (!/\d/.test(text[k])) k++;
+      const to = +text[k++], from = +col.dataset.d, at = (n) => `translateY(${-n}em)`;
+      col.style.transform = at(to); col.dataset.d = to;
+      if (from !== to && !red && el.dataset.mkText !== undefined) col.animate([{ transform: at(from) }, { transform: at(to) }], { duration: e.ms, easing: e.easing });
+    });
+    if (red && el.dataset.mkText !== undefined) el.animate([{ opacity: 0.4 }, { opacity: 1 }], { duration: 150, easing: MK.out });
+    el.dataset.mkText = text;
+  };
+
+  // navigator.vibrate patterns. iOS Safari has no vibrate: this is a silent no-op there, so never rely on it alone.
+  const PATTERNS = { selection: 6, light: 10, medium: 20, success: [10, 40, 10], warning: [20, 60, 20], error: [30, 50, 30, 50, 30] };
+  MK.haptic = (kind = 'light') => { try { navigator.vibrate?.(PATTERNS[kind] ?? 10); } catch { /* blocked before a user gesture */ } };
+})();
+</script>
+  <script>
+  (() => {
+    const $ = (s) => document.querySelector(s);
+    const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+    const MINUS = '−';
+    // Sample data in cents. "Today" is Thu Nov 12, 2026; 19 days are left in November counting today.
+    const DAYS_LEFT = 19, RATE = 28, POT_BEFORE_NOV = 781940;
+    const D = {
+      income: [
+        { who: 'Halvorsen Studio', date: 'Nov 3', c: 320000 },
+        { who: 'Brightline Media & Production Partners', date: 'Nov 7', c: 185000 },
+        { who: 'Okafor & Lee', date: 'Nov 10', c: 64000 },
+      ],
+      bills: [
+        { who: 'Coworking desk', date: 'Nov 18', c: 24000, in7: true },
+        { who: 'Phone', date: 'Nov 21', c: 6500 },
+        { who: 'Studio rent', date: 'Nov 30', c: 115000 },
+      ],
+      spent: [
+        { who: 'Food and groceries', c: 38602 }, { who: 'Other', c: 38000 },
+        { who: 'Software', c: 21240 }, { who: 'Transport', c: 14000 },
+      ],
+      landed: { who: 'Marlow Coffee Co.', time: '9:14', c: 120000, status: 'unsorted' }, // unsorted | tax | untaxed
+      activity: [
+        { day: 'Today', who: 'Marlow Coffee Co.', c: 120000, in: true, icon: 'building-store', landed: true },
+        { day: 'Yesterday', who: 'Whole Foods Market', c: 6418, icon: 'shopping-cart', note: 'Food and groceries' },
+        { day: 'Nov 10', who: 'Okafor & Lee', c: 64000, in: true, icon: 'briefcase', note: 'Invoice INV-0044' },
+        { day: 'Nov 9', who: 'Figma', c: 1500, icon: 'device-laptop', note: 'Software' },
+        { day: 'Nov 8', who: 'Lyft', c: 2340, icon: 'car', note: 'Transport' },
+        { day: 'Nov 7', who: 'Brightline Media & Production Partners', c: 185000, in: true, icon: 'briefcase', note: 'Invoice INV-0043' },
+        { day: 'Nov 5', who: 'Adobe', c: 5999, icon: 'device-laptop', note: 'Software' },
+        { day: 'Nov 3', who: 'Halvorsen Studio', c: 320000, in: true, icon: 'briefcase', note: 'Invoice INV-0042' },
+      ],
+      invoices: [
+        { no: 'INV-0047', who: 'Tessaro Architects', st: 'Draft, no due date', c: 98000 },
+        { no: 'INV-0046', who: 'Brightline Media & Production Partners', st: 'Sent, due Dec 1', c: 275000, open: true },
+        { no: 'INV-0045', who: 'Marlow Coffee Co.', st: 'Paid today', c: 120000 },
+        { no: 'INV-0044', who: 'Okafor & Lee', st: 'Paid Nov 10', c: 64000 },
+        { no: 'INV-0043', who: 'Brightline Media & Production Partners', st: 'Paid Nov 7', c: 185000 },
+        { no: 'INV-0042', who: 'Halvorsen Studio', st: 'Paid Nov 3', c: 320000 },
+      ],
+    };
+    const EMPTY = { income: [], bills: [], spent: [], landed: null, activity: [], invoices: [] };
+
+    const sum = (a) => a.reduce((s, x) => s + x.c, 0);
+    const tax = (c) => Math.round(c * RATE / 100);
+    let hidden = false, state = 'content';
+    const data = () => (state === 'empty' ? EMPTY : D);
+
+    function totals(d = data()) {
+      const L = d.landed, lin = L && L.status !== 'unsorted' ? L.c : 0;
+      const came = sum(d.income) + lin;
+      const taxed = d.income.reduce((s, x) => s + tax(x.c), 0) + (L && L.status === 'tax' ? tax(L.c) : 0);
+      const bills = sum(d.bills), spent = sum(d.spent);
+      return { came, taxed, bills, spent, safe: came - taxed - bills - spent };
+    }
+    const fmt = (c, sign) => {
+      if (hidden) return '$••••';
+      const s = usd.format(Math.abs(c) / 100);
+      if (sign === '-' && c) return MINUS + s;
+      if (sign === '+' && c) return '+' + s;
+      return c < 0 ? MINUS + s : s;
+    };
+    const say = (c, sign) => (hidden ? 'hidden' : (sign === '-' && c ? 'minus ' : sign === '+' && c ? 'plus ' : c < 0 ? 'minus ' : '') + usd.format(Math.abs(c) / 100));
+    const A = (c, sign, cls = '') => `<span class="amt ${cls}" aria-label="${say(c, sign)}">${fmt(c, sign)}</span>`;
+
+    // Figures that change in place roll only the digits that changed (MK.roll); masked figures are plain text.
+    function fig(el, c, sign) {
+      if (hidden) { delete el.dataset.mkText; delete el.dataset.mkLen; el.removeAttribute('style'); el.textContent = fmt(c, sign); el.setAttribute('aria-label', 'hidden'); return; }
+      MK.roll(el, fmt(c, sign)); el.setAttribute('aria-label', say(c, sign));
+    }
+
+    function renderHome() {
+      const d = data(), t = totals(d);
+      fig($('#f-in'), t.came); fig($('#f-tax'), t.taxed, '-'); fig($('#f-bills'), t.bills, '-'); fig($('#f-spent'), t.spent, '-'); fig($('#f-safe'), t.safe);
+      const per = Math.round(t.safe / 100 / DAYS_LEFT);
+      $('#f-per').textContent = hidden ? 'Amounts hidden' : t.came === 0 ? 'Nothing has come in yet this month' : t.safe < 0 ? 'Over by this much through Nov 30' : `About $${per} a day through Nov 30`;
+      // split bar: shares of what came in; a safe share below zero shows as nothing
+      const segs = [...$('#split').children], parts = [t.taxed, t.bills, t.spent, Math.max(0, t.safe)];
+      MK.flip(segs, () => segs.forEach((s, i) => { s.style.flexGrow = parts[i]; s.style.display = parts[i] ? '' : 'none'; }));
+      $('#split').setAttribute('aria-label', hidden ? 'Split of November income, amounts hidden' : `Of ${fmt(t.came)}: tax ${fmt(t.taxed)}, bills ${fmt(t.bills)}, spent ${fmt(t.spent)}, safe to spend ${fmt(t.safe)}`);
+      renderLanded(); renderLists();
+    }
+
+    function renderLanded() {
+      const el = $('#landed'), L = data().landed, off = state === 'offline';
+      if (state === 'empty') {
+        el.innerHTML = `<div class="empty" style="margin:0;padding:4px 0 0;background:none"><h2>No payments yet this month</h2><p>When a client pays, it shows up here and Pano sets aside ${RATE}% for tax once you confirm.</p><button class="btn secondary" data-go="invoices" style="width:100%">Go to invoices</button></div>`;
+        return;
+      }
+      if (L.status === 'unsorted') {
+        const tx = tax(L.c);
+        el.innerHTML = `<div class="l-head"><span>Landed today, ${L.time}</span><span class="tag">Not sorted</span></div>
+          <div class="l-main"><span class="who">${L.who}</span>${A(L.c, '+', 'in')}</div>
+          <dl class="preview"><div><dt>To tax, ${RATE}%</dt><dd>${A(tx)}</dd></div><div><dt>Safe to spend</dt><dd>${A(L.c - tx, '+')}</dd></div></dl>
+          <p class="l-note">${off ? 'Sorting needs a connection.' : 'Not in your totals until you choose.'}</p>
+          <div class="acts"><button class="btn primary" id="setAside" ${off ? 'disabled' : ''}>Set aside ${hidden ? 'tax' : fmt(tx)}</button><button class="btn secondary" id="untaxed" ${off ? 'disabled' : ''}>Not taxable</button></div>`;
+      } else {
+        const tx = tax(L.c), isTax = L.status === 'tax';
+        el.innerHTML = `<div class="receipt"><p>${isTax ? `${fmt(tx)} moved to your Tax pot` : `${L.who} marked not taxable`}<small>${isTax ? `${L.who}, ${fmt(L.c)}. Safe to spend is up ${fmt(L.c - tx)}.` : `Safe to spend is up ${fmt(L.c)}.`}</small></p><button class="link" id="undo" ${off ? 'disabled' : ''}>Undo</button></div>`;
+      }
+    }
+
+    const row = (icon, who, note, amtHtml) => `<li>${icon ? `<span class="ic" aria-hidden="true"><i class="ti ti-${icon}"></i></span>` : ''}<span class="mid">${who}${note ? `<small>${note}</small>` : ''}</span>${amtHtml}</li>`;
+    const landedNote = (L) => (L.status === 'unsorted' ? 'Not sorted' : L.status === 'tax' ? `${fmt(tax(L.c))} to Tax pot` : 'Not taxable');
+
+    function renderLists() {
+      const d = data(), L = d.landed;
+      const n7 = d.bills.filter((b) => b.in7), rest = d.bills.length - n7.length;
+      $('#next7').innerHTML = n7.length ? n7.map((b) => row('calendar-event', b.who, b.date, A(b.c, '-'))).join('') : '<li><span class="mid">No bills in the next 7 days</span></li>';
+      $('#moreBills').textContent = rest ? `${rest} more bills by Nov 30` : 'All bills';
+      $('#moreBills').hidden = !d.bills.length;
+      const actRow = (a) => row(a.icon, a.who, a.landed ? `${a.day}, ${landedNote(L)}` : `${a.day}${a.note ? ', ' + a.note : ''}`, A(a.c, a.in ? '+' : '-', a.in ? 'in' : ''));
+      $('#recent').innerHTML = d.activity.length ? d.activity.slice(0, 5).map(actRow).join('') : '<li><span class="mid">No activity in November yet</span></li>';
+      // Activity tab, grouped by day
+      const days = [...new Set(d.activity.map((a) => a.day))];
+      $('#actList').innerHTML = days.length ? days.map((day) => `<h2 class="sec-h" style="font:var(--t-label);color:var(--ink-2);min-height:32px">${day}</h2><ul class="list">${d.activity.filter((a) => a.day === day).map((a) => row(a.icon, a.who, a.landed ? landedNote(L) : a.note, A(a.c, a.in ? '+' : '-', a.in ? 'in' : ''))).join('')}</ul>`).join('')
+        : '<div class="empty"><h2>No activity yet</h2><p>Payments and spending from your connected account show up here.</p></div>';
+      // Tax tab
+      const t = totals(d);
+      fig($('#potFig'), (state === 'empty' ? 0 : POT_BEFORE_NOV) + t.taxed);
+      $('#taxFacts').innerHTML = row('', 'Your set-aside rate', 'Chosen at setup', `<span class="amt">${RATE}%</span>`) + row('', 'Next estimated payment', 'Q4, due Jan 15, 2027', '');
+      const taxRows = d.income.map((x) => row('', x.who, x.date, A(tax(x.c)))).concat(L && L.status === 'tax' ? [row('', L.who, 'Today', A(tax(L.c)))] : []);
+      $('#taxList').innerHTML = taxRows.length ? taxRows.join('') + row('', '<b>Total</b>', '', A(t.taxed)) : '<li><span class="mid">Nothing set aside yet this month</span></li>';
+      // Invoices tab
+      const open = d.invoices.filter((i) => i.open);
+      $('#invSum').innerHTML = row('', 'Outstanding', `${open.length} sent`, A(sum(open))) + row('', 'Overdue', 'None', A(0));
+      $('#invList').innerHTML = d.invoices.length ? d.invoices.map((i) => row('file-invoice', i.who, `${i.no}, ${i.st}`, A(i.c))).join('') : '<li><span class="mid">No invoices yet</span></li>';
+    }
+
+    function renderSheet() {
+      const d = data(), t = totals(d), L = d.landed;
+      const sec = (title, rows, sub, sign) => `<h3>${title}</h3><ul class="list">${rows.join('')}${row('', '<span class="sub">Subtotal</span>', '', A(sub, sign))}</ul>`;
+      const inc = d.income.map((x) => row('', x.who, x.date, A(x.c))).concat(L && L.status !== 'unsorted' ? [row('', L.who, 'Today', A(L.c))] : []);
+      const txr = d.income.map((x) => row('', x.who, `${RATE}% of ${fmt(x.c)}`, A(tax(x.c), '-'))).concat(L && L.status === 'tax' ? [row('', L.who, `${RATE}% of ${fmt(L.c)}`, A(tax(L.c), '-'))] : L && L.status === 'untaxed' ? [row('', L.who, 'Marked not taxable', A(0))] : []);
+      $('#shBody').innerHTML = (L && L.status === 'unsorted' ? `<p class="l-note" style="margin-top:8px">${L.who}, ${fmt(L.c)} from today, is not counted until you sort it.</p>` : '')
+        + sec('Came in', inc, t.came)
+        + sec('Set aside for tax', txr, t.taxed, '-')
+        + sec('Bills due by Nov 30', d.bills.map((b) => row('', b.who, b.date, A(b.c, '-'))), t.bills, '-')
+        + sec('Spent so far', d.spent.map((s) => row('', s.who, '', A(s.c, '-'))), t.spent, '-')
+        + `<div class="total"><b>Safe to spend</b>${A(t.safe)}</div><p class="total-per">${hidden ? 'Amounts hidden' : `About $${Math.round(t.safe / 100 / DAYS_LEFT)} a day for the ${DAYS_LEFT} days left in November`}</p>`;
+    }
+
+    // Self-check: the statement reconciles before and after each choice.
+    (function check() {
+      const c = (st) => totals({ ...D, landed: { ...D.landed, status: st } });
+      const ok = c('unsorted').safe === 152338 && c('tax').safe === 238738 && c('untaxed').safe === 272338
+        && c('tax').taxed === 192920 && c('unsorted').came === 569000 && sum(D.spent) === 111842;
+      if (!ok) console.error('Pano totals do not reconcile');
+    })();
+
+    // Sorting the payment: the figures roll, the card becomes the receipt with Undo.
+    function sort(status) {
+      if (state === 'offline') return;
+      D.landed.status = status;
+      renderHome(); if (sheetOpen) renderSheet();
+      const L = D.landed, t = totals();
+      if (status === 'unsorted') { $('#live').textContent = `Undone. Safe to spend is ${fmt(t.safe)}.`; $('#setAside')?.focus({ preventScroll: true }); }
+      else { MK.haptic('success'); $('#live').textContent = (status === 'tax' ? `${fmt(tax(L.c))} moved to your Tax pot. ` : 'Marked not taxable. ') + `Safe to spend is ${fmt(t.safe)}.`; $('#undo')?.focus({ preventScroll: true }); }
+    }
+    document.addEventListener('click', (e) => {
+      const b = e.target.closest('button'); if (!b) return;
+      if (b.id === 'setAside') sort('tax');
+      else if (b.id === 'untaxed') sort('untaxed');
+      else if (b.id === 'undo') sort('unsorted');
+      else if (b.dataset.go) go(b.dataset.go);
+    });
+
+    // Tabs: no slide, each keeps its own scroll position
+    const scroller = $('#scroller'), pos = {};
+    let tab = 'home';
+    function go(name) {
+      if (name === tab) return;
+      pos[tab] = scroller.scrollTop; tab = name;
+      document.querySelectorAll('.view').forEach((v) => (v.hidden = v.dataset.view !== name));
+      document.querySelectorAll('.tab').forEach((t) => {
+        t.dataset.tab === name ? t.setAttribute('aria-current', 'page') : t.removeAttribute('aria-current');
+      });
+      scroller.scrollTop = pos[name] || 0;
+      document.querySelector(`[data-view="${name}"] h1`).focus({ preventScroll: true });
+    }
+    document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => go(t.dataset.tab)));
+
+    // Breakdown sheet: from the safe-to-spend line; close button, scrim, Escape and drag down all close it
+    const sheet = $('#sheet'), scrim = $('#scrim');
+    let sheetOpen = false, opener = null;
+    function openSheet(from) {
+      opener = from; sheetOpen = true; renderSheet();
+      sheet.style.transform = ''; sheet.classList.add('on'); scrim.classList.add('on'); sheet.setAttribute('aria-hidden', 'false');
+      scroller.classList.add('locked'); $('#shBody').scrollTop = 0;
+      $('#sh-title').focus({ preventScroll: true });
+    }
+    function closeSheet() {
+      if (!sheetOpen) return;
+      sheetOpen = false; sheet.style.transform = ''; sheet.classList.remove('on'); scrim.classList.remove('on'); sheet.setAttribute('aria-hidden', 'true');
+      scroller.classList.remove('locked'); opener?.focus({ preventScroll: true });
+    }
+    $('#safeBtn').addEventListener('click', (e) => openSheet(e.currentTarget));
+    $('#moreBills').addEventListener('click', (e) => openSheet(e.currentTarget));
+    $('#closeSheet').addEventListener('click', closeSheet);
+    scrim.addEventListener('click', closeSheet);
+    addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
+    MK.drag($('#grab'), { axis: 'y',
+      onStart: (e) => { if (e.target.closest('button')) return; sheet.style.transition = 'none'; },
+      onMove: (_, dy) => { sheet.style.transform = `translateY(${dy < 0 ? dy * 0.2 : dy}px)`; },
+      onEnd: ({ dy, vy }) => { sheet.style.transition = ''; if (dy > 140 || vy > 0.6) closeSheet(); else sheet.style.transform = ''; } });
+
+    // Hide amounts masks every figure on every tab
+    $('#hideBtn').addEventListener('click', (e) => {
+      hidden = !hidden; const b = e.currentTarget;
+      b.setAttribute('aria-pressed', hidden); b.setAttribute('aria-label', hidden ? 'Show amounts' : 'Hide amounts');
+      b.querySelector('i').className = `ti ti-${hidden ? 'eye-off' : 'eye'}`;
+      renderHome(); if (sheetOpen) renderSheet();
+    });
+
+    // States by hash: #loading, #empty, #error, #offline
+    const states = ['loading', 'empty', 'error', 'offline'];
+    function sync() {
+      const s = location.hash.slice(1); state = states.includes(s) ? s : 'content';
+      document.documentElement.dataset.state = state;
+      $('#updated').textContent = state === 'loading' ? 'Updating' : state === 'offline' ? 'Offline, as of 9:14' : 'Updated 9:14';
+      renderHome();
+    }
+    $('#retry').addEventListener('click', () => { location.hash = ''; });
+    addEventListener('hashchange', sync);
+
+    document.fonts.ready.then(() => {
+      // tabular-figure check for the dealt face
+      const m = (s) => { const e = document.createElement('span'); e.className = 'num'; e.style.cssText = 'position:absolute;font:var(--t-balance)'; e.textContent = s; document.body.appendChild(e); const w = e.getBoundingClientRect().width; e.remove(); return w; };
+      if (Math.abs(m('0000') - m('1111')) > 0.5) console.error('Hanken Grotesk figures are not tabular here');
+    });
+    sync();
+  })();
+  </script>
+</body>
+</html>

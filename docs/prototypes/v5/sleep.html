@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="en-GB" data-platform="ios" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dusk, Tonight</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css">
+<style>
+  :root {
+    --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif;
+    --chrome: #000;
+  }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--ground); color: var(--ink); }
+  .statusbar {
+    position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 10;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .statusbar svg { height: 12px; fill: var(--chrome); }
+  .home-indicator {
+    position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 10;
+    width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none;
+  }
+  #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+</style>
+<style>
+  /* PRODUCT TOKENS: Dusk, dealt direction data-canvas (dark-first) */
+  :root {
+    --ground: #F7F9FC; --raised: #FFFFFF; --ink: #0B1220; --ink-2: #4A5568; --line: #DCE3EC;
+    --accent: #18A06E; --on-accent: #0B1220; --negative: #E5484D;
+    --night: #050A16; --night-ink: #F2F5FA; --night-ink-2: #A3AFC6; --night-line: #1C2848;
+    --r: 16px; --gut: 16px;
+    --t-hero: 600 72px/1 var(--font); --t-title: 600 22px/1.2 var(--font);
+    --t-body: 400 16px/1.4 var(--font); --t-label: 500 13px/1.3 var(--font);
+    --tabbar: calc(49px + var(--safe-bottom));
+  }
+  [data-theme="dark"] {
+    --ground: #0B1630; --raised: #15213F; --ink: #F2F5FA; --ink-2: #A3AFC6; --line: #26345A;
+    --accent: #19A974; --on-accent: #0B1220; --negative: #E5484D;
+  }
+</style>
+<style>
+  h1, h2, p { margin: 0; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .label { font: var(--t-label); color: var(--ink-2); }
+  .num { font-variant-numeric: tabular-nums; }
+
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+    touch-action: manipulation; transition: transform .12s cubic-bezier(.22,1,.36,1); -webkit-tap-highlight-color: transparent; }
+  button:active:not(:disabled) { transform: scale(.97); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn { min-height: 44px; border-radius: var(--r); display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    font: 600 16px/1 var(--font); padding: 0 16px; }
+  .btn i { font-size: 20px; }
+  .btn.primary { background: var(--accent); color: var(--on-accent); min-height: 52px; }
+  .btn.secondary { background: var(--raised); color: var(--ink); min-height: 52px; border: 1px solid var(--line); }
+  .btn.ghost { color: var(--ink); padding: 0 12px; }
+  .btn.link { color: var(--accent); padding: 0 12px; }
+
+  /* views */
+  .view { position: absolute; inset: 0; display: flex; flex-direction: column; }
+  .view[hidden] { display: none; }
+  .view::before { content: ""; position: absolute; inset: 0 0 auto 0; height: var(--safe-top); background: var(--ground); z-index: 3; }
+  .scroll { flex: 1; overflow-y: auto; padding: var(--safe-top) var(--gut) calc(var(--tabbar) + 16px); scrollbar-width: none; }
+  .top { height: 44px; display: flex; align-items: center; justify-content: space-between; }
+  .wordmark { font: var(--t-title); color: var(--accent); letter-spacing: -.01em; }
+  .page-title { font: var(--t-title); color: var(--ink); }
+
+  /* hero: the night band */
+  .hero { margin-top: 4px; border-radius: var(--r); padding: 18px 20px; background: color-mix(in oklab, var(--accent) 11%, var(--raised)); }
+  .numeral { font: var(--t-hero); letter-spacing: -.03em; font-variant-numeric: tabular-nums; margin-top: 2px; color: var(--ink); }
+  .sub { font: var(--t-body); color: var(--ink-2); margin-top: 6px; }
+  .chart { margin-top: 12px; position: relative; touch-action: pan-y; }
+  .axis { position: relative; height: 18px; margin: 0 76px 6px 60px; }
+  .axis span { position: absolute; left: var(--x); transform: translateX(-50%); font: var(--t-label); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .rows { position: relative; display: grid; gap: 3px; }
+  .grid { position: absolute; inset: 0 76px 0 60px; pointer-events: none; }
+  .grid i { position: absolute; top: 0; bottom: 0; left: var(--x); width: 1px; background: var(--line); }
+  .r { display: grid; grid-template-columns: 52px 1fr 68px; column-gap: 8px; align-items: center; height: 16px; }
+  .r .d { font: var(--t-label); color: var(--ink-2); }
+  .r .v { font: var(--t-label); color: var(--ink-2); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .r .track { position: relative; height: 8px; }
+  .r .bar { position: absolute; top: 0; bottom: 0; left: var(--a); width: var(--b); border-radius: 4px; background: color-mix(in oklab, var(--ink-2) 55%, transparent); }
+  .r.tonight .d, .r.tonight .v { color: var(--ink); font-weight: 600; }
+  .r.tonight .bar { background: var(--accent); opacity: .55; height: 12px; top: -2px; border-radius: 6px; }
+  .r.tonight.logged .bar { opacity: 1; }
+  .r.on .d, .r.on .v { color: var(--ink); }
+  .readout { font: var(--t-label); color: var(--ink-2); margin-top: 8px; min-height: 17px; font-variant-numeric: tabular-nums; }
+  .chart-msg { display: none; font: var(--t-body); color: var(--ink-2); padding: 8px 0 4px; }
+  .chart-msg .btn { margin-top: 8px; }
+
+  /* breathing */
+  .card { background: var(--raised); border-radius: var(--r); padding: 16px; }
+  .breathe { margin-top: 12px; display: flex; align-items: center; gap: 12px; }
+  .dot { width: 44px; height: 44px; flex: none; border-radius: 50%; background: color-mix(in oklab, var(--accent) 34%, var(--raised)); }
+  .breathe .txt { flex: 1; min-width: 0; }
+  .breathe h2 { font: 600 17px/1.25 var(--font); }
+  .breathe p { font: var(--t-label); color: var(--ink-2); margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+  /* sounds */
+  .sounds { margin-top: 12px; }
+  .sounds .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0; }
+  .sounds .head .btn { margin-right: -12px; font: 500 15px/1 var(--font); color: var(--ink); }
+  .sounds .head .btn i { color: var(--ink-2); }
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .tile { min-height: 68px; border-radius: var(--r); background: var(--raised); border: 2px solid transparent;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 6px 4px;
+    font: var(--t-label); color: var(--ink); text-align: center; }
+  .tile i { font-size: 24px; color: var(--ink-2); }
+  .tile[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in oklab, var(--accent) 14%, var(--raised)); }
+  .tile[aria-pressed="true"] i { color: var(--accent); }
+  .tile:disabled { opacity: .5; cursor: default; }
+  .tile small { font: 500 11px/1.2 var(--font); color: var(--ink-2); display: none; }
+  .note { display: none; font: var(--t-label); color: var(--ink-2); margin-top: 8px; }
+
+  .sleep { margin-top: 12px; }
+  .sleep > .btn { width: 100%; }
+  .receipt { min-height: 52px; display: flex; align-items: center; justify-content: space-between; border-radius: var(--r);
+    border: 1px solid var(--line); padding: 0 4px 0 16px; font: var(--t-body); font-variant-numeric: tabular-nums; }
+  .receipt[hidden], .sleep .btn[hidden] { display: none; }
+
+  /* tab bar */
+  .tabbar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; height: var(--tabbar); padding-bottom: var(--safe-bottom);
+    display: grid; grid-template-columns: repeat(3, 1fr); background: var(--ground); border-top: 1px solid var(--line); }
+  .tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: 500 11px/1.2 var(--font); color: var(--ink-2); }
+  .tab i { font-size: 26px; }
+  .tab[aria-current="page"] { color: var(--accent); }
+
+  /* other tabs */
+  .list { margin-top: 12px; }
+  .li { display: grid; grid-template-columns: 32px 1fr auto; align-items: center; gap: 12px; min-height: 64px; border-bottom: 1px solid var(--line); width: 100%; text-align: left; }
+  .li i { font-size: 24px; color: var(--ink-2); }
+  .li .t { font: var(--t-body); color: var(--ink); }
+  .li .s { font: var(--t-label); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .li .e { font: var(--t-label); color: var(--ink-2); font-variant-numeric: tabular-nums; text-align: right; }
+  button.li[aria-pressed="true"] i, button.li[aria-pressed="true"] .e { color: var(--accent); }
+  .log .li { grid-template-columns: 1fr auto; }
+
+  /* breathing player */
+  .player { position: absolute; inset: 0; z-index: 6; background: var(--night); color: var(--night-ink);
+    display: flex; flex-direction: column; align-items: center; padding: var(--safe-top) var(--gut) calc(var(--safe-bottom) + 16px); }
+  .player[hidden], .lights[hidden] { display: none; }
+  .pl-top { width: 100%; height: 52px; display: flex; align-items: center; justify-content: space-between; }
+  .player .btn.ghost { color: var(--night-ink); margin: 0 -12px; }
+  .player .btn.ghost i { color: var(--night-ink-2); }
+  .player h2 { font: var(--t-title); margin-top: 28px; outline: none; }
+  .player .meta { font: var(--t-label); color: var(--night-ink-2); margin-top: 4px; }
+  .stage { position: relative; width: 280px; height: 280px; margin-top: 32px; }
+  .shape { position: absolute; inset: 0; border-radius: 50%; background: color-mix(in oklab, #19A974 30%, var(--night)); transform: scale(.7); }
+  .cue { view-transition-name: cue; position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+  /* the cue text waits for the shape to land, so no two texts cross mid-morph */
+  ::view-transition-new(cue) { animation: cue-in 200ms 320ms ease-out both; }
+  ::view-transition-old(cue) { animation: cue-out 80ms ease-out both; }
+  @keyframes cue-in { from { opacity: 0; } } @keyframes cue-out { to { opacity: 0; } }
+  .cue .c1 { font: var(--t-body); color: var(--night-ink); }
+  .cue .c2 { font: var(--t-hero); font-variant-numeric: tabular-nums; margin-top: 4px; }
+  .elapsed { font: var(--t-body); color: var(--night-ink-2); margin-top: 28px; font-variant-numeric: tabular-nums; }
+  .pl-actions { margin-top: auto; width: 100%; display: grid; gap: 12px; }
+  .pl-actions .btn { width: 100%; }
+  .pl-actions[hidden] { display: none; }
+  .player .btn.secondary, .lights .btn.secondary { background: transparent; color: var(--night-ink); border-color: var(--night-line); }
+  .player .btn.primary { background: #19A974; }
+  @media (prefers-reduced-motion: reduce) {
+    .shape { background: transparent; border: 2px solid #19A974; transform: none; }
+    * { transition-duration: .01ms !important; }
+  }
+
+  /* lights out */
+  .lights { position: absolute; inset: 0; z-index: 7; background: var(--night); color: var(--night-ink-2);
+    display: flex; flex-direction: column; padding: calc(var(--safe-top) + 72px) 24px calc(var(--safe-bottom) + 16px); }
+  .lights h2 { font: var(--t-label); color: var(--night-ink-2); outline: none; }
+  .lights .numeral { color: var(--night-ink-2); }
+  .lights .sub { color: var(--night-ink-2); }
+  .lights .snd { margin-top: 32px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--night-line); padding-top: 12px; }
+  .lights .snd p { font: var(--t-body); font-variant-numeric: tabular-nums; }
+  .lights .btn.link { color: var(--night-ink-2); text-decoration: underline; text-underline-offset: 3px; }
+  .lo-actions { margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* states by hash */
+  .skel { display: none; }
+  [data-state="loading"] .rows, [data-state="loading"] .axis, [data-state="loading"] .readout, [data-state="loading"] #window, [data-state="loading"] #alarm-line { visibility: hidden; }
+  [data-state="loading"] .skel { display: grid; gap: 4px; position: absolute; inset: 24px 0 0 0; }
+  .skel i { height: 16px; border-radius: 6px; background: color-mix(in oklab, var(--ink-2) 18%, transparent); }
+  [data-state="empty"] .r:not(.tonight), [data-state="empty"] .readout { display: none; }
+  [data-state="empty"] .msg-empty { display: block; }
+  [data-state="error"] .rows, [data-state="error"] .axis, [data-state="error"] .readout { display: none; }
+  [data-state="error"] .msg-error { display: block; }
+  [data-state="offline"] .note { display: block; }
+  [data-state="offline"] .tile[data-snd="fan"] small { display: block; }
+  [data-state="offline"] .tile[data-snd="fan"] i { display: none; }
+</style>
+</head>
+<body>
+  <div class="statusbar">
+    <span id="clock" class="num">23:04</span>
+    <svg class="ios" viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" stroke="currentColor" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
+
+  <main id="screen">
+    <!-- TONIGHT -->
+    <div class="view" id="v-tonight">
+      <div class="scroll" id="scroll-tonight">
+        <header class="top">
+          <h1 class="wordmark">Dusk<span class="sr">, Tonight</span></h1>
+          <span class="label num">Thu 12 Nov</span>
+        </header>
+
+        <section class="hero" aria-labelledby="hero-label">
+          <p class="label" id="hero-label">Sleep window</p>
+          <p class="numeral" id="window">7h 41m</p>
+          <p class="sub num" id="alarm-line">Now to your 06:45 alarm</p>
+          <div class="chart" id="chart">
+            <div class="axis" aria-hidden="true"><span style="--x:20%">00:00</span><span style="--x:50%">03:00</span><span style="--x:80%">06:00</span></div>
+            <div class="rows" id="rows" role="img">
+              <div class="grid" aria-hidden="true"><i style="--x:20%"></i><i style="--x:50%"></i><i style="--x:80%"></i></div>
+            </div>
+            <div class="skel" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <p class="chart-msg msg-empty">Nights you log appear here.</p>
+            <div class="chart-msg msg-error" role="alert">Your sleep log didn't load.<br><button class="btn secondary" id="retry">Try again</button></div>
+          </div>
+          <p class="readout" id="readout" aria-live="polite"></p>
+        </section>
+
+        <section class="card breathe" aria-labelledby="br-h">
+          <div class="dot" id="dot" aria-hidden="true"></div>
+          <div class="txt"><h2 id="br-h">Slow breathing</h2><p id="br-sub">4 s in, 6 s out, 5 min</p></div>
+          <button class="btn primary" id="start" aria-label="Start 5 minutes of slow breathing">Start 5 min</button>
+        </section>
+
+        <section class="sounds" aria-labelledby="snd-h">
+          <div class="head">
+            <h2 class="label" id="snd-h">Sound</h2>
+            <button class="btn ghost" id="timer" aria-label="Sound timer"><i class="ph ph-timer" aria-hidden="true"></i><span id="timer-t" class="num">Timer 45 min</span></button>
+          </div>
+          <div class="tiles" id="tiles" role="group" aria-labelledby="snd-h"></div>
+          <p class="note">Offline. Rain and Brown noise are downloaded.</p>
+        </section>
+
+        <div class="sleep">
+          <button class="btn secondary" id="sleep">I'm going to sleep</button>
+          <div class="receipt" id="receipt" hidden><span id="receipt-t">Lights out 23:06 logged</span><button class="btn link" id="undo">Undo</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOUNDS -->
+    <div class="view" id="v-sounds" hidden>
+      <div class="scroll">
+        <header class="top"><h1 class="page-title" tabindex="-1">Sounds</h1></header>
+        <div class="list" id="sound-list"></div>
+      </div>
+    </div>
+
+    <!-- LOG -->
+    <div class="view" id="v-log" hidden>
+      <div class="scroll">
+        <header class="top"><h1 class="page-title" tabindex="-1">Sleep log</h1></header>
+        <div class="list log" id="log-list"></div>
+      </div>
+    </div>
+
+    <nav class="tabbar" aria-label="Main">
+      <button class="tab" data-tab="tonight" aria-current="page"><i class="ph-fill ph-moon-stars" aria-hidden="true"></i><span>Tonight</span></button>
+      <button class="tab" data-tab="sounds"><i class="ph ph-speaker-high" aria-hidden="true"></i><span>Sounds</span></button>
+      <button class="tab" data-tab="log"><i class="ph ph-chart-bar-horizontal" aria-hidden="true"></i><span>Log</span></button>
+    </nav>
+
+    <!-- BREATHING PLAYER -->
+    <section class="player" id="player" hidden role="dialog" aria-modal="true" aria-labelledby="pl-h">
+      <div class="pl-top">
+        <button class="btn ghost" id="end">End</button>
+        <button class="btn ghost" id="pl-sound" aria-pressed="false"><i class="ph ph-speaker-slash" aria-hidden="true"></i><span>Sound off</span></button>
+      </div>
+      <h2 id="pl-h" tabindex="-1">Slow breathing</h2>
+      <p class="meta">4 s in, 6 s out</p>
+      <div class="stage">
+        <div class="shape" id="shape"></div>
+        <div class="cue" aria-live="off"><span class="c1" id="cue">Breathe in</span><span class="c2" id="count">4</span></div>
+      </div>
+      <p class="elapsed" id="elapsed">0:00 of 5:00</p>
+      <div class="pl-actions" id="pl-run">
+        <button class="btn secondary" id="pause"><i class="ph-fill ph-pause" aria-hidden="true"></i><span>Pause</span></button>
+      </div>
+      <div class="pl-actions" id="pl-done" hidden>
+        <button class="btn primary" id="done-sleep">I'm going to sleep</button>
+        <button class="btn secondary" id="done-back">Back to Tonight</button>
+      </div>
+    </section>
+
+    <!-- LIGHTS OUT -->
+    <section class="lights" id="lights" hidden role="dialog" aria-modal="true" aria-labelledby="lo-h">
+      <h2 id="lo-h" tabindex="-1">Lights out</h2>
+      <p class="numeral" id="lo-time">23:06</p>
+      <p class="sub num" id="lo-alarm">Alarm 06:45, in 7h 39m</p>
+      <div class="snd" id="lo-snd"><p id="lo-snd-t">Rain, stops 23:51</p><button class="btn link" id="lo-stop">Stop sound</button></div>
+      <div class="lo-actions">
+        <button class="btn secondary" id="lo-undo">Undo</button>
+        <button class="btn secondary" id="lo-done">Done</button>
+      </div>
+    </section>
+  </main>
+
+  <div class="home-indicator"></div>
+  <div class="sr" id="live" aria-live="polite"></div>
+
+<script>
+/* motion-kit.js (mobile-ui-craft 5.0), inlined */
+(() => {
+  const MK = (window.MK = { out: 'cubic-bezier(.2,.8,.2,1)' });
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  MK.reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  MK.spring = (k, zeta, pts = 36) => {
+    const w0 = Math.sqrt(k), wd = w0 * Math.sqrt(Math.max(1e-6, 1 - zeta * zeta));
+    const x = zeta < 1
+      ? (t) => 1 - Math.exp(-zeta * w0 * t) * (Math.cos(wd * t) + (zeta * w0 / wd) * Math.sin(wd * t))
+      : (t) => 1 - Math.exp(-w0 * t) * (1 + w0 * t);
+    let T = 0.02;
+    while (T < 10 && !(Math.abs(1 - x(T)) < 0.002 && Math.abs(1 - x(T + 0.15)) < 0.002)) T += 0.01;
+    const v = Array.from({ length: pts + 1 }, (_, i) => +x((T * i) / pts).toFixed(3));
+    v[pts] = 1;
+    return { easing: `linear(${v.join(', ')})`, ms: Math.round(T * 1000) };
+  };
+  MK.ease = { spatial: MK.spring(380, 0.8), fast: MK.spring(800, 0.6), slow: MK.spring(200, 0.8), effects: MK.spring(1600, 1) };
+  let vtStyle;
+  MK.morph = (update, opts = {}) => {
+    if (!document.startViewTransition || document.visibilityState !== 'visible') return Promise.resolve(update()).then(() => {});
+    if (!vtStyle) {
+      const e = opts.ease || MK.ease.spatial;
+      vtStyle = document.head.appendChild(document.createElement('style'));
+      vtStyle.textContent = `::view-transition-group(*){animation-duration:${e.ms}ms;animation-timing-function:${e.easing}}
+::view-transition-group(root){animation-duration:200ms;animation-timing-function:ease-out}
+::view-transition-old(root){animation:mk-vt-out 90ms ease-out both}::view-transition-new(root){animation:mk-vt-in 150ms 60ms ease-out both}
+@keyframes mk-vt-out{to{opacity:0}}@keyframes mk-vt-in{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){::view-transition-group(*){animation-duration:.01ms}::view-transition-group(root){animation-duration:150ms}}`;
+    }
+    const vt = document.startViewTransition(update);
+    vt.ready.catch(() => {});
+    return vt.finished;
+  };
+  MK.haptic = (kind = 'light') => { try { navigator.vibrate?.({ selection: 6, light: 10, success: [10, 40, 10] }[kind] ?? 10); } catch { /* blocked before a gesture */ } };
+})();
+</script>
+<script>
+const $ = (id) => document.getElementById(id);
+const html = document.documentElement;
+if (new URLSearchParams(location.search).get('theme') === 'light') html.dataset.theme = 'light';
+
+/* clock: the scenario is 23:04 on Thu 12 Nov; real time runs from there */
+const BASE = new Date(2026, 10, 12, 23, 4, 0).getTime(), T0 = Date.now();
+const ALARM = new Date(2026, 10, 13, 6, 45, 0).getTime();
+const now = () => BASE + (Date.now() - T0);
+const hm = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+const fmt = (t) => hm.format(t);
+const dur = (min) => `${Math.floor(min / 60)}h ${String(Math.round(min % 60)).padStart(2, '0')}m`;
+const minsTo = (a, b) => Math.floor((b - a) / 60000);
+
+/* sample log: realistic, uneven, one night missing */
+const NIGHTS = [
+  { d: 'Wed', full: 'Wed 11 Nov', s: '23:52', e: '06:41' },
+  { d: 'Tue', full: 'Tue 10 Nov', s: '23:18', e: '06:44' },
+  { d: 'Mon', full: 'Mon 9 Nov', s: '00:41', e: '06:45' },
+  { d: 'Sun', full: 'Sun 8 Nov', s: null },
+  { d: 'Sat', full: 'Sat 7 Nov', s: '23:35', e: '07:58' },
+  { d: 'Fri', full: 'Fri 6 Nov', s: '23:10', e: '06:40' },
+];
+const axis = (hhmm) => { const [h, m] = hhmm.split(':').map(Number); return (h >= 12 ? h - 22 : h + 2) * 60 + m; }; // minutes after 22:00
+const SPAN = 600; // 22:00 to 08:00
+NIGHTS.forEach((n) => { if (n.s) n.min = axis(n.e) - axis(n.s); });
+console.assert(NIGHTS[0].min === 409 && NIGHTS[4].min === 503, 'night durations');
+
+const SOUNDS = [
+  { id: 'off', name: 'Off', icon: 'speaker-slash' },
+  { id: 'rain', name: 'Rain', icon: 'cloud-rain' },
+  { id: 'brown', name: 'Brown noise', icon: 'waveform' },
+  { id: 'fan', name: 'Fan', icon: 'fan' },
+];
+const TIMERS = [15, 30, 45, 60];
+const S = { sound: 'off', last: 'rain', timer: 45, soundAt: null, lightsOut: null, breathed: 0 };
+
+/* real sound: synthesised noise, so the tiles do what they say */
+let ac, cur;
+function noise(brown) {
+  const len = ac.sampleRate * 4, b = ac.createBuffer(1, len, ac.sampleRate), d = b.getChannelData(0);
+  let last = 0;
+  for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; d[i] = brown ? (last = (last + 0.02 * w) / 1.02) * 3.5 : w; }
+  return b;
+}
+function play(id, fade = 1.5) {
+  if (cur) { const c = cur, t = ac.currentTime; c.g.gain.cancelScheduledValues(t); c.g.gain.setValueAtTime(c.g.gain.value, t); c.g.gain.linearRampToValueAtTime(0, t + fade); setTimeout(() => c.src.stop(), fade * 1000 + 100); cur = null; }
+  if (id === 'off') return;
+  ac ??= new AudioContext();
+  const src = ac.createBufferSource(); src.buffer = noise(id === 'brown'); src.loop = true;
+  const g = ac.createGain(), f = ac.createBiquadFilter();
+  if (id === 'rain') { f.type = 'bandpass'; f.frequency.value = 2600; f.Q.value = 0.5; }
+  else if (id === 'fan') { f.type = 'lowpass'; f.frequency.value = 450; }
+  else { f.type = 'lowpass'; f.frequency.value = 900; }
+  const vol = { rain: 0.22, brown: 0.5, fan: 0.6 }[id];
+  g.gain.setValueAtTime(0, ac.currentTime); g.gain.linearRampToValueAtTime(vol, ac.currentTime + 2);
+  src.connect(f).connect(g).connect(ac.destination); src.start(); cur = { src, g };
+}
+let timerId;
+function setSound(id) {
+  if (id !== 'off' && html.dataset.state === 'offline' && id === 'fan') return;
+  S.sound = id; if (id !== 'off') S.last = id;
+  S.soundAt = id === 'off' ? null : now();
+  play(id);
+  clearTimeout(timerId);
+  if (id !== 'off') timerId = setTimeout(() => { play('off', 10); S.sound = 'off'; S.soundAt = null; render(); }, S.timer * 60000);
+  MK.haptic('selection'); render();
+  say(id === 'off' ? 'Sound off' : `${name(id)} on, stops ${fmt(S.soundAt + S.timer * 60000)}`);
+}
+const name = (id) => SOUNDS.find((s) => s.id === id).name;
+const say = (t) => { $('live').textContent = t; };
+
+/* chart rows */
+const rows = $('rows');
+function rowHTML(d, a, b, v, cls = '') {
+  return `<div class="r ${cls}"><span class="d">${d}</span><span class="track">${b > 0 ? `<i class="bar" style="--a:${a}%;--b:${b}%"></i>` : ''}</span><span class="v">${v}</span></div>`;
+}
+const pct = (m) => +(Math.max(0, Math.min(SPAN, m)) / SPAN * 100).toFixed(2);
+function tonightSpan() {
+  const from = S.lightsOut ?? now();
+  return { from, min: minsTo(from, ALARM) };
+}
+function drawChart() {
+  const t = tonightSpan(), a = axis(fmt(t.from));
+  let h = rows.querySelector('.grid').outerHTML;
+  h += rowHTML('Tonight', pct(a), pct(t.min), dur(t.min), 'tonight' + (S.lightsOut ? ' logged' : ''));
+  NIGHTS.forEach((n) => { h += n.s ? rowHTML(n.d, pct(axis(n.s)), pct(n.min), dur(n.min)) : rowHTML(n.d, 0, 0, 'Not logged'); });
+  rows.innerHTML = h;
+  rows.setAttribute('aria-label', `Sleep log. Tonight ${dur(t.min)} until the 06:45 alarm. ` +
+    NIGHTS.map((n) => n.s ? `${n.full}, ${n.s} to ${n.e}, ${dur(n.min)}` : `${n.full}, not logged`).join('. '));
+}
+function readout(i) {
+  const t = tonightSpan();
+  if (i === 0) return S.lightsOut ? `Tonight, lights out ${fmt(t.from)} to alarm 06:45` : `Tonight, now ${fmt(t.from)} to alarm 06:45`;
+  const n = NIGHTS[(i ?? 1) - 1];
+  const lead = i == null ? 'Last night' : n.full;
+  return n.s ? `${lead}, ${n.s} to ${n.e}, ${dur(n.min)}` : `${lead}, not logged`;
+}
+let scrub = null;
+function setScrub(e) {
+  const rs = [...rows.querySelectorAll('.r')], y = e.clientY;
+  const i = rs.findIndex((r) => { const b = r.getBoundingClientRect(); return y >= b.top - 2 && y <= b.bottom + 2; });
+  if (i < 0 || i === scrub) return;
+  scrub = i; rs.forEach((r, k) => r.classList.toggle('on', k === i));
+  $('readout').textContent = readout(i); MK.haptic('selection');
+}
+const chart = $('chart');
+chart.addEventListener('pointerdown', (e) => { chart.setPointerCapture?.(e.pointerId); setScrub(e); });
+chart.addEventListener('pointermove', (e) => { if (e.buttons || e.pointerType === 'mouse') setScrub(e); });
+const endScrub = () => { scrub = null; rows.querySelectorAll('.r.on').forEach((r) => r.classList.remove('on')); $('readout').textContent = readout(); };
+chart.addEventListener('pointerleave', endScrub); chart.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') endScrub(); });
+
+/* sound tiles, sound list, log list */
+function drawTime() {
+  const win = dur(tonightSpan().min);
+  $('clock').textContent = fmt(now());
+  $('window').textContent = win;
+  $('alarm-line').textContent = S.lightsOut ? `Lights out ${fmt(S.lightsOut)} to your 06:45 alarm` : 'Now to your 06:45 alarm';
+  if (scrub == null) { drawChart(); $('readout').textContent = readout(); }
+  console.assert(rows.querySelector('.r.tonight .v').textContent === win, 'hero and tonight row agree');
+}
+let lastMin;
+setInterval(() => { const m = fmt(now()); if (m !== lastMin) { lastMin = m; drawTime(); } }, 1000);
+function render() {
+  drawTime();
+  const off = html.dataset.state === 'offline';
+  $('tiles').innerHTML = SOUNDS.map((s) => {
+    const on = S.sound === s.id, dis = off && s.id === 'fan';
+    return `<button class="tile" data-snd="${s.id}" aria-pressed="${on}" ${dis ? 'disabled' : ''}><i class="${on ? 'ph-fill' : 'ph'} ph-${s.icon}" aria-hidden="true"></i><span>${s.name}</span><small>Not downloaded</small></button>`;
+  }).join('');
+  const stops = S.soundAt ? fmt(S.soundAt + S.timer * 60000) : null;
+  $('timer-t').textContent = stops ? `Stops ${stops}` : `Timer ${S.timer} min`;
+  $('timer').setAttribute('aria-label', stops ? `Sound timer ${S.timer} minutes, stops ${stops}. Change` : `Sound timer ${S.timer} minutes. Change`);
+
+  $('sound-list').innerHTML = SOUNDS.map((s) => {
+    const on = S.sound === s.id, dis = off && s.id === 'fan';
+    return `<button class="li" data-snd="${s.id}" aria-pressed="${on}" ${dis ? 'disabled' : ''}><i class="${on ? 'ph-fill' : 'ph'} ph-${s.icon}" aria-hidden="true"></i><span><span class="t">${s.name}</span>${dis ? '<br><span class="s">Not downloaded</span>' : ''}</span><span class="e">${on ? (s.id === 'off' ? 'Selected' : 'Playing') : ''}</span></button>`;
+  }).join('') + `<button class="li" id="timer2"><i class="ph ph-timer" aria-hidden="true"></i><span class="t">Timer</span><span class="e">${S.timer} min${stops ? `, stops ${stops}` : ''}</span></button>`;
+
+  const tl = S.lightsOut ? `<div class="li"><span><span class="t">Thu 12 Nov</span><br><span class="s">Lights out ${fmt(S.lightsOut)}, alarm 06:45</span></span><span class="e">In progress</span></div>` : '';
+  $('log-list').innerHTML = tl + NIGHTS.map((n) => `<div class="li"><span><span class="t">${n.full}</span><br><span class="s">${n.s ? `${n.s} to ${n.e}` : 'Not logged'}</span></span><span class="e">${n.s ? dur(n.min) : ''}</span></div>`).join('');
+
+  $('sleep').hidden = !!S.lightsOut; $('receipt').hidden = !S.lightsOut;
+  if (S.lightsOut) $('receipt-t').textContent = `Lights out ${fmt(S.lightsOut)} logged`;
+  $('br-sub').textContent = S.breathed ? `Breathed ${S.breathed < 60 ? S.breathed + ' s' : Math.floor(S.breathed / 60) + ' min' + (S.breathed % 60 ? ' ' + (S.breathed % 60) + ' s' : '')} tonight` : '4 s in, 6 s out, 5 min';
+  plSound();
+}
+
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-snd]');
+  if (b && !b.disabled) { const box = b.parentElement; setSound(b.dataset.snd); box.querySelector(`[data-snd="${b.dataset.snd}"]`).focus({ preventScroll: true }); }
+  if (e.target.closest('#timer, #timer2')) {
+    S.timer = TIMERS[(TIMERS.indexOf(S.timer) + 1) % TIMERS.length];
+    if (S.sound !== 'off') { S.soundAt = now(); clearTimeout(timerId); timerId = setTimeout(() => { play('off', 10); S.sound = 'off'; S.soundAt = null; render(); }, S.timer * 60000); }
+    render(); say(`Timer ${S.timer} minutes`);
+  }
+});
+
+/* tabs */
+document.querySelectorAll('.tab').forEach((tab) => tab.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach((t) => {
+    const on = t === tab; t.toggleAttribute('aria-current', on); if (on) t.setAttribute('aria-current', 'page');
+    const i = t.querySelector('i'); i.classList.toggle('ph-fill', on); i.classList.toggle('ph', !on);
+  });
+  ['tonight', 'sounds', 'log'].forEach((v) => { $('v-' + v).hidden = v !== tab.dataset.tab; });
+}));
+
+/* breathing session: one WAAPI animation is the clock, so pause stops shape and count together */
+const CIRC = 'shape(from 50% 0%, curve to 100% 50% with 77% 0% / 100% 23%, curve to 50% 100% with 100% 77% / 77% 100%, curve to 0% 50% with 23% 100% / 0% 77%, curve to 50% 0% with 0% 23% / 23% 0%, close)';
+const BLOB = 'shape(from 50% 0%, curve to 100% 50% with 93% 2% / 100% 10%, curve to 50% 100% with 100% 88% / 90% 100%, curve to 0% 50% with 8% 100% / 0% 92%, curve to 50% 0% with 0% 6% / 12% 0%, close)';
+const hasShape = CSS.supports('clip-path', CIRC);
+if (hasShape && !MK.reduced()) { $('shape').style.borderRadius = '0'; $('shape').style.clipPath = CIRC; } // the clip-path is the shape; a radius would clip the inhale blob back to a circle
+const CYCLE = 10000, IN = 4000, TOTAL = 300000;
+const clock = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+let anim, raf, phase;
+function startBreath() {
+  const io = 'cubic-bezier(.45,0,.55,1)', red = MK.reduced();
+  const kf = red ? [{ opacity: 1 }, { opacity: 1 }]
+    : hasShape ? [{ clipPath: CIRC, transform: 'scale(.7)', easing: io }, { clipPath: BLOB, transform: 'scale(1)', offset: 0.4, easing: io }, { clipPath: CIRC, transform: 'scale(.7)' }]
+    : [{ transform: 'scale(.7)', easing: io }, { transform: 'scale(1)', offset: 0.4, easing: io }, { transform: 'scale(.7)' }];
+  anim = $('shape').animate(kf, { duration: CYCLE, iterations: TOTAL / CYCLE });
+  anim.onfinish = finished;
+  phase = null; $('pl-run').hidden = false; $('pl-done').hidden = true; setPause(false);
+  tick();
+}
+function tick() {
+  const t = anim.currentTime ?? 0, c = t % CYCLE, inhale = c < IN;
+  const n = Math.ceil(((inhale ? IN : CYCLE) - c) / 1000) || 1;
+  if (phase !== inhale) { phase = inhale; $('cue').textContent = inhale ? 'Breathe in' : 'Breathe out'; if (t > 50) MK.haptic('selection'); }
+  $('count').textContent = n;
+  $('elapsed').textContent = `${clock(t / 1000)} of 5:00`;
+  if (anim.playState === 'running') raf = requestAnimationFrame(tick);
+}
+function setPause(p) {
+  $('pause').innerHTML = p ? '<i class="ph-fill ph-play" aria-hidden="true"></i><span>Resume</span>' : '<i class="ph-fill ph-pause" aria-hidden="true"></i><span>Pause</span>';
+}
+$('pause').onclick = () => {
+  if (anim.playState === 'running') { anim.pause(); cancelAnimationFrame(raf); setPause(true); say('Paused'); }
+  else { anim.play(); setPause(false); tick(); say('Resumed'); }
+};
+function finished() {
+  cancelAnimationFrame(raf); S.breathed = TOTAL / 1000;
+  $('cue').textContent = 'Done'; $('count').textContent = '';
+  $('elapsed').textContent = '5:00 of slow breathing';
+  $('pl-run').hidden = true; $('pl-done').hidden = false; MK.haptic('success'); render();
+  $('done-sleep').focus({ preventScroll: true });
+}
+function openPlayer() {
+  const dot = $('dot'), shape = $('shape');
+  dot.style.viewTransitionName = 'breath';
+  MK.morph(() => {
+    dot.style.viewTransitionName = ''; shape.style.viewTransitionName = 'breath';
+    $('player').hidden = false; startBreath();
+  }, { ease: MK.ease.slow }).then(() => { shape.style.viewTransitionName = ''; });
+  $('pl-h').focus({ preventScroll: true });
+}
+function closePlayer(after) {
+  if (anim && anim.playState !== 'finished') { S.breathed = Math.max(S.breathed, Math.floor((anim.currentTime ?? 0) / 1000)); }
+  cancelAnimationFrame(raf);
+  const dot = $('dot'), shape = $('shape');
+  shape.style.viewTransitionName = 'breath';
+  return MK.morph(() => {
+    shape.style.viewTransitionName = ''; dot.style.viewTransitionName = 'breath';
+    anim?.cancel(); $('player').hidden = true; render(); after?.();
+  }).then(() => { dot.style.viewTransitionName = ''; });
+}
+$('start').onclick = openPlayer;
+$('end').onclick = () => closePlayer(() => $('start').focus({ preventScroll: true }));
+$('done-back').onclick = $('end').onclick;
+$('done-sleep').onclick = () => { anim?.cancel(); $('player').hidden = true; goToSleep(); };
+function plSound() {
+  const on = S.sound !== 'off', b = $('pl-sound');
+  b.setAttribute('aria-pressed', on);
+  b.innerHTML = `<i class="ph ph-speaker-${on ? 'high' : 'slash'}" aria-hidden="true"></i><span>${on ? name(S.sound) : 'Sound off'}</span>`;
+  b.setAttribute('aria-label', on ? `${name(S.sound)} playing. Turn sound off` : `Sound off. Turn on ${name(S.last)}`);
+}
+$('pl-sound').onclick = () => setSound(S.sound === 'off' ? S.last : 'off');
+
+/* lights out: the commit dims the screen; Undo reverses, Done and Escape keep it */
+function goToSleep() {
+  S.lightsOut = now(); render();
+  $('lo-time').textContent = fmt(S.lightsOut);
+  $('lo-alarm').textContent = `Alarm 06:45, in ${dur(minsTo(S.lightsOut, ALARM))}`;
+  loSound();
+  const L = $('lights'); L.hidden = false;
+  L.animate([{ opacity: 0 }, { opacity: 1 }], { duration: MK.reduced() ? 150 : 900, easing: MK.out });
+  $('lo-h').focus({ preventScroll: true }); MK.haptic('light');
+  say(`Lights out ${fmt(S.lightsOut)} logged`);
+}
+function loSound() {
+  const on = S.sound !== 'off';
+  $('lo-snd').style.display = on ? '' : 'none';
+  if (on) $('lo-snd-t').textContent = `${name(S.sound)}, stops ${fmt(S.soundAt + S.timer * 60000)}`;
+}
+function closeLights(focusId) { $('lights').hidden = true; $(focusId).focus({ preventScroll: true }); }
+function undoSleep() { S.lightsOut = null; render(); say('Lights out undone'); }
+$('sleep').onclick = goToSleep;
+$('undo').onclick = () => { undoSleep(); $('sleep').focus({ preventScroll: true }); };
+$('lo-undo').onclick = () => { undoSleep(); closeLights('sleep'); };
+$('lo-done').onclick = () => closeLights('undo');
+$('lo-stop').onclick = () => { setSound('off'); loSound(); };
+$('retry').onclick = () => { location.hash = ''; };
+
+addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (!$('lights').hidden) $('lo-done').click();
+  else if (!$('player').hidden) $('end').click();
+});
+
+/* states by hash */
+const STATES = ['loading', 'empty', 'error', 'offline'];
+const sync = () => { const s = location.hash.slice(1); html.dataset.state = STATES.includes(s) ? s : 'content'; if (s === 'offline' && S.sound === 'fan') setSound('off'); render(); };
+addEventListener('hashchange', sync); sync();
+</script>
+</body>
+</html>

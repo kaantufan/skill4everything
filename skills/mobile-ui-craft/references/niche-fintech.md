@@ -22,7 +22,7 @@ Mildly anxious or purely routine. They open the app to answer one question — h
 - **Colour:** neutral surfaces and one restrained accent for actions. Green and red only for semantic gain and loss, always paired with a sign or icon so the meaning survives colour-blindness and greyscale.
 - **Type:** the platform font. Amounts are the hero: large, tabular figures, with the currency symbol and decimals visually quieter than the integer part. Right-align (trailing-align) amounts in lists so digits line up.
 - **Shape:** moderate radii. Separate list rows with hairlines or spacing; do not box every row in its own card.
-- **Motion and haptics:** calm. A success haptic when a transfer completes, a warning haptic before an irreversible step. A number may count up once on first load; nothing loops and nothing celebrates.
+- **Motion and haptics:** calm. A success haptic when a transfer completes, a warning haptic before an irreversible step. A figure rolls only the digits that changed when it changes; nothing counts up on load, nothing loops and nothing celebrates.
 
 ## Trust signals
 
@@ -45,6 +45,17 @@ Gamified spending; celebratory effects on risky actions (trading apps have remov
 - **Monzo** — plain-language onboarding that leads with eligibility and protection.
 - **Copilot Money** — calm, native-feeling analytics; each chart answers a question instead of decorating.
 - **Revolut** — identity verification broken into short single-purpose steps, framed as protection.
+
+## Details leading apps get right
+
+- One number that already nets out commitments: "safe to spend" subtracts upcoming bills, savings and money already spent, so the user does no arithmetic.
+- The formula sits beside the number (came in, minus tax, minus bills, equals safe to spend), with a day-rate such as "about X a day through month end".
+- A new event is handled in place: a consequence preview ("To tax / Safe to spend"), a button that names the amount ("Set aside $350.00"), then updated figures and a toast with Undo.
+- Upcoming bills show as a short window (the next seven days), not a long list.
+- An ambiguous state gets a stated default ("counted as taxable until you choose").
+- Legend swatches match the bar segments one to one, and no debug rows ("card check $0.00") appear in the activity list.
+- A hide-balance toggle, and a forward-looking card with a due date and "On track".
+- A sticky header gets a solid or blurred background on scroll, so rows never slide under it.
 
 ## What users complain about here
 

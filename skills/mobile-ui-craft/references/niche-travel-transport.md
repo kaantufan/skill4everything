@@ -46,6 +46,17 @@ Drip pricing where fees are added step by step; fake scarcity such as "2 rooms l
 - **Airbnb (2025 redesign)** — warm, playful imagery and a broader services scope. Borrow the friendly tone for planning screens. Reception was mixed, with scepticism about the wider scope.
 - **Tide Guide** — Apple Design Award 2026 for visuals. Borrow the idea that colour should encode the real environment in a data screen.
 
+## Details leading apps get right
+
+- The total price for the selected dates comes with its breakdown (nightly rate times nights, cleaning, service fee, total) and tax status. Airbnb made the all-fee total price its global default in April 2025; almost 17 million guests had used the earlier toggle.
+- Choosing dates visibly changes the sticky total, through per-night price chips or a small bar chart.
+- Honest constraints come early ("No running water", no step-free access), with "What makes it special" near the top.
+- The cancellation rule gives the exact deadline and amount.
+- Photos carry a counter. Baymard notes that missing photos make basics such as the bathroom impossible to check.
+- A sticky bar holds the total, the dates and a large Reserve, with no second tab bar stacked under it on a detail page.
+- The host card and trust cues sit high, and "No reviews yet" is shown as a fact, not left as a hole.
+- The map shows an approximate location with "exact address after booking".
+
 ## What users complain about here
 
 Hidden fees and add-on tricks in booking flows; fake scarcity; forced account creation before showing prices. Wide-scope redesigns that make familiar tasks harder to find draw scepticism.

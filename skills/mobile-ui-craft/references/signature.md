@@ -36,7 +36,7 @@ What is binding:
 - **The face.** Use exactly one family. The one exception is `reading-room`: a dealt text face for reading and the system font for UI. (`pro-tool` may add IBM Plex Mono for numeric readouts only.)
 - **The token values.** Copy the hexes for ground, raised, ink, ink-2, line, accent, on-accent, positive and negative, in light and dark. Contrast is already checked. You may move the accent to a brand colour the brief gives.
 - **The icon set**, with its CDN link and markup. Never write icon paths yourself.
-- **The signature moment.** You may swap it for another from the same direction's list when the screen cannot host it; say why.
+- **The signature motion** (from the niche: the primary action's consequence travelling as real content) **and the detail** (from the direction: the small motion character). You may swap either for another from its own list when the screen cannot host it; say why. The detail is never a second signature.
 - **One reroll** (`--reroll 1`) when the direction contradicts the brief: a night direction for a daytime utility, an imagery rule the product cannot meet. Say why.
 
 A brand or an existing design system outranks the direction. In the Inherited lane take only what the brand leaves open.
@@ -63,11 +63,12 @@ Follow the direction's imagery rule.
 
 ## Wow: one signature moment, done properly
 
-- **The dealt moment is the screen's one memorable interaction.** Build it with the prototype techniques (springs, shared-element expand, scroll-driven header, sheet physics, number roll, chart scrub, sampled colour) and finish it: interruptible, under 300 ms for UI motion (springs for what the finger moved), with a Reduce Motion variant.
+- **The dealt signature motion is the screen's one memorable interaction:** the same object travels from one state to the next (the add button becomes the stepper and the dish flies into the cart bar, the cover grows into Now Playing, the card flips to its back). Build it with `assets/motion-kit.js` and the techniques in the motion file, and finish it: interruptible, springs for what the finger moved, under about 400 ms, with a Reduce Motion variant. 3D only for objects you could hold.
 - **Everything else gets press feedback only.** Frequent actions get no animation. No entrance choreography, no perpetual decorative loop. A loop is for something truly in progress.
 - **The type scale has real contrast.** The hero size is about 2.5 to 4 times the body size.
 - **The hero image or data is large and real.** The hero shows the screen's main value: a figure set in type, a chart, a route, a photo, a cover. It is sized by the Density dial, and it does not eat the brief: everything the user asked for stays on the first screen or one obvious scroll away.
 - **Restraint is not absence: give the brand one surface.** In blind judging, screens whose accent lived only on one button were called "clean but generic, a wireframe, no brand identity", and lost on appeal to louder generated screens. Each screen carries the product's name or wordmark once, and one large area where the direction's colour or the content's colour lives: a tinted hero, a brand-coloured balance or summary card, a header wash sampled from the photo, the accent filling the main data mark (the route, the ring, the bar that matters). Everything around it stays quiet.
+- **Make the brand surface big enough to own the screen.** In hands-on judging, screens that were correct but quiet were still called "clean but generic, a stock iOS template, system blue" and lost appeal. In the first viewport, the brand surface covers roughly a fifth of the screen or more, and the product's name is set in the dealt face at title size, in the accent or on it. Pick one product-specific visual idea from the concept and repeat it through the screen in type, colour or the content's own shapes (the night band of a sleep app, the receipt rule of a money app, the route colour of a running app), never a drawn picture.
 - **Wow comes from real content shown large, one brand surface and one physical interaction,** not from effects.
 
 ## Type
@@ -78,6 +79,7 @@ Follow the direction's imagery rule.
 - **Glyph check:** render ğ ş ı İ ₺ € in the face. A fallback glyph in a headline ruins it.
 - Never use a face from the overused list (`--list` prints it), dealt or not.
 - In a native app the family is bundled, licensed and follows the user's text size.
+- **No italic in headings or UI labels.** No eyebrow or kicker above a heading; the heading says it. No bar, rule or border on the edge of a heading, label, quote, stat or card.
 
 ## Colour and effects
 
@@ -97,7 +99,8 @@ Follow the direction's imagery rule.
 - Section titles are the plain nouns people expect: "Reviews", "Splits", "Menu". Not lines with attitude.
 - No middle-dot chains: use a second line, a column, a comma or a secondary label. At most one separator in a row.
 - Sample data is uneven and includes one long value, one missing value and one zero.
-- No exclamation marks, no emoji, no tracked uppercase labels above headings, no build notes on screen. Notes go in the report.
+- No exclamation marks, no emoji, no build notes on screen. Notes go in the report.
+- **Icons only on controls and navigation,** from the dealt set, never Unicode glyphs (check, cross, star, dot, triangle, arrow). Use the platform's own symbol for a concept: a star only in a rating, a check only for a selected or done state, no arrow on a button, no 01 02 03 on a list, no sparkle, rocket, bolt, flame or leaf as decoration.
 
 ## The fingerprint check
 
@@ -107,7 +110,7 @@ Look at the render, scrolled to the top and to the bottom, and answer each. Any 
 2. Did I draw anything pictorial, or any icon?
 3. Is there any grey or empty slot where real material belongs?
 4. Is there any glow, blur, grain or gradient beyond a photo scrim or a data-driven ground?
-5. Are there middle-dot chains, headers with attitude, eyebrow labels, sparkles, or a pill that is neither a control nor a real state?
+5. Are there middle-dot chains, headers with attitude, an italic heading word, eyebrow labels, a bar beside a heading or card, glyphs for icons, arrows on buttons, 01 02 03, icon tiles, sparkles, or a pill that is neither a control nor a real state?
 6. Is the accent only on a button, with no brand surface and no product name on screen? (A "yes" reads as a wireframe.)
 7. Is the screen's layout one the niche's leading apps would recognise? (A "no" is the problem.)
 8. Does any text on screen talk to a builder, explain the data in a sentence, or tell a crafted little story where a real account would hold something ordinary?
