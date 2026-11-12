@@ -274,10 +274,11 @@ node scripts/capture.mjs screen.html out/t --steps "wait:300;shot:open;wait:8000
 3. **Primary action** (film). The tapped thing travels and lands on its result; the stateful control and the total show the new state. The receipt and Undo sit in the docked bar or inline, never in a toast over content. No two texts overlap in any frame.
 4. **Next step** (shot). The cart, player or detail opens from what was tapped, and the page behind it did not scroll.
 5. **Escape or back, then `log`.** Focus returns to the control that opened it, the page is where it was, and anything committed is still committed; the live region says what happened.
-6. **Each tab and every other visible control** (shot). A tab opens a simple real view built from the same material; every header button, row, chip and link does something sensible. List any control you left inert, and remove it rather than leave it dead.
-7. **`scroll:end`** (shot). Nothing sits under the bars.
-8. **Each state by hash** (shot): loading, empty, error, offline, whatever the prototype has.
-9. **`motion:reduce`, reload, primary action** (shot). The consequence is still visible without movement.
+6. **Each tab and every other visible control** (shot). A tab opens a simple real view built from the same material; every header button, row, chip and link does something sensible. List any control you left inert, and remove it rather than leave it dead. Also tap once on plain content (a description, lyrics, a caption): nothing may happen.
+7. **Undo at the end of the page** (shot after `scroll:end`, the action, then Undo). The header, the tab bar and the docked bar are still where they were, and the page did not jump.
+8. **`scroll:end`** (shot). Nothing sits under the bars.
+9. **Each state by hash** (shot): loading, empty, error, offline, whatever the prototype has.
+10. **`motion:reduce`, reload, primary action** (shot). The consequence is still visible without movement.
 
 `film:` slows animations to 0.1x, so 300 ms of motion needs about 3000 ms of film. A `tap:` step already waits 80 ms; after a `drag:` add `wait:50` before `film:`, or an animation still starting stays on its first frame. Frame loops (`requestAnimationFrame`) are not slowed.
 

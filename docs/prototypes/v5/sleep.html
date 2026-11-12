@@ -6,321 +6,328 @@
 <title>Dusk, Tonight</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css">
+<script>
+  // dark-first as dealt; ?theme=light shows the other appearance
+  const qt = new URLSearchParams(location.search).get('theme');
+  if (qt === 'light' || qt === 'dark') document.documentElement.dataset.theme = qt;
+</script>
 <style>
-  :root {
-    --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px;
-    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif;
-    --chrome: #000;
-  }
+  /* device frame (assets/phone-frame.html) */
+  :root { --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif; --chrome: #000; }
   [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
   * { box-sizing: border-box; }
   html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
   body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--ground); color: var(--ink); }
-  .statusbar {
-    position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 10;
-    display: flex; align-items: flex-end; justify-content: space-between;
-    padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none;
-    font-variant-numeric: tabular-nums;
-  }
+  .statusbar { position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 30; display: flex; align-items: flex-end;
+    justify-content: space-between; padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none; }
   .statusbar svg { height: 12px; fill: var(--chrome); }
-  .home-indicator {
-    position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 10;
-    width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none;
-  }
+  .home-indicator { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 30; width: 134px; height: 5px;
+    border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none; }
   #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
 </style>
 <style>
-  /* PRODUCT TOKENS: Dusk, dealt direction data-canvas (dark-first) */
+  /* PRODUCT TOKENS: Dusk. Dealt direction data-canvas, dark-first. */
   :root {
     --ground: #F7F9FC; --raised: #FFFFFF; --ink: #0B1220; --ink-2: #4A5568; --line: #DCE3EC;
-    --accent: #18A06E; --on-accent: #0B1220; --negative: #E5484D;
-    --night: #050A16; --night-ink: #F2F5FA; --night-ink-2: #A3AFC6; --night-line: #1C2848;
-    --r: 16px; --gut: 16px;
-    --t-hero: 600 72px/1 var(--font); --t-title: 600 22px/1.2 var(--font);
+    --accent: #18A06E; --on-accent: #0B1220; --positive: #18A06E; --negative: #E5484D;
+    --night: #050B19; --night-ink: #F2F5FA; --night-ink-2: #A3AFC6; --night-line: #26345A; --night-accent: #19A974;
+    --r: 16px; --r-pill: 999px;
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px;
+    --t-hero: 600 60px/1 var(--font); --t-title: 600 22px/1.2 var(--font); --t-head: 600 17px/1.3 var(--font);
     --t-body: 400 16px/1.4 var(--font); --t-label: 500 13px/1.3 var(--font);
-    --tabbar: calc(49px + var(--safe-bottom));
+    --dock-h: 72px; --tab-h: calc(49px + var(--safe-bottom));
   }
   [data-theme="dark"] {
     --ground: #0B1630; --raised: #15213F; --ink: #F2F5FA; --ink-2: #A3AFC6; --line: #26345A;
-    --accent: #19A974; --on-accent: #0B1220; --negative: #E5484D;
+    --accent: #19A974; --on-accent: #0B1220; --positive: #19A974; --negative: #E5484D;
   }
 </style>
 <style>
-  h1, h2, p { margin: 0; }
-  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .label { font: var(--t-label); color: var(--ink-2); }
-  .num { font-variant-numeric: tabular-nums; }
-
-  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer;
-    touch-action: manipulation; transition: transform .12s cubic-bezier(.22,1,.36,1); -webkit-tap-highlight-color: transparent; }
+  h1, h2, h3, p { margin: 0; }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; touch-action: manipulation;
+    transition: transform .12s cubic-bezier(.22,1,.36,1); -webkit-tap-highlight-color: transparent; }
   button:active:not(:disabled) { transform: scale(.97); }
   button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .btn { min-height: 44px; border-radius: var(--r); display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    font: 600 16px/1 var(--font); padding: 0 16px; }
+  button:disabled { cursor: default; opacity: .45; }
+  [hidden] { display: none !important; }
+  .num { font-variant-numeric: tabular-nums; }
+  .label { font: var(--t-label); color: var(--ink-2); }
+  .sub { font: var(--t-label); font-size: 14px; color: var(--ink-2); }
+  .h { font: var(--t-head); }
+
+  .scroller { flex: 1; overflow-y: auto; overflow-x: hidden; margin-top: var(--safe-top); padding: 0 16px calc(var(--tab-h) + var(--dock-h) + 16px); scrollbar-width: none; }
+  .scroller.nodock { padding-bottom: calc(var(--tab-h) + 16px); }
+  .scroller::-webkit-scrollbar { display: none; }
+  .top { display: flex; align-items: baseline; justify-content: space-between; height: 44px; padding-top: 6px; }
+  .brand { font: var(--t-title); }
+  .view { display: flex; flex-direction: column; gap: var(--s3); }
+  .card { background: var(--raised); border-radius: var(--r); padding: var(--s4); }
+
+  /* hero: the night as a band */
+  .hero { padding: 18px 16px 14px; display: flex; flex-direction: column; }
+  .hero .num.big { font: var(--t-hero); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; margin: 6px 0 8px; white-space: nowrap; }
+  #band { display: block; width: 100%; height: auto; margin-top: 14px; overflow: visible; }
+  #band text { font: var(--t-label); fill: var(--ink-2); }
+  #band .ink { fill: var(--ink); }
+
+  /* wind-down */
+  .wrow { display: flex; align-items: center; gap: var(--s3); margin-bottom: var(--s3); }
+  .dot { flex: none; width: 44px; height: 44px; border-radius: 50%; background: var(--accent); }
+  .btn { display: flex; align-items: center; justify-content: center; gap: var(--s2); width: 100%; min-height: 50px; border-radius: var(--r);
+    font: var(--t-head); }
+  .btn.primary { background: var(--accent); color: var(--on-accent); }
+  .btn.secondary { background: var(--raised); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
   .btn i { font-size: 20px; }
-  .btn.primary { background: var(--accent); color: var(--on-accent); min-height: 52px; }
-  .btn.secondary { background: var(--raised); color: var(--ink); min-height: 52px; border: 1px solid var(--line); }
-  .btn.ghost { color: var(--ink); padding: 0 12px; }
-  .btn.link { color: var(--accent); padding: 0 12px; }
-
-  /* views */
-  .view { position: absolute; inset: 0; display: flex; flex-direction: column; }
-  .view[hidden] { display: none; }
-  .view::before { content: ""; position: absolute; inset: 0 0 auto 0; height: var(--safe-top); background: var(--ground); z-index: 3; }
-  .scroll { flex: 1; overflow-y: auto; padding: var(--safe-top) var(--gut) calc(var(--tabbar) + 16px); scrollbar-width: none; }
-  .top { height: 44px; display: flex; align-items: center; justify-content: space-between; }
-  .wordmark { font: var(--t-title); color: var(--accent); letter-spacing: -.01em; }
-  .page-title { font: var(--t-title); color: var(--ink); }
-
-  /* hero: the night band */
-  .hero { margin-top: 4px; border-radius: var(--r); padding: 18px 20px; background: color-mix(in oklab, var(--accent) 11%, var(--raised)); }
-  .numeral { font: var(--t-hero); letter-spacing: -.03em; font-variant-numeric: tabular-nums; margin-top: 2px; color: var(--ink); }
-  .sub { font: var(--t-body); color: var(--ink-2); margin-top: 6px; }
-  .chart { margin-top: 12px; position: relative; touch-action: pan-y; }
-  .axis { position: relative; height: 18px; margin: 0 76px 6px 60px; }
-  .axis span { position: absolute; left: var(--x); transform: translateX(-50%); font: var(--t-label); color: var(--ink-2); font-variant-numeric: tabular-nums; }
-  .rows { position: relative; display: grid; gap: 3px; }
-  .grid { position: absolute; inset: 0 76px 0 60px; pointer-events: none; }
-  .grid i { position: absolute; top: 0; bottom: 0; left: var(--x); width: 1px; background: var(--line); }
-  .r { display: grid; grid-template-columns: 52px 1fr 68px; column-gap: 8px; align-items: center; height: 16px; }
-  .r .d { font: var(--t-label); color: var(--ink-2); }
-  .r .v { font: var(--t-label); color: var(--ink-2); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .r .track { position: relative; height: 8px; }
-  .r .bar { position: absolute; top: 0; bottom: 0; left: var(--a); width: var(--b); border-radius: 4px; background: color-mix(in oklab, var(--ink-2) 55%, transparent); }
-  .r.tonight .d, .r.tonight .v { color: var(--ink); font-weight: 600; }
-  .r.tonight .bar { background: var(--accent); opacity: .55; height: 12px; top: -2px; border-radius: 6px; }
-  .r.tonight.logged .bar { opacity: 1; }
-  .r.on .d, .r.on .v { color: var(--ink); }
-  .readout { font: var(--t-label); color: var(--ink-2); margin-top: 8px; min-height: 17px; font-variant-numeric: tabular-nums; }
-  .chart-msg { display: none; font: var(--t-body); color: var(--ink-2); padding: 8px 0 4px; }
-  .chart-msg .btn { margin-top: 8px; }
-
-  /* breathing */
-  .card { background: var(--raised); border-radius: var(--r); padding: 16px; }
-  .breathe { margin-top: 12px; display: flex; align-items: center; gap: 12px; }
-  .dot { width: 44px; height: 44px; flex: none; border-radius: 50%; background: color-mix(in oklab, var(--accent) 34%, var(--raised)); }
-  .breathe .txt { flex: 1; min-width: 0; }
-  .breathe h2 { font: 600 17px/1.25 var(--font); }
-  .breathe p { font: var(--t-label); color: var(--ink-2); margin-top: 2px; font-variant-numeric: tabular-nums; }
 
   /* sounds */
-  .sounds { margin-top: 12px; }
-  .sounds .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0; }
-  .sounds .head .btn { margin-right: -12px; font: 500 15px/1 var(--font); color: var(--ink); }
-  .sounds .head .btn i { color: var(--ink-2); }
-  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-  .tile { min-height: 68px; border-radius: var(--r); background: var(--raised); border: 2px solid transparent;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 6px 4px;
-    font: var(--t-label); color: var(--ink); text-align: center; }
-  .tile i { font-size: 24px; color: var(--ink-2); }
-  .tile[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in oklab, var(--accent) 14%, var(--raised)); }
-  .tile[aria-pressed="true"] i { color: var(--accent); }
-  .tile:disabled { opacity: .5; cursor: default; }
-  .tile small { font: 500 11px/1.2 var(--font); color: var(--ink-2); display: none; }
-  .note { display: none; font: var(--t-label); color: var(--ink-2); margin-top: 8px; }
+  .shead { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: var(--s2); }
+  .tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--s2); }
+  .tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; height: 62px; border-radius: 14px;
+    background: var(--ground); font: var(--t-label); color: var(--ink-2); box-shadow: inset 0 0 0 1px var(--line); }
+  .tile i { font-size: 22px; }
+  .tile[aria-checked="true"] { background: var(--accent); color: var(--on-accent); box-shadow: none; }
+  .tile .nd, .row .nd { display: none; }
+  .timer { display: flex; align-items: center; justify-content: space-between; margin-top: var(--s3); }
+  .seg { display: flex; background: var(--ground); border-radius: 12px; padding: 2px; box-shadow: inset 0 0 0 1px var(--line); }
+  .seg button { min-width: 48px; height: 40px; border-radius: 10px; font: var(--t-label); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .seg button[aria-checked="true"] { background: var(--raised); color: var(--ink); box-shadow: 0 0 0 1px var(--line); }
+  [data-theme="dark"] .seg button[aria-checked="true"] { background: var(--line); }
+  .notice { display: flex; align-items: center; gap: var(--s3); }
+  .notice p { flex: 1; font: var(--t-body); font-size: 15px; }
+  .linkbtn { min-height: 44px; min-width: 44px; padding: 0 var(--s3); border-radius: 12px; font: var(--t-head); color: var(--accent); }
+  .offline-line { display: none; font: var(--t-label); color: var(--ink-2); margin-top: var(--s2); align-items: center; gap: 6px; }
 
-  .sleep { margin-top: 12px; }
-  .sleep > .btn { width: 100%; }
-  .receipt { min-height: 52px; display: flex; align-items: center; justify-content: space-between; border-radius: var(--r);
-    border: 1px solid var(--line); padding: 0 4px 0 16px; font: var(--t-body); font-variant-numeric: tabular-nums; }
-  .receipt[hidden], .sleep .btn[hidden] { display: none; }
+  /* last night */
+  .logrow { display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; gap: var(--s3); min-height: 64px; }
+  .bars { display: flex; align-items: flex-end; gap: 6px; height: 46px; }
+  .bars span { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px; height: 100%; font: var(--t-label); font-size: 11px; color: var(--ink-2); }
+  .bars b { display: block; width: 8px; border-radius: 3px; background: var(--line); }
+  .bars b.last { background: var(--accent); }
+  .bars b.none { height: 2px !important; background: var(--ink-2); opacity: .5; }
 
-  /* tab bar */
-  .tabbar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; height: var(--tabbar); padding-bottom: var(--safe-bottom);
-    display: grid; grid-template-columns: repeat(3, 1fr); background: var(--ground); border-top: 1px solid var(--line); }
-  .tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: 500 11px/1.2 var(--font); color: var(--ink-2); }
-  .tab i { font-size: 26px; }
-  .tab[aria-current="page"] { color: var(--accent); }
+  /* dock: the bedtime commit and its receipt live here */
+  .dock { position: absolute; left: 0; right: 0; bottom: var(--tab-h); height: var(--dock-h); padding: 10px 16px; background: var(--ground);
+    box-shadow: 0 -1px 0 var(--line); z-index: 5; display: flex; align-items: center; }
+  .receipt { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 50px; padding: 0 4px 0 var(--s4);
+    border-radius: var(--r); background: var(--raised); }
+  .receipt span { font: var(--t-body); }
+  .tabbar { position: absolute; left: 0; right: 0; bottom: 0; height: var(--tab-h); padding-bottom: var(--safe-bottom); display: flex;
+    background: var(--ground); box-shadow: 0 -1px 0 var(--line); z-index: 6; }
+  .tabbar button { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: 500 11px/1 var(--font); color: var(--ink-2); }
+  .tabbar button i { font-size: 26px; }
+  .tabbar button[aria-current="page"] { color: var(--accent); }
 
   /* other tabs */
-  .list { margin-top: 12px; }
-  .li { display: grid; grid-template-columns: 32px 1fr auto; align-items: center; gap: 12px; min-height: 64px; border-bottom: 1px solid var(--line); width: 100%; text-align: left; }
-  .li i { font-size: 24px; color: var(--ink-2); }
-  .li .t { font: var(--t-body); color: var(--ink); }
-  .li .s { font: var(--t-label); color: var(--ink-2); font-variant-numeric: tabular-nums; }
-  .li .e { font: var(--t-label); color: var(--ink-2); font-variant-numeric: tabular-nums; text-align: right; }
-  button.li[aria-pressed="true"] i, button.li[aria-pressed="true"] .e { color: var(--accent); }
-  .log .li { grid-template-columns: 1fr auto; }
+  .ptitle { font: 600 34px/1.15 var(--font); letter-spacing: -0.01em; margin: 4px 0 6px; }
+  .list { background: var(--raised); border-radius: var(--r); overflow: hidden; }
+  .row { display: flex; align-items: center; gap: var(--s3); width: 100%; min-height: 60px; padding: 10px 16px; text-align: left; }
+  .row + .row { box-shadow: 0 -1px 0 var(--line); }
+  .row .grow { flex: 1; min-width: 0; }
+  .row .t { font: var(--t-body); }
+  .row i.lead { font-size: 24px; color: var(--ink-2); }
+  .row .chk { font-size: 22px; color: var(--accent); visibility: hidden; }
+  .row[aria-checked="true"] .chk { visibility: visible; }
+  .row .dur { min-width: 96px; text-align: right; font: var(--t-body); font-variant-numeric: tabular-nums; }
+  .row .lbar { width: 64px; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+  .row .lbar i { display: block; height: 100%; background: var(--ink-2); }
+  .row .lbar i.last { background: var(--accent); }
 
-  /* breathing player */
-  .player { position: absolute; inset: 0; z-index: 6; background: var(--night); color: var(--night-ink);
-    display: flex; flex-direction: column; align-items: center; padding: var(--safe-top) var(--gut) calc(var(--safe-bottom) + 16px); }
-  .player[hidden], .lights[hidden] { display: none; }
-  .pl-top { width: 100%; height: 52px; display: flex; align-items: center; justify-content: space-between; }
-  .player .btn.ghost { color: var(--night-ink); margin: 0 -12px; }
-  .player .btn.ghost i { color: var(--night-ink-2); }
-  .player h2 { font: var(--t-title); margin-top: 28px; outline: none; }
-  .player .meta { font: var(--t-label); color: var(--night-ink-2); margin-top: 4px; }
-  .stage { position: relative; width: 280px; height: 280px; margin-top: 32px; }
-  .shape { position: absolute; inset: 0; border-radius: 50%; background: color-mix(in oklab, #19A974 30%, var(--night)); transform: scale(.7); }
-  .cue { view-transition-name: cue; position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
-  /* the cue text waits for the shape to land, so no two texts cross mid-morph */
-  ::view-transition-new(cue) { animation: cue-in 200ms 320ms ease-out both; }
-  ::view-transition-old(cue) { animation: cue-out 80ms ease-out both; }
-  @keyframes cue-in { from { opacity: 0; } } @keyframes cue-out { to { opacity: 0; } }
-  .cue .c1 { font: var(--t-body); color: var(--night-ink); }
-  .cue .c2 { font: var(--t-hero); font-variant-numeric: tabular-nums; margin-top: 4px; }
-  .elapsed { font: var(--t-body); color: var(--night-ink-2); margin-top: 28px; font-variant-numeric: tabular-nums; }
-  .pl-actions { margin-top: auto; width: 100%; display: grid; gap: 12px; }
-  .pl-actions .btn { width: 100%; }
-  .pl-actions[hidden] { display: none; }
-  .player .btn.secondary, .lights .btn.secondary { background: transparent; color: var(--night-ink); border-color: var(--night-line); }
-  .player .btn.primary { background: #19A974; }
-  @media (prefers-reduced-motion: reduce) {
-    .shape { background: transparent; border: 2px solid #19A974; transform: none; }
-    * { transition-duration: .01ms !important; }
-  }
+  /* skeleton (static, no shimmer) */
+  .skel { background: var(--raised); border-radius: var(--r); }
+  .skel.line { height: 14px; border-radius: 7px; background: var(--line); }
 
-  /* lights out */
-  .lights { position: absolute; inset: 0; z-index: 7; background: var(--night); color: var(--night-ink-2);
-    display: flex; flex-direction: column; padding: calc(var(--safe-top) + 72px) 24px calc(var(--safe-bottom) + 16px); }
-  .lights h2 { font: var(--t-label); color: var(--night-ink-2); outline: none; }
-  .lights .numeral { color: var(--night-ink-2); }
-  .lights .sub { color: var(--night-ink-2); }
-  .lights .snd { margin-top: 32px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--night-line); padding-top: 12px; }
-  .lights .snd p { font: var(--t-body); font-variant-numeric: tabular-nums; }
-  .lights .btn.link { color: var(--night-ink-2); text-decoration: underline; text-underline-offset: 3px; }
-  .lo-actions { margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  /* overlays */
+  .overlay { position: absolute; inset: 0; z-index: 20; display: flex; flex-direction: column; padding: var(--safe-top) 16px calc(var(--safe-bottom) + 12px);
+    background: var(--night); color: var(--night-ink); --ink: var(--night-ink); --ink-2: var(--night-ink-2); --line: var(--night-line); --accent: var(--night-accent); }
+  .otop { display: flex; align-items: center; justify-content: space-between; height: 52px; }
+  .otop h2 { font: var(--t-head); }
+  .icon { display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 44px; height: 44px; border-radius: 22px; font: var(--t-label); color: var(--ink-2); }
+  .icon i { font-size: 24px; color: var(--ink); }
+  .icon.pill { padding: 0 12px; box-shadow: inset 0 0 0 1px var(--line); }
+  .stage { position: relative; flex: 1; display: grid; place-items: center; min-height: 0; }
+  .shape { width: 240px; height: 240px; background: var(--accent); border-radius: 50%; transform: scale(.6);
+    clip-path: shape(from 50% 0%, curve to 100% 50% with 77% 0% / 100% 23%, curve to 50% 100% with 100% 77% / 77% 100%, curve to 0% 50% with 23% 100% / 0% 77%, curve to 50% 0% with 0% 23% / 23% 0%, close); }
+  .ring { display: none; width: 200px; height: 200px; border-radius: 50%; box-shadow: inset 0 0 0 6px var(--accent); }
+  .cue { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 26px; }
+  .cue .w { font: var(--t-title); }
+  .cue .num { font: 600 72px/1 var(--font); letter-spacing: -0.03em; }
+  .prog .bar { height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+  .prog .bar i { display: block; height: 100%; width: 0; background: var(--accent); }
+  .prog .times { display: flex; justify-content: space-between; margin-top: 6px; font: var(--t-label); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .pctl { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-top: 18px; }
+  .play { width: 76px; height: 76px; border-radius: 50%; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; }
+  .play i { font-size: 34px; }
+  .pdone { text-align: center; display: flex; flex-direction: column; gap: var(--s3); margin-bottom: 8px; }
+
+  .lights { justify-content: space-between; }
+  .lights .mid { text-align: center; display: flex; flex-direction: column; gap: 10px; }
+  .lights .clock { font: 600 72px/1 var(--font); letter-spacing: -0.03em; color: var(--night-ink-2); font-variant-numeric: tabular-nums; }
+  .lights .l1 { font: var(--t-body); color: var(--night-ink-2); }
 
   /* states by hash */
-  .skel { display: none; }
-  [data-state="loading"] .rows, [data-state="loading"] .axis, [data-state="loading"] .readout, [data-state="loading"] #window, [data-state="loading"] #alarm-line { visibility: hidden; }
-  [data-state="loading"] .skel { display: grid; gap: 4px; position: absolute; inset: 24px 0 0 0; }
-  .skel i { height: 16px; border-radius: 6px; background: color-mix(in oklab, var(--ink-2) 18%, transparent); }
-  [data-state="empty"] .r:not(.tonight), [data-state="empty"] .readout { display: none; }
-  [data-state="empty"] .msg-empty { display: block; }
-  [data-state="error"] .rows, [data-state="error"] .axis, [data-state="error"] .readout { display: none; }
-  [data-state="error"] .msg-error { display: block; }
-  [data-state="offline"] .note { display: block; }
-  [data-state="offline"] .tile[data-snd="fan"] small { display: block; }
-  [data-state="offline"] .tile[data-snd="fan"] i { display: none; }
+  #v-loading { display: none; }
+  [data-state="loading"] #v-loading { display: flex; }
+  [data-state="loading"] #v-tonight, [data-state="loading"] .dock { display: none; }
+  [data-state="loading"] .scroller { padding-bottom: calc(var(--tab-h) + 16px); }
+  #soundsErr { display: none; }
+  [data-state="error"] #soundsErr { display: flex; }
+  [data-state="error"] #soundsOk { display: none; }
+  [data-state="offline"] .offline-line { display: flex; }
+  [data-state="offline"] .tile[data-dl="0"] .nd, [data-state="offline"] .row[data-dl="0"] .nd { display: inline; }
+  #logEmpty { display: none; }
+  [data-state="empty"] #logEmpty { display: block; }
+  [data-state="empty"] #logFull, [data-state="empty"] #bars { display: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    .shape { display: none; } .ring { display: block; }
+  }
 </style>
 </head>
 <body>
   <div class="statusbar">
     <span id="clock" class="num">23:04</span>
-    <svg class="ios" viewBox="0 0 66 12" aria-hidden="true">
+    <svg viewBox="0 0 66 12" aria-hidden="true">
       <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
       <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
       <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
-      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" stroke="currentColor" style="stroke: var(--chrome)" opacity=".5"/>
-      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="9" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
     </svg>
   </div>
 
   <main id="screen">
-    <!-- TONIGHT -->
-    <div class="view" id="v-tonight">
-      <div class="scroll" id="scroll-tonight">
-        <header class="top">
-          <h1 class="wordmark">Dusk<span class="sr">, Tonight</span></h1>
-          <span class="label num">Thu 12 Nov</span>
-        </header>
-
-        <section class="hero" aria-labelledby="hero-label">
-          <p class="label" id="hero-label">Sleep window</p>
-          <p class="numeral" id="window">7h 41m</p>
-          <p class="sub num" id="alarm-line">Now to your 06:45 alarm</p>
-          <div class="chart" id="chart">
-            <div class="axis" aria-hidden="true"><span style="--x:20%">00:00</span><span style="--x:50%">03:00</span><span style="--x:80%">06:00</span></div>
-            <div class="rows" id="rows" role="img">
-              <div class="grid" aria-hidden="true"><i style="--x:20%"></i><i style="--x:50%"></i><i style="--x:80%"></i></div>
-            </div>
-            <div class="skel" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-            <p class="chart-msg msg-empty">Nights you log appear here.</p>
-            <div class="chart-msg msg-error" role="alert">Your sleep log didn't load.<br><button class="btn secondary" id="retry">Try again</button></div>
-          </div>
-          <p class="readout" id="readout" aria-live="polite"></p>
-        </section>
-
-        <section class="card breathe" aria-labelledby="br-h">
-          <div class="dot" id="dot" aria-hidden="true"></div>
-          <div class="txt"><h2 id="br-h">Slow breathing</h2><p id="br-sub">4 s in, 6 s out, 5 min</p></div>
-          <button class="btn primary" id="start" aria-label="Start 5 minutes of slow breathing">Start 5 min</button>
-        </section>
-
-        <section class="sounds" aria-labelledby="snd-h">
-          <div class="head">
-            <h2 class="label" id="snd-h">Sound</h2>
-            <button class="btn ghost" id="timer" aria-label="Sound timer"><i class="ph ph-timer" aria-hidden="true"></i><span id="timer-t" class="num">Timer 45 min</span></button>
-          </div>
-          <div class="tiles" id="tiles" role="group" aria-labelledby="snd-h"></div>
-          <p class="note">Offline. Rain and Brown noise are downloaded.</p>
-        </section>
-
-        <div class="sleep">
-          <button class="btn secondary" id="sleep">I'm going to sleep</button>
-          <div class="receipt" id="receipt" hidden><span id="receipt-t">Lights out 23:06 logged</span><button class="btn link" id="undo">Undo</button></div>
+    <div class="scroller" id="scroller">
+      <!-- loading -->
+      <section id="v-loading" class="view" aria-label="Loading tonight" aria-busy="true">
+        <header class="top"><h1 class="brand">Dusk</h1></header>
+        <div class="skel" style="height:250px;padding:18px 16px;display:flex;flex-direction:column;gap:14px">
+          <div class="skel line" style="width:30%"></div><div class="skel line" style="width:70%;height:48px;border-radius:12px"></div>
+          <div class="skel line" style="width:50%"></div><div class="skel line" style="width:100%;height:16px;margin-top:30px"></div>
         </div>
-      </div>
+        <div class="skel" style="height:140px"></div>
+        <div class="skel" style="height:150px"></div>
+      </section>
+
+      <!-- Tonight -->
+      <section id="v-tonight" class="view" aria-labelledby="brand">
+        <header class="top"><h1 class="brand" id="brand">Dusk</h1><span class="label" id="date">Thursday 12 November</span></header>
+
+        <section class="card hero" aria-label="Tonight">
+          <p class="label">Until alarm</p>
+          <p class="num big" id="untilAlarm">7 h 41 min</p>
+          <p class="sub" id="bedLine">Alarm 06:45. Bedtime 23:15, in 11 min</p>
+          <svg id="band" viewBox="0 0 329 96" role="img" aria-label=""></svg>
+        </section>
+
+        <section class="card" aria-labelledby="w-title">
+          <div class="wrow">
+            <span class="dot" id="dot" aria-hidden="true"></span>
+            <div><h2 class="h" id="w-title">Breathe 4 in, 6 out</h2><p class="sub" id="windSub">6 min, paced by a soft tone</p></div>
+          </div>
+          <button class="btn primary" id="startBtn"><i class="ph-fill ph-play" aria-hidden="true"></i><span id="startLbl">Start 6 min breathing</span></button>
+        </section>
+
+        <section class="card" aria-labelledby="s-title">
+          <div id="soundsOk">
+            <div class="shead"><h2 class="h" id="s-title">Sounds</h2><span class="label" id="soundLine">Off</span></div>
+            <div class="tiles" role="radiogroup" aria-labelledby="s-title" id="tiles"></div>
+            <p class="offline-line"><i class="ph ph-cloud-slash" aria-hidden="true"></i>Offline. Downloaded sounds only.</p>
+            <div class="timer"><span class="sub" id="fadeLbl">Fade out after</span>
+              <div class="seg" role="radiogroup" aria-labelledby="fadeLbl" id="seg"></div></div>
+          </div>
+          <div class="notice" id="soundsErr">
+            <p>Sounds didn't load. Breathing works without them.</p>
+            <button class="linkbtn" id="retryBtn">Retry</button>
+          </div>
+        </section>
+
+        <button class="card logrow" id="logRow" aria-describedby="lastLbl">
+          <div id="logFull"><p class="label" id="lastLbl">Last night</p><p class="h num" id="lastDur" style="margin-top:2px">6 h 33 min</p><p class="sub num" id="lastTimes">00:12 to 06:45</p></div>
+          <div id="logEmpty"><p class="label">Last night</p><p class="h" style="margin-top:2px">No nights logged yet</p><p class="sub">Going to sleep starts your log</p></div>
+          <div class="bars" id="bars" aria-hidden="true"></div>
+        </button>
+      </section>
+
+      <!-- Sounds tab -->
+      <section id="v-sounds" class="view" hidden aria-labelledby="t-sounds">
+        <h1 class="ptitle" id="t-sounds">Sounds</h1>
+        <div class="list" role="radiogroup" aria-labelledby="t-sounds" id="soundList"></div>
+        <div class="card timer" style="margin-top:0"><span class="sub" id="fadeLbl2">Fade out after</span>
+          <div class="seg" role="radiogroup" aria-labelledby="fadeLbl2" id="seg2"></div></div>
+      </section>
+
+      <!-- Log tab -->
+      <section id="v-log" class="view" hidden aria-labelledby="t-log">
+        <h1 class="ptitle" id="t-log">Sleep log</h1>
+        <div class="list" id="logList"></div>
+      </section>
     </div>
 
-    <!-- SOUNDS -->
-    <div class="view" id="v-sounds" hidden>
-      <div class="scroll">
-        <header class="top"><h1 class="page-title" tabindex="-1">Sounds</h1></header>
-        <div class="list" id="sound-list"></div>
-      </div>
+    <div class="dock" id="dock">
+      <button class="btn secondary" id="sleepBtn"><i class="ph ph-moon" aria-hidden="true"></i>Going to sleep</button>
+      <div class="receipt" id="receipt" hidden><span id="receiptTxt">Lights out 23:06 logged</span><button class="linkbtn" id="undoBtn">Undo</button></div>
     </div>
 
-    <!-- LOG -->
-    <div class="view" id="v-log" hidden>
-      <div class="scroll">
-        <header class="top"><h1 class="page-title" tabindex="-1">Sleep log</h1></header>
-        <div class="list log" id="log-list"></div>
-      </div>
-    </div>
-
-    <nav class="tabbar" aria-label="Main">
-      <button class="tab" data-tab="tonight" aria-current="page"><i class="ph-fill ph-moon-stars" aria-hidden="true"></i><span>Tonight</span></button>
-      <button class="tab" data-tab="sounds"><i class="ph ph-speaker-high" aria-hidden="true"></i><span>Sounds</span></button>
-      <button class="tab" data-tab="log"><i class="ph ph-chart-bar-horizontal" aria-hidden="true"></i><span>Log</span></button>
+    <nav class="tabbar" aria-label="Tabs">
+      <button data-tab="tonight" aria-current="page"><i class="ph-fill ph-moon-stars" aria-hidden="true"></i>Tonight</button>
+      <button data-tab="sounds"><i class="ph ph-speaker-high" aria-hidden="true"></i>Sounds</button>
+      <button data-tab="log"><i class="ph ph-chart-bar" aria-hidden="true"></i>Log</button>
     </nav>
 
-    <!-- BREATHING PLAYER -->
-    <section class="player" id="player" hidden role="dialog" aria-modal="true" aria-labelledby="pl-h">
-      <div class="pl-top">
-        <button class="btn ghost" id="end">End</button>
-        <button class="btn ghost" id="pl-sound" aria-pressed="false"><i class="ph ph-speaker-slash" aria-hidden="true"></i><span>Sound off</span></button>
+    <!-- breathing player -->
+    <section id="player" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="p-title">
+      <div class="otop">
+        <button class="icon" id="pClose" aria-label="Close and pause"><i class="ph ph-caret-down"></i></button>
+        <h2 id="p-title" tabindex="-1">Breathe 4 in, 6 out</h2>
+        <button class="icon pill" id="pSound" aria-label="Sound"><i class="ph ph-speaker-slash" aria-hidden="true"></i><span id="pSoundLbl">Off</span></button>
       </div>
-      <h2 id="pl-h" tabindex="-1">Slow breathing</h2>
-      <p class="meta">4 s in, 6 s out</p>
-      <div class="stage">
-        <div class="shape" id="shape"></div>
-        <div class="cue" aria-live="off"><span class="c1" id="cue">Breathe in</span><span class="c2" id="count">4</span></div>
+      <div class="stage"><div class="shape" id="shape"></div><div class="ring" aria-hidden="true"></div></div>
+      <div id="pRun">
+        <p class="cue"><span class="w" id="cueWord" aria-live="polite">Breathe in</span><span class="num" id="cueNum" aria-hidden="true">4</span></p>
+        <div class="prog"><div class="bar"><i id="progFill"></i></div><div class="times"><span id="pEl">0:00</span><span>6:00</span></div></div>
+        <div class="pctl">
+          <button class="linkbtn" id="pEnd" style="justify-self:start">End</button>
+          <button class="play" id="pPlay" aria-label="Pause"><i class="ph-fill ph-pause" aria-hidden="true"></i></button>
+          <span></span>
+        </div>
       </div>
-      <p class="elapsed" id="elapsed">0:00 of 5:00</p>
-      <div class="pl-actions" id="pl-run">
-        <button class="btn secondary" id="pause"><i class="ph-fill ph-pause" aria-hidden="true"></i><span>Pause</span></button>
-      </div>
-      <div class="pl-actions" id="pl-done" hidden>
-        <button class="btn primary" id="done-sleep">I'm going to sleep</button>
-        <button class="btn secondary" id="done-back">Back to Tonight</button>
+      <div class="pdone" id="pDone" hidden>
+        <p class="cue" style="margin:0"><span class="w">6 min done</span></p>
+        <button class="btn primary" id="pSleep"><i class="ph ph-moon" aria-hidden="true"></i>Going to sleep</button>
+        <button class="linkbtn" id="pBack">Back to Tonight</button>
       </div>
     </section>
 
-    <!-- LIGHTS OUT -->
-    <section class="lights" id="lights" hidden role="dialog" aria-modal="true" aria-labelledby="lo-h">
-      <h2 id="lo-h" tabindex="-1">Lights out</h2>
-      <p class="numeral" id="lo-time">23:06</p>
-      <p class="sub num" id="lo-alarm">Alarm 06:45, in 7h 39m</p>
-      <div class="snd" id="lo-snd"><p id="lo-snd-t">Rain, stops 23:51</p><button class="btn link" id="lo-stop">Stop sound</button></div>
-      <div class="lo-actions">
-        <button class="btn secondary" id="lo-undo">Undo</button>
-        <button class="btn secondary" id="lo-done">Done</button>
+    <!-- lights out -->
+    <section id="lights" class="overlay lights" hidden role="dialog" aria-modal="true" aria-labelledby="l-title">
+      <div class="otop"><button class="icon" id="lClose" aria-label="Back to Tonight"><i class="ph ph-caret-down"></i></button><span></span></div>
+      <div class="mid">
+        <p class="label" id="l-title" tabindex="-1">Lights out</p>
+        <p class="clock" id="lClock">23:06</p>
+        <p class="l1" id="lAlarm">Alarm 06:45, in 7 h 39 min</p>
+        <p class="l1" id="lSound">No sound</p>
       </div>
+      <button class="linkbtn" id="lUndo" style="align-self:center">Undo lights out</button>
     </section>
+
+    <p id="live" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)"></p>
   </main>
 
   <div class="home-indicator"></div>
-  <div class="sr" id="live" aria-live="polite"></div>
 
 <script>
-/* motion-kit.js (mobile-ui-craft 5.0), inlined */
+/* motion-kit.js (mobile-ui-craft 5.0). Zero dependencies. Inline it in one <script> of the prototype; it defines window.MK.
+   Everything that should be filmable runs on WAAPI or view transitions, which scripts/capture.mjs `film:` slows down.
+   requestAnimationFrame is used only for MK.tilt smoothing (pointer-driven, not filmed); never build a filmed move on it.
+   Springs are CSS linear() easings generated at mass 1; the tokens are the Material 3 Expressive stiffness/damping pairs. */
 (() => {
-  const MK = (window.MK = { out: 'cubic-bezier(.2,.8,.2,1)' });
+  const MK = (window.MK = { out: 'cubic-bezier(.2,.8,.2,1)' }); // out: for fades and menus, never for springs
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   MK.reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Spring as a linear() easing: stiffness k, damping ratio zeta (<= 1). ms is the time to settle within 0.2%.
   MK.spring = (k, zeta, pts = 36) => {
     const w0 = Math.sqrt(k), wd = w0 * Math.sqrt(Math.max(1e-6, 1 - zeta * zeta));
     const x = zeta < 1
@@ -332,299 +339,408 @@
     v[pts] = 1;
     return { easing: `linear(${v.join(', ')})`, ms: Math.round(T * 1000) };
   };
+  // spatial moves things and may overshoot; effects (opacity, colour) must not overshoot
   MK.ease = { spatial: MK.spring(380, 0.8), fast: MK.spring(800, 0.6), slow: MK.spring(200, 0.8), effects: MK.spring(1600, 1) };
+
+  // Shared-element and state morphs. Give the two ends the same view-transition-name (unique, set only while morphing).
   let vtStyle;
   MK.morph = (update, opts = {}) => {
     if (!document.startViewTransition || document.visibilityState !== 'visible') return Promise.resolve(update()).then(() => {});
     if (!vtStyle) {
-      const e = opts.ease || MK.ease.spatial;
+      const e = MK.ease.spatial;
       vtStyle = document.head.appendChild(document.createElement('style'));
+      // under Reduce Motion the named groups jump and only the page crossfades.
+      // The page fades out before the new one fades in: a simultaneous crossfade shows old and new text on top of each other.
       vtStyle.textContent = `::view-transition-group(*){animation-duration:${e.ms}ms;animation-timing-function:${e.easing}}
 ::view-transition-group(root){animation-duration:200ms;animation-timing-function:ease-out}
 ::view-transition-old(root){animation:mk-vt-out 90ms ease-out both}::view-transition-new(root){animation:mk-vt-in 150ms 60ms ease-out both}
 @keyframes mk-vt-out{to{opacity:0}}@keyframes mk-vt-in{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){::view-transition-group(*){animation-duration:.01ms}::view-transition-group(root){animation-duration:150ms}}`;
     }
-    const vt = document.startViewTransition(update);
-    vt.ready.catch(() => {});
+    const typed = opts.types && window.ViewTransition && 'types' in ViewTransition.prototype;
+    const vt = typed ? document.startViewTransition({ update, types: opts.types }) : document.startViewTransition(update);
+    vt.ready.catch(() => {}); // a skipped transition rejects ready; the update still ran, so finished is what we return
     return vt.finished;
   };
-  MK.haptic = (kind = 'light') => { try { navigator.vibrate?.({ selection: 6, light: 10, success: [10, 40, 10] }[kind] ?? 10); } catch { /* blocked before a gesture */ } };
+
+  // Commit the on-screen transform and stop animations, so a grab or a new move starts from where the element is.
+  MK.freeze = (el) => {
+    const cs = getComputedStyle(el), t = cs.transform, tr = cs.translate, sc = cs.scale; // read before cancel: computed values are live
+    el.getAnimations().forEach((a) => a.cancel());
+    el.style.transform = t === 'none' ? '' : t;
+    el.style.translate = tr === 'none' ? '' : tr; // MK.flip animates these two, so a mid-flip grab needs them too
+    el.style.scale = sc === 'none' ? '' : sc;
+  };
+
+  // FLIP for one element or an array. Uses the translate/scale properties, so it composes with the element's own transform.
+  // Scaling distorts children and radii: flip boxes, or use MK.morph for rich content.
+  MK.flip = (targets, mutate, ease = MK.ease.spatial) => {
+    const els = [].concat(targets), red = MK.reduced();
+    const first = els.map((e) => e.getBoundingClientRect()); // measured while any earlier flip is still in flight
+    els.forEach((e) => e.getAnimations().filter((a) => a.id === 'mk-flip').forEach((a) => a.cancel()));
+    mutate();
+    return Promise.all(els.map((e, i) => {
+      const a = first[i], b = e.getBoundingClientRect();
+      if (!a.width || !b.width) return;
+      const o = { transformOrigin: '0 0' };
+      const kf = red ? [{ opacity: 0 }, { opacity: 1 }]
+        : [{ ...o, translate: `${a.left - b.left}px ${a.top - b.top}px`, scale: `${a.width / b.width} ${a.height / b.height}` }, { ...o, translate: '0 0', scale: '1 1' }];
+      const an = e.animate(kf, red ? { duration: 150, easing: 'ease-out' } : { duration: ease.ms, easing: ease.easing });
+      an.id = 'mk-flip';
+      return an.finished.catch(() => {});
+    })).then(() => {});
+  };
+
+  // Pointer drag with capture. Velocity (px/ms) comes from the last ~80 ms of movement. Returns a disposer.
+  // axis 'x' or 'y' locks the other axis and leaves that scroll direction to the browser.
+  MK.drag = (el, { axis, onStart, onMove, onEnd } = {}) => {
+    el.style.touchAction = axis === 'x' ? 'pan-y' : axis === 'y' ? 'pan-x' : 'none';
+    let id = null, x0 = 0, y0 = 0, pts = [];
+    const d = (e) => ({ dx: axis === 'y' ? 0 : e.clientX - x0, dy: axis === 'x' ? 0 : e.clientY - y0 });
+    const down = (e) => {
+      if (id !== null || (e.pointerType === 'mouse' && e.button)) return;
+      MK.freeze(el);
+      id = e.pointerId; x0 = e.clientX; y0 = e.clientY; pts = [[e.timeStamp, e.clientX, e.clientY]];
+      try { el.setPointerCapture(id); } catch { /* synthetic events have no active pointer */ }
+      onStart?.(e);
+    };
+    const move = (e) => {
+      if (e.pointerId !== id) return;
+      pts.push([e.timeStamp, e.clientX, e.clientY]);
+      onMove?.(d(e).dx, d(e).dy, e);
+    };
+    const up = (e) => {
+      if (e.pointerId !== id) return;
+      id = null;
+      const p0 = pts.find((p) => e.timeStamp - p[0] <= 80) || pts[pts.length - 1], p1 = pts[pts.length - 1], dt = p1[0] - p0[0];
+      const vx = dt > 1 && axis !== 'y' ? (p1[1] - p0[1]) / dt : 0, vy = dt > 1 && axis !== 'x' ? (p1[2] - p0[2]) / dt : 0;
+      onEnd?.({ ...d(e), vx, vy });
+    };
+    const ev = [['pointerdown', down], ['pointermove', move], ['pointerup', up], ['pointercancel', up]];
+    ev.forEach(([n, f]) => el.addEventListener(n, f));
+    return () => ev.forEach(([n, f]) => el.removeEventListener(n, f));
+  };
+
+  // Spring on x, y (px), r (deg), s (scale), seeded with the release velocity v (units per ms). The spring is simulated
+  // into WAAPI keyframes, so the move is a normal Animation: cancel it (or MK.freeze) to grab it mid-flight.
+  MK.fling = (el, { from = {}, to = {}, v = {}, k = 380, zeta = 0.8 } = {}) => {
+    if (MK.reduced()) { k = 1600; zeta = 1; v = {}; } // no overshoot, no carried momentum
+    const base = { x: 0, y: 0, r: 0, s: 1 }, tol = { x: 0.3, y: 0.3, r: 0.05, s: 0.002 };
+    const A = { ...base, ...from }, B = { ...base, ...to }, c = 2 * zeta * Math.sqrt(k), dt = 1 / 240, keys = Object.keys(base);
+    const p = { ...A }, w = Object.fromEntries(keys.map((q) => [q, (v[q] || 0) * 1000]));
+    const css = () => `translate(${p.x}px,${p.y}px) rotate(${p.r}deg) scale(${p.s})`;
+    const frames = [{ transform: css() }];
+    for (let i = 1; i < 720; i++) {
+      keys.forEach((q) => { w[q] += (-k * (p[q] - B[q]) - c * w[q]) * dt; p[q] += w[q] * dt; });
+      if (i % 4) continue;
+      if (keys.every((q) => Math.abs(p[q] - B[q]) < tol[q] && Math.abs(w[q]) < tol[q] * 8)) break;
+      frames.push({ transform: css() });
+    }
+    Object.assign(p, B);
+    const end = css();
+    frames.push({ transform: end });
+    const an = el.animate(frames, { duration: (frames.length * 1000) / 60, easing: 'linear', fill: 'forwards' });
+    an.finished.then(() => { el.style.transform = end; an.cancel(); }, () => {}); // a cancelled fling leaves the transform alone
+    return an;
+  };
+
+  // Perspective tilt that follows the pointer, low-pass smoothed (rAF, see header), spring back on leave.
+  // It owns el.style.transform: tilt an inner element if the outer one is thrown. Sets --mx/--my (0-100%) for a highlight.
+  // Returns a disposer.
+  MK.tilt = (el, { max = 10 } = {}) => {
+    let tx = 0, ty = 0, cx = 0, cy = 0, raf = 0;
+    const pose = () => `perspective(700px) rotateX(${-cy * max}deg) rotateY(${cx * max}deg)`;
+    const step = () => {
+      cx += (tx - cx) * 0.15; cy += (ty - cy) * 0.15;
+      el.style.transform = pose();
+      el.style.setProperty('--mx', `${50 + cx * 50}%`); el.style.setProperty('--my', `${50 + cy * 50}%`);
+      raf = Math.abs(tx - cx) + Math.abs(ty - cy) > 0.002 ? requestAnimationFrame(step) : 0;
+    };
+    const aim = (x, y) => { if (MK.reduced()) return; tx = clamp(x, -1, 1); ty = clamp(y, -1, 1); raf = raf || requestAnimationFrame(step); };
+    const move = (e) => { const r = el.getBoundingClientRect(); aim(((e.clientX - r.left) / r.width) * 2 - 1, ((e.clientY - r.top) / r.height) * 2 - 1); };
+    const leave = () => {
+      cancelAnimationFrame(raf); raf = 0;
+      const e = MK.ease.fast, from = pose(), cx0 = cx, cy0 = cy;
+      tx = ty = cx = cy = 0;
+      el.style.transform = '';
+      el.style.setProperty('--mx', '50%'); el.style.setProperty('--my', '50%');
+      if (!MK.reduced() && Math.abs(cx0) + Math.abs(cy0) > 0.01) el.animate([{ transform: from }, { transform: pose() }], { duration: e.ms, easing: e.easing });
+    };
+    const ev = [['pointermove', move], ['pointerleave', leave], ['pointerup', leave], ['pointercancel', leave]];
+    ev.forEach(([n, f]) => el.addEventListener(n, f));
+    el._mkAim = aim;
+    return () => { leave(); ev.forEach(([n, f]) => el.removeEventListener(n, f)); delete el._mkAim; };
+  };
+  // Gyro tilt for el, started by a tap on button (iOS asks for permission inside a user gesture; needs HTTPS, so file:// gets nothing).
+  MK.tilt.gyro = (button, el, opts) => {
+    const on = (e) => el._mkAim?.((e.gamma || 0) / 30, ((e.beta || 0) - 45) / 30);
+    const click = async () => {
+      const D = window.DeviceOrientationEvent;
+      if (!D || MK.reduced() || (typeof D.requestPermission === 'function' && (await D.requestPermission().catch(() => 'denied')) !== 'granted')) return;
+      if (!el._mkAim) MK.tilt(el, opts);
+      addEventListener('deviceorientation', on);
+    };
+    button.addEventListener('click', click);
+    return () => { button.removeEventListener('click', click); removeEventListener('deviceorientation', on); };
+  };
+
+  // Digit roll for a figure in tabular numerals: only the digits that changed slide. text is the whole formatted string.
+  // A different shape (where the digits and the other characters sit) rebuilds the figure with a fade. The element gets role=img and aria-label = text.
+  MK.roll = (el, text) => {
+    text = String(text);
+    el.setAttribute('role', 'img'); el.setAttribute('aria-label', text);
+    if (el.dataset.mkText === text) return;
+    const red = MK.reduced(), e = MK.ease.fast;
+    const shape = text.replace(/\d/g, '0'); // same length is not same layout: '1h 20m' vs '12 min'
+    if (el.dataset.mkLen !== shape) {
+      el.dataset.mkLen = shape;
+      el.style.cssText += ';display:inline-flex;height:1em;line-height:1;overflow:hidden;font-variant-numeric:tabular-nums';
+      el.innerHTML = [...text].map((ch) => /\d/.test(ch)
+        ? '<span aria-hidden="true" style="display:block;height:1em;overflow:hidden"><span class="mk-col" style="display:flex;flex-direction:column">'
+          + [...'0123456789'].map((n) => `<i style="display:block;height:1em;font-style:normal">${n}</i>`).join('') + '</span></span>'
+        : `<span aria-hidden="true">${ch}</span>`).join('');
+      el.querySelectorAll('.mk-col').forEach((c) => { c.dataset.d = 0; });
+      if (el.dataset.mkText !== undefined) el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: MK.out });
+    }
+    let k = 0;
+    el.querySelectorAll('.mk-col').forEach((col) => {
+      while (k < text.length && !/\d/.test(text[k])) k++;
+      const to = +text[k++], from = +col.dataset.d, at = (n) => `translateY(${-n}em)`;
+      col.style.transform = at(to); col.dataset.d = to;
+      if (from !== to && !red && el.dataset.mkText !== undefined) col.animate([{ transform: at(from) }, { transform: at(to) }], { duration: e.ms, easing: e.easing });
+    });
+    if (red && el.dataset.mkText !== undefined) el.animate([{ opacity: 0.4 }, { opacity: 1 }], { duration: 150, easing: MK.out });
+    el.dataset.mkText = text;
+  };
+
+  // navigator.vibrate patterns. iOS Safari has no vibrate: this is a silent no-op there, so never rely on it alone.
+  const PATTERNS = { selection: 6, light: 10, medium: 20, success: [10, 40, 10], warning: [20, 60, 20], error: [30, 50, 30, 50, 30] };
+  MK.haptic = (kind = 'light') => { try { navigator.vibrate?.(PATTERNS[kind] ?? 10); } catch { /* blocked before a user gesture */ } };
 })();
+
 </script>
 <script>
-const $ = (id) => document.getElementById(id);
-const html = document.documentElement;
-if (new URLSearchParams(location.search).get('theme') === 'light') html.dataset.theme = 'light';
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const hm = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
 
-/* clock: the scenario is 23:04 on Thu 12 Nov; real time runs from there */
-const BASE = new Date(2026, 10, 12, 23, 4, 0).getTime(), T0 = Date.now();
-const ALARM = new Date(2026, 10, 13, 6, 45, 0).getTime();
-const now = () => BASE + (Date.now() - T0);
-const hm = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
-const fmt = (t) => hm.format(t);
-const dur = (min) => `${Math.floor(min / 60)}h ${String(Math.round(min % 60)).padStart(2, '0')}m`;
-const minsTo = (a, b) => Math.floor((b - a) / 60000);
+  // ---- one state; every view renders from it ----
+  // shortcut: sample night starts at Thu 12 Nov 2026, 23:04 and runs in real time from load; native reads the device clock.
+  const T0 = new Date(2026, 10, 12, 23, 4, 0).getTime(), LOAD = Date.now();
+  const now = () => new Date(T0 + (Date.now() - LOAD));
+  const ALARM = new Date(2026, 10, 13, 6, 45), BEDTIME = new Date(2026, 10, 12, 23, 15);
+  const SOUNDS = [
+    { id: 'off', name: 'Off', icon: 'speaker-slash', dl: 1 },
+    { id: 'rain', name: 'Rain', icon: 'cloud-rain', dl: 1 },
+    { id: 'noise', name: 'Noise', icon: 'waveform', dl: 1 },
+    { id: 'ocean', name: 'Ocean', icon: 'waves', dl: 0 },
+    { id: 'fan', name: 'Fan', icon: 'fan', dl: 0 },
+  ];
+  // last seven nights, oldest first; Saturday has no log
+  const NIGHTS = [
+    ['Thu', '5 Nov', '23:40', '06:45'], ['Fri', '6 Nov', '00:05', '06:45'], ['Sat', '7 Nov', null, null],
+    ['Sun', '8 Nov', '23:05', '07:15'], ['Mon', '9 Nov', '23:25', '06:45'], ['Tue', '10 Nov', '23:50', '06:45'], ['Wed', '11 Nov', '00:12', '06:45'],
+  ].map(([d, date, a, w]) => ({ d, date, a, w, min: a ? span(a, w) : null }));
+  function span(a, w) { const m = (s) => +s.slice(0, 2) * 60 + +s.slice(3); let x = m(w) - m(a); return x < 0 ? x + 1440 : x; }
+  console.assert(NIGHTS[6].min === 393 && NIGHTS[3].min === 490, 'sleep log durations');
 
-/* sample log: realistic, uneven, one night missing */
-const NIGHTS = [
-  { d: 'Wed', full: 'Wed 11 Nov', s: '23:52', e: '06:41' },
-  { d: 'Tue', full: 'Tue 10 Nov', s: '23:18', e: '06:44' },
-  { d: 'Mon', full: 'Mon 9 Nov', s: '00:41', e: '06:45' },
-  { d: 'Sun', full: 'Sun 8 Nov', s: null },
-  { d: 'Sat', full: 'Sat 7 Nov', s: '23:35', e: '07:58' },
-  { d: 'Fri', full: 'Fri 6 Nov', s: '23:10', e: '06:40' },
-];
-const axis = (hhmm) => { const [h, m] = hhmm.split(':').map(Number); return (h >= 12 ? h - 22 : h + 2) * 60 + m; }; // minutes after 22:00
-const SPAN = 600; // 22:00 to 08:00
-NIGHTS.forEach((n) => { if (n.s) n.min = axis(n.e) - axis(n.s); });
-console.assert(NIGHTS[0].min === 409 && NIGHTS[4].min === 503, 'night durations');
+  const S = { sound: 'off', fade: 45, soundAt: null, lightsOut: null, tab: 'tonight',
+    breath: { elapsed: 0, playing: false, open: false } };
+  const TOTAL = 360000, CYCLE = 10000;
 
-const SOUNDS = [
-  { id: 'off', name: 'Off', icon: 'speaker-slash' },
-  { id: 'rain', name: 'Rain', icon: 'cloud-rain' },
-  { id: 'brown', name: 'Brown noise', icon: 'waveform' },
-  { id: 'fan', name: 'Fan', icon: 'fan' },
-];
-const TIMERS = [15, 30, 45, 60];
-const S = { sound: 'off', last: 'rain', timer: 45, soundAt: null, lightsOut: null, breathed: 0 };
+  const dur = (ms) => { const m = Math.max(0, Math.round(ms / 60000)); return `${Math.floor(m / 60)} h ${m % 60} min`.replace(" ", " "); };
+  const mmss = (ms) => { const s = Math.floor(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+  const soundOf = (id) => SOUNDS.find((s) => s.id === id);
+  const fadeAt = () => S.soundAt ? new Date(S.soundAt.getTime() + S.fade * 60000) : null;
+  const say = (t) => { $('live').textContent = t; };
+  const offline = () => document.documentElement.dataset.state === 'offline';
+  console.assert(dur(ALARM - T0) === '7 h 41 min', 'until alarm at 23:04');
 
-/* real sound: synthesised noise, so the tiles do what they say */
-let ac, cur;
-function noise(brown) {
-  const len = ac.sampleRate * 4, b = ac.createBuffer(1, len, ac.sampleRate), d = b.getChannelData(0);
-  let last = 0;
-  for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; d[i] = brown ? (last = (last + 0.02 * w) / 1.02) * 3.5 : w; }
-  return b;
-}
-function play(id, fade = 1.5) {
-  if (cur) { const c = cur, t = ac.currentTime; c.g.gain.cancelScheduledValues(t); c.g.gain.setValueAtTime(c.g.gain.value, t); c.g.gain.linearRampToValueAtTime(0, t + fade); setTimeout(() => c.src.stop(), fade * 1000 + 100); cur = null; }
-  if (id === 'off') return;
-  ac ??= new AudioContext();
-  const src = ac.createBufferSource(); src.buffer = noise(id === 'brown'); src.loop = true;
-  const g = ac.createGain(), f = ac.createBiquadFilter();
-  if (id === 'rain') { f.type = 'bandpass'; f.frequency.value = 2600; f.Q.value = 0.5; }
-  else if (id === 'fan') { f.type = 'lowpass'; f.frequency.value = 450; }
-  else { f.type = 'lowpass'; f.frequency.value = 900; }
-  const vol = { rain: 0.22, brown: 0.5, fan: 0.6 }[id];
-  g.gain.setValueAtTime(0, ac.currentTime); g.gain.linearRampToValueAtTime(vol, ac.currentTime + 2);
-  src.connect(f).connect(g).connect(ac.destination); src.start(); cur = { src, g };
-}
-let timerId;
-function setSound(id) {
-  if (id !== 'off' && html.dataset.state === 'offline' && id === 'fan') return;
-  S.sound = id; if (id !== 'off') S.last = id;
-  S.soundAt = id === 'off' ? null : now();
-  play(id);
-  clearTimeout(timerId);
-  if (id !== 'off') timerId = setTimeout(() => { play('off', 10); S.sound = 'off'; S.soundAt = null; render(); }, S.timer * 60000);
-  MK.haptic('selection'); render();
-  say(id === 'off' ? 'Sound off' : `${name(id)} on, stops ${fmt(S.soundAt + S.timer * 60000)}`);
-}
-const name = (id) => SOUNDS.find((s) => s.id === id).name;
-const say = (t) => { $('live').textContent = t; };
-
-/* chart rows */
-const rows = $('rows');
-function rowHTML(d, a, b, v, cls = '') {
-  return `<div class="r ${cls}"><span class="d">${d}</span><span class="track">${b > 0 ? `<i class="bar" style="--a:${a}%;--b:${b}%"></i>` : ''}</span><span class="v">${v}</span></div>`;
-}
-const pct = (m) => +(Math.max(0, Math.min(SPAN, m)) / SPAN * 100).toFixed(2);
-function tonightSpan() {
-  const from = S.lightsOut ?? now();
-  return { from, min: minsTo(from, ALARM) };
-}
-function drawChart() {
-  const t = tonightSpan(), a = axis(fmt(t.from));
-  let h = rows.querySelector('.grid').outerHTML;
-  h += rowHTML('Tonight', pct(a), pct(t.min), dur(t.min), 'tonight' + (S.lightsOut ? ' logged' : ''));
-  NIGHTS.forEach((n) => { h += n.s ? rowHTML(n.d, pct(axis(n.s)), pct(n.min), dur(n.min)) : rowHTML(n.d, 0, 0, 'Not logged'); });
-  rows.innerHTML = h;
-  rows.setAttribute('aria-label', `Sleep log. Tonight ${dur(t.min)} until the 06:45 alarm. ` +
-    NIGHTS.map((n) => n.s ? `${n.full}, ${n.s} to ${n.e}, ${dur(n.min)}` : `${n.full}, not logged`).join('. '));
-}
-function readout(i) {
-  const t = tonightSpan();
-  if (i === 0) return S.lightsOut ? `Tonight, lights out ${fmt(t.from)} to alarm 06:45` : `Tonight, now ${fmt(t.from)} to alarm 06:45`;
-  const n = NIGHTS[(i ?? 1) - 1];
-  const lead = i == null ? 'Last night' : n.full;
-  return n.s ? `${lead}, ${n.s} to ${n.e}, ${dur(n.min)}` : `${lead}, not logged`;
-}
-let scrub = null;
-function setScrub(e) {
-  const rs = [...rows.querySelectorAll('.r')], y = e.clientY;
-  const i = rs.findIndex((r) => { const b = r.getBoundingClientRect(); return y >= b.top - 2 && y <= b.bottom + 2; });
-  if (i < 0 || i === scrub) return;
-  scrub = i; rs.forEach((r, k) => r.classList.toggle('on', k === i));
-  $('readout').textContent = readout(i); MK.haptic('selection');
-}
-const chart = $('chart');
-chart.addEventListener('pointerdown', (e) => { chart.setPointerCapture?.(e.pointerId); setScrub(e); });
-chart.addEventListener('pointermove', (e) => { if (e.buttons || e.pointerType === 'mouse') setScrub(e); });
-const endScrub = () => { scrub = null; rows.querySelectorAll('.r.on').forEach((r) => r.classList.remove('on')); $('readout').textContent = readout(); };
-chart.addEventListener('pointerleave', endScrub); chart.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') endScrub(); });
-
-/* sound tiles, sound list, log list */
-function drawTime() {
-  const win = dur(tonightSpan().min);
-  $('clock').textContent = fmt(now());
-  $('window').textContent = win;
-  $('alarm-line').textContent = S.lightsOut ? `Lights out ${fmt(S.lightsOut)} to your 06:45 alarm` : 'Now to your 06:45 alarm';
-  if (scrub == null) { drawChart(); $('readout').textContent = readout(); }
-  console.assert(rows.querySelector('.r.tonight .v').textContent === win, 'hero and tonight row agree');
-}
-let lastMin;
-setInterval(() => { const m = fmt(now()); if (m !== lastMin) { lastMin = m; drawTime(); } }, 1000);
-function render() {
-  drawTime();
-  const off = html.dataset.state === 'offline';
-  $('tiles').innerHTML = SOUNDS.map((s) => {
-    const on = S.sound === s.id, dis = off && s.id === 'fan';
-    return `<button class="tile" data-snd="${s.id}" aria-pressed="${on}" ${dis ? 'disabled' : ''}><i class="${on ? 'ph-fill' : 'ph'} ph-${s.icon}" aria-hidden="true"></i><span>${s.name}</span><small>Not downloaded</small></button>`;
-  }).join('');
-  const stops = S.soundAt ? fmt(S.soundAt + S.timer * 60000) : null;
-  $('timer-t').textContent = stops ? `Stops ${stops}` : `Timer ${S.timer} min`;
-  $('timer').setAttribute('aria-label', stops ? `Sound timer ${S.timer} minutes, stops ${stops}. Change` : `Sound timer ${S.timer} minutes. Change`);
-
-  $('sound-list').innerHTML = SOUNDS.map((s) => {
-    const on = S.sound === s.id, dis = off && s.id === 'fan';
-    return `<button class="li" data-snd="${s.id}" aria-pressed="${on}" ${dis ? 'disabled' : ''}><i class="${on ? 'ph-fill' : 'ph'} ph-${s.icon}" aria-hidden="true"></i><span><span class="t">${s.name}</span>${dis ? '<br><span class="s">Not downloaded</span>' : ''}</span><span class="e">${on ? (s.id === 'off' ? 'Selected' : 'Playing') : ''}</span></button>`;
-  }).join('') + `<button class="li" id="timer2"><i class="ph ph-timer" aria-hidden="true"></i><span class="t">Timer</span><span class="e">${S.timer} min${stops ? `, stops ${stops}` : ''}</span></button>`;
-
-  const tl = S.lightsOut ? `<div class="li"><span><span class="t">Thu 12 Nov</span><br><span class="s">Lights out ${fmt(S.lightsOut)}, alarm 06:45</span></span><span class="e">In progress</span></div>` : '';
-  $('log-list').innerHTML = tl + NIGHTS.map((n) => `<div class="li"><span><span class="t">${n.full}</span><br><span class="s">${n.s ? `${n.s} to ${n.e}` : 'Not logged'}</span></span><span class="e">${n.s ? dur(n.min) : ''}</span></div>`).join('');
-
-  $('sleep').hidden = !!S.lightsOut; $('receipt').hidden = !S.lightsOut;
-  if (S.lightsOut) $('receipt-t').textContent = `Lights out ${fmt(S.lightsOut)} logged`;
-  $('br-sub').textContent = S.breathed ? `Breathed ${S.breathed < 60 ? S.breathed + ' s' : Math.floor(S.breathed / 60) + ' min' + (S.breathed % 60 ? ' ' + (S.breathed % 60) + ' s' : '')} tonight` : '4 s in, 6 s out, 5 min';
-  plSound();
-}
-
-document.addEventListener('click', (e) => {
-  const b = e.target.closest('[data-snd]');
-  if (b && !b.disabled) { const box = b.parentElement; setSound(b.dataset.snd); box.querySelector(`[data-snd="${b.dataset.snd}"]`).focus({ preventScroll: true }); }
-  if (e.target.closest('#timer, #timer2')) {
-    S.timer = TIMERS[(TIMERS.indexOf(S.timer) + 1) % TIMERS.length];
-    if (S.sound !== 'off') { S.soundAt = now(); clearTimeout(timerId); timerId = setTimeout(() => { play('off', 10); S.sound = 'off'; S.soundAt = null; render(); }, S.timer * 60000); }
-    render(); say(`Timer ${S.timer} minutes`);
+  // ---- night band ----
+  const W = 329, START = new Date(2026, 10, 12, 22, 0).getTime(), SPAN = 9 * 3600000;
+  const x = (t) => Math.max(0, Math.min(W, ((t - START) / SPAN) * W));
+  const lastX = (hhmm) => { const [h, m] = hhmm.split(':').map(Number); const mins = ((h + 24 - 22) % 24) * 60 + m; return (mins / 540) * W; };
+  function band() {
+    const n = now().getTime(), from = S.lightsOut ? S.lightsOut.getTime() : n, empty = document.documentElement.dataset.state === 'empty';
+    const fx = x(from), ax = x(ALARM.getTime()), last = NIGHTS[6];
+    const tick = [0, 2, 4, 6, 8].map((h) => { const tx = (h / 9) * W; const lab = String((22 + h) % 24).padStart(2, '0') + ':00';
+      return `<line x1="${tx}" x2="${tx}" y1="22" y2="${empty ? 48 : 70}" stroke="var(--line)" stroke-width="1"/>
+        <text x="${tx}" y="90" text-anchor="${h ? 'middle' : 'start'}">${lab}</text>`; }).join('');
+    const lab = S.lightsOut ? `Lights out ${hm.format(S.lightsOut)}` : `Now ${hm.format(n)}`;
+    const lastRow = empty ? `<text x="0" y="64">No log for last night</text>`
+      : `<text x="0" y="64">Wed</text><rect x="${lastX(last.a)}" y="54" width="${lastX(last.w) - lastX(last.a)}" height="12" rx="6" fill="var(--ink-2)" opacity=".55"/>`;
+    $('band').innerHTML = `${tick}
+      <rect x="0" y="26" width="${W}" height="18" rx="9" fill="var(--line)" opacity=".6"/>
+      <rect x="${fx}" y="26" width="${ax - fx}" height="18" rx="9" fill="var(--accent)"/>
+      <text x="${fx}" y="16" class="ink">${lab}</text>
+      <text x="${ax}" y="16" text-anchor="end">Alarm ${hm.format(ALARM)}</text>${lastRow}`;
+    $('band').setAttribute('aria-label', `Tonight from ${lab} to alarm ${hm.format(ALARM)}` + (empty ? '' : `. Last night ${last.a} to ${last.w}`));
   }
-});
 
-/* tabs */
-document.querySelectorAll('.tab').forEach((tab) => tab.addEventListener('click', () => {
-  document.querySelectorAll('.tab').forEach((t) => {
-    const on = t === tab; t.toggleAttribute('aria-current', on); if (on) t.setAttribute('aria-current', 'page');
-    const i = t.querySelector('i'); i.classList.toggle('ph-fill', on); i.classList.toggle('ph', !on);
+  // ---- render ----
+  function render() {
+    const n = now(), toBed = Math.round((BEDTIME - n) / 60000);
+    $('clock').textContent = hm.format(n);
+    MK.roll($('untilAlarm'), dur(ALARM - n));
+    $('untilAlarm').setAttribute('aria-label', `${dur(ALARM - n)} until alarm`);
+    $('bedLine').textContent = S.lightsOut ? `Alarm ${hm.format(ALARM)}. Lights out ${hm.format(S.lightsOut)}`
+      : `Alarm ${hm.format(ALARM)}. Bedtime ${hm.format(BEDTIME)}, ` + (toBed > 0 ? `in ${toBed} min` : toBed === 0 ? 'now' : `${-toBed} min ago`);
+    band();
+
+    // sounds
+    const fa = fadeAt();
+    $('soundLine').textContent = S.sound === 'off' ? 'Off' : `${soundOf(S.sound).name}, fades out ${hm.format(fa)}`;
+    for (const el of document.querySelectorAll('[data-sound]')) {
+      const s = soundOf(el.dataset.sound), on = s.id === S.sound;
+      el.setAttribute('aria-checked', on);
+      el.disabled = offline() && !s.dl;
+      el.querySelector('i').className = (on ? 'ph-fill ph-' : 'ph ph-') + s.icon + (el.classList.contains('row') ? ' lead' : '');
+    }
+    for (const el of document.querySelectorAll('[data-fade]')) el.setAttribute('aria-checked', +el.dataset.fade === S.fade);
+    $('pSoundLbl').textContent = S.sound === 'off' ? 'Off' : soundOf(S.sound).name;
+    $('pSound').querySelector('i').className = S.sound === 'off' ? 'ph ph-speaker-slash' : 'ph ph-speaker-high';
+    $('pSound').setAttribute('aria-label', S.sound === 'off' ? 'Sound off, turn on Rain' : `${soundOf(S.sound).name} playing, turn off`);
+
+    // wind-down card follows the session
+    const b = S.breath;
+    if (b.elapsed >= TOTAL) { $('windSub').textContent = 'Done tonight, 6:00'; $('startLbl').textContent = 'Breathe again, 6 min'; }
+    else if (b.elapsed > 0) { $('windSub').textContent = `Paused at ${mmss(b.elapsed)} of 6:00`; $('startLbl').textContent = `Resume, ${mmss(TOTAL - b.elapsed)} left`; }
+    else { $('windSub').textContent = '6 min, paced by a soft tone'; $('startLbl').textContent = 'Start 6 min breathing'; }
+
+    // dock
+    $('sleepBtn').hidden = !!S.lightsOut; $('receipt').hidden = !S.lightsOut;
+    if (S.lightsOut) $('receiptTxt').textContent = `Lights out ${hm.format(S.lightsOut)} logged`;
+    if (S.lightsOut) $('lClock').textContent = hm.format(S.lightsOut);
+    $('lAlarm').textContent = `Alarm ${hm.format(ALARM)}, in ${dur(ALARM - n)}`;
+    $('lSound').textContent = S.sound === 'off' ? 'No sound' : `${soundOf(S.sound).name} fades out at ${hm.format(fa)}`;
+    renderLog();
+  }
+
+  // ---- build controls once ----
+  $('tiles').innerHTML = SOUNDS.map((s) => `<button class="tile" role="radio" data-sound="${s.id}" data-dl="${s.dl}" aria-label="${s.name}${s.dl ? '' : ', not downloaded when offline'}"><i></i>${s.name}</button>`).join('');
+  $('soundList').innerHTML = SOUNDS.filter((s) => s.id !== 'off').concat(SOUNDS[0]).map((s) => `<button class="row" role="radio" data-sound="${s.id}" data-dl="${s.dl}">
+      <i class="lead"></i><span class="grow"><span class="t">${s.name}</span><span class="sub nd"><br>Not downloaded</span></span><i class="ph ph-check chk" aria-hidden="true"></i></button>`).join('');
+  for (const id of ['seg', 'seg2']) $(id).innerHTML = [15, 30, 45, 60].map((m) => `<button role="radio" data-fade="${m}" aria-label="${m} minutes">${m} min</button>`).join('');
+  $('bars').innerHTML = NIGHTS.map((nt, i) => `<span><b class="${nt.min ? (i === 6 ? 'last' : '') : 'none'}" style="height:${nt.min ? Math.round(nt.min / 540 * 32) : 2}px"></b>${nt.d[0]}</span>`).join('');
+
+  function renderLog() {
+    const rows = NIGHTS.slice().reverse().map((nt, i) => `<div class="row"><span class="grow"><span class="t">${nt.d} ${nt.date}</span><br>
+      <span class="sub num">${nt.min ? `${nt.a} to ${nt.w}` : 'No log'}</span></span>
+      ${nt.min ? `<span class="lbar"><i class="${i === 0 ? 'last' : ''}" style="width:${Math.round(nt.min / 540 * 100)}%"></i></span><span class="dur">${dur(nt.min * 60000)}</span>` : ''}</div>`);
+    const tonight = S.lightsOut ? [`<div class="row"><span class="grow"><span class="t">Thu 12 Nov</span><br><span class="sub num">Lights out ${hm.format(S.lightsOut)}</span></span><span class="sub">Tonight</span></div>`] : [];
+    $('logList').innerHTML = document.documentElement.dataset.state === 'empty'
+      ? `<div class="row"><span class="grow"><span class="t">No nights logged yet</span><br><span class="sub">Going to sleep on Tonight starts your log</span></span></div>`
+      : tonight.concat(rows).join('');
+  }
+
+  document.addEventListener('click', (e) => {
+    const s = e.target.closest('[data-sound]'), f = e.target.closest('[data-fade]'), t = e.target.closest('[data-tab]');
+    if (s && !s.disabled) { S.sound = s.dataset.sound; S.soundAt = S.sound === 'off' ? null : now(); MK.haptic('selection');
+      render(); say(S.sound === 'off' ? 'Sound off' : `${soundOf(S.sound).name} on, fades out at ${hm.format(fadeAt())}`); }
+    if (f) { S.fade = +f.dataset.fade; MK.haptic('selection'); render(); }
+    if (t) tab(t.dataset.tab);
   });
-  ['tonight', 'sounds', 'log'].forEach((v) => { $('v-' + v).hidden = v !== tab.dataset.tab; });
-}));
 
-/* breathing session: one WAAPI animation is the clock, so pause stops shape and count together */
-const CIRC = 'shape(from 50% 0%, curve to 100% 50% with 77% 0% / 100% 23%, curve to 50% 100% with 100% 77% / 77% 100%, curve to 0% 50% with 23% 100% / 0% 77%, curve to 50% 0% with 0% 23% / 23% 0%, close)';
-const BLOB = 'shape(from 50% 0%, curve to 100% 50% with 93% 2% / 100% 10%, curve to 50% 100% with 100% 88% / 90% 100%, curve to 0% 50% with 8% 100% / 0% 92%, curve to 50% 0% with 0% 6% / 12% 0%, close)';
-const hasShape = CSS.supports('clip-path', CIRC);
-if (hasShape && !MK.reduced()) { $('shape').style.borderRadius = '0'; $('shape').style.clipPath = CIRC; } // the clip-path is the shape; a radius would clip the inhale blob back to a circle
-const CYCLE = 10000, IN = 4000, TOTAL = 300000;
-const clock = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
-let anim, raf, phase;
-function startBreath() {
-  const io = 'cubic-bezier(.45,0,.55,1)', red = MK.reduced();
-  const kf = red ? [{ opacity: 1 }, { opacity: 1 }]
-    : hasShape ? [{ clipPath: CIRC, transform: 'scale(.7)', easing: io }, { clipPath: BLOB, transform: 'scale(1)', offset: 0.4, easing: io }, { clipPath: CIRC, transform: 'scale(.7)' }]
-    : [{ transform: 'scale(.7)', easing: io }, { transform: 'scale(1)', offset: 0.4, easing: io }, { transform: 'scale(.7)' }];
-  anim = $('shape').animate(kf, { duration: CYCLE, iterations: TOTAL / CYCLE });
-  anim.onfinish = finished;
-  phase = null; $('pl-run').hidden = false; $('pl-done').hidden = true; setPause(false);
-  tick();
-}
-function tick() {
-  const t = anim.currentTime ?? 0, c = t % CYCLE, inhale = c < IN;
-  const n = Math.ceil(((inhale ? IN : CYCLE) - c) / 1000) || 1;
-  if (phase !== inhale) { phase = inhale; $('cue').textContent = inhale ? 'Breathe in' : 'Breathe out'; if (t > 50) MK.haptic('selection'); }
-  $('count').textContent = n;
-  $('elapsed').textContent = `${clock(t / 1000)} of 5:00`;
-  if (anim.playState === 'running') raf = requestAnimationFrame(tick);
-}
-function setPause(p) {
-  $('pause').innerHTML = p ? '<i class="ph-fill ph-play" aria-hidden="true"></i><span>Resume</span>' : '<i class="ph-fill ph-pause" aria-hidden="true"></i><span>Pause</span>';
-}
-$('pause').onclick = () => {
-  if (anim.playState === 'running') { anim.pause(); cancelAnimationFrame(raf); setPause(true); say('Paused'); }
-  else { anim.play(); setPause(false); tick(); say('Resumed'); }
-};
-function finished() {
-  cancelAnimationFrame(raf); S.breathed = TOTAL / 1000;
-  $('cue').textContent = 'Done'; $('count').textContent = '';
-  $('elapsed').textContent = '5:00 of slow breathing';
-  $('pl-run').hidden = true; $('pl-done').hidden = false; MK.haptic('success'); render();
-  $('done-sleep').focus({ preventScroll: true });
-}
-function openPlayer() {
-  const dot = $('dot'), shape = $('shape');
-  dot.style.viewTransitionName = 'breath';
-  MK.morph(() => {
-    dot.style.viewTransitionName = ''; shape.style.viewTransitionName = 'breath';
-    $('player').hidden = false; startBreath();
-  }, { ease: MK.ease.slow }).then(() => { shape.style.viewTransitionName = ''; });
-  $('pl-h').focus({ preventScroll: true });
-}
-function closePlayer(after) {
-  if (anim && anim.playState !== 'finished') { S.breathed = Math.max(S.breathed, Math.floor((anim.currentTime ?? 0) / 1000)); }
-  cancelAnimationFrame(raf);
-  const dot = $('dot'), shape = $('shape');
-  shape.style.viewTransitionName = 'breath';
-  return MK.morph(() => {
-    shape.style.viewTransitionName = ''; dot.style.viewTransitionName = 'breath';
-    anim?.cancel(); $('player').hidden = true; render(); after?.();
-  }).then(() => { dot.style.viewTransitionName = ''; });
-}
-$('start').onclick = openPlayer;
-$('end').onclick = () => closePlayer(() => $('start').focus({ preventScroll: true }));
-$('done-back').onclick = $('end').onclick;
-$('done-sleep').onclick = () => { anim?.cancel(); $('player').hidden = true; goToSleep(); };
-function plSound() {
-  const on = S.sound !== 'off', b = $('pl-sound');
-  b.setAttribute('aria-pressed', on);
-  b.innerHTML = `<i class="ph ph-speaker-${on ? 'high' : 'slash'}" aria-hidden="true"></i><span>${on ? name(S.sound) : 'Sound off'}</span>`;
-  b.setAttribute('aria-label', on ? `${name(S.sound)} playing. Turn sound off` : `Sound off. Turn on ${name(S.last)}`);
-}
-$('pl-sound').onclick = () => setSound(S.sound === 'off' ? S.last : 'off');
+  // ---- tabs keep their own scroll ----
+  const scrolls = {};
+  function tab(name) {
+    scrolls[S.tab] = $('scroller').scrollTop; S.tab = name;
+    for (const v of ['tonight', 'sounds', 'log']) $('v-' + v).hidden = v !== name;
+    for (const b of document.querySelectorAll('[data-tab]')) {
+      const on = b.dataset.tab === name; on ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current');
+      const i = b.querySelector('i'); i.className = i.className.replace(/ph(-fill)? /, on ? 'ph-fill ' : 'ph ');
+    }
+    $('dock').hidden = name !== 'tonight'; $('scroller').classList.toggle('nodock', name !== 'tonight');
+    $('scroller').scrollTop = scrolls[name] || 0;
+  }
+  $('logRow').onclick = () => tab('log');
 
-/* lights out: the commit dims the screen; Undo reverses, Done and Escape keep it */
-function goToSleep() {
-  S.lightsOut = now(); render();
-  $('lo-time').textContent = fmt(S.lightsOut);
-  $('lo-alarm').textContent = `Alarm 06:45, in ${dur(minsTo(S.lightsOut, ALARM))}`;
-  loSound();
-  const L = $('lights'); L.hidden = false;
-  L.animate([{ opacity: 0 }, { opacity: 1 }], { duration: MK.reduced() ? 150 : 900, easing: MK.out });
-  $('lo-h').focus({ preventScroll: true }); MK.haptic('light');
-  say(`Lights out ${fmt(S.lightsOut)} logged`);
-}
-function loSound() {
-  const on = S.sound !== 'off';
-  $('lo-snd').style.display = on ? '' : 'none';
-  if (on) $('lo-snd-t').textContent = `${name(S.sound)}, stops ${fmt(S.soundAt + S.timer * 60000)}`;
-}
-function closeLights(focusId) { $('lights').hidden = true; $(focusId).focus({ preventScroll: true }); }
-function undoSleep() { S.lightsOut = null; render(); say('Lights out undone'); }
-$('sleep').onclick = goToSleep;
-$('undo').onclick = () => { undoSleep(); $('sleep').focus({ preventScroll: true }); };
-$('lo-undo').onclick = () => { undoSleep(); closeLights('sleep'); };
-$('lo-done').onclick = () => closeLights('undo');
-$('lo-stop').onclick = () => { setSound('off'); loSound(); };
-$('retry').onclick = () => { location.hash = ''; };
+  // ---- breathing: the dot grows into the pacer ----
+  const C = 'shape(from 50% 0%, curve to 100% 50% with 77% 0% / 100% 23%, curve to 50% 100% with 100% 77% / 77% 100%, curve to 0% 50% with 23% 100% / 0% 77%, curve to 50% 0% with 0% 23% / 23% 0%, close)';
+  const B = 'shape(from 50% 0%, curve to 100% 50% with 95% 0% / 100% 5%, curve to 50% 100% with 100% 95% / 95% 100%, curve to 0% 50% with 5% 100% / 0% 95%, curve to 50% 0% with 0% 5% / 5% 0%, close)';
+  const hasShape = CSS.supports('clip-path', C);
+  let breathAnim = null, timer = null, lastTick = 0, lastPhase = '';
+  function makeAnim() {
+    if (breathAnim || MK.reduced()) return;
+    const k = hasShape ? [{ clipPath: C, transform: 'scale(.6)' }, { clipPath: B, transform: 'scale(1)', offset: .4 }, { clipPath: C, transform: 'scale(.6)' }]
+      : [{ transform: 'scale(.6)', borderRadius: '50%' }, { transform: 'scale(1)', borderRadius: '38%', offset: .4 }, { transform: 'scale(.6)', borderRadius: '50%' }];
+    // 4 s in (ease-in-out), 6 s out
+    breathAnim = $('shape').animate(k.map((f) => ({ ...f, easing: 'ease-in-out' })), { duration: CYCLE, iterations: Infinity });
+    breathAnim.pause();
+  }
+  function cue() {
+    const b = S.breath, t = (b.elapsed % CYCLE) / 1000, inhale = t < 4;
+    const phase = inhale ? 'Breathe in' : 'Breathe out';
+    $('cueNum').textContent = inhale ? 4 - Math.floor(t) : 6 - Math.floor(t - 4);
+    if (phase !== lastPhase) { $('cueWord').textContent = phase; if (b.playing && lastPhase) MK.haptic('light'); lastPhase = phase; }
+    $('pEl').textContent = mmss(b.elapsed);
+    $('progFill').style.width = (b.elapsed / TOTAL * 100) + '%';
+    $('pPlay').setAttribute('aria-label', b.playing ? 'Pause' : 'Resume');
+    $('pPlay').querySelector('i').className = b.playing ? 'ph-fill ph-pause' : 'ph-fill ph-play';
+  }
+  function play(on) {
+    const b = S.breath; b.playing = on;
+    if (breathAnim) { breathAnim.currentTime = b.elapsed % CYCLE; on ? breathAnim.play() : breathAnim.pause(); }
+    clearInterval(timer);
+    if (on) { lastTick = performance.now(); timer = setInterval(() => {
+      const t = performance.now(); b.elapsed = Math.min(TOTAL, b.elapsed + (t - lastTick)); lastTick = t;
+      if (b.elapsed >= TOTAL) { play(false); $('pRun').hidden = true; $('pDone').hidden = false; say('6 minutes done'); }
+      cue(); }, 200); }
+    cue();
+  }
+  function openPlayer() {
+    const b = S.breath; if (b.elapsed >= TOTAL) b.elapsed = 0;
+    makeAnim(); if (breathAnim) breathAnim.currentTime = b.elapsed % CYCLE;
+    $('pRun').hidden = false; $('pDone').hidden = true; lastPhase = ''; cue();
+    $('dot').style.viewTransitionName = 'breath';
+    MK.morph(() => { $('dot').style.viewTransitionName = ''; $('shape').style.viewTransitionName = 'breath'; $('player').hidden = false; b.open = true; })
+      .then(() => { $('shape').style.viewTransitionName = ''; $('p-title').focus({ preventScroll: true }); if (b.open) play(true); });
+  }
+  function closePlayer(then) {
+    const b = S.breath; if (!b.open) return; play(false); b.open = false;
+    $('shape').style.viewTransitionName = 'breath';
+    return MK.morph(() => { $('shape').style.viewTransitionName = ''; $('dot').style.viewTransitionName = 'breath'; $('player').hidden = true; render(); })
+      .then(() => { $('dot').style.viewTransitionName = ''; if (then) then(); else $('startBtn').focus({ preventScroll: true });
+        if (b.elapsed > 0 && b.elapsed < TOTAL) say(`Paused at ${mmss(b.elapsed)}`); });
+  }
+  $('startBtn').onclick = openPlayer;
+  $('pPlay').onclick = () => play(!S.breath.playing);
+  $('pClose').onclick = $('pEnd').onclick = $('pBack').onclick = () => closePlayer();
+  $('pSound').onclick = () => { S.sound = S.sound === 'off' ? 'rain' : 'off'; S.soundAt = S.sound === 'off' ? null : now(); render(); };
+  $('pSleep').onclick = () => closePlayer(lightsOut);
 
-addEventListener('keydown', (e) => {
-  if (e.key !== 'Escape') return;
-  if (!$('lights').hidden) $('lo-done').click();
-  else if (!$('player').hidden) $('end').click();
-});
+  // ---- lights out: the commit, and the screen goes dark ----
+  function lightsOut() {
+    S.lightsOut = now(); render(); MK.haptic('light');
+    const el = $('lights'); el.hidden = false;
+    el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: MK.reduced() ? 150 : 700, easing: MK.out });
+    $('l-title').focus({ preventScroll: true }); say(`Lights out ${hm.format(S.lightsOut)} logged`);
+  }
+  function closeLights() {
+    const el = $('lights'); if (el.hidden) return;
+    el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, easing: MK.out }).finished.then(() => { el.hidden = true;
+      ($('receipt').hidden ? $('sleepBtn') : $('undoBtn')).focus({ preventScroll: true }); });
+  }
+  function undoLights() { const t = S.lightsOut; S.lightsOut = null; render(); say(`Lights out ${hm.format(t)} removed`); }
+  $('sleepBtn').onclick = lightsOut;
+  $('lClose').onclick = closeLights;
+  $('lUndo').onclick = () => { undoLights(); closeLights(); };
+  $('undoBtn').onclick = () => { undoLights(); $('sleepBtn').focus({ preventScroll: true }); };
 
-/* states by hash */
-const STATES = ['loading', 'empty', 'error', 'offline'];
-const sync = () => { const s = location.hash.slice(1); html.dataset.state = STATES.includes(s) ? s : 'content'; if (s === 'offline' && S.sound === 'fan') setSound('off'); render(); };
-addEventListener('hashchange', sync); sync();
+  addEventListener('keydown', (e) => { if (e.key !== 'Escape') return;
+    if (!$('lights').hidden) closeLights(); else if (S.breath.open) closePlayer(); });
+
+  // ---- states by hash ----
+  const states = ['loading', 'empty', 'error', 'offline'];
+  const sync = () => { const s = location.hash.slice(1); document.documentElement.dataset.state = states.includes(s) ? s : 'content';
+    if (offline() && !soundOf(S.sound).dl) { S.sound = 'off'; S.soundAt = null; } render(); };
+  $('retryBtn').onclick = () => { history.replaceState(null, '', location.pathname + location.search); sync(); };
+  addEventListener('hashchange', sync); sync();
+
+  // real time runs; nothing else moves by itself
+  let lastMin = now().getMinutes();
+  setInterval(() => { const m = now().getMinutes(); if (m !== lastMin) { lastMin = m; render(); } }, 1000);
+})();
 </script>
 </body>
 </html>

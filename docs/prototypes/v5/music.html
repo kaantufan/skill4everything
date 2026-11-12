@@ -1,202 +1,191 @@
 <!doctype html>
-<!-- Plak, Now Playing. HTML prototype at 393x852 (iOS). States by hash: #loading #empty #error #offline. ?theme=light for the light appearance. -->
+<!-- Plak: Now Playing prototype. HTML mockup at 393x852; fonts, materials, controls and scrolling approximate the native ones.
+     States by hash: #loading (buffering), #empty (nothing up next), #error (playback failed), #offline (downloads only). ?theme=light for the light appearance. -->
 <html lang="en" data-platform="ios" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Plak, Now Playing</title>
+<title>Plak Now Playing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css">
-<script>/* the dealt appearance is dark; ?theme=light shows the other one */
-if (new URLSearchParams(location.search).get('theme') === 'light') document.documentElement.dataset.theme = 'light';</script>
+<script>if (new URLSearchParams(location.search).get('theme') === 'light') document.documentElement.dataset.theme = 'light';</script>
 <style>
-  /* device frame (from assets/phone-frame.html) */
+  /* device frame (assets/phone-frame.html) */
   :root { --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px; --chrome: #000; }
   [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
   * { box-sizing: border-box; }
-  html, body { margin: 0; width: var(--w); height: var(--h); overflow: clip; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
   body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--ground); color: var(--ink); }
-  .statusbar { position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 10; display: flex; align-items: flex-end; justify-content: space-between;
-    padding: 0 28px 10px; font: 600 16px/1 -apple-system, "SF Pro Text", system-ui, sans-serif; color: var(--chrome); pointer-events: none; }
+  .statusbar { position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 50; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none; }
   .statusbar svg { height: 12px; fill: var(--chrome); }
-  .home-indicator { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 30; width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none; }
-  #screen { position: absolute; inset: 0; overflow: clip; }
-  [hidden] { display: none !important; }
+  .home-indicator { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 50; width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none; }
+  #screen { position: absolute; inset: 0; overflow: hidden; }
 </style>
 <style>
-  /* PRODUCT TOKENS: dealt direction photo-editorial, Hanken Grotesk, accent red. One place for colour, type, space, radii, motion. */
+  /* PRODUCT TOKENS: dealt direction photo-editorial, dark-first. One place for colour, type, radii, spacing, motion. */
+  @property --tint { syntax: '<color>'; inherits: true; initial-value: #263a3d; }
   :root {
     --font: "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif;
-    --ground: #FFFFFF; --raised: #F7F7F7; --ink: #1A1A1A; --ink-2: #5F5F5F; --line: #EBEBEB;
-    --accent: #D93B30; --on-accent: #FFFFFF; --positive: #1F7A4C; --negative: #D93B30;
-    --fill: color-mix(in srgb, var(--ink) 9%, transparent);     /* quiet control fill on the tinted ground */
-    --fill-on: color-mix(in srgb, var(--ink) 18%, transparent);
-    --t-title: 700 28px/1.15 var(--font); --t-section: 600 20px/1.25 var(--font); --t-body: 400 16px/1.35 var(--font);
-    --t-label: 600 16px/1.25 var(--font); --t-meta: 400 14px/1.3 var(--font); --t-meta-strong: 600 14px/1.3 var(--font);
-    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
-    --r-cover: 14px; --r-card: 12px; --r-thumb: 6px; --r-sheet: 16px;
-    --scrim: rgb(0 0 0 / .5);
-  }
-  [data-theme="dark"] {
     --ground: #0A0A0A; --raised: #1A1A1A; --ink: #FFFFFF; --ink-2: #B3B3B3; --line: #2A2A2A;
-    --positive: #3DB87A; --negative: #F0605A; --scrim: rgb(0 0 0 / .6);
+    --accent: #D93B30; --on-accent: #FFFFFF; --positive: #3DB87A; --negative: #F0605A;
+    --wash-mix: 46%; --wash-base: #000; --chip: rgb(255 255 255 / .12); --card: rgb(255 255 255 / .08);
+    --t-title: 700 28px/1.12 var(--font); --t-section: 600 20px/1.2 var(--font); --t-body: 400 16px/1.35 var(--font);
+    --t-body-strong: 600 16px/1.3 var(--font); --t-meta: 400 14px/1.3 var(--font); --t-tiny: 400 12px/1.2 var(--font);
+    --r-art: 14px; --r-card: 12px; --r-thumb: 6px; --r-sheet: 16px;
+    --m: 28px; --gap: 8px;
+  }
+  [data-theme="light"] {
+    --ground: #FFFFFF; --raised: #F7F7F7; --ink: #1A1A1A; --ink-2: #5F5F5F; --line: #EBEBEB;
+    --positive: #1F7A4C; --negative: #D93B30; --wash-mix: 30%; --wash-base: #fff; --chip: rgb(0 0 0 / .08); --card: rgb(0 0 0 / .05);
   }
 </style>
 <style>
-  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent; transition: transform .12s cubic-bezier(.22,1,.36,1), background-color .15s ease-out; }
-  button:active:not(:disabled) { transform: scale(.97); }
-  button:disabled { cursor: default; opacity: .38; }
+  [hidden] { display: none !important; }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: transform .12s cubic-bezier(.22,1,.36,1); }
+  button:active:not([aria-disabled="true"]) { transform: scale(.97); }
   :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 8px; }
-  [tabindex="-1"]:focus { outline: none; }
-  .ib { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 22px; font-size: 24px; flex: none; }
-  .ph-fill, .ph { line-height: 1; }
-  .num { font-variant-numeric: tabular-nums; }
-  .ellip { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  h1, h2, h3, p, ol, ul { margin: 0; padding: 0; }
+  li { list-style: none; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .tnum { font-variant-numeric: tabular-nums; }
 
   /* never-grey image slot */
-  .ph-img { position: relative; overflow: hidden; background: var(--c, #3a3330); }
-  .ph-img img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; transition: opacity .4s ease-out; }
-  .ph-img img.in { opacity: 1; }
+  .slot { position: relative; overflow: hidden; background: var(--c, #263a3d); }
+  .slot img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; transition: opacity .4s ease-out; }
+  .slot img.in { opacity: 1; }
 
-  /* ---------- Playlist view behind the player (reached with the collapse control) ---------- */
-  #home { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--ground); }
-  .home-head { padding: calc(var(--safe-top) + var(--s2)) var(--s5) var(--s3); }
-  .wordmark { font: var(--t-title); letter-spacing: -0.02em; color: var(--accent); margin: 0; }
-  .home-head h2 { font: var(--t-section); margin: var(--s4) 0 2px; }
-  .home-head p:not(.wordmark) { font: var(--t-meta); color: var(--ink-2); margin: 0; }
-  .home-list { flex: 1; overflow-y: auto; list-style: none; margin: 0; padding: 0 var(--s4) calc(var(--safe-bottom) + 64px + var(--s5)); scrollbar-width: none; }
-  .row { width: 100%; display: flex; align-items: center; gap: var(--s3); min-height: 64px; padding: var(--s2); border-radius: var(--r-card); text-align: left; }
-  .row .ph-img { width: 48px; height: 48px; border-radius: var(--r-thumb); flex: none; }
-  .row .tx { flex: 1; min-width: 0; }
-  .row .t1 { font: var(--t-label); display: block; }
-  .row .t2 { font: var(--t-meta); color: var(--ink-2); display: block; margin-top: 2px; }
-  .row .dur { font: var(--t-meta); color: var(--ink-2); flex: none; }
-  .row[aria-current="true"] .t1 { color: var(--accent); }
-  .row .eq { color: var(--accent); font-size: 18px; flex: none; }
-  .mini { position: absolute; left: var(--s2); right: var(--s2); bottom: calc(var(--safe-bottom) + var(--s1)); height: 64px; z-index: 5;
-    display: flex; align-items: center; gap: var(--s1); padding: 0 var(--s1) 0 var(--s2); border-radius: var(--r-card); background: var(--raised); }
-  .mini-open { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--s3); height: 56px; text-align: left; border-radius: 10px; }
-  .mini-open .ph-img { width: 44px; height: 44px; border-radius: var(--r-thumb); flex: none; }
-  .mini-open .tx { min-width: 0; }
-  .mini-open b { font: var(--t-label); display: block; }
-  .mini-open span span { font: var(--t-meta); color: var(--ink-2); display: block; }
+  /* ---------- base: the playlist Now Playing came from ---------- */
+  .base { position: absolute; inset: 0; background: var(--ground); }
+  .base-scroll { position: absolute; inset: 0; overflow-y: auto; padding: calc(var(--safe-top) + 8px) 20px calc(var(--safe-bottom) + 96px); scrollbar-width: none; }
+  .wordmark { font: var(--t-title); letter-spacing: -0.02em; padding: 4px 0 20px; }
+  .pl-head { display: flex; gap: 16px; align-items: center; margin-bottom: 16px; }
+  .pl-cover { width: 96px; height: 96px; border-radius: var(--r-card); flex: none; }
+  .pl-head h2 { font: var(--t-section); }
+  .pl-head p { font: var(--t-meta); color: var(--ink-2); margin-top: 4px; }
+  .pl-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; text-align: left; border-radius: 10px; }
+  .pl-row .th { width: 44px; height: 44px; border-radius: var(--r-thumb); flex: none; }
+  .pl-row .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .pl-row .t1 { font: var(--t-body-strong); }
+  .pl-row .t2 { font: var(--t-meta); color: var(--ink-2); }
+  .pl-row .du { font: var(--t-meta); color: var(--ink-2); display: flex; align-items: center; gap: 6px; }
+  .pl-row .now { color: var(--accent); font-size: 18px; }
+  .mini { position: absolute; left: 8px; right: 8px; bottom: calc(var(--safe-bottom) + 6px); height: 64px; border-radius: var(--r-card); display: flex; align-items: center; padding: 0 4px 0 8px; gap: 4px; background: color-mix(in oklab, var(--tint) 40%, var(--raised)); }
+  .mini-main { flex: 1; min-width: 0; height: 56px; display: flex; align-items: center; gap: 12px; text-align: left; }
+  .mini-main .th { width: 46px; height: 46px; border-radius: var(--r-thumb); flex: none; }
+  .mini-main .tx { min-width: 0; display: flex; flex-direction: column; }
+  .mini-main .t1 { font: var(--t-body-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini-main .t2 { font: var(--t-meta); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ib { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; font-size: 26px; flex: none; }
 
   /* ---------- Now Playing ---------- */
-  #np { position: absolute; inset: 0; z-index: 8; isolation: isolate; overflow: clip; background: var(--ground); display: flex; flex-direction: column;
-    padding: var(--safe-top) var(--s5) calc(var(--safe-bottom) + var(--s2)); color: var(--ink); }
-  .ground { position: absolute; inset: 0; z-index: -1; background: var(--ground); opacity: 0; transition: opacity 600ms ease-out; }
-  .ground.on { opacity: 1; }
-  .np-head { display: flex; align-items: center; justify-content: space-between; height: 48px; margin: 0 -10px; }
-  .np-head .wordmark { flex: 1; text-align: center; }
-  .from { display: flex; justify-content: center; align-items: center; gap: var(--s2); min-height: 24px; margin: 0; font: var(--t-meta); color: var(--ink-2); }
-  .from b { font-weight: 600; color: var(--ink); }
-  .from-off { display: none; align-items: center; gap: 6px; color: var(--ink); }
-  [data-state="offline"] .from-on { display: none; }
-  [data-state="offline"] .from-off { display: inline-flex; }
-  .chip { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 10px; border-radius: 14px; background: var(--fill); font: var(--t-meta-strong); color: var(--ink); position: relative; }
-  .chip::after { content: ""; position: absolute; inset: -8px 0; }  /* 44 pt tall hit area */
+  .np { position: absolute; inset: 0; display: flex; flex-direction: column; padding: var(--safe-top) var(--m) var(--safe-bottom);
+        background: linear-gradient(180deg, color-mix(in oklab, var(--tint) var(--wash-mix), var(--wash-base)) 0%, color-mix(in oklab, var(--tint) calc(var(--wash-mix) * .5), var(--ground)) 58%, var(--ground) 100%);
+        transition: --tint .6s ease-out; }
+  .np-top { height: 52px; display: flex; align-items: center; justify-content: space-between; margin: 0 -10px; flex: none; }
+  .from { flex: 1; min-width: 0; min-height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; border-radius: 10px; }
+  .from .l1 { font: var(--t-tiny); font-size: 13px; color: var(--ink-2); }
+  .from .l2 { font: var(--t-body-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+  .art-wrap { flex: 1 1 auto; min-height: 0; container-type: size; display: grid; place-items: center; margin: 10px 0 22px; }
+  .art { position: relative; width: min(100cqw, 100cqh); height: min(100cqw, 100cqh); }
+  .cov { position: absolute; inset: 0; border-radius: var(--r-art); transform-origin: 0 0; box-shadow: 0 1px 0 rgb(0 0 0 / .2); }
+  .lyrics { position: absolute; inset: 0; z-index: 5; border-radius: var(--r-art); background: var(--raised); overflow-y: auto; padding: 22px 22px 28px; scrollbar-width: none; }
+  .lyrics p { font: 600 22px/1.35 var(--font); color: var(--ink); }
+  .lyrics p + p { margin-top: 10px; }
+  .lyrics .none { font: var(--t-body); color: var(--ink-2); }
+  .tt { display: flex; align-items: flex-start; gap: 12px; flex: none; }
+  .tt-text { flex: 1; min-width: 0; }
+  .tt h1 { font: var(--t-title); letter-spacing: -0.02em; overflow-wrap: anywhere; }
+  .artist { font: var(--t-body); color: var(--ink-2); margin-top: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .badge { font: var(--t-tiny); display: inline-flex; align-items: center; gap: 4px; padding: 3px 7px; border-radius: 999px; background: var(--chip); color: var(--ink); }
+  .like { font-size: 28px; margin: -4px -8px 0 0; }
+  .like[aria-pressed="true"] { color: var(--accent); }
+  .scrub { margin-top: 16px; height: 28px; display: flex; align-items: center; touch-action: none; cursor: pointer; flex: none; --p: 0; }
+  .rail { position: relative; width: 100%; height: 4px; border-radius: 2px; background: color-mix(in oklab, var(--ink) 24%, transparent); transition: height .15s ease-out; }
+  .fill { position: absolute; inset: 0; border-radius: 2px; background: var(--ink); transform-origin: 0 50%; transform: scaleX(var(--p)); }
+  .knob { position: absolute; top: 50%; left: calc(var(--p) * 100%); width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--ink); transition: transform .15s ease-out; }
+  .scrub.drag .rail { height: 6px; }
+  .scrub.drag .knob { transform: scale(1.4); }
+  .times { display: flex; justify-content: space-between; font: var(--t-meta); color: var(--ink-2); margin-top: 2px; flex: none; }
+  .transport { display: flex; align-items: center; justify-content: space-between; height: 80px; margin-top: 6px; padding-bottom: 0; flex: none; }
+  .tb { position: relative; width: 60px; height: 60px; display: grid; place-items: center; border-radius: 50%; font-size: 36px; }
+  .tb.side { width: 64px; height: 64px; font-size: 24px; color: var(--ink-2); display: flex; flex-direction: column; justify-content: center; gap: 3px; border-radius: 14px; }
+  .tb.side .lbl { font: var(--t-tiny); white-space: nowrap; }
+  .tb.side[aria-pressed="true"] { color: var(--ink); background: var(--chip); }
+  .tb[aria-disabled="true"] { opacity: .35; cursor: default; }
+  .play { width: 76px; height: 76px; border-radius: 50%; background: var(--accent); color: var(--on-accent); font-size: 34px; display: grid; place-items: center; }
+  .spin { width: 30px; height: 30px; border-radius: 50%; border: 3px solid color-mix(in oklab, var(--on-accent) 35%, transparent); border-top-color: var(--on-accent); animation: spin .9s linear infinite; }
+  @keyframes spin { to { transform: rotate(1turn); } }
+  .upnext { margin-top: auto; display: flex; align-items: center; gap: 8px; min-height: 68px; border-radius: var(--r-card); background: var(--card); padding: 0 8px 0 0; flex: none; }
+  .un-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; min-height: 68px; padding: 10px 4px 10px 10px; text-align: left; border-radius: var(--r-card); }
+  .un-thumb { width: 48px; height: 48px; border-radius: var(--r-thumb); flex: none; }
+  .un-icon { width: 48px; height: 48px; flex: none; display: grid; place-items: center; font-size: 28px; color: var(--negative); }
+  .un-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .un-label { font: var(--t-tiny); font-size: 13px; color: var(--ink-2); }
+  .un-title { font: var(--t-body-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .un-sub { font: var(--t-meta); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .un-count { display: flex; flex-direction: column; align-items: flex-end; font: var(--t-meta); gap: 2px; padding-right: 4px; }
+  .un-count .n { display: flex; align-items: center; gap: 6px; font-weight: 600; }
+  .un-count .n > i { font-size: 18px; }
+  .un-min { color: var(--ink-2); }
+  .un-act { min-height: 44px; padding: 0 14px; border-radius: 999px; background: var(--ink); color: var(--ground); font: var(--t-body-strong); font-size: 15px; white-space: nowrap; flex: none; }
+  .util { display: flex; justify-content: space-between; margin: 6px -10px 0; flex: none; }
+  .ub { min-height: 44px; padding: 0 10px; display: flex; align-items: center; gap: 8px; font: var(--t-meta); color: var(--ink-2); border-radius: 10px; }
+  .ub i { font-size: 22px; }
+  .ub[aria-pressed="true"] { color: var(--ink); background: var(--chip); }
 
-  .art { flex: 1 1 0; min-height: 180px; display: flex; align-items: center; justify-content: center; margin-top: var(--s3); }
-  .cover-wrap { position: relative; height: 100%; max-height: 345px; max-width: 100%; aspect-ratio: 1 / 1; }
-  #covers { position: absolute; inset: 0; }
-  .cv { position: absolute; inset: 0; border-radius: var(--r-cover); }
-  .cv img { border-radius: var(--r-cover); }
-  .lyrics { position: absolute; inset: 0; z-index: 3; border-radius: var(--r-cover); background: var(--raised); overflow-y: auto; padding: var(--s5) var(--s5) 96px;
-    display: none; scrollbar-width: none; }
-  .lyrics.open { display: block; }
-  .lyrics p { font: 600 22px/1.3 var(--font); color: var(--ink-2); margin: 0 0 var(--s4); transition: color .2s ease-out; }
-  .lyrics p.now { color: var(--ink); }
-  .lyrics .none { font: var(--t-body); }
+  /* ---------- menus ---------- */
+  .catch { position: absolute; inset: 0; z-index: 30; }
+  .menu { position: absolute; z-index: 31; min-width: 230px; padding: 6px; border-radius: 14px; background: var(--raised); border: 1px solid var(--line); box-shadow: 0 12px 32px rgb(0 0 0 / .35);
+          transform-origin: var(--ox, 100%) var(--oy, 0%); transition: opacity .16s ease-out, transform .16s ease-out, display .16s allow-discrete; }
+  @starting-style { .menu { opacity: 0; transform: scale(.94); } }
+  .mi { width: 100%; min-height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 12px; border-radius: 10px; font: var(--t-body); text-align: left; }
+  .mi i { font-size: 22px; width: 22px; }
+  .mi .ck { margin-left: auto; color: var(--ink); }
+  .mi:active { background: var(--chip); }
+  .menu .mh { font: var(--t-meta); color: var(--ink-2); padding: 8px 12px 4px; }
 
-  .meta { display: flex; align-items: flex-start; gap: var(--s3); margin-top: var(--s5); }
-  .meta .tx { flex: 1; min-width: 0; }
-  .meta h1 { font: var(--t-title); letter-spacing: -0.02em; margin: 0; overflow-wrap: anywhere;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .artist { display: flex; align-items: center; gap: var(--s2); margin-top: var(--s1); font: var(--t-body); color: var(--ink-2); min-width: 0; }
-  .artist .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .dl { display: inline-flex; align-items: center; gap: 4px; font: var(--t-meta); color: var(--ink-2); flex: none; }
-  .dl i { font-size: 16px; color: var(--ink); }
-  #like { margin-top: -4px; margin-right: -10px; font-size: 28px; }
-  #like[aria-pressed="true"] { color: var(--accent); }
+  /* ---------- queue sheet ---------- */
+  .scrim { position: absolute; inset: 0; z-index: 20; background: rgb(0 0 0 / .5); opacity: 0; transition: opacity .25s ease-out; }
+  .scrim.open { opacity: 1; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; height: 80%; z-index: 21; background: var(--raised); border-radius: var(--r-sheet) var(--r-sheet) 0 0; display: flex; flex-direction: column;
+           transform: translateY(102%); transition: transform var(--sheet-ms, 420ms) var(--sheet-ease, cubic-bezier(.2,.8,.2,1)); }
+  .sheet.open { transform: translateY(0); }
+  .grab { height: 24px; display: grid; place-items: center; touch-action: none; cursor: grab; flex: none; }
+  .grab span { width: 36px; height: 5px; border-radius: 3px; background: color-mix(in oklab, var(--ink) 30%, transparent); }
+  .q-head { display: flex; align-items: center; padding: 0 12px 0 20px; gap: 4px; flex: none; }
+  .q-head h2 { font: var(--t-section); flex: 1; }
+  .q-head h2:focus { outline: none; }
+  .tbtn { min-height: 44px; padding: 0 12px; font: var(--t-body-strong); border-radius: 10px; }
+  .tbtn.pri { color: var(--ink); }
+  .q-from { font: var(--t-meta); color: var(--ink-2); padding: 0 20px 8px; flex: none; }
+  .q-body { flex: 1; overflow-y: auto; padding: 0 20px calc(var(--safe-bottom) + 16px); scrollbar-width: none; overscroll-behavior: contain; }
+  .q-sec { display: flex; justify-content: space-between; align-items: baseline; font: var(--t-body-strong); padding: 16px 0 6px; }
+  .q-sec span { font: var(--t-meta); color: var(--ink-2); }
+  .q-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; text-align: left; border-radius: 10px; }
+  .q-row .th { width: 44px; height: 44px; border-radius: var(--r-thumb); flex: none; }
+  .q-row .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .q-row .t1 { font: var(--t-body-strong); }
+  .q-row .t2 { font: var(--t-meta); color: var(--ink-2); }
+  .q-row .du { font: var(--t-meta); color: var(--ink-2); }
+  .q-row.na .th, .q-row.na .t1 { opacity: .45; }
+  .q-li.edit .du { display: none; }
+  .q-li.edit { display: flex; align-items: center; gap: 4px; }
+  .q-li.edit .q-row { flex: 1; min-width: 0; cursor: default; }
+  .q-li.edit .q-row:active { transform: none; }
+  .ib.sm { font-size: 22px; color: var(--ink-2); }
+  .ib.rm { color: var(--negative); }
+  .ib[disabled] { opacity: .3; cursor: default; }
+  .q-removed { display: flex; align-items: center; justify-content: space-between; min-height: 60px; font: var(--t-meta); color: var(--ink-2); border-bottom: 1px solid var(--line); }
+  .q-removed button { font: var(--t-body-strong); color: var(--ink); min-height: 44px; padding: 0 12px; border-radius: 10px; }
+  .q-empty { padding: 24px 0; font: var(--t-body); color: var(--ink-2); display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
 
-  .scrub { position: relative; height: 44px; margin-top: var(--s3); touch-action: none; cursor: pointer; }
-  .scrub .track { position: absolute; left: 0; right: 0; top: 20px; height: 4px; border-radius: 2px; background: var(--fill-on); overflow: hidden; transition: transform .15s ease-out; }
-  .scrub .fill { position: absolute; inset: 0; background: var(--accent); transform-origin: left; transform: scaleX(0); }
-  .scrub .knob { position: absolute; top: 16px; left: 0; width: 12px; height: 12px; margin-left: -6px; border-radius: 6px; background: var(--ink); transition: transform .15s ease-out; }
-  .scrub.active .track { transform: scaleY(2); }
-  .scrub.active .knob { transform: scale(1.5); }
-  .times { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); min-height: 20px; margin-top: -10px; font: var(--t-meta); color: var(--ink-2); }
-  .status { display: none; align-items: center; gap: 6px; color: var(--ink); font: var(--t-meta-strong); }
-  [data-state="loading"] .st-load, [data-state="error"] .st-err { display: inline-flex; }
-  .spin { display: inline-block; }
-  @media (prefers-reduced-motion: no-preference) { .spin { animation: spin 1s linear infinite; } }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .st-err i { color: var(--negative); font-size: 18px; }
-  .st-err button { height: 44px; padding: 0 var(--s3); border-radius: 22px; background: var(--fill-on); font: var(--t-meta-strong); }
+  html[data-state="loading"] .tt h1, html[data-state="loading"] .artist { opacity: .95; }
 
-  .transport { display: flex; align-items: center; justify-content: space-between; height: 80px; margin-top: var(--s1); }
-  .transport .skip { width: 64px; height: 64px; display: grid; place-items: center; border-radius: 32px; font-size: 38px; }
-  #play { width: 76px; height: 76px; display: grid; place-items: center; border-radius: 38px; background: var(--accent); color: var(--on-accent); font-size: 34px; }
-  #play .i-load { display: none; }
-  [data-state="loading"] #play .i-pp { display: none; }
-  [data-state="loading"] #play .i-load { display: inline-block; }
-  .tog { color: var(--ink-2); }
-  .tog[aria-pressed="true"] { color: var(--ink); background: var(--fill-on); }
-
-  .dock { display: flex; gap: var(--s2); height: 56px; margin-top: var(--s4); }
-  .dock > button { height: 56px; border-radius: var(--r-card); background: var(--fill); display: flex; align-items: center; gap: var(--s2); padding: 0 var(--s3); font: var(--t-meta-strong); min-width: 0; }
-  .dock .ph, .dock .ph-fill { font-size: 22px; flex: none; }
-  .dock > .vbtn { flex: none; flex-direction: column; justify-content: center; gap: 4px; padding: 0 6px; font: 600 13px/1.2 var(--font); }
-  .vbtn span { max-width: 100%; }
-  #devBtn { width: 92px; }
-  #lyrBtn { width: 64px; }
-  #lyrBtn[aria-pressed="true"] { background: var(--fill-on); }
-  #queueBtn { flex: 1; text-align: left; padding: 0 var(--s3) 0 10px; }
-  #queueBtn .ph-img { width: 36px; height: 36px; border-radius: var(--r-thumb); flex: none; }
-  #queueBtn .tx { flex: 1; min-width: 0; }
-  #queueBtn .tx > span { display: block; }
-  #queueBtn .t2 { font: var(--t-meta); color: var(--ink-2); }
-
-  /* ---------- Sheets ---------- */
-  .scrim { position: absolute; inset: 0; z-index: 15; background: var(--scrim); opacity: 0; pointer-events: none; transition: opacity .2s ease-out; }
-  .scrim.on { opacity: 1; pointer-events: auto; }
-  .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 20; max-height: 82%; display: flex; flex-direction: column; background: var(--raised); color: var(--ink);
-    border-radius: var(--r-sheet) var(--r-sheet) 0 0; padding-bottom: var(--safe-bottom); transform: translateY(105%); visibility: hidden; }
-  .sheet.open { visibility: visible; }
-  .sh-head { flex: none; padding: var(--s2) var(--s4) var(--s2) var(--s5); touch-action: none; cursor: grab; }
-  .grab { width: 36px; height: 5px; border-radius: 3px; background: var(--fill-on); margin: 0 auto var(--s2); }
-  .sh-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
-  .sh-bar h2 { font: var(--t-section); margin: 0; }
-  .sh-bar p { font: var(--t-meta); color: var(--ink-2); margin: 2px 0 0; }
-  .done { height: 44px; padding: 0 var(--s3); border-radius: 22px; font: var(--t-label); flex: none; }
-  .sh-body { flex: 1; overflow-y: auto; padding: 0 var(--s2) var(--s4); scrollbar-width: none; }
-  .sec-label { font: var(--t-meta-strong); color: var(--ink-2); margin: var(--s3) var(--s4) var(--s1); }
-  .qrow { display: flex; align-items: center; gap: var(--s1); }
-  .qrow .row { flex: 1; min-width: 0; }
-  .qrow .na { font: var(--t-meta); color: var(--ink-2); }
-  .qrow.off .row { opacity: .45; }
-  .qempty { display: none; text-align: center; padding: var(--s6) var(--s5); }
-  .qempty.on { display: block; }
-  .qempty h3 { font: var(--t-label); margin: 0 0 var(--s1); }
-  .qempty p { font: var(--t-meta); color: var(--ink-2); margin: 0 0 var(--s4); }
-  .btn { height: 48px; padding: 0 var(--s5); border-radius: 24px; font: var(--t-label); background: var(--accent); color: var(--on-accent); }
-  .undo { flex: none; display: none; align-items: center; justify-content: space-between; gap: var(--s3); margin: 0 var(--s4) var(--s2); padding: 0 var(--s2) 0 var(--s4);
-    min-height: 56px; border-radius: var(--r-card); background: var(--fill); font: var(--t-meta); }
-  .undo.on { display: flex; }
-  .undo button { height: 44px; padding: 0 var(--s4); border-radius: 22px; font: var(--t-label); background: var(--fill-on); }
-  .opt { width: 100%; display: flex; align-items: center; gap: var(--s3); min-height: 56px; padding: 0 var(--s4); border-radius: var(--r-card); text-align: left; font: var(--t-label); }
-  .opt i:first-child { font-size: 24px; }
-  .opt .ck { margin-left: auto; font-size: 22px; color: var(--accent); visibility: hidden; }
-  .opt[aria-checked="true"] .ck { visibility: inherit; }
-  .chips { display: flex; flex-wrap: wrap; gap: var(--s2); padding: var(--s2) var(--s4) var(--s4); }
-  .chips button { height: 44px; padding: 0 var(--s4); border-radius: 22px; background: var(--fill); font: var(--t-label); }
-  .chips button[aria-checked="true"] { background: var(--ink); color: var(--ground); }
-  .hint { font: var(--t-meta); color: var(--ink-2); padding: 0 var(--s4) var(--s4); margin: 0; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } .spin { animation: none; border-color: var(--on-accent); border-top-color: transparent; } }
+  ::view-transition-old(cover), ::view-transition-new(cover) { height: 100%; object-fit: cover; }
 </style>
 </head>
 <body>
@@ -212,128 +201,114 @@ if (new URLSearchParams(location.search).get('theme') === 'light') document.docu
   </div>
 
   <main id="screen">
-    <!-- Playlist the music plays from; shown when Now Playing is collapsed -->
-    <section id="home" aria-labelledby="homeTitle" inert>
-      <div class="home-head">
-        <p class="wordmark">Plak</p>
-        <h2 id="homeTitle">Commute</h2>
-        <p id="homeSum" class="num"></p>
+    <!-- the playlist behind the Now Playing sheet; reached with the close button -->
+    <section class="base" id="base" aria-label="Late Drive playlist" inert>
+      <div class="base-scroll" id="baseScroll">
+        <h2 class="wordmark">Plak</h2>
+        <div class="pl-head">
+          <div class="pl-cover slot" id="plCover"></div>
+          <div><h2>Late Drive</h2><p id="plMeta" class="tnum"></p></div>
+        </div>
+        <ol id="plList"></ol>
       </div>
-      <ul class="home-list" id="homeList"></ul>
-      <div class="mini" role="group" aria-label="Mini player">
-        <button class="mini-open" id="miniOpen"><span class="ph-img" id="miniArt"></span><span class="tx"><b class="ellip" id="miniTitle"></b><span class="ellip" id="miniArtist"></span></span></button>
-        <button class="ib" id="miniPlay" aria-label="Pause"><i class="ph-fill ph-pause"></i></button>
+      <div class="mini" id="mini">
+        <button class="mini-main" id="miniOpen" aria-label="Open Now Playing">
+          <span class="th slot" id="miniThumb"></span>
+          <span class="tx"><span class="t1" id="miniTitle"></span><span class="t2" id="miniArtist"></span></span>
+        </button>
+        <button class="ib" id="miniPlay"><i class="ph-fill ph-pause"></i></button>
         <button class="ib" id="miniNext" aria-label="Next song"><i class="ph-fill ph-skip-forward"></i></button>
       </div>
     </section>
 
-    <section id="np" aria-label="Now playing">
-      <div class="ground on" id="g0"></div><div class="ground" id="g1"></div>
-      <div class="np-head">
-        <button class="ib" id="collapse" aria-label="Close now playing"><i class="ph ph-caret-down"></i></button>
-        <p class="wordmark">Plak</p>
-        <button class="ib" id="moreBtn" aria-label="More options" aria-haspopup="dialog"><i class="ph ph-dots-three"></i></button>
-      </div>
-      <p class="from">
-        <span class="from-on">Playing from <b>Commute</b></span>
-        <span class="from-off"><i class="ph ph-wifi-slash"></i> Offline, playing downloads</span>
-        <button class="chip" id="timerChip" hidden aria-haspopup="dialog"><i class="ph ph-timer"></i><span id="timerTxt" class="num"></span></button>
-      </p>
+    <section class="np" id="np" role="dialog" aria-label="Now Playing">
+      <header class="np-top">
+        <button class="ib" id="closeNp" aria-label="Close Now Playing"><i class="ph ph-caret-down"></i></button>
+        <button class="from" id="fromBtn" aria-label="Go to playlist Late Drive">
+          <span class="l1" id="fromL1">Playing from playlist</span><span class="l2">Late Drive</span>
+        </button>
+        <button class="ib" id="moreBtn" aria-label="More options" aria-haspopup="menu" aria-expanded="false"><i class="ph ph-dots-three"></i></button>
+      </header>
 
-      <div class="art">
-        <div class="cover-wrap" id="coverWrap">
-          <div id="covers" role="img" aria-roledescription="cover" aria-label=""></div>
-          <div class="lyrics" id="lyrics" aria-label="Lyrics"></div>
+      <div class="art-wrap"><div class="art" id="art">
+        <div class="lyrics" id="lyrics" hidden tabindex="0" aria-label="Lyrics"></div>
+      </div></div>
+
+      <div class="tt" id="meta">
+        <div class="tt-text">
+          <h1 id="npTitle"></h1>
+          <p class="artist"><span id="npArtist"></span><span class="badge" id="dlBadge" hidden><i class="ph ph-download-simple"></i>Downloaded</span></p>
         </div>
+        <button class="ib like" id="likeBtn" aria-pressed="false" aria-label="Like"><i class="ph ph-heart"></i></button>
       </div>
 
-      <div class="meta">
-        <div class="tx" id="metaTx">
-          <h1 id="title" tabindex="-1"></h1>
-          <div class="artist"><span class="name" id="artist"></span><span class="dl" id="dl"><i class="ph-fill ph-arrow-circle-down"></i>Downloaded</span></div>
-        </div>
-        <button class="ib" id="like" aria-pressed="false" aria-label="Like"><i class="ph ph-heart"></i></button>
+      <div class="scrub" id="scrub" role="slider" tabindex="0" aria-label="Song position" aria-valuemin="0">
+        <div class="rail" id="rail"><div class="fill"></div><div class="knob"></div></div>
       </div>
-
-      <div class="scrub" id="scrub" role="slider" tabindex="0" aria-label="Playback position" aria-valuemin="0">
-        <div class="track"><div class="fill" id="fill"></div></div>
-        <div class="knob" id="knob"></div>
-      </div>
-      <div class="times num">
-        <span id="elapsed"></span>
-        <span class="status st-load"><i class="ph ph-circle-notch spin"></i>Buffering</span>
-        <span class="status st-err"><i class="ph-fill ph-warning-circle"></i>Couldn't load this song <button id="retry">Retry</button></span>
-        <span id="remain"></span>
-      </div>
+      <div class="times tnum"><span id="tEl"></span><span id="tRem"></span></div>
 
       <div class="transport">
-        <button class="ib tog" id="shuffle" aria-pressed="false" aria-label="Shuffle"><i class="ph ph-shuffle"></i></button>
-        <button class="skip" id="prev" aria-label="Previous song"><i class="ph-fill ph-skip-back"></i></button>
-        <button id="play" aria-label="Pause"><i class="ph-fill ph-pause i-pp"></i><i class="ph ph-circle-notch spin i-load"></i></button>
-        <button class="skip" id="next" aria-label="Next song"><i class="ph-fill ph-skip-forward"></i></button>
-        <button class="ib tog" id="repeat" aria-pressed="false" aria-label="Repeat off"><i class="ph ph-repeat"></i></button>
+        <button class="tb side" id="shufBtn" aria-pressed="false"><i class="ph ph-shuffle"></i><span class="lbl" id="shufLbl">Shuffle</span></button>
+        <button class="tb" id="prevBtn" aria-label="Previous song"><i class="ph-fill ph-skip-back"></i></button>
+        <button class="play" id="playBtn"><i class="ph-fill ph-pause"></i></button>
+        <button class="tb" id="nextBtn" aria-label="Next song"><i class="ph-fill ph-skip-forward"></i></button>
+        <button class="tb side" id="repBtn" aria-pressed="false"><i class="ph ph-repeat"></i><span class="lbl" id="repLbl">Repeat</span></button>
       </div>
 
-      <div class="dock">
-        <button class="vbtn" id="devBtn" aria-haspopup="dialog"><i class="ph ph-headphones" id="devIcon"></i><span class="ellip" id="devName"></span></button>
-        <button class="vbtn" id="lyrBtn" aria-pressed="false"><i class="ph ph-quotes"></i><span>Lyrics</span></button>
-        <button id="queueBtn" aria-haspopup="dialog">
-          <span class="ph-img" id="qThumb"></span>
-          <span class="tx"><span><span id="qCount" class="num">9</span> in queue</span><span class="t2 ellip" id="qNext"></span></span>
-          <i class="ph ph-queue"></i>
+      <div class="upnext" id="upNext">
+        <button class="un-main" id="unMain" aria-haspopup="dialog">
+          <span class="un-thumb slot" id="unThumb"></span>
+          <span class="un-icon" id="unIcon" hidden><i class="ph ph-warning-circle"></i></span>
+          <span class="un-text"><span class="un-label" id="unLabel">Up next</span><span class="un-title" id="unTitle"></span><span class="un-sub" id="unSub"></span></span>
+          <span class="un-count" id="unCountBox"><span class="n"><i class="ph ph-queue"></i><span id="unCount" class="tnum"></span><span id="unWord">songs</span></span><span class="un-min tnum" id="unMin"></span></span>
         </button>
+        <button class="un-act" id="unAct" hidden></button>
+      </div>
+
+      <div class="util">
+        <button class="ub" id="lyricsBtn" aria-pressed="false"><i class="ph ph-quotes"></i><span>Lyrics</span></button>
+        <button class="ub" id="devBtn" aria-haspopup="menu" aria-expanded="false"><i class="ph ph-device-mobile" id="devIcon"></i><span id="devName">iPhone</span></button>
       </div>
     </section>
 
-    <div class="scrim" id="scrim"></div>
+    <div class="catch" id="catch" hidden></div>
+    <div class="menu" id="moreMenu" role="menu" aria-label="More options" hidden style="top: 108px; right: 16px; --ox: 100%; --oy: 0%">
+      <button class="mi" role="menuitem" id="dlItem"><i class="ph ph-download-simple"></i><span id="dlItemTxt">Download</span></button>
+      <button class="mi" role="menuitem" id="plItem"><i class="ph ph-playlist"></i><span>Go to playlist</span></button>
+    </div>
+    <div class="menu" id="devMenu" role="menu" aria-label="Play on" hidden style="bottom: 92px; right: 16px; --ox: 100%; --oy: 100%">
+      <p class="mh">Play on</p>
+      <div id="devList"></div>
+    </div>
 
-    <section class="sheet" id="queue" role="dialog" aria-modal="true" aria-labelledby="qTitle" inert>
-      <div class="sh-head"><div class="grab"></div>
-        <div class="sh-bar"><div><h2 id="qTitle" tabindex="-1">Up next</h2><p id="qSum" class="num"></p></div><button class="done" data-close>Done</button></div>
+    <div class="scrim" id="scrim" hidden></div>
+    <section class="sheet" id="queue" role="dialog" aria-modal="true" aria-labelledby="qTitle" hidden>
+      <div class="grab" id="grab" aria-hidden="true"><span></span></div>
+      <div class="q-head">
+        <h2 id="qTitle" tabindex="-1">Queue</h2>
+        <button class="tbtn" id="editBtn" aria-pressed="false">Edit</button>
+        <button class="tbtn pri" id="doneBtn">Done</button>
       </div>
-      <div class="sh-body" id="qBody">
-        <p class="sec-label">Now playing</p>
-        <div class="row" id="qNow"></div>
-        <p class="sec-label">From Commute</p>
-        <ul id="qList" style="list-style:none;margin:0;padding:0"></ul>
-        <div class="qempty" id="qEmpty">
-          <h3>Nothing up next</h3>
-          <p>When this song ends, playback stops.</p>
-          <button class="btn" id="refill">Play the rest of Commute</button>
-        </div>
-      </div>
-      <div class="undo" id="undo"><span id="undoTxt" class="ellip"></span><button id="undoBtn">Undo</button></div>
+      <p class="q-from" id="qFrom">Playing from Late Drive</p>
+      <div class="q-body" id="qBody"></div>
     </section>
 
-    <section class="sheet" id="device" role="dialog" aria-modal="true" aria-labelledby="dTitle" inert>
-      <div class="sh-head"><div class="grab"></div>
-        <div class="sh-bar"><h2 id="dTitle" tabindex="-1">Play on</h2><button class="done" data-close>Done</button></div>
-      </div>
-      <div class="sh-body" role="radiogroup" aria-labelledby="dTitle" id="devList"></div>
-    </section>
-
-    <section class="sheet" id="more" role="dialog" aria-modal="true" aria-labelledby="mTitle" inert>
-      <div class="sh-head"><div class="grab"></div>
-        <div class="sh-bar"><h2 id="mTitle" tabindex="-1">Sleep timer</h2><button class="done" data-close>Done</button></div>
-      </div>
-      <div class="sh-body">
-        <div class="chips" role="radiogroup" aria-labelledby="mTitle" id="timerChips"></div>
-        <p class="hint">Playback fades out and pauses when the timer ends.</p>
-      </div>
-    </section>
-
-    <div id="live" class="sr" aria-live="polite"></div>
+    <div class="sr" aria-live="polite" id="live"></div>
   </main>
 
   <div class="home-indicator"></div>
   <script>document.getElementById('clock').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, '');</script>
-
-<script>
-/* motion-kit.js (mobile-ui-craft 5.0), inlined */
+  <script>
+/* motion-kit.js (mobile-ui-craft 5.0). Zero dependencies. Inline it in one <script> of the prototype; it defines window.MK.
+   Everything that should be filmable runs on WAAPI or view transitions, which scripts/capture.mjs `film:` slows down.
+   requestAnimationFrame is used only for MK.tilt smoothing (pointer-driven, not filmed); never build a filmed move on it.
+   Springs are CSS linear() easings generated at mass 1; the tokens are the Material 3 Expressive stiffness/damping pairs. */
 (() => {
-  const MK = (window.MK = { out: 'cubic-bezier(.2,.8,.2,1)' });
+  const MK = (window.MK = { out: 'cubic-bezier(.2,.8,.2,1)' }); // out: for fades and menus, never for springs
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   MK.reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Spring as a linear() easing: stiffness k, damping ratio zeta (<= 1). ms is the time to settle within 0.2%.
   MK.spring = (k, zeta, pts = 36) => {
     const w0 = Math.sqrt(k), wd = w0 * Math.sqrt(Math.max(1e-6, 1 - zeta * zeta));
     const x = zeta < 1
@@ -345,15 +320,44 @@ if (new URLSearchParams(location.search).get('theme') === 'light') document.docu
     v[pts] = 1;
     return { easing: `linear(${v.join(', ')})`, ms: Math.round(T * 1000) };
   };
+  // spatial moves things and may overshoot; effects (opacity, colour) must not overshoot
   MK.ease = { spatial: MK.spring(380, 0.8), fast: MK.spring(800, 0.6), slow: MK.spring(200, 0.8), effects: MK.spring(1600, 1) };
+
+  // Shared-element and state morphs. Give the two ends the same view-transition-name (unique, set only while morphing).
+  let vtStyle;
+  MK.morph = (update, opts = {}) => {
+    if (!document.startViewTransition || document.visibilityState !== 'visible') return Promise.resolve(update()).then(() => {});
+    if (!vtStyle) {
+      const e = MK.ease.spatial;
+      vtStyle = document.head.appendChild(document.createElement('style'));
+      // under Reduce Motion the named groups jump and only the page crossfades.
+      // The page fades out before the new one fades in: a simultaneous crossfade shows old and new text on top of each other.
+      vtStyle.textContent = `::view-transition-group(*){animation-duration:${e.ms}ms;animation-timing-function:${e.easing}}
+::view-transition-group(root){animation-duration:200ms;animation-timing-function:ease-out}
+::view-transition-old(root){animation:mk-vt-out 90ms ease-out both}::view-transition-new(root){animation:mk-vt-in 150ms 60ms ease-out both}
+@keyframes mk-vt-out{to{opacity:0}}@keyframes mk-vt-in{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){::view-transition-group(*){animation-duration:.01ms}::view-transition-group(root){animation-duration:150ms}}`;
+    }
+    const typed = opts.types && window.ViewTransition && 'types' in ViewTransition.prototype;
+    const vt = typed ? document.startViewTransition({ update, types: opts.types }) : document.startViewTransition(update);
+    vt.ready.catch(() => {}); // a skipped transition rejects ready; the update still ran, so finished is what we return
+    return vt.finished;
+  };
+
+  // Commit the on-screen transform and stop animations, so a grab or a new move starts from where the element is.
   MK.freeze = (el) => {
-    const t = getComputedStyle(el).transform;
+    const cs = getComputedStyle(el), t = cs.transform, tr = cs.translate, sc = cs.scale; // read before cancel: computed values are live
     el.getAnimations().forEach((a) => a.cancel());
     el.style.transform = t === 'none' ? '' : t;
+    el.style.translate = tr === 'none' ? '' : tr; // MK.flip animates these two, so a mid-flip grab needs them too
+    el.style.scale = sc === 'none' ? '' : sc;
   };
+
+  // FLIP for one element or an array. Uses the translate/scale properties, so it composes with the element's own transform.
+  // Scaling distorts children and radii: flip boxes, or use MK.morph for rich content.
   MK.flip = (targets, mutate, ease = MK.ease.spatial) => {
     const els = [].concat(targets), red = MK.reduced();
-    const first = els.map((e) => e.getBoundingClientRect());
+    const first = els.map((e) => e.getBoundingClientRect()); // measured while any earlier flip is still in flight
     els.forEach((e) => e.getAnimations().filter((a) => a.id === 'mk-flip').forEach((a) => a.cancel()));
     mutate();
     return Promise.all(els.map((e, i) => {
@@ -367,6 +371,9 @@ if (new URLSearchParams(location.search).get('theme') === 'light') document.docu
       return an.finished.catch(() => {});
     })).then(() => {});
   };
+
+  // Pointer drag with capture. Velocity (px/ms) comes from the last ~80 ms of movement. Returns a disposer.
+  // axis 'x' or 'y' locks the other axis and leaves that scroll direction to the browser.
   MK.drag = (el, { axis, onStart, onMove, onEnd } = {}) => {
     el.style.touchAction = axis === 'x' ? 'pan-y' : axis === 'y' ? 'pan-x' : 'none';
     let id = null, x0 = 0, y0 = 0, pts = [];
@@ -378,7 +385,11 @@ if (new URLSearchParams(location.search).get('theme') === 'light') document.docu
       try { el.setPointerCapture(id); } catch { /* synthetic events have no active pointer */ }
       onStart?.(e);
     };
-    const move = (e) => { if (e.pointerId !== id) return; pts.push([e.timeStamp, e.clientX, e.clientY]); onMove?.(d(e).dx, d(e).dy, e); };
+    const move = (e) => {
+      if (e.pointerId !== id) return;
+      pts.push([e.timeStamp, e.clientX, e.clientY]);
+      onMove?.(d(e).dx, d(e).dy, e);
+    };
     const up = (e) => {
       if (e.pointerId !== id) return;
       id = null;
@@ -390,8 +401,11 @@ if (new URLSearchParams(location.search).get('theme') === 'light') document.docu
     ev.forEach(([n, f]) => el.addEventListener(n, f));
     return () => ev.forEach(([n, f]) => el.removeEventListener(n, f));
   };
+
+  // Spring on x, y (px), r (deg), s (scale), seeded with the release velocity v (units per ms). The spring is simulated
+  // into WAAPI keyframes, so the move is a normal Animation: cancel it (or MK.freeze) to grab it mid-flight.
   MK.fling = (el, { from = {}, to = {}, v = {}, k = 380, zeta = 0.8 } = {}) => {
-    if (MK.reduced()) { k = 1600; zeta = 1; v = {}; }
+    if (MK.reduced()) { k = 1600; zeta = 1; v = {}; } // no overshoot, no carried momentum
     const base = { x: 0, y: 0, r: 0, s: 1 }, tol = { x: 0.3, y: 0.3, r: 0.05, s: 0.002 };
     const A = { ...base, ...from }, B = { ...base, ...to }, c = 2 * zeta * Math.sqrt(k), dt = 1 / 240, keys = Object.keys(base);
     const p = { ...A }, w = Object.fromEntries(keys.map((q) => [q, (v[q] || 0) * 1000]));
@@ -407,16 +421,60 @@ if (new URLSearchParams(location.search).get('theme') === 'light') document.docu
     const end = css();
     frames.push({ transform: end });
     const an = el.animate(frames, { duration: (frames.length * 1000) / 60, easing: 'linear', fill: 'forwards' });
-    an.finished.then(() => { el.style.transform = end; an.cancel(); }, () => {});
+    an.finished.then(() => { el.style.transform = end; an.cancel(); }, () => {}); // a cancelled fling leaves the transform alone
     return an;
   };
+
+  // Perspective tilt that follows the pointer, low-pass smoothed (rAF, see header), spring back on leave.
+  // It owns el.style.transform: tilt an inner element if the outer one is thrown. Sets --mx/--my (0-100%) for a highlight.
+  // Returns a disposer.
+  MK.tilt = (el, { max = 10 } = {}) => {
+    let tx = 0, ty = 0, cx = 0, cy = 0, raf = 0;
+    const pose = () => `perspective(700px) rotateX(${-cy * max}deg) rotateY(${cx * max}deg)`;
+    const step = () => {
+      cx += (tx - cx) * 0.15; cy += (ty - cy) * 0.15;
+      el.style.transform = pose();
+      el.style.setProperty('--mx', `${50 + cx * 50}%`); el.style.setProperty('--my', `${50 + cy * 50}%`);
+      raf = Math.abs(tx - cx) + Math.abs(ty - cy) > 0.002 ? requestAnimationFrame(step) : 0;
+    };
+    const aim = (x, y) => { if (MK.reduced()) return; tx = clamp(x, -1, 1); ty = clamp(y, -1, 1); raf = raf || requestAnimationFrame(step); };
+    const move = (e) => { const r = el.getBoundingClientRect(); aim(((e.clientX - r.left) / r.width) * 2 - 1, ((e.clientY - r.top) / r.height) * 2 - 1); };
+    const leave = () => {
+      cancelAnimationFrame(raf); raf = 0;
+      const e = MK.ease.fast, from = pose(), cx0 = cx, cy0 = cy;
+      tx = ty = cx = cy = 0;
+      el.style.transform = '';
+      el.style.setProperty('--mx', '50%'); el.style.setProperty('--my', '50%');
+      if (!MK.reduced() && Math.abs(cx0) + Math.abs(cy0) > 0.01) el.animate([{ transform: from }, { transform: pose() }], { duration: e.ms, easing: e.easing });
+    };
+    const ev = [['pointermove', move], ['pointerleave', leave], ['pointerup', leave], ['pointercancel', leave]];
+    ev.forEach(([n, f]) => el.addEventListener(n, f));
+    el._mkAim = aim;
+    return () => { leave(); ev.forEach(([n, f]) => el.removeEventListener(n, f)); delete el._mkAim; };
+  };
+  // Gyro tilt for el, started by a tap on button (iOS asks for permission inside a user gesture; needs HTTPS, so file:// gets nothing).
+  MK.tilt.gyro = (button, el, opts) => {
+    const on = (e) => el._mkAim?.((e.gamma || 0) / 30, ((e.beta || 0) - 45) / 30);
+    const click = async () => {
+      const D = window.DeviceOrientationEvent;
+      if (!D || MK.reduced() || (typeof D.requestPermission === 'function' && (await D.requestPermission().catch(() => 'denied')) !== 'granted')) return;
+      if (!el._mkAim) MK.tilt(el, opts);
+      addEventListener('deviceorientation', on);
+    };
+    button.addEventListener('click', click);
+    return () => { button.removeEventListener('click', click); removeEventListener('deviceorientation', on); };
+  };
+
+  // Digit roll for a figure in tabular numerals: only the digits that changed slide. text is the whole formatted string.
+  // A different shape (where the digits and the other characters sit) rebuilds the figure with a fade. The element gets role=img and aria-label = text.
   MK.roll = (el, text) => {
     text = String(text);
     el.setAttribute('role', 'img'); el.setAttribute('aria-label', text);
     if (el.dataset.mkText === text) return;
     const red = MK.reduced(), e = MK.ease.fast;
-    if (el.dataset.mkLen !== String(text.length)) {
-      el.dataset.mkLen = text.length;
+    const shape = text.replace(/\d/g, '0'); // same length is not same layout: '1h 20m' vs '12 min'
+    if (el.dataset.mkLen !== shape) {
+      el.dataset.mkLen = shape;
       el.style.cssText += ';display:inline-flex;height:1em;line-height:1;overflow:hidden;font-variant-numeric:tabular-nums';
       el.innerHTML = [...text].map((ch) => /\d/.test(ch)
         ? '<span aria-hidden="true" style="display:block;height:1em;overflow:hidden"><span class="mk-col" style="display:flex;flex-direction:column">'
@@ -427,7 +485,7 @@ if (new URLSearchParams(location.search).get('theme') === 'light') document.docu
     }
     let k = 0;
     el.querySelectorAll('.mk-col').forEach((col) => {
-      while (!/\d/.test(text[k])) k++;
+      while (k < text.length && !/\d/.test(text[k])) k++;
       const to = +text[k++], from = +col.dataset.d, at = (n) => `translateY(${-n}em)`;
       col.style.transform = at(to); col.dataset.d = to;
       if (from !== to && !red && el.dataset.mkText !== undefined) col.animate([{ transform: at(from) }, { transform: at(to) }], { duration: e.ms, easing: e.easing });
@@ -435,440 +493,397 @@ if (new URLSearchParams(location.search).get('theme') === 'light') document.docu
     if (red && el.dataset.mkText !== undefined) el.animate([{ opacity: 0.4 }, { opacity: 1 }], { duration: 150, easing: MK.out });
     el.dataset.mkText = text;
   };
+
+  // navigator.vibrate patterns. iOS Safari has no vibrate: this is a silent no-op there, so never rely on it alone.
   const PATTERNS = { selection: 6, light: 10, medium: 20, success: [10, 40, 10], warning: [20, 60, 20], error: [30, 50, 30, 50, 30] };
   MK.haptic = (kind = 'light') => { try { navigator.vibrate?.(PATTERNS[kind] ?? 10); } catch { /* blocked before a user gesture */ } };
 })();
-</script>
 
-<script>
-/* ---------- Sample data: made-up artists and songs, real Unsplash photos as covers ---------- */
-const IMG = (id, w) => `https://images.unsplash.com/photo-${id}?w=${w}&q=80&auto=format&fit=crop&dpr=2`;
-const TRACKS = [
-  { title: 'Bir Sabah', artist: 'Elif Duman', d: 228, id: '1534528741775-53994a69daeb', c: '#4a403a', dl: true },
-  { title: 'Sakin', artist: 'Kerem Aydın', d: 252, id: '1602848597941-0d3d3a2c1241', c: '#8a2c24', dl: false },
-  { title: 'Ağır Ağır', artist: 'Nehir Saka', d: 185, id: '1495430288918-03be19c7c485', c: '#1f4a3a', dl: true },
-  { title: 'Dönüş Yolu', artist: 'Bora Ünal, Derin Işık', d: 321, id: '1506794778202-cad84cf45f1d', c: '#3a3430', dl: true },
-  { title: 'Kış', artist: 'Defne Ilgaz', d: 178, id: '1616714109948-c74fe5029a4d', c: '#8a5420', dl: false },
-  { title: 'Her Şey Yolunda Gidiyor Sanırken Bir Gün', artist: 'Mert Öztürk', d: 284, id: '1505811210036-052144988918', c: '#2c2848', dl: true },
-  { title: 'Yağmur', artist: 'Selin Okur', d: 203, id: '1531746020798-e6953c6e8e04', c: '#b06a7a', dl: true },
-  { title: 'Pazar', artist: 'Can Erdem', d: 247, id: '1580656449278-e8381933522c', c: '#c9a21a', dl: false },
-  { title: 'Uzak', artist: 'Ada Yalçın', d: 199, id: '1463453091185-61582044d556', c: '#4a4038', dl: true },
-  { title: 'Eylül', artist: 'Kaan Tekin', d: 236, id: '1582730147924-d92f4da00252', c: '#a03a3a', dl: true },
-];
-// made-up lines; only the first song has lyrics, the rest show the honest "not available" state
-const LYRICS = { 'Bir Sabah': [[0,'Bir sabah uyandım'],[14,'Pencerede ışık var'],[27,'Kahve soğuk, ev sessiz'],[40,'Kimse aramadı'],[55,'Bir sabah uyandım'],
-  [68,'Yine aynı sokak'],[80,'Yürüdüm, durmadım'],[94,'Bir sabah, bir sabah'],[110,'Saat erken, yol uzun'],[124,'Otobüs geç kaldı'],[139,'Bir sabah uyandım'],
-  [152,'Pencerede ışık var'],[166,'Bir sabah, bir sabah'],[182,'Yürüdüm, durmadım'],[198,'Bir sabah uyandım']] };
-const DEVICES = [{ name: 'iPhone', icon: 'ph-device-mobile' }, { name: 'AirPods Pro', icon: 'ph-headphones' }, { name: 'Living room speaker', icon: 'ph-speaker-hifi' }];
-const TIMERS = [['Off', 0], ['15 min', 900], ['30 min', 1800], ['45 min', 2700], ['End of song', -1]];
+  </script>
+  <script>
+  const $ = (s) => document.querySelector(s);
+  const U = (id) => `https://images.unsplash.com/photo-${id}?w=900&q=80&auto=format&fit=crop`;
+  // Sample catalogue (made-up artists and titles; photos from Unsplash). c = fallback colour, tint = dominant colour sampled once from the photo.
+  const T = [
+    { title: 'Harbour Lights', artist: 'Selin Aksoy', dur: 201, id: '1514439827219-9137a0b99245', c: '#172134', tint: '#16243a', dl: false },
+    { title: 'Night Bus', artist: 'Deniz Yıldırım', dur: 228, id: '1495430288918-03be19c7c485', c: '#263a3d', tint: '#486568', dl: true,
+      lyrics: ['Last bus out of the city', 'Window cold against my head', 'Every stop a little quieter', 'Every light a little red', 'I count the streets until your corner', 'Then I count them back again'] },
+    { title: 'Slow Return', artist: 'Kemal Arda', dur: 245, id: '1506794778202-cad84cf45f1d', c: '#2a221d', tint: '#976955', dl: false },
+    { title: 'Amber', artist: 'Lena Hofer', dur: 177, id: '1616714109948-c74fe5029a4d', c: '#865522', tint: '#ba6502', dl: true },
+    { title: 'Everything I Meant to Say on the Way Home', artist: 'Maya Ruiz', dur: 271, id: '1529626455594-4ff0802cfb7e', c: '#82969f', tint: '#06cbf4', dl: false },
+    { title: 'Overpass', artist: 'Ozan Kara', dur: 192, id: '1505811210036-052144988918', c: '#19141a', tint: '#2c160c', dl: false },
+    { title: 'Sunday 45', artist: 'The Lowlands', dur: 219, id: '1602848597941-0d3d3a2c1241', c: '#7d6c65', tint: '#c98a46', dl: true },
+    { title: 'Close Enough', artist: 'Ama Owusu', dur: 234, id: '1531123897727-8f129e1688ce', c: '#72504b', tint: '#864a48', dl: false },
+  ];
+  const DEVICES = [{ name: 'iPhone', icon: 'ph-device-mobile' }, { name: 'Living room speaker', icon: 'ph-speaker-hifi' }, { name: 'Headphones', icon: 'ph-headphones' }];
+  const S = { cur: 1, hist: [0], queue: [2, 3, 4, 5, 6, 7], t: 72, playing: true, shuffle: false, repeat: 'off', liked: new Set([6]),
+              dev: 'iPhone', lyrics: false, state: 'content', edit: false, pending: null, npOpen: true, qOpen: false };
+  T.forEach((tr) => { const im = new Image(); im.src = U(tr.id); }); // preload: a skip never shows an empty frame
 
-const $ = (s) => document.querySelector(s);
-const STATES = ['loading', 'empty', 'error', 'offline'];
-const state = () => document.documentElement.dataset.state;
-const offline = () => state() === 'offline';
-const playable = (t) => !offline() || t.dl;
-const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
-const words = (s) => { const m = Math.floor(s / 60), x = Math.floor(s % 60); return `${m} minute${m === 1 ? '' : 's'} ${x} second${x === 1 ? '' : 's'}`; };
-const mins = (list) => Math.round(list.reduce((a, t) => a + t.d, 0) / 60);
-const say = (msg) => { const l = $('#live'); l.textContent = ''; setTimeout(() => { l.textContent = msg; }, 30); };
-const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const fmt = (s) => { s = Math.max(0, Math.floor(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+  const spoken = (s) => { s = Math.max(0, Math.floor(s)); const m = Math.floor(s / 60), r = s % 60; return `${m} minute${m === 1 ? '' : 's'} ${r} second${r === 1 ? '' : 's'}`; };
+  const minutes = (s) => `${Math.round(s / 60)} min`;
+  const songs = (n) => `${n} ${n === 1 ? 'song' : 'songs'}`;
+  const sum = (ids) => ids.reduce((a, i) => a + T[i].dur, 0);
+  const cur = () => T[S.cur];
+  const playable = (i) => S.state !== 'offline' || T[i].dl;
+  const shuffled = (ids) => { const a = ids.slice(); let s = 7; for (let i = a.length - 1; i > 0; i--) { s = (s * 16807) % 2147483647; const j = s % (i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const refillList = () => { const ids = T.map((_, i) => i).filter((i) => i !== S.cur); return S.shuffle ? shuffled(ids) : ids; };
+  // what plays after this song: the queue, or the playlist from the start when Repeat all is on and the queue has run out
+  const upcoming = () => { const q = S.queue.filter(playable); return q.length || S.repeat !== 'all' ? q : refillList().filter(playable); };
+  const live = (msg) => { $('#live').textContent = ''; requestAnimationFrame(() => { $('#live').textContent = msg; }); };
+  const busy = () => S.state === 'loading' || S.state === 'error';
 
-function slot(t, w, alt = '') { // never-grey image: tinted box, fade in, removed on error
-  const d = document.createElement('span'); d.className = 'ph-img'; d.style.setProperty('--c', t.c);
-  const i = new Image(); i.alt = alt; i.crossOrigin = 'anonymous'; i.decoding = 'async';
-  i.onload = () => i.classList.add('in'); i.onerror = () => i.remove(); i.src = IMG(t.id, w);
-  if (i.complete && i.naturalWidth) { i.style.transition = 'none'; i.classList.add('in'); }  // cached: no fade-in
-  d.append(i); return d;
-}
-const slotHTML = (t, w) => `<span class="ph-img" style="--c:${t.c}"><img alt="" crossorigin="anonymous" src="${IMG(t.id, w)}" onload="this.classList.add('in')" onerror="this.remove()"></span>`;
-
-/* ---------- Ground tinted from the cover (detail motion: crossfade on change) ---------- */
-const lum = (c) => { const f = (v) => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }; return .2126 * f(c[0]) + .7152 * f(c[1]) + .0722 * f(c[2]); };
-const hexRGB = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-// Dark: scale down until luminance <= .03, so white text stays 13:1, ink-2 6:1 and the red play button 3:1 against the ground.
-// Light: lift toward white until luminance >= .78, so ink and ink-2 stay above 4.5:1.
-function tone(rgb) {
-  let c = rgb.slice();
-  if (document.documentElement.dataset.theme === 'light') { for (let i = 0; i < 60 && lum(c) < .78; i++) c = c.map((v) => v + (255 - v) * .08); }
-  else { for (let i = 0; i < 80 && lum(c) > .03; i++) c = c.map((v) => v * .92); }
-  return `rgb(${c.map(Math.round).join(' ')})`;
-}
-const sampled = new Map();
-function sample(t) { // dominant colour of the cover; the hard-coded --c stays when CORS or the photo fails
-  return new Promise((res) => {
-    const img = new Image(); img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      try {
-        const cv = document.createElement('canvas'); cv.width = cv.height = 24; const x = cv.getContext('2d', { willReadFrequently: true });
-        x.drawImage(img, 0, 0, 24, 24); const d = x.getImageData(0, 0, 24, 24).data, bins = {};
-        for (let i = 0; i < d.length; i += 4) { const r = d[i], g = d[i + 1], b = d[i + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b);
-          if (mx < 40 || mn > 225 || mx - mn < 28) continue; const k = (r >> 4) + ',' + (g >> 4) + ',' + (b >> 4); const v = (bins[k] ??= [0, 0, 0, 0]); v[0]++; v[1] += r; v[2] += g; v[3] += b; }
-        const top = Object.values(bins).sort((a, b) => b[0] - a[0])[0];
-        if (top) sampled.set(t.id, [top[1] / top[0], top[2] / top[0], top[3] / top[0]]);
-      } catch { /* tainted canvas: keep the fallback */ }
-      res();
-    };
-    img.onerror = () => res(); img.src = IMG(t.id, 48);
-  });
-}
-let gi = 0;
-function setGround(t, instant) {
-  const col = tone(sampled.get(t.id) || hexRGB(t.c)), a = $('#g' + gi), b = $('#g' + (1 - gi));
-  if (instant) { a.style.background = col; return; }
-  b.style.background = col; b.classList.add('on'); a.classList.remove('on'); gi = 1 - gi;
-}
-
-/* ---------- Player state ---------- */
-let S;
-function init() {
-  const h = location.hash.slice(1);
-  document.documentElement.dataset.state = STATES.includes(h) ? h : 'content';
-  S = { cur: TRACKS[0], hist: [], queue: TRACKS.slice(1), orig: null, shuffle: false, repeat: 0, playing: true, el: 72,
-        timer: 0, timerEnd: false, timerSet: 0, device: 1, removed: null, lyrics: false, liked: new Set([TRACKS[2].id]) };
-  if (h === 'empty') S.queue = [];
-  if (h === 'error') S.playing = false;
-  $('#covers').replaceChildren(coverEl(S.cur)); $('#coverWrap').style.transform = '';
-  setGround(S.cur, true);
-  if (typeof renderTimers === 'function' && $('#timerChips').children.length) renderTimers();
-  renderMeta(); renderTime(); renderTransport(); renderDock(); renderQueue(); renderHome(); renderLyrics();
-}
-function coverEl(t) { const d = slot(t, 800); d.classList.add('cv', 'cur'); return d; }
-
-function renderMeta() {
-  const t = S.cur;
-  $('#title').textContent = t.title; $('#artist').textContent = t.artist;
-  $('#covers').setAttribute('aria-label', `Cover of ${t.title} by ${t.artist}`);
-  $('#dl').hidden = !t.dl;
-  const liked = S.liked.has(t.id);
-  $('#like').setAttribute('aria-pressed', liked); $('#like').setAttribute('aria-label', liked ? 'Liked. Remove from Liked songs' : 'Like');
-  $('#like i').className = liked ? 'ph-fill ph-heart' : 'ph ph-heart';
-}
-let lastLine = -1;
-function renderTime() {
-  const d = S.cur.d, el = Math.min(S.el, d);
-  $('#elapsed').textContent = mmss(el); $('#remain').textContent = '-' + mmss(d - el);
-  $('#fill').style.transform = `scaleX(${el / d})`; $('#knob').style.left = (el / d * 100) + '%';
-  const sc = $('#scrub'); sc.setAttribute('aria-valuemax', d); sc.setAttribute('aria-valuenow', el); sc.setAttribute('aria-valuetext', `${words(el)} of ${words(d)}`);
-  if (S.lyrics) {
-    const L = LYRICS[S.cur.title]; if (!L) return;
-    let i = -1; L.forEach(([s], k) => { if (el >= s) i = k; });
-    if (i !== lastLine) { lastLine = i; const ps = $('#lyrics').querySelectorAll('p');
-      ps.forEach((p, k) => p.classList.toggle('now', k === i));
-      if (ps[i]) $('#lyrics').scrollTo({ top: Math.max(0, ps[i].offsetTop - 72), behavior: MK.reduced() ? 'auto' : 'smooth' }); }
+  function slot(el, i, alt = '') {
+    el.style.setProperty('--c', T[i].c); el.textContent = '';
+    const im = new Image(); im.alt = alt; im.decoding = 'async';
+    im.onload = () => im.classList.add('in'); im.onerror = () => im.remove();
+    im.src = U(T[i].id); if (im.complete && im.naturalWidth) im.classList.add('in');
+    el.append(im); return el;
   }
-  const tc = $('#timerChip');
-  tc.hidden = !S.timer && !S.timerEnd;
-  $('#timerTxt').textContent = S.timerEnd ? 'End of song' : `${Math.ceil(S.timer / 60)} min`;
-  tc.setAttribute('aria-label', S.timerEnd ? 'Sleep timer: stops after this song' : `Sleep timer: ${Math.ceil(S.timer / 60)} minutes left`);
-}
-const nextIndex = () => S.queue.findIndex(playable);
-function renderTransport() {
-  const err = state() === 'error';
-  $('#play i.i-pp').className = 'ph-fill i-pp ' + (S.playing ? 'ph-pause' : 'ph-play');
-  $('#play').setAttribute('aria-label', S.playing ? 'Pause' : 'Play'); $('#play').disabled = err;
-  $('#miniPlay i').className = 'ph-fill ' + (S.playing ? 'ph-pause' : 'ph-play'); $('#miniPlay').setAttribute('aria-label', S.playing ? 'Pause' : 'Play');
-  const canNext = nextIndex() >= 0;
-  $('#next').disabled = !canNext; $('#miniNext').disabled = !canNext;
-  $('#next').setAttribute('aria-label', canNext ? 'Next song' : 'Next song, nothing up next');
-  $('#shuffle').setAttribute('aria-pressed', S.shuffle); $('#shuffle').setAttribute('aria-label', S.shuffle ? 'Shuffle on' : 'Shuffle off');
-  const r = $('#repeat'); r.setAttribute('aria-pressed', S.repeat > 0);
-  r.setAttribute('aria-label', ['Repeat off', 'Repeat all', 'Repeat this song'][S.repeat]);
-  r.querySelector('i').className = 'ph ' + (S.repeat === 2 ? 'ph-repeat-once' : 'ph-repeat');
-}
-function renderDock(animate) {
-  const dv = DEVICES[S.device]; $('#devName').textContent = dv.name; $('#devIcon').className = 'ph ' + dv.icon;
-  $('#devBtn').setAttribute('aria-label', `Playing on ${dv.name}. Change output`);
-  const n = S.queue.length, i = nextIndex(), nx = S.queue[i];
-  MK.roll($('#qCount'), String(n));
-  console.assert($('#qCount').dataset.mkText === String(S.queue.length), 'queue count out of sync');
-  const swap = () => {
-    $('#qNext').textContent = nx ? nx.title : 'Add songs';
-    $('#qThumb').replaceWith(Object.assign(nx ? slot(nx, 120) : Object.assign(document.createElement('span'), { className: 'ph-img' }), { id: 'qThumb' }));
-    $('#qThumb').hidden = !nx;
-    $('#queueBtn').setAttribute('aria-label', `Queue, ${n} ${n === 1 ? 'song' : 'songs'}. Up next: ${nx ? nx.title : 'nothing'}`);
-  };
-  if (!animate || MK.reduced()) return swap();
-  // old text leaves before the new one arrives, so two texts never overlap
-  const outs = [$('#qNext'), $('#qThumb')].map((e) => e.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 90, easing: 'ease-out', fill: 'forwards' }));
-  Promise.all(outs.map((a) => a.finished.catch(() => {}))).then(() => {
-    swap(); outs.forEach((a) => a.cancel());
-    [$('#qNext'), $('#qThumb')].forEach((e) => e.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160, easing: MK.out }));
-  });
-}
-function renderQueue() {
-  const n = S.queue.length;
-  $('#qSum').textContent = n ? `${n} ${n === 1 ? 'song' : 'songs'}, ${mins(S.queue)} min` : 'Empty';
-  $('#qNow').innerHTML = `${slotHTML(S.cur, 120)}<span class="tx"><span class="t1 ellip">${esc(S.cur.title)}</span><span class="t2 ellip">${esc(S.cur.artist)}</span></span><i class="ph-fill ph-speaker-simple-high eq" aria-label="Playing"></i>`;
-  $('#qEmpty').classList.toggle('on', !n);
-  $('#qList').innerHTML = S.queue.map((t, i) => `<li class="qrow${playable(t) ? '' : ' off'}" data-id="${t.id}">
-    <button class="row" data-act="play" ${playable(t) ? '' : 'disabled'} aria-label="Play ${esc(t.title)} by ${esc(t.artist)}${playable(t) ? '' : ', not downloaded'}">${slotHTML(t, 120)}
-      <span class="tx"><span class="t1 ellip">${esc(t.title)}</span><span class="t2 ellip">${esc(t.artist)}</span></span>
-      <span class="${playable(t) ? 'dur num' : 'na'}">${playable(t) ? mmss(t.d) : 'Not downloaded'}</span></button>
-    <button class="ib" data-act="up" aria-label="Move ${esc(t.title)} up" ${i ? '' : 'disabled'}><i class="ph ph-caret-up"></i></button>
-    <button class="ib" data-act="rm" aria-label="Remove ${esc(t.title)} from queue"><i class="ph ph-minus-circle"></i></button></li>`).join('');
-}
-function renderHome() {
-  const all = [...S.hist, S.cur, ...S.queue];
-  $('#homeSum').textContent = `${all.length} songs, ${mins(all)} min`;
-  $('#homeList').innerHTML = all.map((t) => `<li><button class="row" data-id="${t.id}" aria-current="${t === S.cur}">${slotHTML(t, 120)}
-    <span class="tx"><span class="t1 ellip">${esc(t.title)}</span><span class="t2 ellip">${esc(t.artist)}</span></span>
-    ${t === S.cur ? '<i class="ph-fill ph-speaker-simple-high eq" aria-label="Playing"></i>' : `<span class="dur num">${mmss(t.d)}</span>`}</button></li>`).join('');
-  $('#miniArt').replaceWith(Object.assign(slot(S.cur, 120), { id: 'miniArt' }));
-  $('#miniTitle').textContent = S.cur.title; $('#miniArtist').textContent = S.cur.artist;
-  $('#miniOpen').setAttribute('aria-label', `Open now playing: ${S.cur.title} by ${S.cur.artist}`);
-}
-function renderLyrics() {
-  const L = LYRICS[S.cur.title]; lastLine = -1;
-  $('#lyrics').innerHTML = L ? L.map(([, l]) => `<p>${esc(l)}</p>`).join('') : '<p class="none">Lyrics aren’t available for this song.</p>';
-  $('#lyrics').classList.toggle('open', S.lyrics);
-  $('#lyrBtn').setAttribute('aria-pressed', S.lyrics);
-  renderTime();
-}
 
-/* ---------- Signature: skip. The next cover slides in, the old one leaves, title and time swap, the queue count rolls ---------- */
-function swapCover(dir, fromX = 0, vx = 0) {
-  const box = $('#covers'), old = box.querySelector('.cv.cur'), nu = coverEl(S.cur);
-  box.querySelectorAll('.cv.leaving').forEach((e) => e.remove());
-  if (old) { MK.freeze(old); old.classList.replace('cur', 'leaving'); }
-  box.append(nu);
-  if (MK.reduced()) {
-    nu.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: MK.out });
-    if (old) old.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 150, fill: 'forwards' }).finished.then(() => old.remove(), () => {});
-    return;
+  /* ---------- render ---------- */
+  function renderMeta() {
+    const tr = cur();
+    $('#npTitle').textContent = tr.title; $('#npArtist').textContent = tr.artist;
+    $('#dlBadge').hidden = !tr.dl;
+    const liked = S.liked.has(S.cur), lb = $('#likeBtn');
+    lb.setAttribute('aria-pressed', liked); lb.setAttribute('aria-label', liked ? `Remove ${tr.title} from Liked Songs` : `Add ${tr.title} to Liked Songs`);
+    lb.innerHTML = `<i class="${liked ? 'ph-fill' : 'ph'} ph-heart"></i>`;
+    $('#np').style.setProperty('--tint', tr.tint);
+    $('#lyrics').innerHTML = tr.lyrics ? tr.lyrics.map((l) => `<p>${l}</p>`).join('') : `<p class="none">No lyrics for ${tr.title} yet.</p>`;
+    $('#dlItemTxt').textContent = tr.dl ? 'Remove download' : 'Download';
   }
-  const W = box.offsetWidth + 48, e = MK.ease.spatial;
-  if (old) {
-    const a = MK.fling(old, { from: { x: fromX }, to: { x: -dir * W, s: .9 }, v: { x: vx }, k: 380, zeta: 1 });
-    a.finished.then(() => old.remove(), () => {});
+  function renderTime() {
+    const d = cur().dur, p = Math.min(1, S.t / d), sc = $('#scrub');
+    sc.style.setProperty('--p', p);
+    sc.setAttribute('aria-valuemax', d); sc.setAttribute('aria-valuenow', Math.floor(S.t));
+    sc.setAttribute('aria-valuetext', `${spoken(S.t)} of ${spoken(d)}`);
+    $('#tEl').textContent = fmt(S.t);
+    $('#tRem').textContent = S.state === 'loading' ? 'Loading' : `-${fmt(d - Math.floor(S.t))}`;
   }
-  nu.animate([{ transform: `translateX(${dir * W}px) scale(.9)` }, { transform: 'none' }], { duration: e.ms, easing: e.easing });
-}
-function change(dir, fromX, vx) {
-  swapCover(dir, fromX, vx);
-  const metaEls = [$('#title'), $('.artist'), $('#like')];
-  if (MK.reduced()) renderMeta();
-  else {
-    const outs = metaEls.map((x) => x.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 90, easing: 'ease-out', fill: 'forwards' }));
-    Promise.all(outs.map((a) => a.finished.catch(() => {}))).then(() => { renderMeta(); outs.forEach((a) => a.cancel());
-      metaEls.forEach((x) => x.animate([{ opacity: 0, transform: `translateX(${dir * 12}px)` }, { opacity: 1, transform: 'none' }], { duration: 200, easing: MK.out })); });
+  function renderPlay() {
+    const pb = $('#playBtn'), mp = $('#miniPlay'), tr = cur();
+    if (S.state === 'loading') { pb.innerHTML = '<span class="spin"></span>'; pb.setAttribute('aria-label', `Loading ${tr.title}, pause`); }
+    else if (S.state === 'error') { pb.innerHTML = '<i class="ph-fill ph-play"></i>'; pb.setAttribute('aria-label', 'Play, retry'); }
+    else { pb.innerHTML = `<i class="ph-fill ${S.playing ? 'ph-pause' : 'ph-play'}"></i>`; pb.setAttribute('aria-label', S.playing ? 'Pause' : 'Play'); }
+    mp.innerHTML = `<i class="ph-fill ${S.playing ? 'ph-pause' : 'ph-play'}"></i>`; mp.setAttribute('aria-label', S.playing ? 'Pause' : 'Play');
   }
-  renderTime(); renderTransport(); renderDock(true); renderQueue(); renderHome(); renderLyrics();
-  setGround(S.cur);
-  MK.haptic('light');
-  say(`Playing ${S.cur.title} by ${S.cur.artist}. ${S.queue.length} in queue.`);
-}
-function next(fromX, vx) {
-  const i = nextIndex(); if (i < 0) { say('Nothing up next'); return false; }
-  S.hist.push(S.cur); S.cur = S.queue.splice(i, 1)[0]; S.el = 0;
-  if (S.orig) S.orig = S.orig.filter((t) => t !== S.cur);
-  if (S.timerEnd) S.timerEnd = false;
-  change(1, fromX, vx); return true;
-}
-function prev(fromX, vx) {
-  if (S.el > 3 || !S.hist.length) { // iOS convention: past 3 s, Previous restarts the song
-    S.el = 0; renderTime(); say('Restarted ' + S.cur.title);
-    if (fromX) MK.fling($('#covers .cv.cur'), { from: { x: fromX }, to: {}, v: { x: vx } });
-    return;
+  function renderModes() {
+    const sb = $('#shufBtn'); sb.setAttribute('aria-pressed', S.shuffle); $('#shufLbl').textContent = S.shuffle ? 'Shuffle on' : 'Shuffle';
+    sb.setAttribute('aria-label', S.shuffle ? 'Shuffle, on' : 'Shuffle, off');
+    const rb = $('#repBtn'), lbl = { off: 'Repeat', all: 'Repeat all', one: 'Repeat one' }[S.repeat];
+    rb.setAttribute('aria-pressed', S.repeat !== 'off'); $('#repLbl').textContent = lbl;
+    rb.setAttribute('aria-label', `Repeat, ${S.repeat === 'off' ? 'off' : S.repeat}. Changes to ${{ off: 'all', all: 'one', one: 'off' }[S.repeat]}`);
+    rb.querySelector('i').className = `ph ${S.repeat === 'one' ? 'ph-repeat-once' : 'ph-repeat'}`;
+    const nb = $('#nextBtn'), none = !upcoming().length;
+    nb.setAttribute('aria-disabled', none); nb.setAttribute('aria-label', none ? 'Next song, nothing up next' : 'Next song');
+    $('#miniNext').setAttribute('aria-disabled', none);
   }
-  S.queue.unshift(S.cur); if (S.orig) S.orig.unshift(S.cur);
-  S.cur = S.hist.pop(); S.el = 0; change(-1, fromX, vx);
-}
-function playTrack(t) { // from a queue row: play it now, keep the rest of the queue in order
-  const i = S.queue.indexOf(t); if (i < 0 || !playable(t)) return;
-  S.hist.push(S.cur); S.queue.splice(i, 1); if (S.orig) S.orig = S.orig.filter((x) => x !== t);
-  S.cur = t; S.el = 0; change(1);
-}
-
-/* Cover follows the finger; release past 90 px or a quick flick commits the skip, carrying the release velocity */
-MK.drag($('#covers'), {
-  onStart: () => { const cur = $('#covers .cv.cur'); if (cur && !S.lyrics) MK.freeze(cur); },  // grab it mid-flight
-  onMove: (dx) => { if (S.lyrics) return; const cur = $('#covers .cv.cur'); if (!cur) return;
-    const blocked = (dx < 0 && nextIndex() < 0); cur.style.transform = `translateX(${blocked ? dx * .3 : dx}px)`; },
-  onEnd: ({ dx, vx }) => {
-    if (S.lyrics) return; const cur = $('#covers .cv.cur'); if (!cur) return;
-    const x = new DOMMatrix(getComputedStyle(cur).transform).e;
-    const go = Math.abs(x) > 90 || Math.abs(vx) > .5;
-    if (go && x < 0 && next(x, vx)) return;
-    if (go && x > 0) return prev(x, vx);
-    MK.fling(cur, { from: { x }, to: {}, v: { x: vx } });
-  },
-});
-
-/* ---------- Play, pause: the cover settles back when paused ---------- */
-function setPlaying(on) {
-  if (state() === 'error') return;
-  S.playing = on; renderTransport();
-  const w = $('#coverWrap'), to = on ? 'none' : 'scale(.86)';
-  if (!MK.reduced()) { const from = getComputedStyle(w).transform; const e = MK.ease.spatial;
-    w.getAnimations().forEach((a) => a.cancel());
-    w.animate([{ transform: from === 'none' ? 'none' : from }, { transform: to }], { duration: e.ms, easing: e.easing }); }
-  w.style.transform = to;
-  say(on ? 'Playing' : 'Paused');
-}
-$('#play').onclick = () => setPlaying(!S.playing);
-$('#miniPlay').onclick = () => setPlaying(!S.playing);
-$('#next').onclick = () => next();
-$('#miniNext').onclick = () => next();
-$('#prev').onclick = () => prev();
-$('#retry').onclick = () => { history.replaceState(null, '', location.pathname + location.search); init(); setPlaying(true); say('Playing ' + S.cur.title); };
-$('#like').onclick = () => {
-  const id = S.cur.id, on = !S.liked.has(id); on ? S.liked.add(id) : S.liked.delete(id); renderMeta();
-  if (on && !MK.reduced()) { const e = MK.ease.fast; $('#like i').animate([{ transform: 'scale(.7)' }, { transform: 'none' }], { duration: e.ms, easing: e.easing }); }
-  MK.haptic('light'); say(on ? 'Added to Liked songs' : 'Removed from Liked songs');
-};
-function seededShuffle(list, seed = 7) {
-  const a = list.slice(); for (let i = a.length - 1; i > 0; i--) { seed = (seed * 9301 + 49297) % 233280; const j = Math.floor(seed / 233280 * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a;
-}
-$('#shuffle').onclick = () => {
-  S.shuffle = !S.shuffle;
-  if (S.shuffle) { S.orig = S.queue.slice(); S.queue = seededShuffle(S.queue); }
-  else { S.queue = [...S.orig.filter((t) => S.queue.includes(t)), ...S.queue.filter((t) => !S.orig.includes(t))]; S.orig = null; }
-  renderTransport(); renderDock(true); renderQueue(); renderHome(); say(S.shuffle ? 'Shuffle on' : 'Shuffle off');
-};
-$('#repeat').onclick = () => { S.repeat = (S.repeat + 1) % 3; renderTransport(); say(['Repeat off', 'Repeat all', 'Repeat this song'][S.repeat]); };
-$('#lyrBtn').onclick = () => { S.lyrics = !S.lyrics; renderLyrics(); say(S.lyrics ? 'Lyrics shown' : 'Lyrics hidden'); };
-
-/* ---------- Scrub bar: pointer and keyboard ---------- */
-let scrubbing = false;
-const sc = $('#scrub');
-const ratio = (e) => { const r = sc.getBoundingClientRect(); return Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)); };
-sc.addEventListener('pointerdown', (e) => { if (state() === 'error') return; scrubbing = true; try { sc.setPointerCapture(e.pointerId); } catch {} sc.classList.add('active'); S.el = Math.round(ratio(e) * S.cur.d); renderTime(); MK.haptic('selection'); });
-sc.addEventListener('pointermove', (e) => { if (!scrubbing) return; S.el = Math.round(ratio(e) * S.cur.d); renderTime(); });
-const endScrub = () => { if (!scrubbing) return; scrubbing = false; sc.classList.remove('active'); say('At ' + words(S.el)); };
-sc.addEventListener('pointerup', endScrub); sc.addEventListener('pointercancel', endScrub);
-sc.addEventListener('keydown', (e) => {
-  const k = { ArrowRight: 5, ArrowUp: 5, ArrowLeft: -5, ArrowDown: -5 }[e.key];
-  if (k) S.el = Math.min(S.cur.d, Math.max(0, S.el + k)); else if (e.key === 'Home') S.el = 0; else if (e.key === 'End') S.el = S.cur.d - 1; else return;
-  e.preventDefault(); renderTime();
-});
-
-/* Real time: the playing song's position (and a sleep timer) advance; nothing else happens on its own */
-setInterval(() => {
-  if (!S.playing || scrubbing || state() === 'loading' || state() === 'error') return;
-  S.el++;
-  if (S.timer > 0 && --S.timer === 0) { S.timerSet = 0; renderTimers(); renderTime(); setPlaying(false); say('Sleep timer ended. Paused'); return; }
-  if (S.el >= S.cur.d) {
-    if (S.repeat === 2) S.el = 0;
-    else if (S.timerEnd) { S.timerEnd = false; S.el = S.cur.d; setPlaying(false); }
-    else if (!next()) { S.el = S.cur.d; setPlaying(false); }
+  function renderUpNext(swap) {
+    const up = upcoming(), err = S.state === 'error', t = $('#unThumb'), act = $('#unAct');
+    $('#unIcon').hidden = !err; $('#unCountBox').hidden = err || !up.length; act.hidden = !(err || !up.length);
+    t.hidden = err || !up.length;
+    if (err) {
+      $("#unLabel").textContent = "Can't play this song"; $("#unTitle").textContent = "Connection lost"; $("#unSub").textContent = "Check your connection";
+      act.textContent = 'Retry'; act.dataset.do = 'retry';
+      $('#unMain').setAttribute('aria-label', `Can't play ${cur().title}. Connection lost. Open queue`);
+    } else if (!up.length) {
+      $('#unLabel').textContent = S.state === 'offline' ? 'Up next, downloaded' : 'Up next';
+      $('#unTitle').textContent = S.state === 'offline' ? 'No more downloaded songs' : 'Nothing up next';
+      $('#unSub').textContent = 'Stops after this song';
+      act.textContent = 'Repeat playlist'; act.dataset.do = 'repeat';
+      $('#unMain').setAttribute('aria-label', 'Nothing up next. Open queue');
+    } else {
+      const n = up[0];
+      $('#unLabel').textContent = S.state === 'offline' ? 'Up next, downloaded' : S.queue.filter(playable).length ? 'Up next' : 'Up next, from the start';
+      $('#unTitle').textContent = T[n].title; $('#unSub').textContent = T[n].artist;
+      if (t.dataset.i !== String(n)) {
+        slot(t, n); t.dataset.i = n;
+        if (swap && !MK.reduced()) t.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, delay: 160, easing: MK.out, fill: 'backwards' });
+      }
+      MK.roll($("#unCount"), String(up.length)); $("#unWord").textContent = up.length === 1 ? "song" : "songs"; $('#unMin').textContent = minutes(sum(up));
+      $('#unMain').setAttribute('aria-label', `Up next: ${T[n].title} by ${T[n].artist}. Queue, ${songs(up.length)}, ${minutes(sum(up))}. Open queue`);
+    }
   }
-  renderTime();
-}, 1000);
-
-/* ---------- Sheets ---------- */
-let openSheet = null, opener = null;
-function showSheet(id, from) {
-  if (openSheet) hideSheet(true);
-  const sh = $('#' + id); openSheet = sh; opener = from || document.activeElement;
-  sh.inert = false; sh.classList.add('open'); $('#scrim').classList.add('on'); $('#np').inert = true;
-  const e = MK.ease.spatial;
-  sh.getAnimations().forEach((a) => a.cancel());
-  if (MK.reduced()) { sh.style.transform = 'none'; sh.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180, easing: MK.out }); }
-  else { sh.animate([{ transform: 'translateY(105%)' }, { transform: 'none' }], { duration: e.ms, easing: e.easing }); sh.style.transform = 'none'; }
-  sh.querySelector('h2').focus({ preventScroll: true });
-}
-function hideSheet(quick, fromY = 0, vy = 0) {
-  const sh = openSheet; if (!sh) return; openSheet = null;
-  $('#scrim').classList.remove('on'); $('#np').inert = false;
-  const done = () => { sh.classList.remove('open'); sh.inert = true; sh.style.transform = ''; };
-  if (sh.id === 'queue') { S.removed = null; $('#undo').classList.remove('on'); }  // closing keeps the removal; only Undo restores it
-  if (quick || MK.reduced()) done();
-  else MK.fling(sh, { from: { y: fromY }, to: { y: sh.offsetHeight + 20 }, v: { y: vy }, k: 800, zeta: 1 }).finished.then(done, () => {});
-  if (opener && opener.isConnected) opener.focus({ preventScroll: true });
-}
-$('#scrim').onclick = () => hideSheet();
-document.querySelectorAll('[data-close]').forEach((b) => { b.onclick = () => hideSheet(); });
-document.querySelectorAll('.sheet .sh-head').forEach((head) => {
-  const sh = head.parentElement; let y0 = 0;
-  MK.drag(head, { axis: 'y',
-    onStart: (e) => { if (e.target.closest('button')) return; y0 = new DOMMatrix(getComputedStyle(sh).transform).f; },
-    onMove: (_, dy) => { const t = y0 + dy; sh.style.transform = `translateY(${t < 0 ? t * .3 : t}px)`; },
-    onEnd: ({ dy, vy }) => { const t = Math.max(0, y0 + dy); if (t + vy * 180 > 140) hideSheet(false, t, vy); else MK.fling(sh, { from: { y: t }, to: {}, v: { y: vy } }); },
-  });
-});
-$('#queueBtn').onclick = (e) => showSheet('queue', e.currentTarget);
-$('#devBtn').onclick = (e) => showSheet('device', e.currentTarget);
-$('#moreBtn').onclick = (e) => showSheet('more', e.currentTarget);
-$('#timerChip').onclick = (e) => showSheet('more', e.currentTarget);
-
-/* Queue: tap a row to play it, move up, remove with Undo in the sheet's own bar */
-$('#qList').addEventListener('click', (e) => {
-  const b = e.target.closest('button[data-act]'); if (!b) return;
-  const li = b.closest('li'), t = S.queue.find((x) => x.id === li.dataset.id), i = S.queue.indexOf(t);
-  if (b.dataset.act === 'play') { playTrack(t); return; }
-  if (b.dataset.act === 'up' && i > 0) {
-    const above = li.previousElementSibling;
-    MK.flip([li, above], () => { li.parentNode.insertBefore(li, above); [S.queue[i - 1], S.queue[i]] = [S.queue[i], S.queue[i - 1]]; });
-    $('#qList').querySelectorAll('li').forEach((x, k) => { x.querySelector('[data-act="up"]').disabled = !k; });
-    (b.disabled ? li.querySelector('[data-act="rm"]') : b).focus({ preventScroll: true });
-    renderTransport(); renderDock(true); renderHome(); say(`Moved ${t.title} to position ${i}`);
+  function renderHeader() {
+    $('#fromL1').textContent = S.state === 'offline' ? 'Offline, downloads only' : 'Playing from playlist';
+    const d = DEVICES.find((x) => x.name === S.dev);
+    $('#devName').textContent = d.name; $('#devIcon').className = `ph ${d.icon}`;
+    $('#devBtn').setAttribute('aria-label', `Playing on ${d.name}. Change output`);
+    $('#lyricsBtn').setAttribute('aria-pressed', S.lyrics); $('#lyrics').hidden = !S.lyrics;
   }
-  if (b.dataset.act === 'rm') {
-    S.removed = { t, i }; S.queue.splice(i, 1); if (S.orig) S.orig = S.orig.filter((x) => x !== t);
-    li.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, easing: 'ease-out', fill: 'forwards' }).finished.then(() => {
-      renderQueue(); renderTransport(); renderDock(true); renderHome();
-      const nxt = $('#qList').children[i] || $('#qList').lastElementChild; (nxt ? nxt.querySelector('[data-act="rm"]') : $('#refill')).focus({ preventScroll: true });
+  function renderBase() {
+    $('#plMeta').textContent = `Playlist, ${songs(T.length)}, ${minutes(sum(T.map((_, i) => i)))}`;
+    if (!$('#plCover').firstChild) slot($('#plCover'), 1);
+    $('#plList').innerHTML = T.map((tr, i) => `<li><button class="pl-row" data-i="${i}" ${i === S.cur ? 'aria-current="true"' : ''} aria-label="${tr.title} by ${tr.artist}, ${fmt(tr.dur)}${i === S.cur ? ', now playing' : ''}">
+      <span class="th slot" data-slot="${i}"></span><span class="tx"><span class="t1">${tr.title}</span><span class="t2">${tr.artist}</span></span>
+      <span class="du tnum">${i === S.cur ? '<i class="ph-fill ph-speaker-simple-high now"></i>' : ''}${fmt(tr.dur)}</span></button></li>`).join('');
+    $('#plList').querySelectorAll('[data-slot]').forEach((el) => slot(el, +el.dataset.slot));
+    const mt = $('#miniThumb'); if (mt.dataset.i !== String(S.cur)) { slot(mt, S.cur); mt.dataset.i = S.cur; }
+    $('#miniTitle').textContent = cur().title; $('#miniArtist').textContent = cur().artist;
+    $('#mini').style.setProperty('--tint', cur().tint);
+  }
+  function rowHTML(i, k) {
+    const tr = T[i], ok = playable(i), n = S.queue.filter(playable).length;
+    const row = `<button class="q-row${ok ? "" : " na"}" data-play="${i}" ${ok && !S.edit ? '' : 'aria-disabled="true"'} ${S.edit ? 'tabindex="-1"' : ''}
+      aria-label="${tr.title} by ${tr.artist}, ${ok ? fmt(tr.dur) + (S.edit ? '' : '. Play now') : 'not downloaded'}">
+      <span class="th slot" data-slot="${i}"></span><span class="tx"><span class="t1">${tr.title}</span><span class="t2">${tr.artist}</span></span>
+      <span class="du tnum">${ok ? fmt(tr.dur) : 'Not downloaded'}</span></button>`;
+    if (!S.edit) return `<li class="q-li">${row}</li>`;
+    return `<li class="q-li edit"><button class="ib sm rm" data-rm="${i}" aria-label="Remove ${tr.title} from queue"><i class="ph-fill ph-minus-circle"></i></button>${row}
+      <button class="ib sm" data-up="${i}" aria-label="Move ${tr.title} up" ${k === 0 ? 'disabled' : ''}><i class="ph ph-caret-up"></i></button>
+      <button class="ib sm" data-down="${i}" aria-label="Move ${tr.title} down" ${k === S.queue.length - 1 ? 'disabled' : ''}><i class="ph ph-caret-down"></i></button></li>`;
+  }
+  function renderQueue() {
+    if (!S.qOpen) return;
+    const up = upcoming(), tr = cur();
+    $('#editBtn').setAttribute('aria-pressed', S.edit); $('#editBtn').textContent = S.edit ? 'Edit done' : 'Edit';
+    $('#qFrom').textContent = S.state === 'offline' ? 'Offline: downloaded songs play, others wait' : 'Playing from Late Drive';
+    let list = S.queue.map((i, k) => rowHTML(i, k));
+    if (S.pending) list.splice(S.pending.idx, 0, `<li class="q-removed"><span>Removed ${T[S.pending.i].title}</span><button data-undo>Undo</button></li>`);
+    const empty = !S.queue.length && !S.pending;
+    $('#qBody').innerHTML = `<p class="q-sec">Now playing</p>
+      <div class="q-row" role="group" aria-label="Now playing: ${tr.title} by ${tr.artist}"><span class="th slot" data-slot="${S.cur}"></span>
+        <span class="tx"><span class="t1">${tr.title}</span><span class="t2">${tr.artist}</span></span>
+        <span class="du"><i class="ph-fill ${S.playing ? 'ph-speaker-simple-high' : 'ph-pause'}" style="color:var(--accent);font-size:18px"></i></span></div>
+      <p class="q-sec">Up next <span class="tnum">${up.length ? songs(up.length) + ', ' + minutes(sum(up)) : songs(0)}</span></p>
+      ${empty ? `<div class="q-empty"><span>${S.repeat === 'all' ? 'The playlist starts again after this song.' : 'Nothing up next. Playback stops after this song.'}</span>
+        ${S.repeat === 'all' ? '' : '<button class="un-act" data-do="repeat">Repeat playlist</button>'}</div>` : `<ol>${list.join('')}</ol>`}`;
+    $('#qBody').querySelectorAll('[data-slot]').forEach((el) => slot(el, +el.dataset.slot));
+  }
+  function renderAll() { renderMeta(); renderTime(); renderPlay(); renderModes(); renderUpNext(false); renderHeader(); renderBase(); renderQueue(); }
+
+  /* ---------- the signature: skip moves real covers ---------- */
+  // Grab an element where it is on screen right now, so an interrupted move continues from there.
+  function grab(el) {
+    const cs = getComputedStyle(el), s = { translate: cs.translate === 'none' ? '0px 0px' : cs.translate, scale: cs.scale === 'none' ? '1' : cs.scale, opacity: cs.opacity };
+    el.getAnimations().forEach((a) => a.cancel()); return s;
+  }
+  function swapCover(dir) {
+    const art = $('#art'), red = MK.reduced(), sp = MK.ease.spatial;
+    const olds = [...art.querySelectorAll('.cov')];
+    const neu = slot(Object.assign(document.createElement('div'), { className: 'cov slot' }), S.cur, `Cover of ${cur().title}`);
+    art.insertBefore(neu, $('#lyrics'));
+    const th = $('#unThumb'), tr = th.hidden ? null : th.getBoundingClientRect(), ar = art.getBoundingClientRect();
+    const toThumb = tr && tr.width ? { translate: `${tr.left - ar.left}px ${tr.top - ar.top}px`, scale: `${tr.width / ar.width}` } : { translate: '0px 40%', scale: '.6' };
+    olds.forEach((o) => {
+      const s = grab(o); o.style.zIndex = dir < 0 ? 3 : 1;
+      let kf, opt = { duration: 200, easing: MK.out, fill: 'forwards' };
+      if (red || !dir) kf = [{ opacity: s.opacity }, { opacity: 0 }];
+      else if (dir > 0) kf = [s, { translate: '-14% 6%', scale: '.82', opacity: 0 }];
+      else { kf = [s, { ...toThumb, opacity: 1 }]; opt = { duration: sp.ms, easing: sp.easing, fill: 'forwards' }; } // back into the up-next slot
+      o.animate(kf, opt).finished.then(() => o.remove(), () => {});
     });
-    $('#undoTxt').textContent = `Removed ${t.title}`; $('#undo').classList.add('on'); say(`Removed ${t.title}. Undo available`);
+    neu.style.zIndex = 2;
+    if (red || !dir) neu.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: MK.out });
+    else if (dir > 0) neu.animate([toThumb, { translate: '0px 0px', scale: '1' }], { duration: sp.ms, easing: sp.easing }); // the up-next cover grows into place
+    else neu.animate([{ opacity: 0, scale: '.94' }, { opacity: 1, scale: '1' }], { duration: 240, easing: MK.out });
   }
-});
-$('#undoBtn').onclick = () => {
-  const r = S.removed; if (!r) return; S.removed = null;
-  S.queue.splice(r.i, 0, r.t); if (S.orig) S.orig.push(r.t);
-  renderQueue(); renderTransport(); renderDock(true); renderHome(); $('#undo').classList.remove('on');
-  const li = $('#qList').children[r.i]; li.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160, easing: MK.out });
-  li.querySelector('[data-act="rm"]').focus({ preventScroll: true }); say(`${r.t.title} is back in the queue`);
-};
-$('#refill').onclick = () => {
-  S.queue = TRACKS.filter((t) => t !== S.cur && !S.hist.includes(t)); if (!S.queue.length) S.queue = TRACKS.filter((t) => t !== S.cur);
-  renderQueue(); renderTransport(); renderDock(true); renderHome(); $('#qTitle').focus({ preventScroll: true }); say(`${S.queue.length} songs added`);
-};
+  function swapMeta() {
+    const box = $('#meta');
+    if (MK.reduced()) { renderMeta(); box.animate([{ opacity: .3 }, { opacity: 1 }], { duration: 150, easing: MK.out }); return; }
+    box.getAnimations().forEach((a) => a.cancel());
+    const out = box.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 80, easing: MK.out, fill: 'forwards' });
+    out.finished.then(() => { renderMeta(); out.cancel(); box.animate([{ opacity: 0, translate: '0 6px' }, { opacity: 1, translate: '0 0' }], { duration: 170, easing: MK.out }); }, () => renderMeta());
+  }
+  function changed(dir) {
+    if (S.npOpen) { swapCover(dir); swapMeta(); } else renderMeta();
+    S.t = 0; renderTime(); renderPlay(); renderModes(); renderUpNext(true); renderBase(); renderQueue();
+    live(`Now playing ${cur().title} by ${cur().artist}`);
+  }
 
-/* Output device and sleep timer */
-function renderDevices() {
-  $('#devList').innerHTML = DEVICES.map((d, i) => `<button class="opt" role="radio" aria-checked="${i === S.device}" data-i="${i}"><i class="ph ${d.icon}"></i>${d.name}<i class="ph ph-check ck"></i></button>`).join('');
-}
-$('#devList').addEventListener('click', (e) => { const b = e.target.closest('[data-i]'); if (!b) return; S.device = +b.dataset.i; renderDevices(); renderDock(); $('#devList').children[S.device].focus({ preventScroll: true }); say('Playing on ' + DEVICES[S.device].name); });
-function renderTimers() {
-  $('#timerChips').innerHTML = TIMERS.map(([l, v]) => `<button role="radio" data-v="${v}" aria-checked="${v === S.timerSet}">${l}</button>`).join('');
-}
-$('#timerChips').addEventListener('click', (e) => {
-  const b = e.target.closest('[data-v]'); if (!b) return; const v = +b.dataset.v;
-  S.timerEnd = v === -1; S.timer = v > 0 ? v : 0; S.timerSet = v; renderTimers(); renderTime();
-  $('#timerChips').querySelector(`[data-v="${v}"]`).focus({ preventScroll: true });
-  say(v === 0 ? 'Sleep timer off' : v === -1 ? 'Stops after this song' : `Stops in ${v / 60} minutes`);
-});
+  /* ---------- playback ---------- */
+  function clearState() { if (location.hash) { history.replaceState(null, '', location.pathname + location.search); sync(); } }
+  function next() {
+    if (!upcoming().length) return;
+    if (S.state === 'error' || S.state === 'loading') clearState();
+    if (!S.queue.filter(playable).length && S.repeat === 'all') { S.queue = refillList(); S.hist = []; }
+    const n = S.queue.find(playable); S.queue.splice(S.queue.indexOf(n), 1);
+    S.hist.push(S.cur); S.cur = n; S.playing = true; commitPending(); changed(1);
+  }
+  function prev() {
+    const back = S.hist.filter(playable);
+    if (S.t > 3 || !back.length) { S.t = 0; renderTime(); live(`Restarted ${cur().title}`); return; }
+    if (S.state === 'error' || S.state === 'loading') clearState();
+    const p = back[back.length - 1]; S.hist.splice(S.hist.lastIndexOf(p), 1);
+    S.queue.unshift(S.cur); S.cur = p; S.playing = true; commitPending(); changed(-1);
+  }
+  function jump(i) {
+    const k = S.queue.indexOf(i); if (k < 0 || !playable(i)) return;
+    S.hist.push(S.cur, ...S.queue.splice(0, k)); S.queue.shift(); S.cur = i; S.playing = true; commitPending(); changed(1);
+  }
+  function playFromList(i) {
+    if (i === S.cur) { openNp(); return; }
+    S.hist = T.map((_, k) => k).filter((k) => k < i); S.queue = T.map((_, k) => k).filter((k) => k > i);
+    if (S.shuffle) S.queue = shuffled(S.queue);
+    S.cur = i; S.playing = true; changed(0);
+  }
+  function trackEnd() {
+    if (S.repeat === 'one') { S.t = 0; return; }
+    if (upcoming().length) { next(); return; }
+    S.playing = false; S.t = cur().dur; renderPlay(); renderQueue();
+  }
+  let dragging = false, last = performance.now();
+  setInterval(() => { // real time: the playing song's position is the only thing that moves on its own
+    const now = performance.now(), dt = (now - last) / 1000; last = now;
+    if (!S.playing || busy() || dragging) return;
+    S.t += dt; if (S.t >= cur().dur) trackEnd(); renderTime();
+  }, 250);
 
-/* Collapse to the playlist with the mini player, and back */
-function setNP(open) {
-  const np = $('#np'), H = np.offsetHeight, e = MK.ease.spatial;
-  np.getAnimations().forEach((a) => a.cancel());
-  np.inert = !open; $('#home').inert = open;
-  if (MK.reduced()) { np.style.transform = open ? 'none' : `translateY(${H}px)`; np.animate([{ opacity: open ? 0 : 1 }, { opacity: open ? 1 : 0 }], { duration: 180, easing: MK.out, fill: open ? 'none' : 'forwards' }); }
-  else { np.animate([{ transform: `translateY(${open ? H : 0}px)` }, { transform: `translateY(${open ? 0 : H}px)` }], { duration: open ? e.ms : Math.round(e.ms * .7), easing: e.easing }); np.style.transform = open ? 'none' : `translateY(${H}px)`; }
-  (open ? $('#title') : $('#miniOpen')).focus({ preventScroll: true });
-}
-$('#collapse').onclick = () => setNP(false);
-$('#miniOpen').onclick = () => setNP(true);
-$('#homeList').addEventListener('click', (e) => {
-  const b = e.target.closest('[data-id]'); if (!b) return;
-  const t = TRACKS.find((x) => x.id === b.dataset.id);
-  if (t !== S.cur) { const all = [...S.hist, S.cur, ...S.queue], i = all.indexOf(t);
-    S.hist = all.slice(0, i); S.cur = t; S.queue = all.slice(i + 1); S.el = 0; S.orig = S.shuffle ? S.queue.slice() : null;
-    $('#covers').replaceChildren(coverEl(S.cur)); setGround(S.cur, false); renderMeta(); renderTime(); renderTransport(); renderDock(); renderQueue(); renderHome(); renderLyrics();
-    if (!S.playing) setPlaying(true); }
-  setNP(true);
-});
+  function togglePlay() {
+    if (S.state === 'error') { clearState(); S.playing = true; renderPlay(); return; }
+    S.playing = !S.playing; renderPlay(); renderQueue(); live(S.playing ? 'Playing' : 'Paused');
+  }
+  function commitPending() { S.pending = null; }
 
-addEventListener('keydown', (e) => {
-  if (e.key !== 'Escape') return;
-  if (openSheet) hideSheet(); else if (!$('#np').inert) setNP(false);
-});
-addEventListener('hashchange', () => { hideSheet(true); init(); });
+  /* ---------- controls ---------- */
+  $('#playBtn').onclick = togglePlay; $('#miniPlay').onclick = togglePlay;
+  $('#nextBtn').onclick = () => next(); $('#miniNext').onclick = () => next(); $('#prevBtn').onclick = prev;
+  $('#shufBtn').onclick = () => {
+    S.shuffle = !S.shuffle;
+    S.queue = S.shuffle ? shuffled(S.queue) : S.queue.slice().sort((a, b) => a - b);
+    renderModes(); renderUpNext(true); renderQueue(); live(S.shuffle ? 'Shuffle on. Up next reordered' : 'Shuffle off. Playlist order');
+  };
+  $('#repBtn').onclick = () => {
+    S.repeat = { off: 'all', all: 'one', one: 'off' }[S.repeat];
+    renderModes(); renderUpNext(true); renderQueue(); live({ off: 'Repeat off', all: 'Repeat all', one: 'Repeat this song' }[S.repeat]);
+  };
+  $('#likeBtn').onclick = () => {
+    const tr = cur(); S.liked.has(S.cur) ? S.liked.delete(S.cur) : S.liked.add(S.cur);
+    renderMeta(); MK.haptic('light'); live(S.liked.has(S.cur) ? `${tr.title} added to Liked Songs` : `${tr.title} removed from Liked Songs`);
+    if (S.liked.has(S.cur) && !MK.reduced()) $('#likeBtn i').animate([{ scale: '.8' }, { scale: '1' }], { duration: MK.ease.fast.ms, easing: MK.ease.fast.easing });
+  };
+  $('#lyricsBtn').onclick = () => { S.lyrics = !S.lyrics; renderHeader(); live(S.lyrics ? 'Lyrics shown' : 'Lyrics hidden'); };
+  $('#unMain').onclick = openQueue;
+  $('#unAct').onclick = (e) => act(e.currentTarget.dataset.do);
+  function act(what) {
+    if (what === 'retry') { clearState(); S.playing = true; renderPlay(); $('#playBtn').focus({ preventScroll: true }); live(`Playing ${cur().title}`); }
+    if (what === 'repeat') { S.repeat = 'all'; renderModes(); renderUpNext(true); renderQueue(); if (!S.qOpen) $('#unMain').focus({ preventScroll: true }); live('Repeat all. The playlist starts again after this song'); }
+  }
 
-init(); renderDevices(); renderTimers();
-Promise.all(TRACKS.map(sample)).then(() => setGround(S.cur, true));
-TRACKS.forEach((t) => { const i = new Image(); i.crossOrigin = 'anonymous'; i.src = IMG(t.id, 800); });  // warm the cache so a skipped-to cover is there when it slides in
-</script>
+  /* scrubber: drag, tap, or arrow keys */
+  const scrub = $('#scrub');
+  const seekTo = (e) => { const r = $('#rail').getBoundingClientRect(); S.t = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * cur().dur; renderTime(); };
+  scrub.addEventListener('pointerdown', (e) => { dragging = true; try { scrub.setPointerCapture(e.pointerId); } catch {} scrub.classList.add('drag'); seekTo(e); });
+  scrub.addEventListener('pointermove', (e) => { if (dragging) seekTo(e); });
+  const endSeek = (e) => { if (!dragging) return; dragging = false; scrub.classList.remove('drag'); seekTo(e); MK.haptic('selection'); live(`Moved to ${spoken(S.t)}`); };
+  scrub.addEventListener('pointerup', endSeek); scrub.addEventListener('pointercancel', endSeek);
+  scrub.addEventListener('keydown', (e) => {
+    const d = { ArrowRight: 5, ArrowUp: 5, ArrowLeft: -5, ArrowDown: -5 }[e.key];
+    if (d) { S.t = Math.min(cur().dur - 1, Math.max(0, S.t + d)); renderTime(); e.preventDefault(); }
+    if (e.key === 'Home') { S.t = 0; renderTime(); e.preventDefault(); }
+  });
+
+  /* menus */
+  let openMenuEl = null, menuBtn = null;
+  function openMenu(menu, btn) {
+    closeMenu(); openMenuEl = menu; menuBtn = btn; menu.hidden = false; $('#catch').hidden = false; btn.setAttribute('aria-expanded', 'true');
+    menu.querySelector('.mi').focus({ preventScroll: true });
+  }
+  function closeMenu() {
+    if (!openMenuEl) return; openMenuEl.hidden = true; $('#catch').hidden = true; menuBtn.setAttribute('aria-expanded', 'false');
+    menuBtn.focus({ preventScroll: true }); openMenuEl = menuBtn = null;
+  }
+  $('#catch').onclick = closeMenu;
+  $('#moreBtn').onclick = (e) => openMenu($('#moreMenu'), e.currentTarget);
+  $('#devBtn').onclick = (e) => {
+    $('#devList').innerHTML = DEVICES.map((d) => `<button class="mi" role="menuitemradio" aria-checked="${d.name === S.dev}" data-dev="${d.name}"><i class="ph ${d.icon}"></i><span>${d.name}</span>${d.name === S.dev ? '<i class="ph ph-check ck"></i>' : ''}</button>`).join('');
+    openMenu($('#devMenu'), e.currentTarget);
+  };
+  $('#devList').onclick = (e) => { const b = e.target.closest('[data-dev]'); if (!b) return; S.dev = b.dataset.dev; renderHeader(); closeMenu(); live(`Playing on ${S.dev}`); };
+  $('#dlItem').onclick = () => { const tr = cur(); tr.dl = !tr.dl; renderMeta(); renderUpNext(false); closeMenu(); live(tr.dl ? `${tr.title} downloaded` : `Download of ${tr.title} removed`); };
+  $('#plItem').onclick = () => { closeMenu(); closeNp(); };
+
+  /* Now Playing <-> mini player: the cover is the shared element */
+  function setOpen(open) { S.npOpen = open; $('#np').hidden = !open; $('#base').inert = open; }
+  function closeNp() {
+    if (!S.npOpen) return;
+    const big = [...$('#art').querySelectorAll('.cov')].pop(), mt = $('#miniThumb');
+    if (big) big.style.viewTransitionName = 'cover';
+    MK.morph(() => { if (big) big.style.viewTransitionName = ''; mt.style.viewTransitionName = 'cover'; setOpen(false); })
+      .then(() => { mt.style.viewTransitionName = ''; $('#miniOpen').focus({ preventScroll: true }); });
+  }
+  function openNp() {
+    if (S.npOpen) return;
+    const mt = $('#miniThumb'); mt.style.viewTransitionName = 'cover';
+    MK.morph(() => {
+      mt.style.viewTransitionName = ''; setOpen(true); renderAll();
+      if (!$('#art .cov')) swapCover(0);
+      const big = [...$('#art').querySelectorAll('.cov')].pop(); big.getAnimations().forEach((a) => a.finish()); big.style.viewTransitionName = 'cover';
+    }).then(() => { const big = [...$('#art').querySelectorAll('.cov')].pop(); if (big) big.style.viewTransitionName = ''; $('#closeNp').focus({ preventScroll: true }); });
+  }
+  $('#closeNp').onclick = closeNp; $('#fromBtn').onclick = closeNp; $('#miniOpen').onclick = openNp;
+  $('#plList').onclick = (e) => { const b = e.target.closest('[data-i]'); if (b) playFromList(+b.dataset.i); };
+
+  /* queue sheet */
+  const sheet = $('#queue');
+  sheet.style.setProperty('--sheet-ms', MK.ease.spatial.ms + 'ms'); sheet.style.setProperty('--sheet-ease', MK.ease.spatial.easing);
+  function openQueue() {
+    S.qOpen = true; S.edit = false; renderQueue();
+    $('#scrim').hidden = false; sheet.hidden = false; $('#np').inert = true;
+    requestAnimationFrame(() => requestAnimationFrame(() => { sheet.classList.add('open'); $('#scrim').classList.add('open'); }));
+    $('#qTitle').focus({ preventScroll: true });
+  }
+  function closeQueue() {
+    if (!S.qOpen) return;
+    S.qOpen = false; S.edit = false; commitPending(); $('#np').inert = false;
+    sheet.classList.remove('open'); $('#scrim').classList.remove('open');
+    setTimeout(() => { if (!S.qOpen) { sheet.hidden = true; $('#scrim').hidden = true; } }, 320);
+    renderUpNext(false); renderModes(); $('#unMain').focus({ preventScroll: true });
+  }
+  $('#doneBtn').onclick = closeQueue; $('#scrim').onclick = closeQueue;
+  $('#editBtn').onclick = () => { S.edit = !S.edit; commitPending(); renderQueue(); $('#editBtn').focus({ preventScroll: true }); };
+  $('#qBody').onclick = (e) => {
+    const t = e.target.closest('button'); if (!t) return;
+    const focusRow = (sel) => { const el = $('#qBody').querySelector(sel); if (el) el.focus({ preventScroll: true }); };
+    if (t.dataset.do) { act(t.dataset.do); return; }
+    if (t.dataset.undo !== undefined && S.pending) {
+      const { i, idx } = S.pending; S.queue.splice(idx, 0, i); S.pending = null;
+      renderQueue(); renderUpNext(true); renderModes(); focusRow(S.edit ? `[data-rm="${i}"]` : `[data-play="${i}"]`); live(`${T[i].title} is back in the queue`); return;
+    }
+    if (t.dataset.rm) {
+      const i = +t.dataset.rm, idx = S.queue.indexOf(i); S.queue.splice(idx, 1); S.pending = { i, idx };
+      renderQueue(); renderUpNext(true); renderModes(); focusRow('[data-undo]'); live(`Removed ${T[i].title} from the queue. Undo available`); return;
+    }
+    if (t.dataset.up || t.dataset.down) {
+      const i = +(t.dataset.up || t.dataset.down), k = S.queue.indexOf(i), j = k + (t.dataset.up ? -1 : 1);
+      if (j < 0 || j >= S.queue.length) return;
+      commitPending(); [S.queue[k], S.queue[j]] = [S.queue[j], S.queue[k]];
+      renderQueue(); renderUpNext(true); focusRow(t.dataset.up ? `[data-up="${i}"]:not([disabled]), [data-down="${i}"]` : `[data-down="${i}"]:not([disabled]), [data-up="${i}"]`);
+      live(`${T[i].title} moved to position ${j + 1}`); return;
+    }
+    if (t.dataset.play && !S.edit && t.getAttribute('aria-disabled') !== 'true') jump(+t.dataset.play);
+  };
+  // drag the grabber down to dismiss; Done, the scrim and Escape do the same
+  let sy0 = 0;
+  MK.drag($('#grab'), {
+    axis: 'y',
+    onStart: () => { sheet.style.transition = 'none'; sy0 = 0; },
+    onMove: (_, dy) => { sy0 = dy; sheet.style.transform = `translateY(${dy < 0 ? dy * 0.25 : dy}px)`; },
+    onEnd: ({ dy, vy }) => { sheet.style.transition = ''; sheet.style.transform = ''; if (dy + vy * 180 > 160) closeQueue(); },
+  });
+
+  addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (openMenuEl) closeMenu(); else if (S.qOpen) closeQueue(); else if (S.npOpen) closeNp();
+  });
+
+  /* states by URL hash: #loading #empty #error #offline */
+  const STATES = ['loading', 'empty', 'error', 'offline'];
+  let savedQueue = null;
+  function sync() {
+    const s = location.hash.slice(1), st = STATES.includes(s) ? s : 'content';
+    if (st === 'empty') { if (!savedQueue) savedQueue = S.queue.slice(); S.queue = []; S.repeat = 'off'; }
+    else if (savedQueue) { S.queue = savedQueue; savedQueue = null; }
+    S.state = st; document.documentElement.dataset.state = st; renderAll();
+  }
+  addEventListener('hashchange', sync);
+  sync(); swapCover(0);
+
+  // self-check: every figure shown for the queue is computed from the same list
+  console.assert(sum([2, 3, 4, 5, 6, 7]) === 1338 && minutes(1338) === '22 min', 'queue total');
+  console.assert(sum(T.map((_, i) => i)) === 1767, 'playlist total');
+  </script>
 </body>
 </html>

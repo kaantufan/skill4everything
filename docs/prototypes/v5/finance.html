@@ -1,181 +1,182 @@
 <!doctype html>
-<html lang="en-US" data-platform="ios" data-theme="dark">
+<html lang="en" data-platform="ios" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pano home</title>
+<title>Pano</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.51.0/dist/tabler-icons.min.css"><script>
-  // The dealt appearance is dark; ?theme=light shows the other one. It never follows the viewer's system here.
-  (function(){ var t = new URLSearchParams(location.search).get('theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; })();
+<!-- filled set first, outline second: both define .ti, so the outline font wins and the filled face is used only for the selected tab -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.51.0/dist/tabler-icons-filled.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.51.0/dist/tabler-icons.min.css">
+<script>
+  // the dealt appearance is dark; ?theme=light shows the other one
+  const q = new URLSearchParams(location.search).get('theme');
+  if (q === 'light' || q === 'dark') document.documentElement.dataset.theme = q;
 </script>
 <style>
-  /* Device chrome (from phone-frame.html) */
-  :root { --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px; --chrome: #000; }
-  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
+  /* device frame (from assets/phone-frame.html) */
+  :root { --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px; }
   * { box-sizing: border-box; }
-  /* clip, not hidden: nothing (scrollIntoView included) may scroll the device itself */
-  html, body { margin: 0; width: var(--w); height: var(--h); overflow: clip; }
-  body { position: relative; font-family: var(--face); -webkit-font-smoothing: antialiased; background: var(--ground); color: var(--ink); }
-  .statusbar { position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 30; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none; font-family: -apple-system, "SF Pro Text", system-ui, sans-serif; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--ground); color: var(--ink); }
+  .statusbar { position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 30; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 28px 10px; font: 600 16px/1 -apple-system, "SF Pro Text", system-ui, sans-serif; color: var(--chrome); pointer-events: none; }
   .statusbar svg { height: 12px; fill: var(--chrome); }
   .home-indicator { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 30; width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none; }
-  #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: clip; }
+  #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
 </style>
 <style>
-  /* PANO TOKENS: austere-dark, Hanken Grotesk, signal blue. Screens below use only these. */
+  /* PANO TOKENS: austere-dark direction, Hanken Grotesk, signal blue. Every screen value comes from here. */
   :root {
-    --face: "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif;
+    --font: "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif;
+    --t-balance: 500 48px/1 var(--font); --t-balance-track: -0.02em;
+    --t-title: 600 20px/1.2 var(--font);
+    --t-section: 600 17px/1.25 var(--font);
+    --t-body: 400 16px/1.3 var(--font);
+    --t-body-strong: 500 16px/1.3 var(--font);
+    --t-label: 500 13px/1.3 var(--font);
+    --t-tab: 500 11px/1 var(--font);
+    --r-card: 14px; --r-control: 12px; --r-seg: 3px;
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s8: 32px;
+    --row: 52px; --tap: 44px; --tabbar: 49px;
+  }
+  [data-theme="dark"] {
+    color-scheme: dark; --chrome: #fff;
     --ground: #0B0B0C; --raised: #161618; --ink: #F4F4F5; --ink-2: #A1A1AA; --line: #27272A;
     --accent: #4F7DFF; --on-accent: #0B0B0C; --positive: #3DD68C; --negative: #FF6B6B;
-    /* chart neutrals for the split bar, ordered tax > bills > spent, each 3:1+ apart from the panel except the last */
-    --seg-tax: #D4D4D8; --seg-bills: #8E8E96; --seg-spent: #52525B;
-    --t-balance: 500 48px/1 var(--face); --t-title: 600 20px/1.2 var(--face); --t-body: 400 16px/1.35 var(--face);
-    --t-label: 500 13px/1.35 var(--face); --t-amount: 500 17px/1.2 var(--face);
-    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
-    --r-card: 14px; --r-btn: 12px; --tabbar-h: 50px;
-    --press: transform .12s cubic-bezier(.22,1,.36,1);
-    --sheet-in: 320ms cubic-bezier(.2,.8,.2,1);
   }
   [data-theme="light"] {
+    color-scheme: light; --chrome: #000;
     --ground: #FFFFFF; --raised: #F4F4F5; --ink: #0B0B0C; --ink-2: #52525B; --line: #E4E4E7;
     --accent: #4F7DFF; --on-accent: #0B0B0C; --positive: #15803D; --negative: #DC2626;
-    --seg-tax: #27272A; --seg-bills: #71717A; --seg-spent: #B4B4BB;
+  }
+  :root {
+    /* the four parts of the month, one per bar segment and legend swatch */
+    --seg-tax: repeating-linear-gradient(135deg, var(--ink-2) 0 2px, transparent 2px 5px);
+    --seg-bills: color-mix(in oklab, var(--ink-2) 72%, var(--ground));
+    --seg-spent: color-mix(in oklab, var(--ink-2) 40%, var(--ground));
+    --seg-safe: var(--accent);
   }
 </style>
 <style>
-  .num, .amt { font-variant-numeric: tabular-nums; }
-  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; transition: var(--press); touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; text-align: inherit; }
+  button, .tap { transition: transform .12s cubic-bezier(.22,1,.36,1); touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   button:active:not(:disabled) { transform: scale(.97); }
-  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   button:disabled { cursor: default; opacity: .45; }
-  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  h1, h2, h3, p, ul, dl, dd { margin: 0; padding: 0; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  h1, h2, h3, p, ul { margin: 0; padding: 0; }
   ul { list-style: none; }
+  .num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-  /* Header: solid ground so rows never read through it */
-  .top { flex: none; padding: var(--safe-top) var(--s4) 0; background: var(--ground); position: relative; z-index: 5; }
-  .top-in { height: 60px; display: flex; align-items: center; justify-content: space-between; }
-  .brand { font: var(--t-title); color: var(--accent); letter-spacing: 0; }
-  .updated { font: var(--t-label); color: var(--ink-2); margin-top: 2px; }
-  .iconbtn { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 22px; font-size: 24px; color: var(--ink); margin-right: -10px; }
-  .iconbtn[aria-pressed="true"] { color: var(--accent); }
+  /* nav bar: opaque, gets a hairline once content scrolls under it */
+  .nav { flex: none; padding: var(--safe-top) 6px 0 var(--s4); height: calc(var(--safe-top) + 52px); display: flex; align-items: center; justify-content: space-between; background: var(--ground); border-bottom: 1px solid transparent; position: relative; z-index: 5; }
+  .nav.scrolled { border-bottom-color: var(--line); }
+  .nav h1 { font: var(--t-title); }
+  .icon-btn { width: var(--tap); height: var(--tap); display: grid; place-items: center; border-radius: var(--r-control); color: var(--ink); font-size: 24px; }
 
-  .scroller { flex: 1; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding: 0 var(--s4) calc(var(--tabbar-h) + var(--safe-bottom) + var(--s5)); }
-  .scroller::-webkit-scrollbar { display: none; }
-  .scroller.locked { overflow: hidden; }
+  .views { flex: 1; position: relative; min-height: 0; }
+  .view { position: absolute; inset: 0; overflow-y: auto; padding: 0 var(--s4) var(--s8); scrollbar-width: none; overscroll-behavior: contain; }
+  .view::-webkit-scrollbar { display: none; }
   .view[hidden] { display: none; }
 
-  /* Banners for error and offline */
-  .banner { display: none; align-items: center; gap: var(--s3); padding: var(--s3) var(--s4); border-radius: var(--r-card); background: var(--raised); font: var(--t-label); color: var(--ink); margin: var(--s1) 0 var(--s3); }
-  .banner i { font-size: 20px; color: var(--ink-2); }
-  .banner p { flex: 1; }
-  .banner .link { min-height: 44px; padding: 0 var(--s2); color: var(--accent); font-weight: 600; }
-  [data-state="error"] .banner.err, [data-state="offline"] .banner.off { display: flex; }
+  /* hero: the answer, on the one brand surface */
+  .hero { display: block; width: 100%; margin-top: 0; padding: var(--s4) var(--s5) 14px; border-radius: var(--r-card); background: var(--accent); color: var(--on-accent); user-select: none; -webkit-user-select: none; }
+  .hero .lbl { display: block; font: var(--t-label); font-size: 15px; }
+  .hero .big { display: block; margin: 8px 0 14px; font: var(--t-balance); letter-spacing: var(--t-balance-track); }
+  .hero .foot { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s3); font: var(--t-body-strong); font-size: 15px; }
+  .hero .foot .more { font-weight: 600; flex: none; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 
-  /* The statement: what came in, what tax holds back, what bills and spending take, ending in safe to spend */
-  .statement { background: var(--raised); border-radius: var(--r-card); overflow: hidden; margin-top: var(--s1); }
-  .split { display: flex; gap: 2px; height: 8px; margin: var(--s4) var(--s4) var(--s2); }
-  .split span { flex: 0 0 0; min-width: 3px; border-radius: 2px; }
-  .split .g-tax { background: var(--seg-tax); } .split .g-bills { background: var(--seg-bills); }
-  .split .g-spent { background: var(--seg-spent); } .split .g-safe { background: var(--accent); }
-  .rows li { display: flex; align-items: center; gap: var(--s3); min-height: 48px; padding: var(--s2) var(--s4); border-top: 1px solid var(--line); }
-  .rows li:first-child { border-top: 0; }
-  .rows .lbl { flex: 1; font: var(--t-body); }
-  .rows .lbl small { display: block; font: var(--t-label); color: var(--ink-2); }
-  .sw { width: 10px; height: 10px; border-radius: 2px; flex: none; }
-  .sw.none { background: transparent; border: 1.5px solid var(--ink-2); }
-  .sw.tax { background: var(--seg-tax); } .sw.bills { background: var(--seg-bills); } .sw.spent { background: var(--seg-spent); }
-  .rows .amt { font: var(--t-amount); text-align: right; white-space: nowrap; }
+  section { margin-top: var(--s5); }
+  .sec-h { display: flex; align-items: baseline; justify-content: space-between; min-height: 24px; }
+  .sec-h h2 { font: var(--t-section); }
+  .sec-h .aside { font: var(--t-label); color: var(--ink-2); }
 
-  /* Brand surface: the line the statement ends on */
-  .safe { display: block; width: 100%; text-align: left; background: var(--accent); color: var(--on-accent); padding: var(--s4) var(--s4) 18px; border-radius: 0; }
-  .safe:active:not(:disabled) { transform: none; filter: brightness(.94); }
-  .safe .row1 { display: flex; justify-content: space-between; align-items: baseline; font: var(--t-label); font-weight: 600; }
-  .safe .fig { display: block; font: var(--t-balance); letter-spacing: -.02em; margin: 10px 0 10px; min-height: 48px; }
-  .safe .fig.neg { color: var(--on-accent); }
-  .safe .per { font: var(--t-body); font-weight: 500; }
+  .bar { display: flex; gap: 2px; height: 14px; margin: 10px 0 2px; }
+  .bar i { display: block; min-width: 3px; border-radius: var(--r-seg); }
+  .bar .tax { background: var(--seg-tax); box-shadow: inset 0 0 0 1px var(--ink-2); }
+  .bar .bills { background: var(--seg-bills); }
+  .bar .spent { background: var(--seg-spent); }
+  .bar .safe { background: var(--seg-safe); }
+  .sw { width: 12px; height: 12px; border-radius: var(--r-seg); flex: none; }
+  .sw.tax { background: var(--seg-tax); box-shadow: inset 0 0 0 1px var(--ink-2); }
+  .sw.bills { background: var(--seg-bills); } .sw.spent { background: var(--seg-spent); } .sw.safe { background: var(--seg-safe); }
+  .sw.none { background: none; }
 
-  /* A payment that landed and waits for one decision */
-  .landed { margin-top: var(--s4); background: var(--raised); border-radius: var(--r-card); padding: var(--s4); }
-  .l-head { display: flex; justify-content: space-between; align-items: center; font: var(--t-label); color: var(--ink-2); }
-  .tag { font: var(--t-label); font-weight: 600; color: var(--accent); border: 1px solid var(--accent); border-radius: 6px; padding: 1px 6px; }
-  .l-main { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s3); margin-top: var(--s2); }
-  .l-main .who { font: var(--t-body); font-weight: 600; }
-  .l-main .amt { font: var(--t-amount); color: var(--positive); white-space: nowrap; }
-  .preview { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); margin-top: var(--s3); padding-top: var(--s3); border-top: 1px dashed var(--line); }
-  .preview dt { font: var(--t-label); color: var(--ink-2); }
-  .preview dd { font: var(--t-amount); margin-top: 2px; }
-  .l-note { font: var(--t-label); color: var(--ink-2); margin-top: var(--s3); }
-  .acts { display: grid; grid-template-columns: 1.4fr 1fr; gap: var(--s2); margin-top: var(--s3); }
-  .btn { min-height: 48px; border-radius: var(--r-btn); font: var(--t-body); font-weight: 600; padding: 0 var(--s3); }
-  .btn.primary { background: var(--accent); color: var(--on-accent); }
-  .btn.secondary { border: 1px solid var(--line); color: var(--ink); }
-  .receipt { display: flex; align-items: center; gap: var(--s3); }
-  .receipt p { flex: 1; font: var(--t-body); }
-  .receipt p small { display: block; font: var(--t-label); color: var(--ink-2); margin-top: 2px; }
-  .receipt .link { min-height: 44px; min-width: 64px; color: var(--accent); font-weight: 600; font-size: 16px; }
-  @media (prefers-reduced-motion: no-preference) {
-    .receipt { transition: opacity .18s ease-out; }
-    @starting-style { .receipt { opacity: 0; } }
-  }
+  .rows li, .row { display: grid; grid-template-columns: 1fr auto; align-items: center; column-gap: var(--s3); min-height: var(--row); padding: var(--s2) 0; border-bottom: 1px solid var(--line); }
+  .rows li:last-child { border-bottom: 0; }
+  .rows.legend li { grid-template-columns: 12px 1fr auto; min-height: 44px; padding: 4px 0; }
+  .rows .name { font: var(--t-body); overflow-wrap: anywhere; }
+  .rows .sub { display: block; font: var(--t-label); color: var(--ink-2); margin-top: 2px; }
+  .rows .amt { font: var(--t-body-strong); text-align: right; }
+  .rows .amt .sub { font-weight: 500; }
+  .rows .total .name, .rows .total .amt { font-weight: 600; }
+  .pos { color: var(--positive); }
+  .link { min-height: var(--tap); display: flex; align-items: center; font: var(--t-body-strong); color: var(--accent); }
 
-  /* Sections */
-  .sec { margin-top: var(--s5); }
-  .sec-h { display: flex; justify-content: space-between; align-items: center; min-height: 44px; }
-  .sec-h h2 { font: var(--t-title); font-size: 17px; }
-  .sec-h .link { min-height: 44px; padding: 0 var(--s1); color: var(--accent); font: var(--t-body); font-weight: 500; }
-  .list li { display: flex; align-items: center; gap: var(--s3); min-height: 56px; padding: var(--s2) 0; border-top: 1px solid var(--line); }
-  .list li:first-child { border-top: 0; }
-  .list .ic { width: 36px; height: 36px; border-radius: 10px; background: var(--raised); display: grid; place-items: center; font-size: 20px; color: var(--ink-2); flex: none; }
-  .list .mid { flex: 1; min-width: 0; font: var(--t-body); overflow-wrap: anywhere; }
-  .list .mid small { display: block; font: var(--t-label); color: var(--ink-2); }
-  .list .amt { font: var(--t-amount); white-space: nowrap; text-align: right; }
-  .amt.in { color: var(--positive); }
-  .more { width: 100%; min-height: 48px; border-top: 1px solid var(--line); text-align: left; color: var(--accent); font: var(--t-body); font-weight: 500; }
+  /* the new payment, sorted in place */
+  .pay { margin-top: var(--s3); padding: var(--s4); border-radius: var(--r-card); background: var(--raised); }
+  .pay .top { display: grid; grid-template-columns: 1fr auto; column-gap: var(--s3); align-items: baseline; }
+  .pay .who { font: var(--t-section); overflow-wrap: anywhere; }
+  .pay .sub { font: var(--t-label); color: var(--ink-2); margin-top: 4px; }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); margin: var(--s3) 0; padding-top: var(--s3); border-top: 1px solid var(--line); }
+  .split .k { display: flex; align-items: center; gap: 6px; font: var(--t-label); color: var(--ink-2); }
+  .split .v { display: block; margin-top: 4px; font: var(--t-section); font-weight: 500; }
+  .acts { display: flex; gap: var(--s2); }
+  .btn { min-height: 48px; padding: 0 var(--s4); border-radius: var(--r-control); font: var(--t-body-strong); font-weight: 600; display: inline-flex; align-items: center; justify-content: center; }
+  .btn.primary { flex: 1; background: var(--accent); color: var(--on-accent); }
+  .btn.quiet { border: 1px solid var(--line); color: var(--ink); }
+  .reason { margin-top: var(--s2); font: var(--t-label); color: var(--ink-2); }
+  .receipt { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: var(--s3); font: var(--t-body); }
+  .receipt .btn { color: var(--accent); padding: 0 var(--s3); }
 
-  .vh { font: 600 28px/1.15 var(--face); margin: var(--s2) 0 var(--s4); }
-  .big { background: var(--raised); border-radius: var(--r-card); padding: var(--s4); }
-  .big .k { font: var(--t-label); color: var(--ink-2); }
-  .big .v { font: var(--t-balance); letter-spacing: -.02em; margin-top: var(--s2); }
-  .facts { margin-top: var(--s3); }
+  .banner { margin-top: var(--s2); padding: var(--s3) var(--s3) var(--s3) var(--s4); border-radius: var(--r-control); background: var(--raised); display: flex; align-items: center; justify-content: space-between; gap: var(--s3); font: var(--t-body); }
+  .banner .btn { min-height: var(--tap); color: var(--accent); padding: 0 var(--s3); }
+  .banner[hidden], .btn[hidden] { display: none; }
 
-  /* Empty, loading */
-  .empty { background: var(--raised); border-radius: var(--r-card); padding: var(--s5) var(--s4); margin-top: var(--s4); }
-  .empty h2 { font: var(--t-title); font-size: 17px; }
-  .empty p { font: var(--t-body); color: var(--ink-2); margin: var(--s2) 0 var(--s4); }
+  .empty { margin-top: var(--s3); padding: var(--s5) var(--s4); border-radius: var(--r-card); background: var(--raised); }
+  .empty p { font: var(--t-body); color: var(--ink-2); margin: 4px 0 var(--s3); }
+  .empty h3 { font: var(--t-section); }
+
+  /* loading skeleton: static blocks, no shimmer */
   .skel { display: none; }
-  .skel div { background: var(--raised); border-radius: var(--r-card); }
   [data-state="loading"] .skel { display: block; }
-  [data-state="loading"] .real { display: none; }
+  [data-state="loading"] #home-content { display: none; }
+  .skel b { display: block; background: var(--raised); border-radius: var(--r-card); }
 
-  /* Tab bar: opaque, above the home indicator */
-  .tabbar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; display: grid; grid-template-columns: repeat(4, 1fr); height: calc(var(--tabbar-h) + var(--safe-bottom)); padding-bottom: var(--safe-bottom); background: var(--ground); border-top: 1px solid var(--line); }
-  .tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: 500 11px/1.2 var(--face); color: var(--ink-2); min-height: 48px; }
-  .tab i { font-size: 24px; }
-  .tab[aria-current="page"] { color: var(--accent); font-weight: 600; }
-  .tab:active { transform: none; }
+  .tax-hero { margin-top: var(--s2); }
+  .tax-hero .lbl { font: var(--t-label); font-size: 15px; color: var(--ink-2); }
+  .tax-hero .big { display: block; margin-top: var(--s2); font: var(--t-balance); letter-spacing: var(--t-balance-track); }
 
-  /* Breakdown sheet */
-  .scrim { position: absolute; inset: 0; z-index: 20; background: rgb(0 0 0 / .55); opacity: 0; pointer-events: none; transition: opacity var(--sheet-in); }
-  .scrim.on { opacity: 1; pointer-events: auto; }
-  .sheet { position: absolute; left: 0; right: 0; bottom: 0; top: 72px; z-index: 21; background: var(--raised); border-radius: var(--r-card) var(--r-card) 0 0; display: flex; flex-direction: column; transform: translateY(105%); transition: transform var(--sheet-in); visibility: hidden; }
-  .sheet.on { transform: none; visibility: visible; }
-  .grab { flex: none; padding: var(--s2) var(--s4) 0; touch-action: none; }
-  .handle { width: 36px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto var(--s2); }
-  .sh-top { display: flex; align-items: center; justify-content: space-between; }
-  .sh-top h2 { font: var(--t-title); }
-  .sh-body { flex: 1; overflow-y: auto; padding: 0 var(--s4) calc(var(--safe-bottom) + var(--s5)); scrollbar-width: none; }
-  .sh-body h3 { font: var(--t-label); color: var(--ink-2); font-weight: 600; margin: var(--s5) 0 var(--s1); }
-  .sh-body .list li { min-height: 48px; }
-  .sh-body .sub { font-weight: 600; }
-  .total { display: flex; justify-content: space-between; align-items: baseline; margin-top: var(--s5); padding: var(--s4); border-radius: var(--r-card); background: var(--accent); color: var(--on-accent); }
-  .total b { font: var(--t-title); }
-  .total .amt { font: 500 28px/1 var(--face); }
-  .total-per { font: var(--t-label); color: var(--ink-2); margin-top: var(--s2); }
-  @media (prefers-reduced-motion: reduce) { *, ::before, ::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  /* tab bar: in the layout flow, so content can never run under it */
+  .tabs { flex: none; display: flex; height: calc(var(--tabbar) + var(--safe-bottom)); padding-bottom: var(--safe-bottom); background: var(--ground); border-top: 1px solid var(--line); position: relative; z-index: 5; }
+  .tabs button { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--ink-2); font: var(--t-tab); }
+  .tabs .ti { font-size: 26px; line-height: 1; }
+  .tabs button[aria-current="page"] { color: var(--ink); font-weight: 600; }
+  .tabs button[aria-current="page"] .ti::before { font-family: "tabler-icons-filled" !important; }
+  .tabs button[aria-current="page"] .ti-home::before { content: "\102b3"; }
+  .tabs button[aria-current="page"] .ti-layout-list::before { content: "\fe1a"; }
+  .tabs button[aria-current="page"] .ti-receipt::before { content: "\ff06"; }
+  .tabs button[aria-current="page"] .ti-file-invoice::before { content: "\1011b"; }
+
+  /* breakdown sheet */
+  .scrim { position: absolute; inset: 0; background: rgb(0 0 0 / .55); z-index: 20; }
+  .scrim[hidden], .sheet[hidden] { display: none; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--h) - var(--safe-top) - 12px); z-index: 21; background: var(--raised); border-radius: var(--r-card) var(--r-card) 0 0; display: flex; flex-direction: column; }
+  [data-theme="light"] .sheet { background: var(--ground); }
+  .grab { flex: none; padding: var(--s2) var(--s4) var(--s2); }
+  .handle { width: 36px; height: 5px; border-radius: 3px; background: var(--ink-2); opacity: .5; margin: 0 auto var(--s3); }
+  .grab h2 { font: var(--t-title); outline: none; }
+  .sheet .close { position: absolute; top: 18px; right: 6px; }
+  .sheet .body { flex: 1; overflow-y: auto; padding: 0 var(--s4) calc(var(--safe-bottom) + var(--s6)); overscroll-behavior: contain; }
+  .sheet .big { display: block; font: var(--t-balance); letter-spacing: var(--t-balance-track); margin-top: var(--s2); }
+  .sheet .day { font: var(--t-body); color: var(--ink-2); margin-top: var(--s2); }
+  .sheet .grp { margin-top: var(--s6); }
+  .sheet .grp-h { display: grid; grid-template-columns: 12px 1fr auto; gap: var(--s3); align-items: center; min-height: 40px; border-bottom: 1px solid var(--line); font: var(--t-body-strong); font-weight: 600; }
+  .sheet .rows li { min-height: 44px; }
+  .sheet .rows .name, .sheet .rows .amt { font-size: 15px; }
+  .sheet .eq { margin-top: var(--s6); padding: var(--s4); border-radius: var(--r-control); background: var(--accent); color: var(--on-accent); display: grid; grid-template-columns: 1fr auto; align-items: center; font: var(--t-section); }
 </style>
 </head>
 <body>
@@ -185,103 +186,125 @@
       <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
       <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
       <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
-      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" stroke="currentColor" style="stroke: var(--chrome)" opacity=".5"/>
       <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
     </svg>
   </div>
 
   <main id="screen">
-    <header class="top">
-      <div class="top-in">
-        <div>
-          <div class="brand">Pano</div>
-          <div class="updated" id="updated">Updated 9:14</div>
-        </div>
-        <button class="iconbtn" id="hideBtn" aria-pressed="false" aria-label="Hide amounts"><i class="ti ti-eye" aria-hidden="true"></i></button>
-      </div>
+    <header class="nav" id="nav">
+      <h1 id="nav-title">Pano</h1>
+      <button class="icon-btn" id="eye" aria-pressed="false" aria-label="Hide amounts"><i class="ti ti-eye" aria-hidden="true"></i></button>
     </header>
 
-    <div class="scroller" id="scroller">
-      <div class="banner err" role="status"><i class="ti ti-cloud-off" aria-hidden="true"></i><p>Couldn't refresh from your bank. Figures are from 9:14.</p><button class="link" id="retry">Retry</button></div>
-      <div class="banner off" role="status"><i class="ti ti-wifi-off" aria-hidden="true"></i><p>Offline. Figures as of 9:14.</p></div>
-
+    <div class="views">
       <!-- HOME -->
-      <section class="view" data-view="home" aria-labelledby="h-home">
-        <h1 class="sr" id="h-home" tabindex="-1">Home</h1>
-        <div class="skel" aria-hidden="true"><div style="height:360px;margin-top:4px"></div><div style="height:210px;margin-top:16px"></div></div>
-        <div class="real">
-          <section class="statement" aria-label="November so far">
-            <div class="split" id="split" role="img"><span class="g-tax"></span><span class="g-bills"></span><span class="g-spent"></span><span class="g-safe"></span></div>
-            <ul class="rows">
-              <li><span class="sw none" aria-hidden="true"></span><span class="lbl">Came in, November</span><span class="amt" id="f-in"></span></li>
-              <li><span class="sw tax" aria-hidden="true"></span><span class="lbl">Set aside for tax<small id="f-rate">28% of taxable income</small></span><span class="amt" id="f-tax"></span></li>
-              <li><span class="sw bills" aria-hidden="true"></span><span class="lbl">Bills due by Nov 30</span><span class="amt" id="f-bills"></span></li>
-              <li><span class="sw spent" aria-hidden="true"></span><span class="lbl">Spent so far</span><span class="amt" id="f-spent"></span></li>
+      <div class="view" id="v-home" data-tab="home">
+        <div class="banner" id="banner" role="status" hidden><span id="banner-text"></span><button class="btn" id="retry" hidden>Retry</button></div>
+
+        <div class="skel" aria-hidden="true">
+          <b style="height:152px;margin-top:4px"></b>
+          <b style="height:20px;width:40%;margin-top:28px;border-radius:6px"></b>
+          <b style="height:14px;margin-top:14px;border-radius:4px"></b>
+          <b style="height:196px;margin-top:12px"></b>
+          <b style="height:184px;margin-top:24px"></b>
+        </div>
+        <p class="sr" id="loading-text"></p>
+
+        <div id="home-content">
+          <button class="hero" id="hero" aria-haspopup="dialog">
+            <span class="lbl">Safe to spend</span>
+            <span class="big num" id="f-safe"></span>
+            <span class="foot"><span id="f-day"></span><span class="more">Breakdown</span></span>
+          </button>
+
+          <section aria-labelledby="st-h">
+            <div class="sec-h"><h2 id="st-h">November so far</h2><span class="aside" id="st-asof"></span></div>
+            <div class="bar" id="bar" role="img"><i class="tax"></i><i class="bills"></i><i class="spent"></i><i class="safe"></i></div>
+            <ul class="rows legend">
+              <li><span class="sw none"></span><span class="name">Came in</span><span class="amt num" id="f-in"></span></li>
+              <li><span class="sw tax"></span><span class="name">Set aside for tax, <span id="f-rate">28%</span></span><span class="amt num" id="f-tax"></span></li>
+              <li><span class="sw bills"></span><span class="name">Bills due by Nov 30</span><span class="amt num" id="f-bills"></span></li>
+              <li><span class="sw spent"></span><span class="name">Spent so far</span><span class="amt num" id="f-spent"></span></li>
             </ul>
-            <button class="safe" id="safeBtn" aria-haspopup="dialog">
-              <span class="row1"><span>Safe to spend</span><span>See breakdown</span></span>
-              <span class="fig"><span class="num" id="f-safe"></span></span>
-              <span class="per" id="f-per"></span>
-            </button>
           </section>
 
-          <section class="landed" id="landed" aria-label="Payment to sort"></section>
-
-          <section class="sec" aria-labelledby="h-next">
-            <div class="sec-h"><h2 id="h-next">Next 7 days</h2></div>
-            <ul class="list" id="next7"></ul>
-            <button class="more" id="moreBills"></button>
+          <section aria-labelledby="np-h" id="np-sec">
+            <div class="sec-h"><h2 id="np-h">New payment</h2></div>
+            <div class="pay" id="pay"></div>
           </section>
 
-          <section class="sec" aria-labelledby="h-recent">
-            <div class="sec-h"><h2 id="h-recent">Recent activity</h2><button class="link" data-go="activity">See all</button></div>
-            <ul class="list" id="recent"></ul>
+          <section aria-labelledby="nx-h">
+            <div class="sec-h"><h2 id="nx-h">Next 7 days</h2><span class="aside num" id="nx-sum"></span></div>
+            <ul class="rows" id="nx-list"></ul>
+          </section>
+
+          <section aria-labelledby="pd-h">
+            <div class="sec-h"><h2 id="pd-h">Pending</h2></div>
+            <ul class="rows" id="pd-list"></ul>
+          </section>
+
+          <section aria-labelledby="rc-h" id="rc-sec">
+            <div class="sec-h"><h2 id="rc-h">Recent</h2></div>
+            <ul class="rows" id="rc-list"></ul>
+            <button class="link" id="all-activity">All activity</button>
           </section>
         </div>
-      </section>
+      </div>
 
       <!-- ACTIVITY -->
-      <section class="view" data-view="activity" aria-labelledby="h-act" hidden>
-        <h1 class="vh" id="h-act" tabindex="-1">Activity</h1>
-        <div id="actList"></div>
-      </section>
+      <div class="view" id="v-activity" data-tab="activity" hidden>
+        <section style="margin-top:8px" aria-label="November activity">
+          <div class="sec-h"><h2>November</h2><span class="aside" id="ac-count"></span></div>
+          <ul class="rows" id="ac-list"></ul>
+        </section>
+      </div>
 
-      <!-- TAX -->
-      <section class="view" data-view="tax" aria-labelledby="h-tax" hidden>
-        <h1 class="vh" id="h-tax" tabindex="-1">Tax</h1>
-        <div class="big"><div class="k">Tax pot, since Jan 1</div><div class="v num" id="potFig"></div></div>
-        <ul class="list facts" id="taxFacts"></ul>
-        <section class="sec" aria-labelledby="h-taxnov"><div class="sec-h"><h2 id="h-taxnov">Set aside in November</h2></div><ul class="list" id="taxList"></ul></section>
-      </section>
+      <!-- TAXES -->
+      <div class="view" id="v-taxes" data-tab="taxes" hidden>
+        <div class="tax-hero">
+          <span class="lbl">Set aside in November</span>
+          <span class="big num" id="tx-total"></span>
+        </div>
+        <section aria-labelledby="tx-h">
+          <div class="sec-h"><h2 id="tx-h">By payment</h2></div>
+          <ul class="rows" id="tx-list"></ul>
+        </section>
+        <section aria-label="Settings">
+          <ul class="rows">
+            <li><span class="name">Set-aside rate</span><span class="amt num" id="tx-rate">28%</span></li>
+            <li><span class="name">Next estimated payment</span><span class="amt">Jan 15, 2027</span></li>
+          </ul>
+        </section>
+      </div>
 
       <!-- INVOICES -->
-      <section class="view" data-view="invoices" aria-labelledby="h-inv" hidden>
-        <h1 class="vh" id="h-inv" tabindex="-1">Invoices</h1>
-        <ul class="list facts" id="invSum"></ul>
-        <section class="sec" aria-labelledby="h-invall"><div class="sec-h"><h2 id="h-invall">All invoices</h2></div><ul class="list" id="invList"></ul></section>
-      </section>
+      <div class="view" id="v-invoices" data-tab="invoices" hidden>
+        <section style="margin-top:8px" aria-labelledby="iv-h">
+          <div class="sec-h"><h2 id="iv-h">November</h2></div>
+          <ul class="rows" id="iv-list"></ul>
+        </section>
+      </div>
     </div>
 
-    <nav class="tabbar" aria-label="Tabs">
-      <button class="tab" data-tab="home" aria-current="page"><i class="ti ti-home" data-icon="home" aria-hidden="true"></i>Home</button>
-      <button class="tab" data-tab="activity"><i class="ti ti-arrows-exchange" data-icon="arrows-exchange" aria-hidden="true"></i>Activity</button>
-      <button class="tab" data-tab="tax"><i class="ti ti-receipt-tax" data-icon="receipt-tax" aria-hidden="true"></i>Tax</button>
-      <button class="tab" data-tab="invoices"><i class="ti ti-file-invoice" data-icon="file-invoice" aria-hidden="true"></i>Invoices</button>
+    <nav class="tabs" aria-label="Main">
+      <button data-tab="home" aria-current="page"><i class="ti ti-home" aria-hidden="true"></i>Home</button>
+      <button data-tab="activity"><i class="ti ti-layout-list" aria-hidden="true"></i>Activity</button>
+      <button data-tab="taxes"><i class="ti ti-receipt" aria-hidden="true"></i>Taxes</button>
+      <button data-tab="invoices"><i class="ti ti-file-invoice" aria-hidden="true"></i>Invoices</button>
     </nav>
-
-    <div class="scrim" id="scrim"></div>
-    <section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-title" aria-hidden="true">
-      <div class="grab" id="grab">
-        <div class="handle" aria-hidden="true"></div>
-        <div class="sh-top"><h2 id="sh-title" tabindex="-1">November breakdown</h2><button class="iconbtn" id="closeSheet" aria-label="Close breakdown"><i class="ti ti-x" aria-hidden="true"></i></button></div>
-      </div>
-      <div class="sh-body" id="shBody"></div>
-    </section>
-
-    <div class="sr" aria-live="polite" id="live"></div>
   </main>
 
+  <div class="scrim" id="scrim" hidden></div>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-title" hidden>
+    <div class="grab" id="grab"><div class="handle"></div><h2 id="sh-title" tabindex="-1">Safe to spend</h2></div>
+    <button class="icon-btn close" id="sh-close" aria-label="Close breakdown"><i class="ti ti-x" aria-hidden="true"></i></button>
+    <div class="body" id="sh-body"></div>
+  </div>
+
   <div class="home-indicator"></div>
+  <div class="sr" aria-live="polite" id="live"></div>
+
   <script>document.getElementById('clock').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, '');</script>
   <script>/* motion-kit.js (mobile-ui-craft 5.0). Zero dependencies. Inline it in one <script> of the prototype; it defines window.MK.
    Everything that should be filmable runs on WAAPI or view transitions, which scripts/capture.mjs `film:` slows down.
@@ -330,9 +353,11 @@
 
   // Commit the on-screen transform and stop animations, so a grab or a new move starts from where the element is.
   MK.freeze = (el) => {
-    const t = getComputedStyle(el).transform;
+    const cs = getComputedStyle(el), t = cs.transform, tr = cs.translate, sc = cs.scale; // read before cancel: computed values are live
     el.getAnimations().forEach((a) => a.cancel());
     el.style.transform = t === 'none' ? '' : t;
+    el.style.translate = tr === 'none' ? '' : tr; // MK.flip animates these two, so a mid-flip grab needs them too
+    el.style.scale = sc === 'none' ? '' : sc;
   };
 
   // FLIP for one element or an array. Uses the translate/scale properties, so it composes with the element's own transform.
@@ -436,10 +461,10 @@
   };
   // Gyro tilt for el, started by a tap on button (iOS asks for permission inside a user gesture; needs HTTPS, so file:// gets nothing).
   MK.tilt.gyro = (button, el, opts) => {
-    const on = (e) => el._mkAim((e.gamma || 0) / 30, ((e.beta || 0) - 45) / 30);
+    const on = (e) => el._mkAim?.((e.gamma || 0) / 30, ((e.beta || 0) - 45) / 30);
     const click = async () => {
       const D = window.DeviceOrientationEvent;
-      if (!D || MK.reduced() || (typeof D.requestPermission === 'function' && (await D.requestPermission()) !== 'granted')) return;
+      if (!D || MK.reduced() || (typeof D.requestPermission === 'function' && (await D.requestPermission().catch(() => 'denied')) !== 'granted')) return;
       if (!el._mkAim) MK.tilt(el, opts);
       addEventListener('deviceorientation', on);
     };
@@ -448,14 +473,15 @@
   };
 
   // Digit roll for a figure in tabular numerals: only the digits that changed slide. text is the whole formatted string.
-  // A different length rebuilds the figure with a fade. The element gets role=img and aria-label = text.
+  // A different shape (where the digits and the other characters sit) rebuilds the figure with a fade. The element gets role=img and aria-label = text.
   MK.roll = (el, text) => {
     text = String(text);
     el.setAttribute('role', 'img'); el.setAttribute('aria-label', text);
     if (el.dataset.mkText === text) return;
     const red = MK.reduced(), e = MK.ease.fast;
-    if (el.dataset.mkLen !== String(text.length)) {
-      el.dataset.mkLen = text.length;
+    const shape = text.replace(/\d/g, '0'); // same length is not same layout: '1h 20m' vs '12 min'
+    if (el.dataset.mkLen !== shape) {
+      el.dataset.mkLen = shape;
       el.style.cssText += ';display:inline-flex;height:1em;line-height:1;overflow:hidden;font-variant-numeric:tabular-nums';
       el.innerHTML = [...text].map((ch) => /\d/.test(ch)
         ? '<span aria-hidden="true" style="display:block;height:1em;overflow:hidden"><span class="mk-col" style="display:flex;flex-direction:column">'
@@ -466,7 +492,7 @@
     }
     let k = 0;
     el.querySelectorAll('.mk-col').forEach((col) => {
-      while (!/\d/.test(text[k])) k++;
+      while (k < text.length && !/\d/.test(text[k])) k++;
       const to = +text[k++], from = +col.dataset.d, at = (n) => `translateY(${-n}em)`;
       col.style.transform = at(to); col.dataset.d = to;
       if (from !== to && !red && el.dataset.mkText !== undefined) col.animate([{ transform: at(from) }, { transform: at(to) }], { duration: e.ms, easing: e.easing });
@@ -483,235 +509,262 @@
   <script>
   (() => {
     const $ = (s) => document.querySelector(s);
-    const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
-    const MINUS = '−';
-    // Sample data in cents. "Today" is Thu Nov 12, 2026; 19 days are left in November counting today.
-    const DAYS_LEFT = 19, RATE = 28, POT_BEFORE_NOV = 781940;
+    // Sample data for layout only, in cents. Today is Nov 12; 19 days are left through Nov 30.
+    const TODAY = 12, DAYS_LEFT = 19, AS_OF = '9:02';
     const D = {
-      income: [
-        { who: 'Halvorsen Studio', date: 'Nov 3', c: 320000 },
-        { who: 'Brightline Media & Production Partners', date: 'Nov 7', c: 185000 },
-        { who: 'Okafor & Lee', date: 'Nov 10', c: 64000 },
+      rate: 0.28,
+      payments: [
+        { name: 'Brightline Media', amt: 320000, d: 3 },
+        { name: 'Okafor Design Studio', amt: 275000, d: 7 },
+        { name: 'Northbridge Community Health Partners', amt: 115000, d: 10 },
       ],
+      incoming: { name: 'Halvorsen & Co.', amt: 185000, d: 12, time: '8:14' },
       bills: [
-        { who: 'Coworking desk', date: 'Nov 18', c: 24000, in7: true },
-        { who: 'Phone', date: 'Nov 21', c: 6500 },
-        { who: 'Studio rent', date: 'Nov 30', c: 115000 },
+        { name: 'Adobe Creative Cloud', amt: 5999, d: 14 },
+        { name: 'Mercer Works studio desk', amt: 85000, d: 15 },
+        { name: 'Verizon', amt: 4500, d: 18 },
+        { name: 'Health insurance', amt: 41200, d: 28 },
       ],
-      spent: [
-        { who: 'Food and groceries', c: 38602 }, { who: 'Other', c: 38000 },
-        { who: 'Software', c: 21240 }, { who: 'Transport', c: 14000 },
+      spends: [
+        { name: 'B&H Photo', amt: 77645, d: 1 }, { name: 'Whole Foods Market', amt: 8643, d: 2 },
+        { name: 'Delta Air Lines', amt: 41260, d: 4 }, { name: 'Blue Bottle Coffee', amt: 675, d: 5 },
+        { name: 'Comcast', amt: 7999, d: 6 }, { name: 'Apple iCloud+', amt: 299, d: 8 },
+        { name: 'Shell', amt: 4820, d: 9 }, { name: 'Target', amt: 13387, d: 10 }, { name: "Trader Joe's", amt: 6412, d: 11 },
       ],
-      landed: { who: 'Marlow Coffee Co.', time: '9:14', c: 120000, status: 'unsorted' }, // unsorted | tax | untaxed
-      activity: [
-        { day: 'Today', who: 'Marlow Coffee Co.', c: 120000, in: true, icon: 'building-store', landed: true },
-        { day: 'Yesterday', who: 'Whole Foods Market', c: 6418, icon: 'shopping-cart', note: 'Food and groceries' },
-        { day: 'Nov 10', who: 'Okafor & Lee', c: 64000, in: true, icon: 'briefcase', note: 'Invoice INV-0044' },
-        { day: 'Nov 9', who: 'Figma', c: 1500, icon: 'device-laptop', note: 'Software' },
-        { day: 'Nov 8', who: 'Lyft', c: 2340, icon: 'car', note: 'Transport' },
-        { day: 'Nov 7', who: 'Brightline Media & Production Partners', c: 185000, in: true, icon: 'briefcase', note: 'Invoice INV-0043' },
-        { day: 'Nov 5', who: 'Adobe', c: 5999, icon: 'device-laptop', note: 'Software' },
-        { day: 'Nov 3', who: 'Halvorsen Studio', c: 320000, in: true, icon: 'briefcase', note: 'Invoice INV-0042' },
-      ],
+      pending: [{ name: 'Ferreira Translations', inv: '1042', amt: 64000, due: 14 }],
       invoices: [
-        { no: 'INV-0047', who: 'Tessaro Architects', st: 'Draft, no due date', c: 98000 },
-        { no: 'INV-0046', who: 'Brightline Media & Production Partners', st: 'Sent, due Dec 1', c: 275000, open: true },
-        { no: 'INV-0045', who: 'Marlow Coffee Co.', st: 'Paid today', c: 120000 },
-        { no: 'INV-0044', who: 'Okafor & Lee', st: 'Paid Nov 10', c: 64000 },
-        { no: 'INV-0043', who: 'Brightline Media & Production Partners', st: 'Paid Nov 7', c: 185000 },
-        { no: 'INV-0042', who: 'Halvorsen Studio', st: 'Paid Nov 3', c: 320000 },
+        { name: 'Ferreira Translations', inv: '1042', amt: 64000, st: 'Unpaid, due Nov 14' },
+        { name: 'Halvorsen & Co.', inv: '1041', amt: 185000, st: 'Paid Nov 12' },
+        { name: 'Northbridge Community Health Partners', inv: '1040', amt: 115000, st: 'Paid Nov 10' },
+        { name: 'Okafor Design Studio', inv: '1039', amt: 275000, st: 'Paid Nov 7' },
+        { name: 'Brightline Media', inv: '1038', amt: 320000, st: 'Paid Nov 3' },
       ],
     };
-    const EMPTY = { income: [], bills: [], spent: [], landed: null, activity: [], invoices: [] };
+    const S = { status: 'new', hidden: false, peek: false, tab: 'home', state: 'content' }; // status: new | counted | notincome
 
-    const sum = (a) => a.reduce((s, x) => s + x.c, 0);
-    const tax = (c) => Math.round(c * RATE / 100);
-    let hidden = false, state = 'content';
-    const data = () => (state === 'empty' ? EMPTY : D);
+    const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+    const usd0 = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+    const masked = () => S.hidden && !S.peek;
+    const money = (c, sign) => masked() ? '••••' : (c < 0 ? '−' : sign && c > 0 ? '+' : '') + usd.format(Math.abs(c) / 100);
+    const spoken = (c) => (c < 0 ? 'minus ' : '') + usd.format(Math.abs(c) / 100);
+    const day = (d) => d === TODAY ? 'Today' : `Nov ${d}`;
+    const taxOf = (c) => Math.round(c * D.rate);
+    const sum = (a) => a.reduce((t, x) => t + x.amt, 0);
+    const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 
-    function totals(d = data()) {
-      const L = d.landed, lin = L && L.status !== 'unsorted' ? L.c : 0;
-      const came = sum(d.income) + lin;
-      const taxed = d.income.reduce((s, x) => s + tax(x.c), 0) + (L && L.status === 'tax' ? tax(L.c) : 0);
-      const bills = sum(d.bills), spent = sum(d.spent);
-      return { came, taxed, bills, spent, safe: came - taxed - bills - spent };
+    function model() {
+      const empty = S.state === 'empty';
+      const counted = empty ? [] : [...D.payments, ...(S.status === 'counted' ? [D.incoming] : [])];
+      const spends = empty ? [] : D.spends;
+      const cameIn = sum(counted), tax = counted.reduce((t, p) => t + taxOf(p.amt), 0);
+      const bills = sum(D.bills), spent = sum(spends);
+      const safe = cameIn - tax - bills - spent;
+      if (safe + tax + bills + spent !== cameIn) console.error('figures do not reconcile');
+      return { counted, spends, cameIn, tax, bills, spent, safe, perDay: Math.round(safe / DAYS_LEFT / 100) * 100 };
     }
-    const fmt = (c, sign) => {
-      if (hidden) return '$••••';
-      const s = usd.format(Math.abs(c) / 100);
-      if (sign === '-' && c) return MINUS + s;
-      if (sign === '+' && c) return '+' + s;
-      return c < 0 ? MINUS + s : s;
-    };
-    const say = (c, sign) => (hidden ? 'hidden' : (sign === '-' && c ? 'minus ' : sign === '+' && c ? 'plus ' : c < 0 ? 'minus ' : '') + usd.format(Math.abs(c) / 100));
-    const A = (c, sign, cls = '') => `<span class="amt ${cls}" aria-label="${say(c, sign)}">${fmt(c, sign)}</span>`;
 
-    // Figures that change in place roll only the digits that changed (MK.roll); masked figures are plain text.
+    // roll changed digits; masked figures are plain text and rebuild on reveal
     function fig(el, c, sign) {
-      if (hidden) { delete el.dataset.mkText; delete el.dataset.mkLen; el.removeAttribute('style'); el.textContent = fmt(c, sign); el.setAttribute('aria-label', 'hidden'); return; }
-      MK.roll(el, fmt(c, sign)); el.setAttribute('aria-label', say(c, sign));
+      if (masked()) { delete el.dataset.mkText; delete el.dataset.mkLen; el.textContent = '••••'; el.setAttribute('aria-label', 'Hidden'); return; }
+      MK.roll(el, money(c, sign));
+      el.setAttribute('aria-label', spoken(c));
     }
 
-    function renderHome() {
-      const d = data(), t = totals(d);
-      fig($('#f-in'), t.came); fig($('#f-tax'), t.taxed, '-'); fig($('#f-bills'), t.bills, '-'); fig($('#f-spent'), t.spent, '-'); fig($('#f-safe'), t.safe);
-      const per = Math.round(t.safe / 100 / DAYS_LEFT);
-      $('#f-per').textContent = hidden ? 'Amounts hidden' : t.came === 0 ? 'Nothing has come in yet this month' : t.safe < 0 ? 'Over by this much through Nov 30' : `About $${per} a day through Nov 30`;
-      // split bar: shares of what came in; a safe share below zero shows as nothing
-      const segs = [...$('#split').children], parts = [t.taxed, t.bills, t.spent, Math.max(0, t.safe)];
-      MK.flip(segs, () => segs.forEach((s, i) => { s.style.flexGrow = parts[i]; s.style.display = parts[i] ? '' : 'none'; }));
-      $('#split').setAttribute('aria-label', hidden ? 'Split of November income, amounts hidden' : `Of ${fmt(t.came)}: tax ${fmt(t.taxed)}, bills ${fmt(t.bills)}, spent ${fmt(t.spent)}, safe to spend ${fmt(t.safe)}`);
-      renderLanded(); renderLists();
-    }
+    const row = (name, sub, amt, amtSub, cls = '') =>
+      `<li class="${cls}"><span class="name">${esc(name)}${sub ? `<span class="sub">${sub}</span>` : ''}</span><span class="amt num">${amt}${amtSub ? `<span class="sub">${amtSub}</span>` : ''}</span></li>`;
 
-    function renderLanded() {
-      const el = $('#landed'), L = data().landed, off = state === 'offline';
-      if (state === 'empty') {
-        el.innerHTML = `<div class="empty" style="margin:0;padding:4px 0 0;background:none"><h2>No payments yet this month</h2><p>When a client pays, it shows up here and Pano sets aside ${RATE}% for tax once you confirm.</p><button class="btn secondary" data-go="invoices" style="width:100%">Go to invoices</button></div>`;
+    function activity(m) {
+      if (S.state === 'empty') return [];
+      const pays = [...D.payments.map((p) => ({ ...p, kind: 'pay', note: `tax ${money(taxOf(p.amt))}` }))];
+      const inc = D.incoming;
+      pays.push({ ...inc, kind: 'pay', note: S.status === 'counted' ? `tax ${money(taxOf(inc.amt))}` : S.status === 'notincome' ? 'not income' : 'not sorted yet' });
+      return [...pays, ...m.spends.map((s) => ({ ...s, kind: 'spend' }))].sort((a, b) => b.d - a.d || (a.kind === 'pay' ? -1 : 1));
+    }
+    const actRow = (a) => a.kind === 'pay'
+      ? row(a.name, `${day(a.d)}, ${a.note}`, `<span class="pos">${money(a.amt, true)}</span>`)
+      : row(a.name, day(a.d), money(-a.amt));
+
+    function renderPay(m) {
+      const pay = $('#pay'), inc = D.incoming, t = taxOf(inc.amt), off = S.state === 'offline';
+      if (S.state === 'empty') {
+        $('#np-h').textContent = 'Payments';
+        pay.className = 'empty';
+        pay.innerHTML = `<h3>No payments yet in November</h3><p>Money from clients shows here when it arrives.</p><button class="btn quiet" id="to-inv">View invoices</button>`;
+        $('#to-inv').onclick = () => selectTab('invoices');
         return;
       }
-      if (L.status === 'unsorted') {
-        const tx = tax(L.c);
-        el.innerHTML = `<div class="l-head"><span>Landed today, ${L.time}</span><span class="tag">Not sorted</span></div>
-          <div class="l-main"><span class="who">${L.who}</span>${A(L.c, '+', 'in')}</div>
-          <dl class="preview"><div><dt>To tax, ${RATE}%</dt><dd>${A(tx)}</dd></div><div><dt>Safe to spend</dt><dd>${A(L.c - tx, '+')}</dd></div></dl>
-          <p class="l-note">${off ? 'Sorting needs a connection.' : 'Not in your totals until you choose.'}</p>
-          <div class="acts"><button class="btn primary" id="setAside" ${off ? 'disabled' : ''}>Set aside ${hidden ? 'tax' : fmt(tx)}</button><button class="btn secondary" id="untaxed" ${off ? 'disabled' : ''}>Not taxable</button></div>`;
+      $('#np-h').textContent = 'New payment';
+      pay.className = 'pay';
+      if (S.status === 'new') {
+        pay.innerHTML = `
+          <div class="top"><span class="who">${esc(inc.name)}</span><span class="who num pos">${money(inc.amt, true)}</span></div>
+          <p class="sub">Arrived today, ${inc.time}. Not counted yet.</p>
+          <div class="split">
+            <div><span class="k"><span class="sw tax"></span>To tax, ${Math.round(D.rate * 100)}%</span><span class="v num">${money(t)}</span></div>
+            <div><span class="k"><span class="sw safe"></span>Safe to spend</span><span class="v num">${money(inc.amt - t, true)}</span></div>
+          </div>
+          <div class="acts">
+            <button class="btn primary" id="set-aside" ${off ? 'disabled' : ''}>Set aside ${masked() ? 'for tax' : money(t)}</button>
+            <button class="btn quiet" id="not-income" ${off ? 'disabled' : ''}>Not income</button>
+          </div>
+          ${off ? '<p class="reason">Sorting works again when you are back online.</p>' : ''}`;
+        $('#set-aside').onclick = () => sort('counted');
+        $('#not-income').onclick = () => sort('notincome');
       } else {
-        const tx = tax(L.c), isTax = L.status === 'tax';
-        el.innerHTML = `<div class="receipt"><p>${isTax ? `${fmt(tx)} moved to your Tax pot` : `${L.who} marked not taxable`}<small>${isTax ? `${L.who}, ${fmt(L.c)}. Safe to spend is up ${fmt(L.c - tx)}.` : `Safe to spend is up ${fmt(L.c)}.`}</small></p><button class="link" id="undo" ${off ? 'disabled' : ''}>Undo</button></div>`;
+        const msg = S.status === 'counted'
+          ? `${money(t)} set aside for tax. ${esc(inc.name)} is counted in November.`
+          : `${esc(inc.name)} marked as not income. It is not counted.`;
+        pay.innerHTML = `<div class="receipt"><span>${msg}</span><button class="btn" id="undo">Undo</button></div>`;
+        $('#undo').onclick = () => sort('new');
       }
     }
 
-    const row = (icon, who, note, amtHtml) => `<li>${icon ? `<span class="ic" aria-hidden="true"><i class="ti ti-${icon}"></i></span>` : ''}<span class="mid">${who}${note ? `<small>${note}</small>` : ''}</span>${amtHtml}</li>`;
-    const landedNote = (L) => (L.status === 'unsorted' ? 'Not sorted' : L.status === 'tax' ? `${fmt(tax(L.c))} to Tax pot` : 'Not taxable');
+    function render() {
+      const m = model(), st = S.state;
+      document.documentElement.dataset.state = st;
+      fig($('#f-safe'), m.safe);
+      $('#f-day').textContent = m.safe > 0 ? `About ${masked() ? '••••' : usd0.format(m.perDay / 100)} a day through Nov 30` : 'Bills due by Nov 30 are more than what came in';
+      fig($('#f-in'), m.cameIn); fig($('#f-tax'), -m.tax); fig($('#f-bills'), -m.bills); fig($('#f-spent'), -m.spent);
+      $('#hero').setAttribute('aria-label', masked() ? 'Safe to spend, hidden. Open breakdown' : `Safe to spend ${spoken(m.safe)}. Open breakdown`);
+      $('#st-asof').textContent = st === 'offline' || st === 'error' ? `As of ${AS_OF}` : '';
 
-    function renderLists() {
-      const d = data(), L = d.landed;
-      const n7 = d.bills.filter((b) => b.in7), rest = d.bills.length - n7.length;
-      $('#next7').innerHTML = n7.length ? n7.map((b) => row('calendar-event', b.who, b.date, A(b.c, '-'))).join('') : '<li><span class="mid">No bills in the next 7 days</span></li>';
-      $('#moreBills').textContent = rest ? `${rest} more bills by Nov 30` : 'All bills';
-      $('#moreBills').hidden = !d.bills.length;
-      const actRow = (a) => row(a.icon, a.who, a.landed ? `${a.day}, ${landedNote(L)}` : `${a.day}${a.note ? ', ' + a.note : ''}`, A(a.c, a.in ? '+' : '-', a.in ? 'in' : ''));
-      $('#recent').innerHTML = d.activity.length ? d.activity.slice(0, 5).map(actRow).join('') : '<li><span class="mid">No activity in November yet</span></li>';
-      // Activity tab, grouped by day
-      const days = [...new Set(d.activity.map((a) => a.day))];
-      $('#actList').innerHTML = days.length ? days.map((day) => `<h2 class="sec-h" style="font:var(--t-label);color:var(--ink-2);min-height:32px">${day}</h2><ul class="list">${d.activity.filter((a) => a.day === day).map((a) => row(a.icon, a.who, a.landed ? landedNote(L) : a.note, A(a.c, a.in ? '+' : '-', a.in ? 'in' : ''))).join('')}</ul>`).join('')
-        : '<div class="empty"><h2>No activity yet</h2><p>Payments and spending from your connected account show up here.</p></div>';
-      // Tax tab
-      const t = totals(d);
-      fig($('#potFig'), (state === 'empty' ? 0 : POT_BEFORE_NOV) + t.taxed);
-      $('#taxFacts').innerHTML = row('', 'Your set-aside rate', 'Chosen at setup', `<span class="amt">${RATE}%</span>`) + row('', 'Next estimated payment', 'Q4, due Jan 15, 2027', '');
-      const taxRows = d.income.map((x) => row('', x.who, x.date, A(tax(x.c)))).concat(L && L.status === 'tax' ? [row('', L.who, 'Today', A(tax(L.c)))] : []);
-      $('#taxList').innerHTML = taxRows.length ? taxRows.join('') + row('', '<b>Total</b>', '', A(t.taxed)) : '<li><span class="mid">Nothing set aside yet this month</span></li>';
-      // Invoices tab
-      const open = d.invoices.filter((i) => i.open);
-      $('#invSum').innerHTML = row('', 'Outstanding', `${open.length} sent`, A(sum(open))) + row('', 'Overdue', 'None', A(0));
-      $('#invList').innerHTML = d.invoices.length ? d.invoices.map((i) => row('file-invoice', i.who, `${i.no}, ${i.st}`, A(i.c))).join('') : '<li><span class="mid">No invoices yet</span></li>';
+      // bar: segments are shares of what came in; with nothing in, the bar is not drawn
+      const bar = $('#bar'); bar.style.visibility = m.cameIn > 0 && !masked() ? 'visible' : 'hidden';
+      const parts = { tax: m.tax, bills: m.bills, spent: m.spent, safe: Math.max(0, m.safe) };
+      for (const k in parts) bar.querySelector('.' + k).style.flexGrow = parts[k];
+      bar.setAttribute('aria-label', masked() ? 'November split, amounts hidden'
+        : `Of ${spoken(m.cameIn)} that came in: tax ${spoken(m.tax)}, bills ${spoken(m.bills)}, spent ${spoken(m.spent)}, safe to spend ${spoken(m.safe)}`);
+
+      renderPay(m);
+      const next = D.bills.filter((b) => b.d - TODAY <= 7);
+      $('#nx-sum').textContent = money(sum(next));
+      $('#nx-list').innerHTML = next.map((b) => row(b.name, day(b.d), money(b.amt))).join('');
+      $('#pd-list').innerHTML = D.pending.map((p) => row(p.name, `Invoice ${p.inv}, expected Nov ${p.due}`, money(p.amt), 'Not counted')).join('');
+      const acts = activity(m);
+      $('#rc-sec').hidden = !acts.length;
+      $('#rc-list').innerHTML = acts.slice(0, 4).map(actRow).join('');
+      $('#ac-count').textContent = acts.length ? `${acts.length} items` : '';
+      $('#ac-list').innerHTML = acts.length ? acts.map(actRow).join('') : '<li><span class="name">No activity yet in November</span></li>';
+      $('#tx-total').textContent = money(m.tax);
+      $('#tx-list').innerHTML = m.counted.length
+        ? m.counted.map((p) => row(p.name, `${day(p.d)}, ${Math.round(D.rate * 100)}% of ${money(p.amt)}`, money(taxOf(p.amt)))).join('')
+        : '<li><span class="name">Nothing set aside yet this month</span></li>';
+      $('#iv-list').innerHTML = D.invoices.map((v) => row(v.name, `Invoice ${v.inv}`, money(v.amt), v.st)).join('');
+
+      const b = $('#banner'), retry = $('#retry');
+      b.hidden = !(st === 'offline' || st === 'error');
+      $('#banner-text').textContent = st === 'offline' ? `Offline. Figures from ${AS_OF} today.` : st === 'error' ? `Could not refresh. Figures from ${AS_OF} today.` : '';
+      retry.hidden = st !== 'error';
+      $('#loading-text').textContent = st === 'loading' ? 'Loading November' : '';
+      if (!$('#sheet').hidden) renderSheet();
     }
 
     function renderSheet() {
-      const d = data(), t = totals(d), L = d.landed;
-      const sec = (title, rows, sub, sign) => `<h3>${title}</h3><ul class="list">${rows.join('')}${row('', '<span class="sub">Subtotal</span>', '', A(sub, sign))}</ul>`;
-      const inc = d.income.map((x) => row('', x.who, x.date, A(x.c))).concat(L && L.status !== 'unsorted' ? [row('', L.who, 'Today', A(L.c))] : []);
-      const txr = d.income.map((x) => row('', x.who, `${RATE}% of ${fmt(x.c)}`, A(tax(x.c), '-'))).concat(L && L.status === 'tax' ? [row('', L.who, `${RATE}% of ${fmt(L.c)}`, A(tax(L.c), '-'))] : L && L.status === 'untaxed' ? [row('', L.who, 'Marked not taxable', A(0))] : []);
-      $('#shBody').innerHTML = (L && L.status === 'unsorted' ? `<p class="l-note" style="margin-top:8px">${L.who}, ${fmt(L.c)} from today, is not counted until you sort it.</p>` : '')
-        + sec('Came in', inc, t.came)
-        + sec('Set aside for tax', txr, t.taxed, '-')
-        + sec('Bills due by Nov 30', d.bills.map((b) => row('', b.who, b.date, A(b.c, '-'))), t.bills, '-')
-        + sec('Spent so far', d.spent.map((s) => row('', s.who, '', A(s.c, '-'))), t.spent, '-')
-        + `<div class="total"><b>Safe to spend</b>${A(t.safe)}</div><p class="total-per">${hidden ? 'Amounts hidden' : `About $${Math.round(t.safe / 100 / DAYS_LEFT)} a day for the ${DAYS_LEFT} days left in November`}</p>`;
+      const m = model(), pct = Math.round(D.rate * 100);
+      const grp = (sw, title, total, items) => `<div class="grp"><div class="grp-h"><span class="sw ${sw}"></span><span>${title}</span><span class="num">${total}</span></div><ul class="rows">${items}</ul></div>`;
+      $('#sh-body').innerHTML = `
+        <span class="big num">${money(m.safe)}</span>
+        <p class="day">${m.safe > 0 ? `About ${masked() ? '••••' : usd0.format(m.perDay / 100)} a day for ${DAYS_LEFT} days` : 'Bills due by Nov 30 are more than what came in'}</p>
+        ${grp('none', 'Came in', money(m.cameIn), m.counted.map((p) => row(p.name, day(p.d), money(p.amt))).join('') || row('Nothing yet', '', money(0)))}
+        ${grp('tax', `Set aside for tax, ${pct}%`, money(-m.tax), m.counted.map((p) => row(p.name, '', money(-taxOf(p.amt)))).join('') || row('Nothing yet', '', money(0)))}
+        ${grp('bills', 'Bills due by Nov 30', money(-m.bills), D.bills.map((b) => row(b.name, day(b.d), money(-b.amt))).join(''))}
+        ${grp('spent', 'Spent so far', money(-m.spent), row(`${m.spends.length} purchases since Nov 1`, '', '<button class="link" id="sh-act">View</button>'))}
+        <div class="eq"><span>Safe to spend</span><span class="num">${money(m.safe)}</span></div>
+        ${grp('none', 'Not counted', money(sum(D.pending)), D.pending.map((p) => row(p.name, `Invoice ${p.inv}, expected Nov ${p.due}`, money(p.amt))).join(''))}`;
+      $('#sh-act').onclick = () => { closeSheet(); selectTab('activity'); };
     }
 
-    // Self-check: the statement reconciles before and after each choice.
-    (function check() {
-      const c = (st) => totals({ ...D, landed: { ...D.landed, status: st } });
-      const ok = c('unsorted').safe === 152338 && c('tax').safe === 238738 && c('untaxed').safe === 272338
-        && c('tax').taxed === 192920 && c('unsorted').came === 569000 && sum(D.spent) === 111842;
-      if (!ok) console.error('Pano totals do not reconcile');
-    })();
-
-    // Sorting the payment: the figures roll, the card becomes the receipt with Undo.
     function sort(status) {
-      if (state === 'offline') return;
-      D.landed.status = status;
-      renderHome(); if (sheetOpen) renderSheet();
-      const L = D.landed, t = totals();
-      if (status === 'unsorted') { $('#live').textContent = `Undone. Safe to spend is ${fmt(t.safe)}.`; $('#setAside')?.focus({ preventScroll: true }); }
-      else { MK.haptic('success'); $('#live').textContent = (status === 'tax' ? `${fmt(tax(L.c))} moved to your Tax pot. ` : 'Marked not taxable. ') + `Safe to spend is ${fmt(t.safe)}.`; $('#undo')?.focus({ preventScroll: true }); }
+      const prev = S.status;
+      S.status = status;
+      const segs = [...$('#bar').children];
+      if (prev === 'counted' || status === 'counted') MK.flip(segs, render); else render();
+      const inc = D.incoming, t = money(taxOf(inc.amt));
+      $('#live').textContent = status === 'counted' ? `${t} set aside for tax. Safe to spend is now ${spoken(model().safe)}.`
+        : status === 'notincome' ? `${inc.name} marked as not income.` : 'Undone. Payment not sorted.';
+      MK.haptic(status === 'counted' ? 'success' : 'light');
+      (status === 'new' ? $('#set-aside') : $('#undo'))?.focus({ preventScroll: true });
     }
-    document.addEventListener('click', (e) => {
-      const b = e.target.closest('button'); if (!b) return;
-      if (b.id === 'setAside') sort('tax');
-      else if (b.id === 'untaxed') sort('untaxed');
-      else if (b.id === 'undo') sort('unsorted');
-      else if (b.dataset.go) go(b.dataset.go);
-    });
 
-    // Tabs: no slide, each keeps its own scroll position
-    const scroller = $('#scroller'), pos = {};
-    let tab = 'home';
-    function go(name) {
-      if (name === tab) return;
-      pos[tab] = scroller.scrollTop; tab = name;
-      document.querySelectorAll('.view').forEach((v) => (v.hidden = v.dataset.view !== name));
-      document.querySelectorAll('.tab').forEach((t) => {
-        t.dataset.tab === name ? t.setAttribute('aria-current', 'page') : t.removeAttribute('aria-current');
-      });
-      scroller.scrollTop = pos[name] || 0;
-      document.querySelector(`[data-view="${name}"] h1`).focus({ preventScroll: true });
+    // eye toggle hides every figure on every tab; press and hold the hero to peek
+    const eye = $('#eye');
+    eye.onclick = () => {
+      S.hidden = !S.hidden;
+      eye.setAttribute('aria-pressed', S.hidden); eye.setAttribute('aria-label', S.hidden ? 'Show amounts' : 'Hide amounts');
+      eye.firstElementChild.className = 'ti ' + (S.hidden ? 'ti-eye-off' : 'ti-eye');
+      $('#live').textContent = S.hidden ? 'Amounts hidden. Press and hold the balance to peek.' : 'Amounts shown.';
+      render();
+    };
+    const hero = $('#hero'); let holdT = 0, peeked = false;
+    hero.addEventListener('pointerdown', () => { if (!S.hidden) return; holdT = setTimeout(() => { S.peek = peeked = true; MK.haptic('selection'); render(); }, 300); });
+    const endHold = () => { clearTimeout(holdT); if (S.peek) { S.peek = false; render(); } };
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach((n) => hero.addEventListener(n, endHold));
+    hero.addEventListener('contextmenu', (e) => e.preventDefault());
+    hero.onclick = () => { if (peeked) { peeked = false; return; } openSheet(); };
+
+    // tabs: peers, no slide; each view keeps its own scroll
+    const views = [...document.querySelectorAll('.view')];
+    const titles = { home: 'Pano', activity: 'Activity', taxes: 'Taxes', invoices: 'Invoices' };
+    function selectTab(tab) {
+      S.tab = tab;
+      views.forEach((v) => { v.hidden = v.dataset.tab !== tab; });
+      document.querySelectorAll('.tabs button').forEach((b) => b.dataset.tab === tab ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current'));
+      $('#nav-title').textContent = titles[tab];
+      onScroll();
     }
-    document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => go(t.dataset.tab)));
+    document.querySelectorAll('.tabs button').forEach((b) => { b.onclick = () => selectTab(b.dataset.tab); });
+    $('#all-activity').onclick = () => selectTab('activity');
+    const activeView = () => views.find((v) => !v.hidden);
+    const onScroll = () => $('#nav').classList.toggle('scrolled', activeView().scrollTop > 2);
+    views.forEach((v) => v.addEventListener('scroll', onScroll, { passive: true }));
 
-    // Breakdown sheet: from the safe-to-spend line; close button, scrim, Escape and drag down all close it
-    const sheet = $('#sheet'), scrim = $('#scrim');
-    let sheetOpen = false, opener = null;
-    function openSheet(from) {
-      opener = from; sheetOpen = true; renderSheet();
-      sheet.style.transform = ''; sheet.classList.add('on'); scrim.classList.add('on'); sheet.setAttribute('aria-hidden', 'false');
-      scroller.classList.add('locked'); $('#shBody').scrollTop = 0;
+    // breakdown sheet: follows the finger, commits on distance or velocity, closes by button, scrim or Escape
+    const sheet = $('#sheet'), scrim = $('#scrim'); let open = false, H = 0, y0 = 0;
+    const ty = () => new DOMMatrix(getComputedStyle(sheet).transform).f;
+    function openSheet() {
+      renderSheet(); sheet.hidden = false; scrim.hidden = false; H = sheet.offsetHeight; open = true;
+      activeView().style.overflow = 'hidden';
+      MK.freeze(sheet); sheet.style.transform = `translateY(${H}px)`;
+      MK.fling(sheet, { from: { y: H }, to: { y: 0 }, k: 380, zeta: 1 });
+      scrim.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: MK.out });
       $('#sh-title').focus({ preventScroll: true });
     }
-    function closeSheet() {
-      if (!sheetOpen) return;
-      sheetOpen = false; sheet.style.transform = ''; sheet.classList.remove('on'); scrim.classList.remove('on'); sheet.setAttribute('aria-hidden', 'true');
-      scroller.classList.remove('locked'); opener?.focus({ preventScroll: true });
+    function closeSheet(v = 0) {
+      if (!open) return; open = false;
+      const y = ty(); MK.freeze(sheet);
+      MK.fling(sheet, { from: { y }, to: { y: H }, v: { y: v }, k: 600, zeta: 1 }).finished.then(() => { if (!open) sheet.hidden = true; }, () => {});
+      scrim.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, easing: MK.out }).finished.then(() => { if (!open) scrim.hidden = true; });
+      views.forEach((vw) => { vw.style.overflow = ''; });
+      hero.focus({ preventScroll: true });
     }
-    $('#safeBtn').addEventListener('click', (e) => openSheet(e.currentTarget));
-    $('#moreBills').addEventListener('click', (e) => openSheet(e.currentTarget));
-    $('#closeSheet').addEventListener('click', closeSheet);
-    scrim.addEventListener('click', closeSheet);
+    $('#sh-close').onclick = () => closeSheet();
+    scrim.onclick = () => closeSheet();
     addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
-    MK.drag($('#grab'), { axis: 'y',
-      onStart: (e) => { if (e.target.closest('button')) return; sheet.style.transition = 'none'; },
-      onMove: (_, dy) => { sheet.style.transform = `translateY(${dy < 0 ? dy * 0.2 : dy}px)`; },
-      onEnd: ({ dy, vy }) => { sheet.style.transition = ''; if (dy > 140 || vy > 0.6) closeSheet(); else sheet.style.transform = ''; } });
-
-    // Hide amounts masks every figure on every tab
-    $('#hideBtn').addEventListener('click', (e) => {
-      hidden = !hidden; const b = e.currentTarget;
-      b.setAttribute('aria-pressed', hidden); b.setAttribute('aria-label', hidden ? 'Show amounts' : 'Hide amounts');
-      b.querySelector('i').className = `ti ti-${hidden ? 'eye-off' : 'eye'}`;
-      renderHome(); if (sheetOpen) renderSheet();
+    MK.drag($('#grab'), {
+      axis: 'y',
+      onStart: () => { MK.freeze(sheet); y0 = ty(); },
+      onMove: (_, dy) => { const t = y0 + dy; sheet.style.transform = `translateY(${t < 0 ? t * 0.35 : t}px)`; },
+      onEnd: ({ dy, vy }) => { const t = y0 + dy; if (t + vy * 180 > 200) closeSheet(vy); else MK.fling(sheet, { from: { y: t < 0 ? t * 0.35 : t }, to: { y: 0 }, v: { y: vy } }); },
     });
 
-    // States by hash: #loading, #empty, #error, #offline
-    const states = ['loading', 'empty', 'error', 'offline'];
-    function sync() {
-      const s = location.hash.slice(1); state = states.includes(s) ? s : 'content';
-      document.documentElement.dataset.state = state;
-      $('#updated').textContent = state === 'loading' ? 'Updating' : state === 'offline' ? 'Offline, as of 9:14' : 'Updated 9:14';
-      renderHome();
-    }
-    $('#retry').addEventListener('click', () => { location.hash = ''; });
+    $('#retry').onclick = () => { history.replaceState(null, '', location.pathname + location.search); sync(); };
+
+    // states by hash: #loading #empty #error #offline
+    const STATES = ['loading', 'empty', 'error', 'offline'];
+    function sync() { const s = location.hash.slice(1); S.state = STATES.includes(s) ? s : 'content'; render(); }
     addEventListener('hashchange', sync);
-
-    document.fonts.ready.then(() => {
-      // tabular-figure check for the dealt face
-      const m = (s) => { const e = document.createElement('span'); e.className = 'num'; e.style.cssText = 'position:absolute;font:var(--t-balance)'; e.textContent = s; document.body.appendChild(e); const w = e.getBoundingClientRect().width; e.remove(); return w; };
-      if (Math.abs(m('0000') - m('1111')) > 0.5) console.error('Hanken Grotesk figures are not tabular here');
-    });
     sync();
+
+    // self-checks: tabular figures in the dealt face, and the statement adds up in every status
+    document.fonts.ready.then(() => {
+      const probe = (t) => { const s = document.createElement('span'); s.className = 'num'; s.style.cssText = 'position:absolute;visibility:hidden;font:var(--t-balance)'; s.textContent = t; document.body.append(s); const w = s.getBoundingClientRect().width; s.remove(); return w; };
+      if (Math.abs(probe('0000') - probe('1111')) > 0.5) console.error('dealt face has no tabular figures');
+      if (!document.fonts.check('500 48px "Hanken Grotesk"')) console.error('Hanken Grotesk did not load');
+    });
+    const keep = S.status;
+    for (const s of ['new', 'counted', 'notincome']) { S.status = s; const m = model(); if (m.cameIn - m.tax - m.bills - m.spent !== m.safe) console.error('mismatch', s); }
+    S.status = keep;
+    if (sum(D.spends) !== 161140 || sum(D.payments) !== 710000) console.error('sample totals changed');
   })();
   </script>
 </body>

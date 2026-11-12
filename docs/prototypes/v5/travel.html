@@ -3,374 +3,424 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Rota, listing</title>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<title>Rota: Fairy chimney cave room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.9.0/dist/maplibre-gl.css">
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.9.0/dist/maplibre-gl.js"></script>
 <script>
-  // the dealt appearance is light; ?theme=dark shows the other one
-  { const t = new URLSearchParams(location.search).get('theme'); if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t; }
+  // dealt appearance is light; ?theme=dark shows the other one
+  (() => { const t = new URLSearchParams(location.search).get('theme'); if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t; })();
 </script>
 <style>
-  /* device frame (from the skill's phone-frame.html) */
+  /* device frame (from assets/phone-frame.html) */
   :root { --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px; --chrome: #000; }
   [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
-  html.chrome-light { --chrome: #fff; }
   * { box-sizing: border-box; }
   html, body { margin: 0; width: var(--w); height: var(--h); overflow: clip; }
   body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--ground); color: var(--ink); }
-  .statusbar { position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 50; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 28px 10px; font: 600 16px/1 -apple-system, "SF Pro Text", system-ui, sans-serif; color: var(--chrome); pointer-events: none; transition: color .2s ease-out; }
+  body.on-photo { --chrome: #fff; }
+  .statusbar { position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 40; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none; font-family: -apple-system, "SF Pro Text", system-ui, sans-serif; }
   .statusbar svg { height: 12px; fill: var(--chrome); }
-  .home-indicator { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 50; width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none; }
-  #screen { position: absolute; inset: 0; overflow: clip; }
+  .home-indicator { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 40; width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none; }
+  #screen { position: absolute; inset: 0; overflow: hidden; }
 </style>
 <style>
-  /* ROTA TOKENS: direction native-quiet, Public Sans, teal accent. Screens use only these. */
+  /* PRODUCT TOKENS: Rota, direction native-quiet */
   :root {
+    --font: "Public Sans", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif;
     --ground: #FFFFFF; --raised: #F2F2F7; --ink: #000000; --ink-2: #5E5E63; --line: #D8D8DC;
     --accent: #0E7C6B; --on-accent: #FFFFFF; --positive: #2E7D46; --negative: #D4442E;
-    --accent-ink: #0E7C6B; --on-accent-2: rgb(255 255 255 / .86); --on-accent-line: rgb(255 255 255 / .28);
-    --scrim: rgb(0 0 0 / .4);
-    --font: "Public Sans", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif;
-    --t-large: 700 34px/1.12 var(--font);
-    --t-listing: 700 28px/1.15 var(--font);
-    --t-title: 600 22px/1.25 var(--font);
-    --t-head: 600 17px/1.3 var(--font);
-    --t-body: 400 17px/1.4 var(--font);
-    --t-sub: 400 15px/1.35 var(--font);
-    --t-foot: 400 13px/1.35 var(--font);
+    --band: color-mix(in oklab, var(--accent) 9%, var(--ground));
+    --scrim-top: linear-gradient(rgb(0 0 0 / .5), transparent);
+    --r-list: 12px; --r-btn: 10px; --r-sheet: 14px;
     --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
-    --r-group: 12px; --r-btn: 10px; --r-round: 22px;
-    --tap: 44px; --bar-h: calc(76px + var(--safe-bottom)); --nav-h: calc(var(--safe-top) + 52px);
+    --t-large: 700 34px/1.12 var(--font); --t-title: 600 22px/1.25 var(--font); --t-head: 600 17px/1.3 var(--font);
+    --t-body: 400 17px/1.4 var(--font); --t-foot: 400 13px/1.35 var(--font);
+    --bar-h: 112px;
   }
-  [data-theme="dark"] {
-    --ground: #000000; --raised: #1C1C1E; --ink: #FFFFFF; --ink-2: #A1A1A6; --line: #38383A;
-    --scrim: rgb(0 0 0 / .6); --accent-ink: #3DB39E;
-  }
-
-  /* base */
-  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-  button, .tap { transition: transform .12s cubic-bezier(.22,1,.36,1), opacity .12s ease-out; }
-  button:active:not(:disabled), .tap:active { transform: scale(.97); }
+  [data-theme="dark"] { --ground: #000000; --raised: #1C1C1E; --ink: #FFFFFF; --ink-2: #A1A1A6; --line: #38383A; --band: color-mix(in oklab, var(--accent) 22%, #000); }
+</style>
+<style>
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; touch-action: manipulation; transition: transform .12s cubic-bezier(.22,1,.36,1); -webkit-tap-highlight-color: transparent; }
+  button:active:not(:disabled) { transform: scale(.97); }
+  button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   button:disabled { cursor: default; }
-  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
-  h1, h2, h3, p, ul, dl, dd { margin: 0; padding: 0; }
-  ul { list-style: none; }
+  h1, h2, h3, p { margin: 0; }
   .num { font-variant-numeric: tabular-nums; }
-  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-
-  /* never-grey image */
-  .pic { position: relative; overflow: hidden; background: var(--c, #8a7a6a); }
+  .pic { position: relative; overflow: hidden; background: var(--c, #a07a5a); }
   .pic img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .4s ease-out; display: block; }
   .pic img.in { opacity: 1; }
-
   .view { position: absolute; inset: 0; background: var(--ground); }
   .view[hidden] { display: none; }
-  .scroller { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
-  .scroller::-webkit-scrollbar { display: none; }
+  .scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; overscroll-behavior: contain; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .scroll.locked { overflow: hidden; }
 
-  /* listing: photo header */
-  .navbg { position: absolute; inset: 0 0 auto 0; height: var(--nav-h); z-index: 20; background: var(--ground); border-bottom: 1px solid var(--line); opacity: 0; transition: opacity .18s ease-out; pointer-events: none; display: flex; align-items: flex-end; justify-content: center; padding: 0 116px 14px; }
-  .navbg span { font: var(--t-head); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .scrolled .navbg { opacity: 1; }
-  .topbtns { position: absolute; inset: var(--safe-top) 0 auto 0; height: 52px; z-index: 26; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--s4); pointer-events: none; }
-  .topbtns > div { display: flex; gap: var(--s3); }
-  .circ { pointer-events: auto; width: var(--tap); height: var(--tap); border-radius: 50%; background: var(--ground); color: var(--ink); display: grid; place-items: center; font-size: 20px; box-shadow: 0 1px 3px rgb(0 0 0 / .18); }
-  .scrolled .circ { box-shadow: none; background: var(--raised); }
-  .circ .ph-fill.ph-heart { color: var(--negative); }
+  /* gallery */
+  .gallery { position: relative; height: 264px; }
+  .track { display: flex; height: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+  .track::-webkit-scrollbar { display: none; }
+  .track .pic { flex: none; width: 100%; height: 100%; scroll-snap-align: start; }
+  .gallery::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 130px; background: var(--scrim-top); z-index: 1; pointer-events: none; }
+  .count { position: absolute; right: var(--s4); bottom: var(--s3); z-index: 2; min-height: 44px; padding: 0 var(--s3); border-radius: 22px; display: flex; align-items: center; gap: 6px; background: rgb(0 0 0 / .66); color: #fff; font: 600 15px/1 var(--font); }
+  .count i { font-size: 18px; }
 
-  .hero { position: relative; height: 284px; }
-  .gallery { display: flex; height: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
-  .gallery::-webkit-scrollbar { display: none; }
-  .gallery .pic { flex: none; width: 100%; height: 100%; scroll-snap-align: start; }
-  .hero::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 120px; z-index: 1; pointer-events: none; background: linear-gradient(rgb(0 0 0 / .45), transparent); }
-  .count { position: absolute; right: var(--s4); bottom: var(--s3); z-index: 2; background: rgb(0 0 0 / .62); color: #fff; font: 600 13px/1 var(--font); padding: 6px 10px; border-radius: 8px; }
+  /* top bar */
+  .topbar { position: absolute; inset: 0 0 auto 0; z-index: 20; padding: var(--safe-top) var(--s3) 6px; display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: var(--s2); transition: background .2s ease-out, box-shadow .2s ease-out; }
+  .topbar .mid { text-align: center; min-width: 0; }
+  .wordmark { font: 700 22px/1 var(--font); color: #fff; letter-spacing: -.01em; }
+  .bartitle { display: none; font: var(--t-head); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .round { width: 44px; height: 44px; border-radius: 22px; display: grid; place-items: center; background: rgb(255 255 255 / .94); color: #000; font-size: 22px; }
+  .round .ph-fill.ph-heart { color: var(--negative); }
+  .right { display: flex; gap: var(--s2); }
+  .topbar.solid { background: var(--ground); box-shadow: 0 .5px 0 var(--line); }
+  .topbar.solid .wordmark { display: none; }
+  .topbar.solid .bartitle { display: block; }
+  .topbar.solid .round { background: transparent; color: var(--ink); }
 
-  .pad { padding: var(--s4) var(--s4) calc(var(--bar-h) + var(--s5)); }
-  .offline-note { display: none; margin: var(--s4) var(--s4) 0; padding: var(--s3); border-radius: var(--r-group); background: var(--raised); font: var(--t-sub); gap: var(--s2); align-items: center; }
-  [data-state="offline"] .offline-note { display: flex; }
-  .offline-note i { font-size: 20px; }
-  h1#title { font: var(--t-listing); letter-spacing: -0.01em; }
-  .place { font: var(--t-sub); color: var(--ink-2); margin-top: var(--s1); }
-  .meta { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); margin-top: var(--s3); font: var(--t-sub); }
-  .rating { display: flex; align-items: center; gap: 6px; }
-  .rating .ph-star { font-size: 16px; }
-  .rating b { font-weight: 600; }
-  .hostmini { display: flex; align-items: center; gap: var(--s2); color: var(--ink-2); }
-  .hostmini .pic { width: 28px; height: 28px; border-radius: 50%; }
+  .offline { display: none; }
+  [data-state="offline"] .offline { display: flex; position: absolute; z-index: 19; left: var(--s3); right: var(--s3); top: calc(var(--safe-top) + 56px); padding: var(--s3); gap: var(--s2); border-radius: var(--r-list); background: var(--ink); color: var(--ground); font: var(--t-foot); align-items: center; }
+  .offline i { font-size: 20px; }
 
-  section { margin-top: var(--s6); }
-  section h2 { font: var(--t-title); }
-  .why { margin-top: var(--s5); background: var(--accent); color: var(--on-accent); border-radius: var(--r-group); padding: var(--s4) var(--s4) var(--s2); }
-  .why li { font: var(--t-body); padding: 10px 0; border-top: 1px solid var(--on-accent-line); }
-  .why h2 { margin-bottom: var(--s2); }
+  /* content */
+  .content { padding: var(--s4) var(--s4) 0; }
+  h1 { font: var(--t-large); letter-spacing: -.02em; }
+  .meta { margin-top: var(--s2); font: var(--t-body); color: var(--ink-2); }
+  .meta b { color: var(--ink); font-weight: 600; }
+  .rating { display: flex; align-items: center; gap: 6px; margin-top: 2px; font: var(--t-body); }
+  .rating i { color: var(--ink); font-size: 16px; }
+  .section { padding: var(--s5) 0; border-top: .5px solid var(--line); }
+  .section:first-of-type { border-top: 0; }
+  h2 { font: var(--t-title); margin-bottom: var(--s3); }
+  .host { display: flex; align-items: center; gap: var(--s3); margin-top: var(--s4); padding: var(--s3) 0; }
+  .host .pic { width: 48px; height: 48px; border-radius: 24px; flex: none; }
+  .host p { font: var(--t-foot); color: var(--ink-2); }
+  .host p b { display: block; font: var(--t-head); color: var(--ink); }
+  .facts { list-style: none; margin: 0; padding: 0; }
+  .facts li { display: grid; grid-template-columns: 28px 1fr; gap: var(--s3); align-items: start; padding: var(--s2) 0; font: var(--t-body); min-height: 44px; }
+  .facts i { font-size: 24px; color: var(--accent); margin-top: 1px; }
+  .facts li.warn i { color: var(--ink); }
+  .facts li.warn span b { font-weight: 600; }
 
-  .sechead { display: flex; align-items: center; justify-content: space-between; }
-  .textbtn { color: var(--accent-ink); font: var(--t-head); min-height: var(--tap); padding: 0 var(--s2); margin-right: calc(-1 * var(--s2)); }
-  .sub { font: var(--t-sub); color: var(--ink-2); margin-top: 2px; }
-  .strip { display: flex; gap: var(--s2); overflow-x: auto; scrollbar-width: none; margin: var(--s2) calc(-1 * var(--s4)) 0; padding: 10px var(--s4) var(--s2); scroll-padding: 0 var(--s4); }
+  /* nights band: the brand surface */
+  .band { margin: 0 calc(-1 * var(--s4)); padding: var(--s5) var(--s4); background: var(--band); border-top: 0; }
+  .band h2 { margin-bottom: var(--s2); }
+  .inout { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); font: var(--t-foot); color: var(--ink-2); }
+  .inout b { display: block; font: var(--t-head); color: var(--ink); }
+  .hint { min-height: 20px; margin-top: var(--s2); font: var(--t-foot); color: var(--ink-2); }
+  .strip { display: flex; gap: 6px; overflow-x: auto; margin: var(--s1) calc(-1 * var(--s4)) 0; padding: 10px var(--s4) var(--s2); scrollbar-width: none; }
   .strip::-webkit-scrollbar { display: none; }
-  .night { flex: none; width: 58px; min-height: 84px; border-radius: var(--r-btn); background: var(--raised); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
-  .night .wd { font: var(--t-foot); color: var(--ink-2); }
-  .night .dn { font: 600 20px/1.1 var(--font); font-variant-numeric: tabular-nums; }
-  .night .pr { font: var(--t-foot); font-variant-numeric: tabular-nums; }
-  .night.on { background: var(--accent); color: var(--on-accent); transform: translateY(-6px); }
-  .night.on .wd { color: var(--on-accent-2); }
-  .night[data-booked] { background: transparent; border: 1px dashed var(--line); color: var(--ink-2); }
-  .night[data-booked] .dn { text-decoration: line-through; }
-  .night.mine { background: var(--accent); color: var(--on-accent); }
-  .night.mine .wd { color: var(--on-accent-2); }
-  .night.locked:not(.mine) { opacity: .45; }
-  @media (prefers-reduced-motion: no-preference) {
-    .night { transition: transform var(--spring-ms, 420ms) var(--spring, ease-out), background-color .15s ease-out, color .15s ease-out; }
-    .night:active:not([aria-disabled="true"]) { transform: scale(.97); }
-    .night.on:active { transform: translateY(-6px) scale(.97); }
-  }
-  @media (prefers-reduced-motion: reduce) { .night.on { transform: none; } }
-  .hint { font: var(--t-sub); color: var(--ink-2); min-height: 21px; margin-top: var(--s1); }
+  .night { flex: none; width: 54px; height: 88px; border-radius: var(--r-list); background: var(--ground); border: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: var(--t-foot); color: var(--ink-2); transition: transform var(--sp-ms, 420ms) var(--sp-ease, ease-out), background-color .15s ease-out, color .15s ease-out, border-color .15s ease-out; }
+  .night .d { font: 600 20px/1.1 var(--font); color: var(--ink); font-variant-numeric: tabular-nums; }
+  .night .p { font: 600 13px/1.2 var(--font); color: var(--ink); font-variant-numeric: tabular-nums; }
+  .night[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .night[aria-pressed="true"] .d, .night[aria-pressed="true"] .p { color: var(--on-accent); }
+  @media (prefers-reduced-motion: no-preference) { .night[aria-pressed="true"] { transform: translateY(-6px); } }
+  .night.booked { border-style: dashed; background: transparent; }
+  .night.booked .d { color: var(--ink-2); text-decoration: line-through; }
+  .night.booked .p { color: var(--ink-2); font-weight: 400; }
+  .night:disabled:not(.booked) { opacity: 1; }
+  .breakdown { margin-top: var(--s4); }
+  .row { display: flex; justify-content: space-between; gap: var(--s3); padding: 6px 0; font: var(--t-body); }
+  .row span:last-child { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .row.total { margin-top: var(--s2); padding-top: var(--s3); border-top: .5px solid var(--line); font-weight: 700; }
+  .terms { margin-top: var(--s3); font: var(--t-foot); color: var(--ink-2); }
+  .terms b { color: var(--ink); font-weight: 600; }
+  .soldout { display: none; margin-top: var(--s3); padding: var(--s3); border-radius: var(--r-list); background: var(--ground); font: var(--t-body); }
+  [data-state="empty"] .soldout { display: block; }
+  [data-state="empty"] .breakdown, [data-state="empty"] .terms { display: none; }
+  .booked-note { display: none; margin-top: var(--s3); font: var(--t-foot); color: var(--ink); }
+  .is-booked .booked-note { display: block; }
+  .is-booked .hint { display: none; }
 
-  .lines { margin-top: var(--s3); }
-  .lines div { display: flex; justify-content: space-between; gap: var(--s3); font: var(--t-body); padding: 7px 0; }
-  .lines dt { color: var(--ink); }
-  .lines dd { font-variant-numeric: tabular-nums; }
-  .lines .night-line dt { color: var(--ink-2); }
-  .lines .total { border-top: 1px solid var(--line); margin-top: var(--s2); padding-top: var(--s3); font-weight: 600; }
-  .lines .total dt { font-weight: 600; }
+  .map { position: relative; height: 180px; border-radius: var(--r-list); overflow: hidden; background: #e9ece8; } /* slop-ok: fallback matches the positron tiles */
+  [data-theme="dark"] .map { background: #1d2224; }
+  #map { position: absolute; inset: 0; }
+  .where { margin-top: var(--s3); font: var(--t-body); }
+  .where small { display: block; font: var(--t-foot); color: var(--ink-2); margin-top: 2px; }
+  .review { padding: var(--s3) 0; }
+  .review p { font: var(--t-body); }
+  .review small { display: block; margin-bottom: 4px; font: var(--t-foot); color: var(--ink-2); }
+  .review small b { color: var(--ink); font-weight: 600; }
+  .credit { padding: var(--s4) 0 var(--s5); font: var(--t-foot); color: var(--ink-2); }
+  .endpad { height: calc(var(--bar-h) + var(--s3)); }
 
-  .rows { margin-top: var(--s2); }
-  .rows li { font: var(--t-body); padding: 12px 0; border-bottom: 1px solid var(--line); }
-  .rows li:last-child { border-bottom: 0; }
-  .rows li small { display: block; font: var(--t-sub); color: var(--ink-2); margin-top: 2px; }
-
-  .hostcard { display: flex; gap: var(--s4); align-items: center; background: var(--raised); border-radius: var(--r-group); padding: var(--s4); }
-  .hostcard .pic { width: 64px; height: 64px; border-radius: 50%; flex: none; }
-  .hostcard h2 { font: var(--t-head); }
-  .hostcard p { font: var(--t-sub); color: var(--ink-2); margin-top: 2px; }
-
-  #map { height: 180px; border-radius: var(--r-group); overflow: hidden; margin-top: var(--s3); background: var(--raised); position: relative; }
-  .maplibregl-ctrl-attrib { font: 11px/1.3 var(--font); }
-  .cancel { font: var(--t-body); margin-top: var(--s2); }
-  .cancel b { font-weight: 600; }
-  .credit { font: var(--t-foot); color: var(--ink-2); margin-top: var(--s6); }
-
-  /* docked bar: total, dates, Reserve */
-  .bar { position: absolute; inset: auto 0 0 0; z-index: 30; min-height: var(--bar-h); background: var(--ground); border-top: 1px solid var(--line); display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s3); padding: var(--s3) var(--s4) var(--safe-bottom); }
-  .bar .sum { text-align: left; min-height: var(--tap); padding: 2px 0; flex: 1; min-width: 0; }
-  .bar .big { font: 700 22px/1.15 var(--font); font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 6px; }
-  .bar .big small { font: var(--t-sub); color: var(--ink-2); }
-  .bar .line2 { display: block; font: var(--t-sub); color: var(--ink-2); margin-top: 3px; text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .bar .line2.receipt { color: var(--accent-ink); text-decoration: none; font-weight: 600; }
-  .primary { min-height: 50px; min-width: 132px; padding: 0 var(--s5); border-radius: var(--r-btn); background: var(--accent); color: var(--on-accent); font: var(--t-head); display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); }
+  /* sticky reserve bar */
+  .bar { position: absolute; inset: auto 0 0 0; z-index: 25; min-height: var(--bar-h); padding: var(--s3) var(--s4) calc(var(--safe-bottom) + 4px); background: var(--band); box-shadow: 0 -.5px 0 var(--line); display: flex; align-items: center; gap: var(--s3); overflow: hidden; }
+  .bar .sum { flex: 1; min-width: 0; position: relative; z-index: 1; }
+  .total-fig { color: var(--ink); font: 700 22px/1 var(--font); font-variant-numeric: tabular-nums; display: inline-flex; }
+  .bar .sum .l1 { display: flex; align-items: baseline; gap: 6px; font: var(--t-foot); color: var(--ink-2); }
+  .bar .sum .l2 { margin-top: 4px; font: 600 13px/1.3 var(--font); color: var(--ink); }
+  .bar .sum .l3 { font: var(--t-foot); color: var(--ink-2); }
+  .bar .sum button.l2 { text-decoration: underline; text-underline-offset: 2px; min-height: 28px; text-align: left; }
+  .primary { min-height: 50px; padding: 0 var(--s5); border-radius: var(--r-btn); background: var(--accent); color: var(--on-accent); font: 600 17px/1 var(--font); display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); position: relative; z-index: 1; }
   .primary:disabled { background: var(--raised); color: var(--ink-2); }
-  .primary.wide { width: 100%; }
-  .secondary { min-height: 50px; padding: 0 var(--s5); border-radius: var(--r-btn); background: var(--raised); color: var(--ink); font: var(--t-head); width: 100%; }
-  .danger { color: var(--negative); font: var(--t-head); min-height: var(--tap); width: 100%; }
+  .flood { position: absolute; inset: 0; background: var(--accent); opacity: 0; pointer-events: none; }
+  .bar.booked .flood { opacity: 1; }
+  .bar.booked .sum, .bar.booked .sum * { color: var(--on-accent); }
+  .bar.booked .primary { background: var(--on-accent); color: var(--accent); }
+  .bar .bk { display: none; }
+  .bar.booked .bk { display: block; }
+  .bar.booked .pre { display: none; }
+  .bk b { display: flex; align-items: center; gap: 6px; font: 700 20px/1.1 var(--font); }
+
+  /* sheets */
+  .scrim { position: absolute; inset: 0; z-index: 30; background: rgb(0 0 0 / .4); opacity: 0; pointer-events: none; transition: opacity .25s ease-out; }
+  .scrim.on { opacity: 1; pointer-events: auto; }
+  .sheet { position: absolute; inset: auto 0 0 0; z-index: 31; max-height: calc(100% - var(--safe-top) - 8px); display: flex; flex-direction: column; background: var(--ground); border-radius: var(--r-sheet) var(--r-sheet) 0 0; transform: translateY(105%); transition: transform .34s cubic-bezier(.2,.8,.2,1); visibility: hidden; }
+  .sheet.open { transform: translateY(0); visibility: visible; }
+  .sheet .grab { flex: none; height: 24px; display: grid; place-items: center; touch-action: none; }
+  .sheet .grab::before { content: ""; width: 36px; height: 5px; border-radius: 3px; background: var(--line); }
+  .sheet header { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--s2) var(--s2) var(--s4); }
+  .sheet header h2 { margin: 0; }
+  .sheet .icon { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 22px; font-size: 22px; }
+  .sheet .body { overflow-y: auto; padding: 0 var(--s4) var(--s4); scrollbar-width: none; }
+  .sheet .foot { flex: none; padding: var(--s3) var(--s4) calc(var(--safe-bottom) + 4px); box-shadow: 0 -.5px 0 var(--line); }
+  .sheet .foot .primary { width: 100%; }
+  .sheet .foot p { margin-top: var(--s2); text-align: center; font: var(--t-foot); color: var(--ink-2); }
+  .mini { display: flex; gap: var(--s3); align-items: center; padding: var(--s2) 0 var(--s4); border-bottom: .5px solid var(--line); }
+  .mini .pic { width: 64px; height: 64px; border-radius: var(--r-btn); flex: none; }
+  .mini b { display: block; font: var(--t-head); }
+  .mini span { font: var(--t-foot); color: var(--ink-2); }
+  .field { display: flex; justify-content: space-between; align-items: center; gap: var(--s3); min-height: 60px; padding: var(--s2) 0; border-bottom: .5px solid var(--line); font: var(--t-body); }
+  .field small { display: block; font: var(--t-foot); color: var(--ink-2); }
+  .link { min-height: 44px; min-width: 44px; padding: 0 var(--s2); color: var(--accent); font: 600 17px/1 var(--font); }
+  .sheet .band { margin: var(--s2) calc(-1 * var(--s4)) 0; padding: var(--s3) var(--s4) var(--s4); }
+  .sheet .band[hidden] { display: none; }
+  .sheet h3 { font: var(--t-head); margin: var(--s4) 0 var(--s1); }
   .spin { width: 18px; height: 18px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: spin .8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* states */
-  .skeleton, .errorview { display: none; position: absolute; inset: 0; z-index: 25; background: var(--ground); }
-  [data-state="loading"] .skeleton, [data-state="error"] .errorview { display: block; }
-  [data-state="loading"] #listing .bar, [data-state="error"] #listing .bar,
-  [data-state="loading"] #listing .topbtns > div, [data-state="error"] #listing .topbtns > div { display: none; }
-  .skeleton .b { background: var(--raised); border-radius: 8px; margin: 0 var(--s4) var(--s3); }
-  .errorview .in { position: absolute; left: var(--s5); right: var(--s5); top: 260px; text-align: center; }
-  .errorview i { font-size: 36px; color: var(--ink-2); }
-  .errorview h2 { font: var(--t-title); margin-top: var(--s3); }
-  .errorview p { font: var(--t-sub); color: var(--ink-2); margin: var(--s2) 0 var(--s5); }
+  .photos .pic { width: 100%; aspect-ratio: 4 / 3; border-radius: var(--r-list); margin-top: var(--s3); }
+  .photos figure { margin: 0 0 var(--s2); }
+  .photos figcaption { margin-top: 6px; font: var(--t-foot); color: var(--ink-2); }
+  .nophoto { margin-top: var(--s3); padding: var(--s4); border-radius: var(--r-list); background: var(--raised); font: var(--t-body); display: flex; gap: var(--s3); align-items: center; }
+  .nophoto i { font-size: 24px; }
 
   /* results view */
-  #results .scroller { padding: calc(var(--safe-top) + var(--s2)) var(--s4) calc(var(--safe-bottom) + var(--s5)); }
-  #results h1 { font: var(--t-large); letter-spacing: -0.02em; }
-  #results .wordmark { font: 700 22px/1 var(--font); color: var(--accent); letter-spacing: -0.01em; display: block; margin-bottom: var(--s3); }
-  .card { display: block; width: 100%; text-align: left; margin-top: var(--s5); }
-  .card .pic { height: 210px; border-radius: var(--r-group); }
-  .card h2 { font: var(--t-head); margin-top: var(--s3); }
-  .card p { font: var(--t-sub); color: var(--ink-2); margin-top: 2px; }
-  .card .tot { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
-  .card .tot.na { color: var(--negative); font-weight: 600; }
+  .rhead { padding: calc(var(--safe-top) + var(--s2)) var(--s4) var(--s3); }
+  .rhead .brand { font: 700 22px/1 var(--font); }
+  .rhead h1 { margin-top: var(--s3); }
+  .rhead p { margin-top: var(--s1); font: var(--t-body); color: var(--ink-2); }
+  .card { display: block; width: 100%; text-align: left; padding: 0 var(--s4) var(--s5); }
+  .card .pic { width: 100%; height: 220px; border-radius: var(--r-list); }
+  .card b { display: block; margin-top: var(--s3); font: var(--t-head); }
+  .card span { display: block; font: var(--t-body); color: var(--ink-2); }
+  .card .price { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .card.gone .pic img.in { filter: grayscale(1); opacity: .6; }
+  .card.gone .price { color: var(--ink-2); font-weight: 400; }
 
-  /* sheet */
-  .scrim { position: absolute; inset: 0; z-index: 40; background: var(--scrim); opacity: 0; pointer-events: none; transition: opacity .25s ease-out; }
-  .scrim.open { opacity: 1; pointer-events: auto; }
-  .sheet { position: absolute; inset: auto 0 0 0; z-index: 41; max-height: calc(100% - var(--safe-top) - 12px); height: calc(100% - var(--safe-top) - 12px); background: var(--ground); border-radius: 14px 14px 0 0; display: flex; flex-direction: column; transform: translateY(110%); visibility: hidden; }
-  .sheet.open { visibility: visible; }
-  .grab { flex: none; padding: 6px var(--s4) var(--s2); touch-action: none; }
-  .handle { width: 36px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto var(--s2); }
-  .sheethead { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
-  .sheethead h2 { font: var(--t-title); outline: none; }
-  .closebtn { width: var(--tap); height: var(--tap); border-radius: 50%; background: var(--raised); display: grid; place-items: center; font-size: 18px; flex: none; }
-  .sheetbody { flex: 1; overflow-y: auto; padding: var(--s2) var(--s4) var(--s5); overscroll-behavior: contain; }
-  .sheetfoot { flex: none; padding: var(--s3) var(--s4) var(--safe-bottom); border-top: 1px solid var(--line); background: var(--ground); }
-  .sheetfoot .note { font: var(--t-foot); color: var(--ink-2); margin-top: var(--s2); text-align: center; }
-  .staymini { display: flex; gap: var(--s3); align-items: center; padding-bottom: var(--s4); border-bottom: 1px solid var(--line); }
-  .staymini .pic { width: 72px; height: 72px; border-radius: var(--r-btn); flex: none; }
-  .staymini h3 { font: var(--t-head); }
-  .staymini p { font: var(--t-sub); color: var(--ink-2); }
-  .row { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); padding: var(--s3) 0; border-bottom: 1px solid var(--line); min-height: 64px; }
-  .row h3 { font: var(--t-head); }
-  .row p { font: var(--t-sub); color: var(--ink-2); }
-  .stepper { display: flex; align-items: center; gap: var(--s2); }
-  .stepper button { width: var(--tap); height: var(--tap); border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; font-size: 18px; }
-  .stepper button:disabled { opacity: .35; }
-  .stepper output { min-width: 24px; text-align: center; font: var(--t-head); font-variant-numeric: tabular-nums; }
-  .box { background: var(--raised); border-radius: var(--r-group); padding: var(--s4); margin-top: var(--s4); font: var(--t-sub); }
-  .box h3 { font: var(--t-head); margin-bottom: var(--s1); }
-  .done-card { text-align: left; padding: var(--s2) 0 0; }
-  .done-card .tick { width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; font-size: 28px; }
-  .done-card .when { font: var(--t-title); margin-top: var(--s4); }
-  .confirm { margin-top: var(--s4); padding: var(--s4); border-radius: var(--r-group); border: 1px solid var(--negative); }
-  .confirm p { font: var(--t-body); margin-bottom: var(--s3); }
-  .confirm .two { display: grid; gap: var(--s2); }
-  .confirm .redbtn { min-height: 50px; border-radius: var(--r-btn); background: var(--negative); color: #fff; font: var(--t-head); }
-  ::view-transition-old(hero), ::view-transition-new(hero) { height: 100%; object-fit: cover; }
-  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  /* states */
+  .overlay { display: none; position: absolute; inset: 0; z-index: 22; background: var(--ground); }
+  [data-state="loading"] #loading, [data-state="error"] #error { display: block; }
+  .sk { background: var(--raised); border-radius: 8px; }
+  @media (prefers-reduced-motion: no-preference) { [data-state="loading"] .sk { animation: pulse 1.2s ease-in-out infinite alternate; } }
+  @keyframes pulse { to { opacity: .55; } }
+  #error .msg { position: absolute; left: var(--s4); right: var(--s4); top: 280px; text-align: center; }
+  #error .msg > i { font-size: 40px; color: var(--ink-2); }  [data-state="error"] .bar { display: none; }  [data-state="empty"] .bar .l1, [data-state="loading"] .bar .l1 { display: none; }
+  #error h2 { margin: var(--s3) 0 var(--s2); }
+  #error p { font: var(--t-body); color: var(--ink-2); margin-bottom: var(--s5); }
+  #error .back { position: absolute; top: var(--safe-top); left: var(--s3); }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  @media (prefers-reduced-motion: reduce) { *, ::before, ::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 </style>
 </head>
-<body>
+<body class="on-photo">
   <div class="statusbar">
     <span id="clock">10:08</span>
-    <svg viewBox="0 0 66 12" aria-hidden="true">
+    <svg class="ios" viewBox="0 0 66 12" aria-hidden="true">
       <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
       <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
       <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
-      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" stroke="currentColor" style="stroke: var(--chrome)" opacity=".5"/>
       <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
     </svg>
   </div>
 
   <main id="screen">
-    <!-- Results: where Back goes -->
-    <div class="view" id="results" hidden>
-      <div class="scroller">
-        <h1>Stays in Türkiye</h1>
-        <p class="sub" id="searchLine"></p>
-        <div id="cards"></div>
-      </div>
-    </div>
-
-    <!-- Listing -->
-    <div class="view" id="listing">
-      <div class="navbg" aria-hidden="true"><span id="navTitle"></span></div>
-      <div class="topbtns">
-        <button class="circ" id="backBtn" aria-label="Back to stays"><i class="ph ph-caret-left"></i></button>
-        <div>
-          <button class="circ" id="shareBtn" aria-label="Share"><i class="ph ph-export"></i></button>
-          <button class="circ" id="saveBtn" aria-label="Save" aria-pressed="false"><i class="ph ph-heart"></i></button>
+    <!-- LISTING -->
+    <div class="view" id="detail">
+      <div class="scroll" id="scroll">
+        <div class="gallery">
+          <div class="track" id="track" aria-label="Photos of the stay"></div>
+          <button class="count" id="countBtn" aria-label="Show all photos"><i class="ph ph-images" aria-hidden="true"></i><span id="count" class="num">1 / 4</span></button>
         </div>
-      </div>
-      <div class="scroller" id="lscroll">
-        <div class="hero">
-          <div class="gallery" id="gallery" tabindex="0" aria-label="Photos"></div>
-          <div class="count num" id="count" aria-live="off"></div>
-        </div>
-        <p class="offline-note"><i class="ph ph-cloud-slash" aria-hidden="true"></i><span>Offline. Prices from 10:02 today. Reconnect to reserve.</span></p>
-        <div class="pad">
-          <h1 id="title"></h1>
-          <p class="place" id="place"></p>
-          <div class="meta">
-            <span class="rating" id="rating"></span>
-            <span class="hostmini" id="hostMini"></span>
-          </div>
 
-          <section class="why" aria-labelledby="whyH">
-            <h2 id="whyH">Why it’s on Rota</h2>
-            <ul id="why"></ul>
+        <div class="content">
+          <section class="section">
+            <h1 id="title" tabindex="-1">Fairy chimney cave room</h1>
+            <p class="meta">Göreme, Cappadocia<br><b>Sleeps 2</b>, 1 double bed, 1 bathroom</p>
+            <p class="rating"><i class="ph-fill ph-star" aria-hidden="true"></i><span><b class="num">4.92</b>, 38 reviews</span></p>
           </section>
 
-          <section id="datesSec" aria-labelledby="datesH">
-            <div class="sechead"><h2 id="datesH">Your dates</h2><button class="textbtn" id="clearBtn">Clear</button></div>
-            <p class="sub" id="datesLine"></p>
-            <div class="strip" id="strip" role="group" aria-label="Nights, 20 November to 3 December"></div>
+          <section class="section" aria-labelledby="special-h">
+            <h2 id="special-h">What makes it special</h2>
+            <ul class="facts">
+              <li><i class="ph ph-mountains" aria-hidden="true"></i><span>Room carved into a rock chimney, 1870s</span></li>
+              <li><i class="ph ph-sun-horizon" aria-hidden="true"></i><span>Private terrace facing Rose Valley</span></li>
+              <li><i class="ph ph-thermometer-simple" aria-hidden="true"></i><span>Stone walls keep it 18–21 °C all year</span></li>
+              <li><i class="ph ph-coffee" aria-hidden="true"></i><span>Breakfast on the terrace, included</span></li>
+              <li class="warn"><i class="ph ph-warning-circle" aria-hidden="true"></i><span><b>84 stone steps</b> to the door, no step-free access</span></li>
+            </ul>
+            <div class="host">
+              <div class="pic" style="--c:#7d5a48"><img src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=96&h=96&fit=crop&crop=faces&dpr=2" alt="" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()"></div>
+              <p><b>Hosted by Hatice</b>Host since 2019, usually replies within an hour</p>
+            </div>
+          </section>
+
+          <section class="section band" id="nights" aria-labelledby="nights-h">
+            <h2 id="nights-h">Your nights</h2>
+            <div class="inout">
+              <div>Check-in<b id="inLbl">Thu 11 Mar</b></div>
+              <div>Check-out<b id="outLbl">Sun 14 Mar</b></div>
+            </div>
             <p class="hint" id="hint" aria-live="polite"></p>
+            <div class="strip" id="strip" role="group" aria-label="Nights in March, with price per night"></div>
+            <div class="soldout" id="soldout">
+              <b>11–14 Mar is fully booked.</b><br>
+              <span class="num">18–21 Mar is free, <span id="altTotal">€550</span> in total.</span><br>
+              <button class="link" id="altBtn" style="padding:0">Choose 18–21 Mar</button>
+            </div>
+            <div class="breakdown" id="breakdown"></div>
+            <p class="terms" id="terms"></p>
+            <p class="booked-note" id="bookedNote"></p>
           </section>
 
-          <section id="priceSec" aria-labelledby="priceH">
-            <h2 id="priceH">Price for your dates</h2>
-            <dl class="lines" id="lines"></dl>
+          <section class="section" aria-labelledby="where-h">
+            <h2 id="where-h">Where you’ll be</h2>
+            <div class="map" role="img" aria-label="Map of Göreme with the approximate area of the stay"><div id="map"></div></div>
+            <p class="where">Göreme, Nevşehir, about 600 m from the village centre<small>Exact address after booking</small></p>
           </section>
 
-          <section aria-labelledby="knowH">
-            <h2 id="knowH">Good to know</h2>
-            <ul class="rows" id="know"></ul>
+          <section class="section" aria-labelledby="rev-h">
+            <h2 id="rev-h"><span class="num">4.92</span> from 38 reviews</h2>
+            <div class="review"><small><b>Elif</b>, October 2026</small><p>Cool inside even in August. The steps are steep with luggage, as the listing says.</p></div>
+            <div class="review"><small><b>Marek</b>, September 2026</small><p>Quiet room, good breakfast, terrace faces the valley.</p></div>
           </section>
 
-          <section aria-labelledby="roomH">
-            <h2 id="roomH">The room</h2>
-            <ul class="rows" id="room"></ul>
-          </section>
-
-          <section>
-            <div class="hostcard" id="hostCard"></div>
-          </section>
-
-          <section aria-labelledby="whereH">
-            <h2 id="whereH">Where you’ll stay</h2>
-            <div id="map" role="img"></div>
-            <p class="sub" id="whereLine" style="margin-top:8px"></p>
-          </section>
-
-          <section aria-labelledby="cancelH">
-            <h2 id="cancelH">Cancellation</h2>
-            <p class="cancel" id="cancel"></p>
-          </section>
-
-          <p class="credit">Photos: Unsplash. Prices in euros.</p>
+          <p class="credit">Photos: Unsplash. Map: OpenFreeMap, OpenStreetMap contributors.</p>
+          <div class="endpad"></div>
         </div>
       </div>
 
-      <div class="bar" id="bar">
-        <button class="sum" id="sumBtn">
-          <span class="big"><span id="total" class="num"></span><small id="totalSmall"></small></span>
-          <span class="line2" id="line2"></span>
-        </button>
-        <button class="primary" id="reserveBtn">Reserve</button>
-      </div>
+      <header class="topbar" id="topbar">
+        <button class="round" id="backBtn" aria-label="Back to Göreme stays"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
+        <div class="mid"><span class="wordmark">Rota</span><span class="bartitle">Fairy chimney cave room</span></div>
+        <div class="right">
+          <button class="round" id="shareBtn" aria-label="Share"><i class="ph ph-share-network" aria-hidden="true"></i></button>
+          <button class="round" id="saveBtn" aria-label="Save" aria-pressed="false"><i class="ph ph-heart" aria-hidden="true"></i></button>
+        </div>
+      </header>
 
-      <div class="skeleton" aria-label="Loading stay" role="status">
-        <div class="b" style="height:300px;margin:0 0 16px;border-radius:0"></div>
-        <div class="b" style="height:30px;width:78%"></div>
-        <div class="b" style="height:18px;width:44%"></div>
-        <div class="b" style="height:170px;margin-top:24px;border-radius:12px"></div>
-        <div class="b" style="height:84px;width:60%;margin-top:24px"></div>
+      <div class="offline" role="status"><i class="ph ph-wifi-slash" aria-hidden="true"></i><span>Offline. Prices are from 14:05 and may have changed.</span></div>
+
+      <div class="overlay" id="loading" aria-label="Loading stay" role="status">
+        <div class="sk" style="height:264px;border-radius:0"></div>
+        <div style="padding:16px">
+          <div class="sk" style="height:34px;width:80%"></div>
+          <div class="sk" style="height:34px;width:50%;margin-top:8px"></div>
+          <div class="sk" style="height:17px;width:60%;margin-top:16px"></div>
+          <div class="sk" style="height:48px;width:100%;margin-top:32px"></div>
+          <div class="sk" style="height:48px;width:100%;margin-top:8px"></div>
+          <div class="sk" style="height:48px;width:100%;margin-top:8px"></div>
+        </div>
       </div>
-      <div class="errorview" role="alert">
-        <div class="in">
-          <i class="ph ph-warning-circle" aria-hidden="true"></i>
+      <div class="overlay" id="error" role="alert">
+        <button class="round back" aria-label="Back to Göreme stays" data-back><i class="ph ph-caret-left" aria-hidden="true"></i></button>
+        <div class="msg">
+          <i class="ph ph-cloud-slash" aria-hidden="true"></i>
           <h2>This stay didn’t load</h2>
-          <p>The connection dropped before the prices arrived.</p>
-          <button class="primary" id="retryBtn">Try again</button>
+          <p>The connection dropped before the prices arrived. Nothing was booked.</p>
+          <button class="primary" id="retryBtn"><i class="ph ph-arrow-clockwise" aria-hidden="true"></i>Try again</button>
         </div>
       </div>
+
+      <footer class="bar" id="bar">
+        <div class="flood" id="flood"></div>
+        <div class="sum pre">
+          <div class="l1"><span class="total-fig" id="totalFig">€550</span><span>total</span></div>
+          <button class="l2 num" id="datesBtn" aria-label="Change dates"></button>
+          <div class="l3" id="feesLine"></div>
+        </div>
+        <div class="sum bk" aria-live="polite">
+          <b><i class="ph-fill ph-check-circle" aria-hidden="true"></i>Booked</b>
+          <div class="l2 num" id="bkLine"></div>
+          <div class="l3">Confirmation RT-4K82Q</div>
+        </div>
+        <button class="primary" id="reserveBtn">Reserve</button>
+      </footer>
     </div>
 
-    <div class="scrim" id="scrim"></div>
-    <section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetH" inert>
-      <div class="grab" id="grab">
-        <div class="handle"></div>
-        <div class="sheethead"><h2 id="sheetH" tabindex="-1">Review and pay</h2>
-          <button class="closebtn" id="closeBtn" aria-label="Close"><i class="ph ph-x"></i></button></div>
+    <!-- RESULTS (the view Back returns to) -->
+    <div class="view" id="results" hidden>
+      <div class="scroll">
+        <div class="rhead">
+          <div class="brand">Rota</div>
+          <h1 id="resultsH" tabindex="-1">Göreme</h1>
+          <p class="num" id="resultsSub">11–14 Mar, 2 guests</p>
+        </div>
+        <button class="card" id="openCard">
+          <div class="pic" style="--c:#a77d5c"><img id="cardImg" src="https://images.unsplash.com/photo-1631724533937-687e6e60aafe?w=800&q=80&auto=format&fit=crop" alt="" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()"></div>
+          <b>Fairy chimney cave room</b>
+          <span>Göreme, sleeps 2</span>
+          <span class="price" id="cardPrice">€550 total, fees included</span>
+        </button>
+        <div class="card gone" aria-label="Village house with garden, Ortahisar, sold out for these dates">
+          <div class="pic" style="--c:#4a3a35"><img src="https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80&auto=format&fit=crop" alt="" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()"></div>
+          <b>Village house with garden</b>
+          <span>Ortahisar, sleeps 4</span>
+          <span class="price">Sold out for these dates</span>
+        </div>
+        <div style="height:40px"></div>
       </div>
-      <div class="sheetbody" id="sheetBody"></div>
-      <div class="sheetfoot" id="sheetFoot"></div>
-    </section>
-    <p class="sr" id="live" aria-live="polite"></p>
+    </div>
   </main>
 
+  <div class="scrim" id="scrim"></div>
+
+  <section class="sheet" id="review" role="dialog" aria-modal="true" aria-labelledby="reviewH" inert>
+    <div class="grab" aria-hidden="true"></div>
+    <header><h2 id="reviewH" tabindex="-1">Review and pay</h2><button class="icon" data-close aria-label="Close"><i class="ph ph-x" aria-hidden="true"></i></button></header>
+    <div class="body">
+      <div class="mini">
+        <div class="pic" style="--c:#a77d5c"><img src="https://images.unsplash.com/photo-1631724533937-687e6e60aafe?w=160&q=80&auto=format&fit=crop" alt="" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()"></div>
+        <div><b>Fairy chimney cave room</b><span>Göreme, Cappadocia</span></div>
+      </div>
+      <div class="field"><div>Dates<small class="num" id="sDates"></small></div><button class="link" id="changeBtn" aria-expanded="false" aria-controls="sBand">Change</button></div>
+      <div class="band" id="sBand" hidden>
+        <p class="hint" id="sHint"></p>
+        <div class="strip" id="sStrip" role="group" aria-label="Nights in March, with price per night"></div>
+      </div>
+      <div class="field"><div>Guests<small>2 adults, the most this room sleeps</small></div></div>
+      <h3>Price</h3>
+      <div id="sRows"></div>
+      <h3>Cancellation</h3>
+      <p class="terms" id="sTerms" style="margin-top:0"></p>
+      <div class="field" style="border-bottom:0"><div>Pay with<small>Visa ending 4417</small></div></div>
+    </div>
+    <div class="foot">
+      <button class="primary" id="payBtn"></button>
+      <p id="payNote">Charged now to Visa ending 4417</p>
+    </div>
+  </section>
+
+  <section class="sheet photos" id="photos" role="dialog" aria-modal="true" aria-labelledby="photosH" inert>
+    <div class="grab" aria-hidden="true"></div>
+    <header><h2 id="photosH" tabindex="-1">4 photos</h2><button class="icon" data-close aria-label="Close"><i class="ph ph-x" aria-hidden="true"></i></button></header>
+    <div class="body" id="photoList"></div>
+  </section>
+
+  <div class="sr" aria-live="polite" id="live"></div>
   <div class="home-indicator"></div>
 
-<script>/* motion-kit.js (mobile-ui-craft 5.0). Zero dependencies. Inline it in one <script> of the prototype; it defines window.MK.
-   Everything that should be filmable runs on WAAPI or view transitions, which scripts/capture.mjs `film:` slows down.
-   requestAnimationFrame is used only for MK.tilt smoothing (pointer-driven, not filmed); never build a filmed move on it.
-   Springs are CSS linear() easings generated at mass 1; the tokens are the Material 3 Expressive stiffness/damping pairs. */
+<script>
+/* motion-kit.js (mobile-ui-craft 5.0), inlined */
 (() => {
-  const MK = (window.MK = { out: 'cubic-bezier(.2,.8,.2,1)' }); // out: for fades and menus, never for springs
+  const MK = (window.MK = { out: 'cubic-bezier(.2,.8,.2,1)' });
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   MK.reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  // Spring as a linear() easing: stiffness k, damping ratio zeta (<= 1). ms is the time to settle within 0.2%.
   MK.spring = (k, zeta, pts = 36) => {
     const w0 = Math.sqrt(k), wd = w0 * Math.sqrt(Math.max(1e-6, 1 - zeta * zeta));
     const x = zeta < 1
@@ -382,18 +432,13 @@
     v[pts] = 1;
     return { easing: `linear(${v.join(', ')})`, ms: Math.round(T * 1000) };
   };
-  // spatial moves things and may overshoot; effects (opacity, colour) must not overshoot
   MK.ease = { spatial: MK.spring(380, 0.8), fast: MK.spring(800, 0.6), slow: MK.spring(200, 0.8), effects: MK.spring(1600, 1) };
-
-  // Shared-element and state morphs. Give the two ends the same view-transition-name (unique, set only while morphing).
   let vtStyle;
   MK.morph = (update, opts = {}) => {
     if (!document.startViewTransition || document.visibilityState !== 'visible') return Promise.resolve(update()).then(() => {});
     if (!vtStyle) {
       const e = MK.ease.spatial;
       vtStyle = document.head.appendChild(document.createElement('style'));
-      // under Reduce Motion the named groups jump and only the page crossfades.
-      // The page fades out before the new one fades in: a simultaneous crossfade shows old and new text on top of each other.
       vtStyle.textContent = `::view-transition-group(*){animation-duration:${e.ms}ms;animation-timing-function:${e.easing}}
 ::view-transition-group(root){animation-duration:200ms;animation-timing-function:ease-out}
 ::view-transition-old(root){animation:mk-vt-out 90ms ease-out both}::view-transition-new(root){animation:mk-vt-in 150ms 60ms ease-out both}
@@ -402,22 +447,19 @@
     }
     const typed = opts.types && window.ViewTransition && 'types' in ViewTransition.prototype;
     const vt = typed ? document.startViewTransition({ update, types: opts.types }) : document.startViewTransition(update);
-    vt.ready.catch(() => {}); // a skipped transition rejects ready; the update still ran, so finished is what we return
+    vt.ready.catch(() => {});
     return vt.finished;
   };
-
-  // Commit the on-screen transform and stop animations, so a grab or a new move starts from where the element is.
   MK.freeze = (el) => {
-    const t = getComputedStyle(el).transform;
+    const cs = getComputedStyle(el), t = cs.transform, tr = cs.translate, sc = cs.scale;
     el.getAnimations().forEach((a) => a.cancel());
     el.style.transform = t === 'none' ? '' : t;
+    el.style.translate = tr === 'none' ? '' : tr;
+    el.style.scale = sc === 'none' ? '' : sc;
   };
-
-  // FLIP for one element or an array. Uses the translate/scale properties, so it composes with the element's own transform.
-  // Scaling distorts children and radii: flip boxes, or use MK.morph for rich content.
   MK.flip = (targets, mutate, ease = MK.ease.spatial) => {
     const els = [].concat(targets), red = MK.reduced();
-    const first = els.map((e) => e.getBoundingClientRect()); // measured while any earlier flip is still in flight
+    const first = els.map((e) => e.getBoundingClientRect());
     els.forEach((e) => e.getAnimations().filter((a) => a.id === 'mk-flip').forEach((a) => a.cancel()));
     mutate();
     return Promise.all(els.map((e, i) => {
@@ -431,9 +473,6 @@
       return an.finished.catch(() => {});
     })).then(() => {});
   };
-
-  // Pointer drag with capture. Velocity (px/ms) comes from the last ~80 ms of movement. Returns a disposer.
-  // axis 'x' or 'y' locks the other axis and leaves that scroll direction to the browser.
   MK.drag = (el, { axis, onStart, onMove, onEnd } = {}) => {
     el.style.touchAction = axis === 'x' ? 'pan-y' : axis === 'y' ? 'pan-x' : 'none';
     let id = null, x0 = 0, y0 = 0, pts = [];
@@ -445,11 +484,7 @@
       try { el.setPointerCapture(id); } catch { /* synthetic events have no active pointer */ }
       onStart?.(e);
     };
-    const move = (e) => {
-      if (e.pointerId !== id) return;
-      pts.push([e.timeStamp, e.clientX, e.clientY]);
-      onMove?.(d(e).dx, d(e).dy, e);
-    };
+    const move = (e) => { if (e.pointerId !== id) return; pts.push([e.timeStamp, e.clientX, e.clientY]); onMove?.(d(e).dx, d(e).dy, e); };
     const up = (e) => {
       if (e.pointerId !== id) return;
       id = null;
@@ -461,11 +496,8 @@
     ev.forEach(([n, f]) => el.addEventListener(n, f));
     return () => ev.forEach(([n, f]) => el.removeEventListener(n, f));
   };
-
-  // Spring on x, y (px), r (deg), s (scale), seeded with the release velocity v (units per ms). The spring is simulated
-  // into WAAPI keyframes, so the move is a normal Animation: cancel it (or MK.freeze) to grab it mid-flight.
   MK.fling = (el, { from = {}, to = {}, v = {}, k = 380, zeta = 0.8 } = {}) => {
-    if (MK.reduced()) { k = 1600; zeta = 1; v = {}; } // no overshoot, no carried momentum
+    if (MK.reduced()) { k = 1600; zeta = 1; v = {}; }
     const base = { x: 0, y: 0, r: 0, s: 1 }, tol = { x: 0.3, y: 0.3, r: 0.05, s: 0.002 };
     const A = { ...base, ...from }, B = { ...base, ...to }, c = 2 * zeta * Math.sqrt(k), dt = 1 / 240, keys = Object.keys(base);
     const p = { ...A }, w = Object.fromEntries(keys.map((q) => [q, (v[q] || 0) * 1000]));
@@ -481,59 +513,17 @@
     const end = css();
     frames.push({ transform: end });
     const an = el.animate(frames, { duration: (frames.length * 1000) / 60, easing: 'linear', fill: 'forwards' });
-    an.finished.then(() => { el.style.transform = end; an.cancel(); }, () => {}); // a cancelled fling leaves the transform alone
+    an.finished.then(() => { el.style.transform = end; an.cancel(); }, () => {});
     return an;
   };
-
-  // Perspective tilt that follows the pointer, low-pass smoothed (rAF, see header), spring back on leave.
-  // It owns el.style.transform: tilt an inner element if the outer one is thrown. Sets --mx/--my (0-100%) for a highlight.
-  // Returns a disposer.
-  MK.tilt = (el, { max = 10 } = {}) => {
-    let tx = 0, ty = 0, cx = 0, cy = 0, raf = 0;
-    const pose = () => `perspective(700px) rotateX(${-cy * max}deg) rotateY(${cx * max}deg)`;
-    const step = () => {
-      cx += (tx - cx) * 0.15; cy += (ty - cy) * 0.15;
-      el.style.transform = pose();
-      el.style.setProperty('--mx', `${50 + cx * 50}%`); el.style.setProperty('--my', `${50 + cy * 50}%`);
-      raf = Math.abs(tx - cx) + Math.abs(ty - cy) > 0.002 ? requestAnimationFrame(step) : 0;
-    };
-    const aim = (x, y) => { if (MK.reduced()) return; tx = clamp(x, -1, 1); ty = clamp(y, -1, 1); raf = raf || requestAnimationFrame(step); };
-    const move = (e) => { const r = el.getBoundingClientRect(); aim(((e.clientX - r.left) / r.width) * 2 - 1, ((e.clientY - r.top) / r.height) * 2 - 1); };
-    const leave = () => {
-      cancelAnimationFrame(raf); raf = 0;
-      const e = MK.ease.fast, from = pose(), cx0 = cx, cy0 = cy;
-      tx = ty = cx = cy = 0;
-      el.style.transform = '';
-      el.style.setProperty('--mx', '50%'); el.style.setProperty('--my', '50%');
-      if (!MK.reduced() && Math.abs(cx0) + Math.abs(cy0) > 0.01) el.animate([{ transform: from }, { transform: pose() }], { duration: e.ms, easing: e.easing });
-    };
-    const ev = [['pointermove', move], ['pointerleave', leave], ['pointerup', leave], ['pointercancel', leave]];
-    ev.forEach(([n, f]) => el.addEventListener(n, f));
-    el._mkAim = aim;
-    return () => { leave(); ev.forEach(([n, f]) => el.removeEventListener(n, f)); delete el._mkAim; };
-  };
-  // Gyro tilt for el, started by a tap on button (iOS asks for permission inside a user gesture; needs HTTPS, so file:// gets nothing).
-  MK.tilt.gyro = (button, el, opts) => {
-    const on = (e) => el._mkAim((e.gamma || 0) / 30, ((e.beta || 0) - 45) / 30);
-    const click = async () => {
-      const D = window.DeviceOrientationEvent;
-      if (!D || MK.reduced() || (typeof D.requestPermission === 'function' && (await D.requestPermission()) !== 'granted')) return;
-      if (!el._mkAim) MK.tilt(el, opts);
-      addEventListener('deviceorientation', on);
-    };
-    button.addEventListener('click', click);
-    return () => { button.removeEventListener('click', click); removeEventListener('deviceorientation', on); };
-  };
-
-  // Digit roll for a figure in tabular numerals: only the digits that changed slide. text is the whole formatted string.
-  // A different length rebuilds the figure with a fade. The element gets role=img and aria-label = text.
   MK.roll = (el, text) => {
     text = String(text);
     el.setAttribute('role', 'img'); el.setAttribute('aria-label', text);
     if (el.dataset.mkText === text) return;
     const red = MK.reduced(), e = MK.ease.fast;
-    if (el.dataset.mkLen !== String(text.length)) {
-      el.dataset.mkLen = text.length;
+    const shape = text.replace(/\d/g, '0');
+    if (el.dataset.mkLen !== shape) {
+      el.dataset.mkLen = shape;
       el.style.cssText += ';display:inline-flex;height:1em;line-height:1;overflow:hidden;font-variant-numeric:tabular-nums';
       el.innerHTML = [...text].map((ch) => /\d/.test(ch)
         ? '<span aria-hidden="true" style="display:block;height:1em;overflow:hidden"><span class="mk-col" style="display:flex;flex-direction:column">'
@@ -544,7 +534,7 @@
     }
     let k = 0;
     el.querySelectorAll('.mk-col').forEach((col) => {
-      while (!/\d/.test(text[k])) k++;
+      while (k < text.length && !/\d/.test(text[k])) k++;
       const to = +text[k++], from = +col.dataset.d, at = (n) => `translateY(${-n}em)`;
       col.style.transform = at(to); col.dataset.d = to;
       if (from !== to && !red && el.dataset.mkText !== undefined) col.animate([{ transform: at(from) }, { transform: at(to) }], { duration: e.ms, easing: e.easing });
@@ -552,414 +542,280 @@
     if (red && el.dataset.mkText !== undefined) el.animate([{ opacity: 0.4 }, { opacity: 1 }], { duration: 150, easing: MK.out });
     el.dataset.mkText = text;
   };
-
-  // navigator.vibrate patterns. iOS Safari has no vibrate: this is a silent no-op there, so never rely on it alone.
   const PATTERNS = { selection: 6, light: 10, medium: 20, success: [10, 40, 10], warning: [20, 60, 20], error: [30, 50, 30, 50, 30] };
   MK.haptic = (kind = 'light') => { try { navigator.vibrate?.(PATTERNS[kind] ?? 10); } catch { /* blocked before a user gesture */ } };
 })();
 </script>
-<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.9.0/dist/maplibre-gl.js"></script>
+
 <script>
 document.getElementById('clock').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, '');
-document.documentElement.style.setProperty('--spring', MK.ease.spatial.easing);
-document.documentElement.style.setProperty('--spring-ms', MK.ease.spatial.ms + 'ms');
+const $ = (id) => document.getElementById(id);
+document.documentElement.style.setProperty('--sp-ms', MK.ease.spatial.ms + 'ms');
+document.documentElement.style.setProperty('--sp-ease', MK.ease.spatial.easing);
 
-const $ = (s) => document.querySelector(s);
-const U = (id, w = 800, h) => `https://images.unsplash.com/photo-${id}?w=${w}${h ? `&h=${h}` : ''}&q=80&auto=format&fit=crop&dpr=2`;
-const img = (p, w, h, extra = '') => `<div class="pic" style="--c:${p.c}"><img src="${U(p.id, w, h)}${extra}" alt="${p.alt || ''}" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()"></div>`;
-const money = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
-const eur = (n) => money.format(n);
-const dDay = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
-const dWd = new Intl.DateTimeFormat('en-GB', { weekday: 'short' });
-const dShort = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
-
-// sample data: realistic to test layout, not real listings
-const N = 14, night = (i) => new Date(2026, 10, 20 + i); // 14 nights from Fri 20 Nov 2026
-const STAYS = {
-  cave: {
-    id: 'cave', title: 'Fairy chimney cave room', place: 'Göreme, Nevşehir, Türkiye', short: 'Göreme, Cappadocia', town: 'Göreme',
-    rating: '4.91', reviews: 63, sleeps: 2,
-    photos: [
-      { id: '1631724533937-687e6e60aafe', c: '#b48a66', alt: 'Terrace of the cave house' },
-      { id: '1565694286329-16c31ae20a20', c: '#c19a74', alt: 'Rock cone with carved windows' },
-      { id: '1604156789095-3348604c0f43', c: '#9a8f8c', alt: 'Balloons over the valley' },
-      { id: '1559783510-c448bd7d686b', c: '#a58d70', alt: 'Göreme valley' },
-    ],
-    why: ['Room carved into a rock cone', 'Private terrace over Göreme valley', 'Balloon launch field 2 km away'],
-    know: [['42 stone steps to the door', 'No step-free access'], ['Shower room is 3 steps down', ''], ['No air conditioning', 'Rock walls stay around 18 °C']],
-    room: [['Sleeps 2', ''], ['1 double bed', ''], ['1 shower room', 'Private, inside the room']],
-    host: { name: 'Selin', since: 2019, line: 'Replies within a few hours', p: { id: '1573497019940-1c28c88b4f3e', c: '#7d6656' } },
-    rates: { wd: 104, fri: 132, sat: 138, sun: 112 }, cleaning: 20, booked: [5, 6],
-    center: [34.8297, 38.6431], where: 'Göreme town centre. Exact address after booking.',
-  },
-  gulet: {
-    id: 'gulet', title: 'Cabin on a 1978 wooden gulet', place: 'Bodrum, Muğla, Türkiye', short: 'Bodrum harbour', town: 'Bodrum',
-    rating: null, reviews: 0, sleeps: 2,
-    photos: [
-      { id: '1591078314943-85c674b3789b', c: '#4f7d95', alt: 'Gulets in Bodrum harbour' },
-      { id: '1595346471863-829e3fc915a1', c: '#6b8ea6', alt: 'Harbour town' },
-      { id: '1600194795031-e8c60926db4f', c: '#2f7f8c', alt: 'Boats from above' },
-      { id: '1583061386694-e364c84ba31d', c: '#5a89a4', alt: 'Bay and town' },
-    ],
-    why: ['Wooden gulet built in 1978', 'Moored in Bodrum harbour', 'Breakfast on deck'],
-    know: [['Boarding by gangway', 'No step-free access'], ['Shower is shared, on deck', 'Two cabins share it'], ['Engine noise on Saturdays', 'The boat refuels 08:00 to 09:00']],
-    room: [['Sleeps 2', ''], ['1 double berth', '1.9 m long'], ['Shared shower', '']],
-    host: { name: 'Murat', since: 2023, line: 'Replies within a day', p: { id: '1522556189639-b150ed9c4330', c: '#6f6052' } },
-    rates: { wd: 86, fri: 98, sat: 98, sun: 90 }, cleaning: 15, booked: [1],
-    center: [27.4265, 37.0344], where: 'Bodrum harbour. Exact berth after booking.',
-  },
-};
-
-const S = { stay: 'cave', sel: { s: 0, e: 3 }, anchor: null, guests: 2, saved: {}, booking: {}, sheet: null, panel: 'review', confirmCancel: false, paying: false, view: 'listing' };
-const stay = () => STAYS[S.stay];
-const priceOf = (st, i) => { const d = night(i).getDay(); return d === 5 ? st.rates.fri : d === 6 ? st.rates.sat : d === 0 ? st.rates.sun : st.rates.wd; };
-const free = (st, s, e) => st.booked.every((b) => b < s || b >= e);
-const fromPrice = (st) => Math.min(...Object.values(st.rates));
-const range = (sel) => dShort.formatRange(night(sel.s), night(sel.e));
-const nightsTxt = (n) => `${n} night${n === 1 ? '' : 's'}`;
-
-function quote(st, sel) {
-  if (!sel || !free(st, sel.s, sel.e)) return null;
-  const lines = [];
-  for (let i = sel.s; i < sel.e; i++) lines.push({ label: dDay.format(night(i)), amt: priceOf(st, i) });
-  const nights = lines.reduce((a, l) => a + l.amt, 0), fee = Math.round(nights * 0.1), total = nights + st.cleaning + fee;
-  console.assert(total === lines.reduce((a, l) => a + l.amt, 0) + st.cleaning + fee, 'total must equal the visible lines');
-  return { lines, nights, fee, cleaning: st.cleaning, total, n: lines.length };
-}
-// free cancellation ends 5 days before check-in at 12:00 local time (UTC+3)
-// shortcut: assumes check-in is more than 5 days away, true for this fixed strip; real data needs a "non-refundable" branch
-const deadline = (sel) => new Date(2026, 10, 20 + sel.s - 5);
-
-/* ---------- render ---------- */
-// The strip is built once per stay and then only repainted, so the chosen nights can lift with a spring.
-function paintStrip(el, st, booked) {
-  if (el.dataset.stay !== st.id) {
-    el.dataset.stay = st.id; let h = '';
-    for (let i = 0; i < N; i++) {
-      const d = night(i), isB = st.booked.includes(i);
-      h += `<button class="night" data-i="${i}" aria-label="${dDay.format(d)}, ${isB ? 'booked' : eur(priceOf(st, i))}" ${isB ? 'aria-disabled="true" data-booked' : ''}>
-        <span class="wd">${dWd.format(d)}</span><span class="dn">${d.getDate()}</span><span class="pr">${isB ? 'Booked' : eur(priceOf(st, i))}</span></button>`;
-    }
-    el.innerHTML = h;
-  }
-  const ok = !booked && quote(st, S.sel);
-  [...el.children].forEach((b, i) => {
-    const on = !!ok && i >= S.sel.s && i < S.sel.e, mine = !!booked && i >= booked.s && i < booked.e;
-    b.classList.toggle('on', on); b.classList.toggle('mine', mine); b.classList.toggle('locked', !!booked);
-    b.setAttribute('aria-pressed', on || mine);
-    if (booked || st.booked.includes(i)) b.setAttribute('aria-disabled', 'true'); else b.removeAttribute('aria-disabled');
-  });
-}
-function linesHTML(q) {
-  return q.lines.map((l) => `<div class="night-line"><dt>${l.label}</dt><dd>${eur(l.amt)}</dd></div>`).join('')
-    + `<div><dt>Cleaning fee</dt><dd>${eur(q.cleaning)}</dd></div>`
-    + `<div><dt>Rota service fee</dt><dd>${eur(q.fee)}</dd></div>`
-    + `<div><dt>Accommodation tax</dt><dd>Included</dd></div>`
-    + `<div class="total"><dt>Total</dt><dd>${eur(q.total)}</dd></div>`;
-}
-function cancelHTML(st, sel, q) {
-  if (!q) return `Free cancellation until 5 days before check-in, 12:00 ${st.town} time (UTC+3). After that, the first night is not refunded.`;
-  return `Free cancellation until <b>${dDay.format(deadline(sel))}, 12:00</b> ${st.town} time (UTC+3). After that, <b>${eur(q.lines[0].amt)}</b>, the first night, is not refunded.`;
-}
-
-function renderListing() {
-  const st = stay();
-  $('#title').textContent = st.title; $('#navTitle').textContent = st.title;
-  $('#place').textContent = st.place;
-  $('#rating').innerHTML = st.rating
-    ? `<i class="ph-fill ph-star" aria-hidden="true"></i><b class="num">${st.rating}</b><span>(${st.reviews} reviews)</span>`
-    : `<span>No reviews yet</span>`;
-  $('#hostMini').innerHTML = `${img(st.host.p, 64, 64, '&crop=faces')}<span>Host ${st.host.name}</span>`;
-  $('#gallery').innerHTML = st.photos.map((p) => img(p, 600, 460)).join('');
-  $('#gallery').scrollLeft = 0; updateCount();
-  $('#why').innerHTML = st.why.map((t) => `<li>${t}</li>`).join('');
-  $('#know').innerHTML = st.know.map(([a, b]) => `<li>${a}${b ? `<small>${b}</small>` : ''}</li>`).join('');
-  $('#room').innerHTML = st.room.map(([a, b]) => `<li>${a}${b ? `<small>${b}</small>` : ''}</li>`).join('');
-  $('#hostCard').innerHTML = `${img(st.host.p, 128, 128, '&crop=faces')}<div><h2>Hosted by ${st.host.name}</h2><p>Hosting on Rota since ${st.host.since}</p><p>${st.host.line}</p></div>`;
-  $('#whereLine').textContent = st.where;
-  $('#map').setAttribute('aria-label', `Map of ${st.short}, approximate area`);
-  $('#saveBtn').setAttribute('aria-pressed', !!S.saved[st.id]);
-  $('#saveBtn').innerHTML = `<i class="${S.saved[st.id] ? 'ph-fill' : 'ph'} ph-heart"></i>`;
-  moveMap();
-  update();
-}
-
-function update() {
-  const st = stay(), bk = S.booking[st.id], q = quote(st, S.sel);
-  paintStrip($('#strip'), st, bk);
-  $('#clearBtn').hidden = !!bk || !S.sel;
-  $('#datesLine').textContent = bk ? `Booked, ${range(bk)}. Cancel from your booking to change dates.`
-    : q ? `${range(S.sel)}, ${nightsTxt(q.n)}` : S.sel ? `Not available ${range(S.sel)}. Pick other nights.` : 'Add your dates';
-  $('#hint').textContent = bk ? '' : S.anchor !== null ? 'Now tap your last night' : '';
-  $('#lines').innerHTML = bk ? linesHTML(bk.q) : q ? linesHTML(q) : `<div><dt>From</dt><dd>${eur(fromPrice(st))} a night</dd></div>`;
-  $('#priceH').textContent = bk ? 'What you paid' : 'Price for your dates';
-  $('#cancel').innerHTML = cancelHTML(st, bk || S.sel, bk ? bk.q : q);
-  renderBar(st, q, bk);
-  if (S.sheet) renderSheet();
-}
-
-let receiptTimer = 0;
-function renderBar(st, q, bk) {
-  const offline = document.documentElement.dataset.state === 'offline';
-  const total = $('#total'), small = $('#totalSmall'), l2 = $('#line2'), btn = $('#reserveBtn');
-  if (bk) {
-    MK.roll(total, eur(bk.q.total)); small.textContent = 'paid';
-    l2.textContent = `Booked, ${range(bk)}`; btn.textContent = 'View booking'; btn.disabled = false;
-  } else if (q) {
-    MK.roll(total, eur(q.total)); small.textContent = 'total incl. fees';
-    l2.textContent = offline ? 'Offline. Reconnect to reserve' : `${range(S.sel)}, ${nightsTxt(q.n)}`;
-    btn.textContent = 'Reserve'; btn.disabled = offline;
-  } else {
-    MK.roll(total, eur(fromPrice(st))); small.textContent = 'a night';
-    l2.textContent = offline ? 'Offline. Reconnect to reserve' : S.sel ? 'Not available on your dates' : 'Add dates for the total'; btn.textContent = 'Choose dates'; btn.disabled = false;
-  }
-  if (!receiptTimer) l2.classList.remove('receipt');
-  $('#sumBtn').setAttribute('aria-label', `${total.getAttribute('aria-label')} ${small.textContent}, ${l2.textContent}. Show price details`);
-}
-function receipt(text) {
-  const l2 = $('#line2'); l2.textContent = text; l2.classList.add('receipt'); $('#live').textContent = text;
-  clearTimeout(receiptTimer);
-  receiptTimer = setTimeout(() => { receiptTimer = 0; update(); }, 2600);
-}
-
-/* ---------- dates: the signature (chosen nights lift, the docked total rolls) ---------- */
-function pick(i) {
-  const st = stay();
-  if (S.booking[st.id]) return;
-  if (st.booked.includes(i)) { MK.haptic('warning'); receipt(`${dDay.format(night(i))} is booked`); return; }
-  if (S.anchor !== null && i >= S.anchor && free(st, S.anchor, i + 1)) { S.sel = { s: S.anchor, e: i + 1 }; S.anchor = null; }
-  else { S.sel = { s: i, e: i + 1 }; S.anchor = i; }
-  MK.haptic('selection');
-  update();
-  $('#live').textContent = `${range(S.sel)}, total ${eur(quote(st, S.sel).total)}`;
-}
-document.addEventListener('click', (e) => {
-  const n = e.target.closest('.night');
-  if (n && !n.closest('.locked')) pick(+n.dataset.i);
+/* ---- data (sample: prices, fees, ratings and the host are placeholders) ---- */
+const PHOTOS = [
+  { id: '1631724533937-687e6e60aafe', c: '#a77d5c', cap: 'Terrace' },
+  { id: '1565694286329-16c31ae20a20', c: '#c49a74', cap: 'The chimney the room is carved into' },
+  { id: '1559783510-c448bd7d686b', c: '#b7a08a', cap: 'View from the terrace' },
+  { id: '1633040243823-6bf8d4edb0ec', c: '#8c5a3a', cap: 'Breakfast, included' },
+];
+const eur = new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+const fmtDay = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+const fmtWk = new Intl.DateTimeFormat('en-GB', { weekday: 'short' });
+const fmtLong = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+const FIRST = new Date(2027, 2, 11); // Thu 11 Mar 2027
+const NIGHTS = Array.from({ length: 14 }, (_, i) => {
+  const d = new Date(FIRST); d.setDate(d.getDate() + i);
+  const wd = d.getDay();
+  return { d, price: wd === 5 ? 164 : wd === 6 ? 172 : 138 };
 });
-$('#clearBtn').onclick = () => { S.sel = null; S.anchor = null; update(); $('#live').textContent = 'Dates cleared'; };
+const CLEANING = 20, SERVICE = 0.10, TAX = 0.02, BOOKED_ALWAYS = [5]; // Tue 16 Mar already taken
 
-/* ---------- photos ---------- */
-function updateCount() {
-  const g = $('#gallery'), n = stay().photos.length, k = Math.round(g.scrollLeft / (g.clientWidth || 1)) + 1;
-  $('#count').textContent = `${Math.min(k, n)} / ${n}`;
+const S = { start: 0, end: 2, picking: false, booked: false, saved: false, state: 'content' };
+const bookedSet = () => new Set(S.state === 'empty' ? [...BOOKED_ALWAYS, 0, 1, 2, 3] : BOOKED_ALWAYS);
+const plusDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+function quote(start = S.start, end = S.end) {
+  const nights = NIGHTS.slice(start, end + 1);
+  const sub = nights.reduce((a, n) => a + n.price, 0);
+  const service = Math.round(sub * SERVICE), tax = Math.round(sub * TAX);
+  const total = sub + CLEANING + service + tax;
+  console.assert(total === nights.reduce((a, n) => a + n.price, 0) + CLEANING + service + tax, 'total does not reconcile');
+  return { nights, sub, service, tax, fees: CLEANING + service + tax, total, inD: nights[0].d, outD: plusDays(nights[nights.length - 1].d, 1) };
 }
-$('#gallery').addEventListener('scroll', updateCount, { passive: true });
+const range = (q) => `${q.inD.getDate()}–${q.outD.getDate()} Mar`;
+const nightsWord = (n) => `${n} night${n === 1 ? '' : 's'}`;
+function deadline(q) { const d = plusDays(q.inD, -7); return `${fmtDay.format(d)}, 12:00 Göreme time (GMT+3)`; }
 
-/* ---------- header ---------- */
-const lscroll = $('#lscroll');
-function chrome() {
-  const scrolled = lscroll.scrollTop > 236, st = document.documentElement.dataset.state;
-  $('#listing').classList.toggle('scrolled', scrolled);
-  document.documentElement.classList.toggle('chrome-light', S.view === 'listing' && !scrolled && st !== 'loading' && st !== 'error');
-}
-lscroll.addEventListener('scroll', chrome, { passive: true });
-$('#saveBtn').onclick = () => {
-  const st = stay(); S.saved[st.id] = !S.saved[st.id];
-  $('#saveBtn').setAttribute('aria-pressed', S.saved[st.id]);
-  $('#saveBtn').innerHTML = `<i class="${S.saved[st.id] ? 'ph-fill' : 'ph'} ph-heart"></i>`;
-  MK.haptic('light'); receipt(S.saved[st.id] ? 'Saved to Wishlist' : 'Removed from Wishlist');
-};
-$('#shareBtn').onclick = async () => {
-  const data = { title: stay().title, text: `${stay().title}, ${stay().short} on Rota`, url: location.href.split('#')[0] };
-  if (navigator.share) { try { await navigator.share(data); } catch { /* the user closed the share sheet */ } return; }
-  try { await navigator.clipboard.writeText(data.url); receipt('Link copied'); } catch { receipt('Copy failed. Try again'); }
-};
-$('#sumBtn').onclick = () => lscroll.scrollTo({ top: $('#priceSec').offsetTop - 120, behavior: MK.reduced() ? 'auto' : 'smooth' });
-$('#reserveBtn').onclick = () => {
-  const st = stay();
-  if (S.booking[st.id]) return openSheet('done');
-  if (!quote(st, S.sel)) { lscroll.scrollTo({ top: $('#datesSec').offsetTop - 120, behavior: MK.reduced() ? 'auto' : 'smooth' }); $('#strip button:not([aria-disabled])')?.focus({ preventScroll: true }); return; }
-  openSheet('review');
-};
-$('#retryBtn').onclick = () => { location.hash = ''; };
+/* ---- photos ---- */
+const imgTag = (p, w) => `<img src="https://images.unsplash.com/photo-${p.id}?w=${w}&q=80&auto=format&fit=crop" alt="${p.cap}" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()">`;
+$('track').innerHTML = PHOTOS.map((p, i) => `<div class="pic" style="--c:${p.c}" role="img" aria-label="Photo ${i + 1} of ${PHOTOS.length}: ${p.cap}">${imgTag(p, 1000)}</div>`).join('');
+$('photoList').innerHTML = PHOTOS.map((p) => `<figure><div class="pic" style="--c:${p.c}">${imgTag(p, 800)}</div><figcaption>${p.cap}</figcaption></figure>`).join('')
+  + `<div class="nophoto"><i class="ph ph-camera-slash" aria-hidden="true"></i><span>No bedroom or bathroom photos yet.</span></div>`;
+$('track').addEventListener('scroll', () => {
+  const t = $('track'), i = Math.round(t.scrollLeft / t.clientWidth) + 1;
+  $('count').textContent = `${i} / ${PHOTOS.length}`;
+}, { passive: true });
 
-/* ---------- results <-> listing, photo is the shared element ---------- */
-function renderResults() {
-  $('#searchLine').textContent = `${S.sel ? range(S.sel) : 'Any dates'}, ${S.guests} guest${S.guests > 1 ? 's' : ''}`;
-  $('#cards').innerHTML = Object.values(STAYS).map((st) => {
-    const bk = S.booking[st.id], q = quote(st, S.sel);
-    const tot = bk ? `<span class="tot">Booked, ${range(bk)}</span>`
-      : !S.sel ? `<span class="tot">From ${eur(fromPrice(st))} a night</span>`
-      : q ? `<span class="tot">${eur(q.total)} total</span>, ${nightsTxt(q.n)}, fees included`
-      : `<span class="tot na">Not available on these nights</span>`;
-    return `<button class="card" data-stay="${st.id}" aria-label="${st.title}, ${st.short}">${img(st.photos[0], 600, 460)}<h2>${st.title}</h2><p>${st.short}${st.rating ? `, rated ${st.rating}` : ', no reviews yet'}</p><p>${tot}</p></button>`;
+/* ---- night strips (page and sheet render from the same state) ---- */
+function strip(el) {
+  const bk = bookedSet(), locked = S.booked || S.state === 'loading';
+  el.innerHTML = NIGHTS.map((n, i) => {
+    const on = !bk.has(i) && S.state !== 'empty' && i >= S.start && i <= S.end;
+    const isBk = bk.has(i);
+    const label = `${fmtLong.format(n.d)}, ${isBk ? 'booked' : eur.format(n.price)}`;
+    return `<button class="night${isBk ? ' booked' : ''}" data-i="${i}" aria-pressed="${on}" aria-label="${label}" ${isBk || locked ? 'disabled' : ''}>
+      <span>${fmtWk.format(n.d)}</span><span class="d">${n.d.getDate()}</span><span class="p">${isBk ? 'Booked' : eur.format(n.price)}</span></button>`;
   }).join('');
 }
-function showResults() {
-  const src = $('#gallery img');
-  renderResults();
-  const dst = $(`.card[data-stay="${S.stay}"] img`);
-  if (src && $('#gallery').scrollLeft < 10) src.style.viewTransitionName = 'hero';
-  MK.morph(() => {
-    if (src) src.style.viewTransitionName = '';
-    if (dst && $('#gallery').scrollLeft < 10) dst.style.viewTransitionName = 'hero';
-    $('#listing').hidden = true; $('#results').hidden = false; S.view = 'results'; chrome();
-  }).then(() => { if (dst) dst.style.viewTransitionName = ''; $(`.card[data-stay="${S.stay}"]`)?.focus({ preventScroll: true }); });
+function pick(i) {
+  const bk = bookedSet();
+  const crosses = (a, b) => [...bk].some((x) => x > a && x < b);
+  if (!S.picking || i < S.start || crosses(S.start, i)) { S.start = S.end = i; S.picking = true; }
+  else { S.end = i; S.picking = false; }
+  MK.haptic('selection');
+  render();
 }
-$('#backBtn').onclick = showResults;
-$('#cards').addEventListener('click', (e) => {
-  const c = e.target.closest('.card'); if (!c) return;
-  const src = c.querySelector('img');
-  if (src) src.style.viewTransitionName = 'hero';
-  MK.morph(() => {
-    if (src) src.style.viewTransitionName = '';
-    if (S.stay !== c.dataset.stay) { S.stay = c.dataset.stay; S.anchor = null; lscroll.scrollTop = 0; renderListing(); }
-    const dst = $('#gallery img'); if (dst) { dst.style.viewTransitionName = 'hero'; dst.classList.add('in'); }
-    $('#results').hidden = true; $('#listing').hidden = false; S.view = 'listing'; chrome();
-  }).then(() => { const d = $('#gallery img'); if (d) d.style.viewTransitionName = ''; $('#title').setAttribute('tabindex', '-1'); $('#title').focus({ preventScroll: true }); });
+function onStripTap(e) {
+  const b = e.target.closest('.night'); if (!b || b.disabled) return;
+  const sheet = b.closest('#sStrip');
+  pick(+b.dataset.i);
+  const again = (sheet ? $('sStrip') : $('strip')).querySelector(`[data-i="${b.dataset.i}"]`);
+  again?.focus({ preventScroll: true });
+  if (sheet && !S.picking) toggleChange(false); // editing in place returns to the review
+}
+$('strip').addEventListener('click', onStripTap);
+$('sStrip').addEventListener('click', onStripTap);
+
+/* ---- render everything from S ---- */
+function rows(q, perNight) {
+  const r = (a, b, cls = '') => `<div class="row ${cls}"><span>${a}</span><span>${b}</span></div>`;
+  const nightRows = perNight
+    ? q.nights.map((n) => r(fmtDay.format(n.d), eur.format(n.price))).join('')
+    : r(`${nightsWord(q.nights.length)}`, eur.format(q.sub));
+  return nightRows + r('Cleaning', eur.format(CLEANING)) + r('Rota service fee', eur.format(q.service)) + r('Taxes', eur.format(q.tax)) + r('Total', eur.format(q.total), 'total');
+}
+function render() {
+  const q = quote(), empty = S.state === 'empty', loading = S.state === 'loading';
+  strip($('strip')); strip($('sStrip'));
+  $('inLbl').textContent = empty ? '—' : fmtDay.format(q.inD);
+  $('outLbl').textContent = empty ? '—' : fmtDay.format(q.outD);
+  $('hint').textContent = S.picking ? 'Tap your last night, or keep 1 night.' : '';
+  $('sHint').textContent = S.picking ? 'Tap your last night, or keep 1 night.' : 'Tap your first night.';
+  $('breakdown').innerHTML = rows(q, false);
+  $('terms').innerHTML = `<b>Free cancellation until ${deadline(q)}.</b> After that, the first night (${eur.format(q.nights[0].price)}) is not refunded.`;
+  $('sTerms').innerHTML = $('terms').innerHTML;
+  $('sRows').innerHTML = rows(q, true);
+  $('sDates').textContent = `${fmtDay.format(q.inD)} – ${fmtDay.format(q.outD)}, ${nightsWord(q.nights.length)}`;
+  $('altTotal').textContent = eur.format(quote(7, 9).total);
+  document.querySelector('#nights').classList.toggle('is-booked', S.booked);
+  $('bookedNote').textContent = S.booked ? `These nights are booked for you. To change them, open the booking.` : '';
+
+  // sticky bar
+  MK.roll($('totalFig'), empty || loading ? '€0' : eur.format(q.total));
+  $('totalFig').style.visibility = empty || loading ? 'hidden' : '';
+  $('datesBtn').textContent = empty ? 'Sold out 11–14 Mar' : loading ? 'Loading prices' : `${range(q)}, ${nightsWord(q.nights.length)}`;
+  $('feesLine').textContent = S.state === 'offline' ? 'Reserving needs a connection' : empty ? 'Next free: 18–21 Mar' : `Includes ${eur.format(q.fees)} fees and taxes`;
+  $('bkLine').textContent = `${range(q)}, paid ${eur.format(q.total)}`;
+  const rb = $('reserveBtn');
+  rb.textContent = S.booked ? 'Details' : empty ? 'See 18–21' : 'Reserve';
+  rb.disabled = !S.booked && (loading || S.state === 'offline');
+  rb.setAttribute('aria-label', S.booked ? 'Booking details' : empty ? 'See 18 to 21 March' : `Reserve, ${eur.format(q.total)} total`);
+  $('cardPrice').textContent = `${eur.format(q.total)} total, fees included`;
+  $('resultsSub').textContent = `${range(q)}, 2 guests`;
+
+  // sheet mode
+  $('reviewH').textContent = S.booked ? 'Your booking' : 'Review and pay';
+  $('changeBtn').hidden = S.booked;
+  $('payBtn').hidden = S.booked;
+  if (!S.paying) $('payBtn').innerHTML = `Pay ${eur.format(q.total)}`;
+  
+  $('payNote').textContent = S.booked ? `Paid ${eur.format(q.total)} with Visa ending 4417. Confirmation RT-4K82Q.` : `Charged now to Visa ending 4417`;
+}
+
+/* ---- sheets ---- */
+let opener = null, openSheet = null;
+function open(sheet, from) {
+  opener = from || document.activeElement; openSheet = sheet;
+  sheet.inert = false; sheet.classList.add('open'); sheet.style.transform = '';
+  $('scrim').classList.add('on'); $('screen').inert = true;
+  sheet.querySelector('h2').focus({ preventScroll: true });
+}
+function close() {
+  if (!openSheet) return;
+  const s = openSheet; openSheet = null;
+  s.classList.remove('open'); s.style.transform = ''; s.inert = true;
+  $('scrim').classList.remove('on'); $('screen').inert = false;
+  toggleChange(false);
+  opener?.focus({ preventScroll: true });
+}
+document.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', close));
+$('scrim').addEventListener('click', close);
+addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (!$('sBand').hidden) toggleChange(false); else close(); } });
+document.querySelectorAll('.sheet .grab').forEach((g) => {
+  const sheet = g.parentElement; let y = 0;
+  MK.drag(g, {
+    axis: 'y',
+    onStart: () => { sheet.style.transition = 'none'; y = 0; },
+    onMove: (_, dy) => { y = dy < 0 ? dy * .25 : dy; sheet.style.transform = `translateY(${y}px)`; },
+    onEnd: ({ dy, vy }) => { sheet.style.transition = ''; if (dy + vy * 180 > 160) close(); else sheet.style.transform = ''; },
+  });
+});
+function toggleChange(on) {
+  $('sBand').hidden = !on; $('changeBtn').setAttribute('aria-expanded', on);
+  $('changeBtn').textContent = on ? 'Done' : 'Change';
+  if (on) { S.picking = false; render(); }
+}
+$('changeBtn').addEventListener('click', () => toggleChange($('sBand').hidden));
+$('countBtn').addEventListener('click', (e) => open($('photos'), e.currentTarget));
+$('datesBtn').addEventListener('click', () => {
+  if (S.booked) return open($('review'), $('reserveBtn'));
+  const sc = $('scroll'), band = $('nights');
+  sc.scrollTo({ top: band.offsetTop - 110, behavior: MK.reduced() ? 'auto' : 'smooth' });
+  $('strip').querySelector('[aria-pressed="true"], .night:not(:disabled)')?.focus({ preventScroll: true });
 });
 
-/* ---------- review sheet ---------- */
-const sheet = $('#sheet'), scrim = $('#scrim');
-let opener = null;
-function openSheet(panel) {
-  opener = document.activeElement; S.sheet = true; S.panel = panel; S.confirmCancel = false;
-  renderSheet();
-  sheet.inert = false; sheet.classList.add('open'); scrim.classList.add('open');
-  lscroll.style.overflow = 'hidden'; $('#listing').inert = true; chrome();
-  MK.fling(sheet, { from: { y: sheet.offsetHeight }, to: { y: 0 } });
-  $('#sheetH').focus({ preventScroll: true });
-}
-function closeSheet() {
-  if (!S.sheet) return;
-  S.sheet = null; MK.freeze(sheet);
-  const y = new DOMMatrix(getComputedStyle(sheet).transform).f;
-  const an = MK.fling(sheet, { from: { y }, to: { y: sheet.offsetHeight + 20 }, k: 600, zeta: 1 });
-  scrim.classList.remove('open'); sheet.inert = true;
-  lscroll.style.overflow = ''; $('#listing').inert = false; chrome();
-  an.finished.then(() => { if (!S.sheet) sheet.classList.remove('open'); }, () => {});
-  (opener && opener.isConnected ? opener : $('#reserveBtn')).focus({ preventScroll: true });
-}
-scrim.onclick = closeSheet;
-$('#closeBtn').onclick = closeSheet;
-let y0 = 0;
-MK.drag($('#grab'), {
-  axis: 'y',
-  onStart: () => { y0 = new DOMMatrix(getComputedStyle(sheet).transform).f; },
-  onMove: (_, dy) => { const t = y0 + dy; sheet.style.transform = `translateY(${t < 0 ? t * 0.35 : t}px)`; },
-  onEnd: ({ dy, vy }) => { const t = y0 + dy; if (t + vy * 180 > 160) closeSheet(); else MK.fling(sheet, { from: { y: t < 0 ? t * 0.35 : t }, to: { y: 0 }, v: { y: vy } }); },
+/* ---- reserve, pay, booked ---- */
+$('reserveBtn').addEventListener('click', (e) => {
+  if (S.state === 'empty') return takeAlt();
+  S.picking = false; render(); open($('review'), e.currentTarget);
 });
-addEventListener('keydown', (e) => {
-  if (e.key !== 'Escape' || !S.sheet) return;
-  if (S.confirmCancel) { S.confirmCancel = false; renderSheet(); $('#cancelBk')?.focus(); }
-  else if (S.panel === 'dates') { S.panel = 'review'; renderSheet(); $('#changeBtn')?.focus(); }
-  else closeSheet();
-});
-
-function renderSheet() {
-  const st = stay(), bk = S.booking[st.id], q = quote(st, S.sel), body = $('#sheetBody'), foot = $('#sheetFoot'), h = $('#sheetH');
-  body.dataset.panel = S.panel;
-  if (S.panel === 'dates') {
-    h.textContent = 'Change dates';
-    if (!$('#sdStrip')) {
-      body.innerHTML = `<p class="sub" id="sdLine"></p><div class="strip" id="sdStrip" role="group" aria-label="Nights"></div>
-        <p class="hint" id="sdHint"></p><dl class="lines" id="sdLines"></dl>`;
-      foot.innerHTML = `<button class="primary wide" id="datesDone"></button>`;
-      $('#datesDone').onclick = () => { S.panel = 'review'; renderSheet(); $('#changeBtn')?.focus({ preventScroll: true }); };
-    }
-    paintStrip($('#sdStrip'), st, null);
-    $('#sdLine').textContent = q ? `${range(S.sel)}, ${nightsTxt(q.n)}` : 'Tap your first night';
-    $('#sdHint').textContent = S.anchor !== null ? 'Now tap your last night' : '';
-    $('#sdLines').innerHTML = q ? linesHTML(q) : '';
-    $('#datesDone').disabled = !q;
-    $('#datesDone').textContent = q ? `Use these dates, ${eur(q.total)}` : 'Pick at least 1 night';
-    return;
-  }
-  if (S.panel === 'done' && bk) {
-    h.textContent = 'Booked';
-    body.innerHTML = `<div class="done-card" id="doneCard">
-        <div class="tick"><i class="ph ph-check" aria-hidden="true"></i></div>
-        <p class="when">${range(bk)}, ${nightsTxt(bk.q.n)}</p>
-        <p class="sub">${st.title}, ${st.short}</p></div>
-      <div class="row"><div><h3>Check-in</h3><p>${dDay.format(night(bk.s))}, from 14:00</p></div></div>
-      <div class="row"><div><h3>Check-out</h3><p>${dDay.format(night(bk.e))}, by 11:00</p></div></div>
-      <div class="row"><div><h3>Guests</h3><p>${bk.guests}</p></div></div>
-      <div class="row"><div><h3>Paid</h3><p class="num">${eur(bk.q.total)} with Visa ending 4242</p></div></div>
-      <div class="box"><h3>Cancellation</h3>${cancelHTML(st, bk, bk.q)}</div>
-      ${S.confirmCancel ? `<div class="confirm" id="confirmBox"><p>Cancel ${range(bk)} and get ${eur(bk.q.total)} back to Visa ending 4242?</p>
-        <div class="two"><button class="redbtn" id="doCancel">Cancel booking, refund ${eur(bk.q.total)}</button><button class="secondary" id="keepBk">Keep booking</button></div></div>`
-        : `<button class="danger" id="cancelBk" style="margin-top:24px">Cancel booking</button>`}`;
-    foot.innerHTML = `<button class="primary wide" id="doneBtn">Done</button>`;
-    $('#doneBtn').onclick = closeSheet;
-    if (S.confirmCancel) {
-      $('#doCancel').onclick = () => { const r = bk; delete S.booking[st.id]; S.sel = { s: r.s, e: r.e }; MK.haptic('medium'); closeSheet(); update(); receipt(`Cancelled. ${eur(r.q.total)} refunded`); };
-      $('#keepBk').onclick = () => { S.confirmCancel = false; renderSheet(); $('#cancelBk').focus(); };
-      $('#confirmBox').scrollIntoView({ block: 'nearest' });
-    } else $('#cancelBk').onclick = () => { S.confirmCancel = true; renderSheet(); $('#keepBk').focus(); };
-    return;
-  }
-  // review
-  h.textContent = 'Review and pay';
-  if (!q) { S.panel = 'dates'; return renderSheet(); }
-  const p = st.photos[0];
-  body.innerHTML = `<div class="staymini">${img(p, 144, 144)}<div><h3>${st.title}</h3><p>${st.short}</p></div></div>
-    <div class="row"><div><h3>Dates</h3><p>${range(S.sel)}, ${nightsTxt(q.n)}</p></div><button class="textbtn" id="changeBtn" ${S.paying ? 'disabled' : ''}>Change</button></div>
-    <div class="row"><div><h3>Guests</h3><p>Sleeps ${st.sleeps}</p></div>
-      <div class="stepper"><button id="gMinus" aria-label="Fewer guests" ${S.guests <= 1 ? 'disabled' : ''}><i class="ph ph-minus"></i></button>
-      <output id="gOut" aria-live="polite">${S.guests}</output>
-      <button id="gPlus" aria-label="More guests" ${S.guests >= st.sleeps ? 'disabled' : ''}><i class="ph ph-plus"></i></button></div></div>
-    <div class="box"><h3>Cancellation</h3>${cancelHTML(st, S.sel, q)}</div>
-    <dl class="lines" style="margin-top:16px">${linesHTML(q)}</dl>
-    <div class="row" style="border-bottom:0"><div><h3>Pay with</h3><p>Visa ending 4242</p></div></div>`;
-  foot.innerHTML = `<div id="payWrap"><button class="primary wide" id="payBtn" ${S.paying ? 'disabled' : ''}>${S.paying ? '<span class="spin" aria-hidden="true"></span>Paying…' : `Pay ${eur(q.total)}`}</button></div>
-    <p class="note">${eur(q.total)} is charged to Visa ending 4242 when you tap Pay.</p>`;
-  $('#changeBtn').onclick = () => { S.panel = 'dates'; renderSheet(); $('#sheetH').focus({ preventScroll: true }); };
-  $('#gMinus').onclick = () => { S.guests = Math.max(1, S.guests - 1); renderSheet(); $('#gMinus').focus(); };
-  $('#gPlus').onclick = () => { S.guests = Math.min(st.sleeps, S.guests + 1); renderSheet(); $('#gPlus').focus(); };
-  $('#payBtn').onclick = pay;
-}
-function pay() {
-  const st = stay(), q = quote(st, S.sel);
-  S.paying = true; renderSheet(); $('#live').textContent = 'Paying';
-  // stands in for the payment call
-  setTimeout(() => {
-    S.paying = false;
-    if (!S.sheet) return; // closed while paying: nothing is booked in this prototype
-    S.booking[st.id] = { s: S.sel.s, e: S.sel.e, guests: S.guests, q };
+$('payBtn').addEventListener('click', () => {
+  const b = $('payBtn'); S.paying = true; b.disabled = true;
+  b.innerHTML = '<span class="spin" aria-hidden="true"></span>Paying…';
+  $('live').textContent = 'Paying';
+  setTimeout(() => { // prototype stand-in for the payment call
+    S.paying = false; S.booked = true; S.picking = false;
+    close();
+    const bar = $('bar'), flood = $('flood'), rb = $('reserveBtn');
+    const br = bar.getBoundingClientRect(), r = rb.getBoundingClientRect();
+    // the Reserve button becomes the booking: the teal grows from the button over the whole bar
+    flood.style.cssText = `inset:auto;left:${r.left - br.left}px;top:${r.top - br.top}px;width:${r.width}px;height:${r.height}px;border-radius:10px`;
+    MK.flip(flood, () => { bar.classList.add('booked'); flood.style.cssText = 'border-radius:0'; render(); });
     MK.haptic('success');
-    // the pay button is the thing that becomes the booking
-    $('#payBtn').style.viewTransitionName = 'paid';
-    MK.morph(() => { S.panel = 'done'; update(); $('#doneCard .tick').style.viewTransitionName = 'paid'; })
-      .then(() => { const d = $('#doneCard .tick'); if (d) d.style.viewTransitionName = ''; $('#sheetH').focus({ preventScroll: true }); $('#live').textContent = `Booked, ${range(S.sel)}. ${eur(q.total)} paid`; });
-  }, 1100);
-}
+    $('live').textContent = `Booked ${range(quote())}. Confirmation RT-4K82Q.`;
+    rb.focus({ preventScroll: true });
+  }, 1200);
+});
 
-/* ---------- map: approximate area only ---------- */
-let map = null;
-function circle([lon, lat], m) {
-  const pts = [];
-  for (let k = 0; k <= 64; k++) { const a = (k / 64) * 2 * Math.PI; pts.push([lon + (m * Math.cos(a)) / (111320 * Math.cos((lat * Math.PI) / 180)), lat + (m * Math.sin(a)) / 110540]); }
-  return { type: 'Feature', geometry: { type: 'Polygon', coordinates: [pts] } };
+/* ---- header ---- */
+$('scroll').addEventListener('scroll', () => {
+  const solid = $('scroll').scrollTop > 240;
+  $('topbar').classList.toggle('solid', solid);
+  document.body.classList.toggle('on-photo', !solid && !$('detail').hidden);
+}, { passive: true });
+$('saveBtn').addEventListener('click', (e) => {
+  S.saved = !S.saved; const b = e.currentTarget;
+  b.setAttribute('aria-pressed', S.saved); b.setAttribute('aria-label', S.saved ? 'Saved' : 'Save');
+  b.innerHTML = `<i class="${S.saved ? 'ph-fill' : 'ph'} ph-heart" aria-hidden="true"></i>`;
+  $('live').textContent = S.saved ? 'Saved to your list' : 'Removed from your list';
+  MK.haptic('light');
+});
+$('shareBtn').addEventListener('click', async (e) => {
+  const b = e.currentTarget, url = 'https://rota.example/stay/goreme-cave-room';
+  try { if (navigator.share) await navigator.share({ title: 'Fairy chimney cave room', url }); else await navigator.clipboard.writeText(url); } catch { /* user cancelled or clipboard blocked */ }
+  if (!navigator.share) { b.innerHTML = '<i class="ph ph-check" aria-hidden="true"></i>'; b.setAttribute('aria-label', 'Link copied'); $('live').textContent = 'Link copied';
+    setTimeout(() => { b.innerHTML = '<i class="ph ph-share-network" aria-hidden="true"></i>'; b.setAttribute('aria-label', 'Share'); }, 1600); }
+});
+
+/* ---- back to results and in again: the listing photo is the shared element ---- */
+function heroImg() { const t = $('track'); return t.children[Math.round(t.scrollLeft / t.clientWidth)]?.querySelector('img') || t.querySelector('img'); }
+function toResults() {
+  const src = heroImg(), dst = $('cardImg');
+  if (src) src.style.viewTransitionName = 'hero';
+  MK.morph(() => { if (src) src.style.viewTransitionName = ''; dst.style.viewTransitionName = 'hero';
+    $('detail').hidden = true; $('results').hidden = false; document.body.classList.remove('on-photo'); })
+    .then(() => { dst.style.viewTransitionName = ''; $('resultsH').focus({ preventScroll: true }); });
 }
-function moveMap() {
-  if (!map) return;
-  map.jumpTo({ center: stay().center });
-  map.getSource('area')?.setData(circle(stay().center, 450));
+function toDetail() {
+  const src = $('cardImg'), t = $('track'); t.scrollLeft = 0; const dst = t.querySelector('img');
+  src.style.viewTransitionName = 'hero';
+  MK.morph(() => { src.style.viewTransitionName = ''; if (dst) dst.style.viewTransitionName = 'hero';
+    $('results').hidden = true; $('detail').hidden = false;
+    document.body.classList.toggle('on-photo', $('scroll').scrollTop <= 240); })
+    .then(() => { if (dst) dst.style.viewTransitionName = ''; $('title').focus({ preventScroll: true }); });
 }
-try {
+$('backBtn').addEventListener('click', toResults);
+document.querySelector('[data-back]').addEventListener('click', toResults);
+$('openCard').addEventListener('click', toDetail);
+
+/* ---- states by hash: #loading #empty #error #offline ---- */
+const STATES = ['loading', 'empty', 'error', 'offline'];
+function sync() {
+  const s = location.hash.slice(1); S.state = STATES.includes(s) ? s : 'content';
+  document.documentElement.dataset.state = S.state;
+  if (S.state === 'empty') S.picking = false;
+  document.body.classList.toggle('on-photo', S.state !== 'error' && $('scroll').scrollTop <= 240);
+  render();
+}
+addEventListener('hashchange', sync);
+$('retryBtn').addEventListener('click', () => { location.hash = 'loading'; setTimeout(() => { location.hash = ''; }, 900); });
+function takeAlt() { location.hash = ''; S.start = 7; S.end = 9; S.picking = false; sync();
+  const st = $('strip'), c = st.querySelector('[data-i="7"]'); st.scrollLeft = c.offsetLeft - 16; $('reserveBtn').focus({ preventScroll: true }); $('live').textContent = 'Dates changed to 18 to 21 March'; }
+$('altBtn').addEventListener('click', takeAlt);
+sync();
+
+/* ---- self-checks: tabular figures and reconciling totals ---- */
+document.fonts.ready.then(() => {
+  const m = (t) => { const s = document.createElement('span'); s.className = 'total-fig'; s.style.cssText = 'position:absolute;visibility:hidden'; s.textContent = t; document.body.append(s); const w = s.getBoundingClientRect().width; s.remove(); return w; };
+  console.assert(Math.abs(m('0000') - m('1111')) < .5, 'Public Sans tabular figures not active');
+  const q = quote(0, 2); console.assert(q.total === 474 + 20 + 47 + 9 && q.total === 550, 'sample total changed: ' + q.total);
+});
+
+/* ---- map: approximate area only ---- */
+(() => {
+  if (!window.maplibregl) { document.documentElement.dataset.mapReady = '1'; return; }
+  const c = [34.8275, 38.6420], ring = Array.from({ length: 49 }, (_, i) => { const a = (i / 48) * 2 * Math.PI; return [c[0] + 0.0052 * Math.cos(a), c[1] + 0.004 * Math.sin(a)]; });
   const dark = document.documentElement.dataset.theme === 'dark';
-  map = new maplibregl.Map({ container: 'map', style: `https://tiles.openfreemap.org/styles/${dark ? 'dark' : 'positron'}`, center: stay().center, zoom: 13.6, attributionControl: { compact: true }, interactive: false });
-  const ac = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+  const map = new maplibregl.Map({ container: 'map', style: `https://tiles.openfreemap.org/styles/${dark ? 'dark' : 'positron'}`, center: c, zoom: 13.6, attributionControl: { compact: true }, interactive: false });
   map.on('load', () => {
-    map.addSource('area', { type: 'geojson', data: circle(stay().center, 450) });
-    map.addLayer({ id: 'area-f', type: 'fill', source: 'area', paint: { 'fill-color': ac, 'fill-opacity': 0.18 } });
-    map.addLayer({ id: 'area-l', type: 'line', source: 'area', paint: { 'line-color': ac, 'line-width': 2 } });
+    map.addSource('a', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [ring] } } });
+    map.addLayer({ id: 'af', type: 'fill', source: 'a', paint: { 'fill-color': '#0E7C6B', 'fill-opacity': .18 } });
+    map.addLayer({ id: 'al', type: 'line', source: 'a', paint: { 'line-color': '#0E7C6B', 'line-width': 2 } });
   });
   map.on('idle', () => { document.documentElement.dataset.mapReady = '1'; });
   map.on('error', () => { document.documentElement.dataset.mapReady = '1'; });
-} catch { map = null; document.documentElement.dataset.mapReady = '1'; }
-
-/* ---------- states by hash ---------- */
-const states = ['loading', 'empty', 'error', 'offline'];
-function sync() {
-  const s = location.hash.slice(1);
-  document.documentElement.dataset.state = states.includes(s) ? s : 'content';
-  if (s === 'empty') { S.sel = null; S.anchor = null; }
-  update(); chrome();
-}
-addEventListener('hashchange', sync);
-renderListing(); sync();
+})();
 </script>
 </body>
 </html>

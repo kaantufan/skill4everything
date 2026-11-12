@@ -1,329 +1,264 @@
-﻿<!doctype html>
-<!-- HTML mockup of the Söz iOS home screen. Fonts, materials, controls and scrolling approximate the native ones. -->
+<!doctype html>
 <html lang="en" data-platform="ios" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Söz</title>
+<title>Söz, home</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css">
-<script>{ const t = new URLSearchParams(location.search).get('theme'); if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t; }</script>
+<script>
+  // the dealt appearance is light; the other one only by ?theme=dark
+  const q = new URLSearchParams(location.search).get('theme');
+  if (q === 'dark' || q === 'light') document.documentElement.dataset.theme = q;
+</script>
 <style>
-  /* device frame (from assets/phone-frame.html) */
+  /* phone frame (assets/phone-frame.html) */
   :root { --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px; --chrome: #000; }
   [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
   * { box-sizing: border-box; }
-  html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
-  body { position: relative; font-family: var(--f); -webkit-font-smoothing: antialiased; background: var(--ground); color: var(--ink); }
-  .statusbar { position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 30; display: flex; align-items: flex-end; justify-content: space-between;
-    padding: 0 28px 10px; font: 600 16px/1 -apple-system, "SF Pro Text", system-ui, sans-serif; color: var(--chrome); pointer-events: none; }
+  html, body { margin: 0; width: var(--w); height: var(--h); overflow: clip; }
+  body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--ground); color: var(--ink); }
+  .statusbar { position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 10; display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none; font-family: -apple-system, "SF Pro Text", system-ui, sans-serif; }
   .statusbar svg { height: 12px; fill: var(--chrome); }
-  .home-indicator { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 30; width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none; }
-  #screen { position: absolute; inset: 0; overflow: hidden; }
+  .home-indicator { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 10; width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none; }
+  #screen { position: absolute; inset: 0; overflow: clip; } /* clip: focus and scrollIntoView must never scroll the device itself */
 </style>
 <style>
-  /* PRODUCT TOKENS (dealt direction native-quiet, Public Sans, orange). Screens use only these. */
+  /* PRODUCT TOKENS: native-quiet direction, dealt for "Söz" */
   :root {
+    --font: "Public Sans", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif;
     --ground: #FFFFFF; --raised: #F2F2F7; --ink: #000000; --ink-2: #5E5E63; --line: #D8D8DC;
     --accent: #B85C00; --on-accent: #FFFFFF; --positive: #2E7D46; --negative: #D4442E;
-    --sfx-on-accent: #FFDDBB;              /* suffix colour on the accent card, 3.7:1, used at 28px bold only */
-    --scrim: rgb(0 0 0 / .45);
-    --f: "Public Sans", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif;
-    --t-large: 700 34px/40px var(--f); --t-hero: 700 28px/34px var(--f); --t-title: 600 22px/28px var(--f);
-    --t-head: 600 17px/22px var(--f); --t-body: 400 17px/22px var(--f); --t-sub: 400 15px/20px var(--f); --t-foot: 400 13px/18px var(--f);
-    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px;
-    --r-card: 12px; --r-btn: 10px;
-    --tab-h: calc(49px + var(--safe-bottom));
-    --press: transform .12s cubic-bezier(.22,1,.36,1);
+    --t-large: 700 34px/41px var(--font); --t-title: 600 22px/28px var(--font); --t-head: 600 17px/22px var(--font);
+    --t-body: 400 17px/22px var(--font); --t-foot: 400 13px/18px var(--font);
+    --r-group: 12px; --r-btn: 10px; --gap: 20px; --side: 16px;
+    --tabbar: calc(49px + var(--safe-bottom));
   }
-  [data-theme="dark"] { --ground: #000000; --raised: #1C1C1E; --ink: #FFFFFF; --ink-2: #A1A1A6; --line: #38383A; }
+  [data-theme="dark"] {
+    --ground: #000000; --raised: #1C1C1E; --ink: #FFFFFF; --ink-2: #A1A1A6; --line: #38383A;
+  }
 </style>
 <style>
-  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; touch-action: manipulation; transition: var(--press); -webkit-tap-highlight-color: transparent; }
+  body { font: var(--t-body); }
+  h1, h2, h3, p, dl, dd { margin: 0; }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; touch-action: manipulation;
+    transition: transform .12s cubic-bezier(.22,1,.36,1); -webkit-tap-highlight-color: transparent; }
   button:active:not(:disabled) { transform: scale(.97); }
-  button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   button:disabled { cursor: default; }
-  h1, h2, h3, p { margin: 0; }
-  .num, .num * { font-variant-numeric: tabular-nums !important; }
-  .sfx { color: var(--accent); }
-  .ph-ico { font-size: 22px; line-height: 1; }
+  .num { font-variant-numeric: tabular-nums; }
+  .ph-wrap { position: relative; overflow: hidden; background: var(--c); }
+  .ph-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; transition: opacity .4s ease-out; }
+  .ph-wrap img.in { opacity: 1; }
 
-  .view { position: absolute; inset: 0; }
-  .scroll { position: absolute; top: var(--safe-top); left: 0; right: 0; bottom: 0; overflow-y: auto; scrollbar-width: none;
-    padding: 0 var(--s4) calc(var(--tab-h) + var(--s5)); }
-  .scroll::-webkit-scrollbar { display: none; }
+  /* scrolling panels; the status bar strip stays opaque so nothing reads through it */
+  .panel { position: absolute; inset: 0; overflow-y: auto; scrollbar-width: none; padding: var(--safe-top) 0 calc(var(--tabbar) + 24px); }
+  .panel[hidden] { display: none; }
+  .topstrip { position: absolute; inset: 0 0 auto 0; height: var(--safe-top); background: var(--ground); z-index: 6; }
+  .navbar { display: flex; align-items: flex-end; justify-content: space-between; padding: 4px var(--side) 8px; min-height: 53px; }
+  .navbar h1 { font: var(--t-large); letter-spacing: -0.02em; }
+  .streak { text-align: right; }
+  .streak b { font: var(--t-head); display: block; }
+  .streak > span { font: var(--t-foot); color: var(--ink-2); }
+  .sub { font: var(--t-foot); color: var(--ink-2); padding: 0 var(--side) 8px; }
 
-  /* header */
-  .top { display: flex; align-items: center; justify-content: space-between; height: 56px; }
-  .brand { font: var(--t-large); color: var(--accent); letter-spacing: -.02em; }
-  .bigtitle { font: var(--t-large); letter-spacing: -.02em; padding: 8px 0 12px; }
-  .week { display: flex; gap: 4px; }
-  .day { width: 28px; text-align: center; font: 600 11px/14px var(--f); color: var(--ink-2); }
-  .day b { display: grid; place-items: center; width: 28px; height: 28px; margin-top: 2px; border-radius: 50%; font: 600 13px/1 var(--f); color: var(--ink-2); }
-  .day.done b { background: var(--accent); color: var(--on-accent); }
-  .day.today b { box-shadow: inset 0 0 0 2px var(--accent); color: var(--ink); }
-  .day.today { color: var(--ink); }
+  .note { display: flex; gap: 10px; align-items: center; margin: 0 var(--side) 8px; padding: 10px 12px; border-radius: var(--r-group); background: var(--raised); font: var(--t-foot); }
+  .note i { font-size: 20px; }
 
-  /* today's lesson: the brand surface */
-  .lesson { background: var(--accent); color: var(--on-accent); border-radius: var(--r-card); overflow: hidden; margin-top: var(--s2); }
-  .pic { position: relative; overflow: hidden; background: var(--c, #6b4a2f); }
-  .pic img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .4s ease-out; display: block; }
-  .pic img.in { opacity: 1; }
-  .lesson .pic { height: 150px; }
-  .lesson.no-photo .pic { display: none; }
-  .lesson .body { padding: var(--s4); }
-  .lesson .unit { font: 600 13px/18px var(--f); }
-  .phrase { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); margin-top: var(--s2); }
-  .phrase .tr { font: var(--t-hero); letter-spacing: -.01em; }
-  .lesson .tr .sfx { color: var(--sfx-on-accent); }
-  .phrase .en { font: var(--t-sub); margin-top: 2px; }
-  .audio { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px currentColor; }
-  .lesson .scope { font: var(--t-foot); margin-top: var(--s3); }
-  .primary { display: flex; align-items: center; justify-content: center; width: 100%; height: 50px; border-radius: var(--r-btn); font: var(--t-head); margin-top: var(--s3); background: var(--accent); color: var(--on-accent); }
-  .lesson .primary { background: var(--on-accent); color: var(--accent); }
+  /* today's lesson: the brand surface, filled with the tea-glass amber */
+  .today { margin: 8px var(--side) 0; padding: 16px; border-radius: var(--r-group); background: var(--accent); color: var(--on-accent); }
+  .t-top { display: flex; gap: 14px; align-items: flex-start; justify-content: space-between; }
+  .t-meta { font: var(--t-foot); }
+  .t-top h2 { font: 700 30px/36px var(--font); letter-spacing: -0.01em; margin-top: 2px; }
+  .t-sub { font: var(--t-body); }
+  .t-photo { flex: none; width: 88px; height: 88px; border-radius: 10px; }
+  .t-phrase { display: flex; gap: 12px; align-items: center; margin-top: 14px; }
+  .speak { flex: none; width: 44px; height: 44px; border-radius: 22px; display: grid; place-items: center; font-size: 22px; }
+  .today .speak { border: 1.5px solid var(--on-accent); }
+  .speak.on { background: var(--on-accent); color: var(--accent); }
+  .t-tr { font: var(--t-head); }
+  .t-en { font: var(--t-foot); }
+  .t-scope { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgb(255 255 255 / .45); }
+  .t-scope dt { font: var(--t-foot); }
+  .t-scope dd { font: var(--t-head); font-variant-numeric: tabular-nums; }
+  .btn-light { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 50px; margin-top: 14px; border-radius: var(--r-btn);
+    background: #FFFFFF; color: #8A4500; font: var(--t-head); }
+  .done-line { display: flex; gap: 8px; align-items: center; font: var(--t-foot); margin: 0 0 12px; }
+  .done-line i { font-size: 18px; }
 
-  /* course progress */
-  .course { display: block; width: 100%; text-align: left; margin-top: var(--s4); padding: var(--s4); background: var(--raised); border-radius: var(--r-card); }
-  .row { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
-  .course h2 { font: var(--t-head); }
-  .course .pct { font: var(--t-head); }
-  .bar { display: flex; gap: 3px; margin: var(--s3) 0 var(--s2); }
-  .seg { flex: 1; height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
-  .seg i { display: block; height: 100%; background: var(--accent); transform-origin: left center; }
-  .course .meta { font: var(--t-foot); color: var(--ink-2); }
-  .course .ph-caret-right { color: var(--ink-2); font-size: 17px; }
-  .receipt { font: 600 13px/18px var(--f); color: var(--ink); margin-top: var(--s1); }
-  .receipt:empty { display: none; }
-
-  /* weak words */
-  .weak { margin-top: var(--s5); }
-  .weak h2 { font: var(--t-title); }
-  .weak h2 .num { color: var(--ink-2); font-weight: 400; }
-  .ghost { height: 44px; padding: 0 var(--s4); border-radius: var(--r-btn); box-shadow: inset 0 0 0 1px var(--line); color: var(--accent); font: var(--t-head); background: var(--ground); }
-  .ghost:disabled { color: var(--ink-2); }
-  .note { font: var(--t-foot); color: var(--ink-2); margin-top: var(--s1); }
-  .words { list-style: none; margin: var(--s2) 0 0; padding: 0; }
-  .words li { display: flex; align-items: center; justify-content: space-between; min-height: 56px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  /* sections */
+  .sec { margin-top: var(--gap); }
+  .sec-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 var(--side); min-height: 44px; }
+  .sec-head h2 { font: var(--t-title); }
+  .group { margin: 8px var(--side) 0; border-radius: var(--r-group); background: var(--raised); }
+  .course-row { display: block; width: 100%; text-align: left; padding: 14px 16px; border-radius: var(--r-group); }
+  .c-line { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .c-line .ph { font-size: 18px; color: var(--ink-2); align-self: center; }
+  .c-pct { font: var(--t-head); font-variant-numeric: tabular-nums; margin-left: auto; }
+  .steps { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin: 12px 0 10px; }
+  .steps span { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+  .steps span i { display: block; height: 100%; width: var(--f, 0%); background: var(--accent); }
+  .c-foot { display: flex; justify-content: space-between; gap: 12px; font: var(--t-foot); color: var(--ink-2); }
+  .btn-out { min-height: 44px; padding: 0 16px; border-radius: var(--r-btn); border: 1.5px solid var(--accent); color: var(--accent); font: var(--t-head); background: var(--ground);
+    display: inline-flex; align-items: center; gap: 8px; }
+  [data-theme="dark"] .btn-out { color: #FFFFFF; }
+  .words { list-style: none; margin: 4px 0 0; padding: 0 0 0 var(--side); }
+  .words li { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 6px var(--side) 6px 0; border-bottom: 1px solid var(--line); }
   .words li:last-child { border-bottom: 0; }
+  .w-text { flex: 1; min-width: 0; }
   .w-tr { font: var(--t-head); }
-  .w-en { font: var(--t-sub); color: var(--ink-2); }
-  .meter { display: flex; align-items: center; gap: var(--s2); font: var(--t-foot); color: var(--ink-2); }
-  .meter span { display: flex; gap: 3px; }
-  .meter i { width: 6px; height: 16px; border-radius: 2px; background: var(--line); }
-  .meter i.on { background: var(--accent); }
-  .empty { padding: var(--s5) 0; text-align: center; color: var(--ink-2); font: var(--t-sub); }
-  .empty i { display: block; font-size: 28px; color: var(--ink-2); margin-bottom: var(--s2); }
-  .sub-h { font: var(--t-head); margin-top: var(--s5); }
+  .w-en { font: var(--t-foot); color: var(--ink-2); }
+  .meter { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex: none; }
+  .bars { display: flex; gap: 3px; }
+  .bars i { width: 14px; height: 6px; border-radius: 3px; background: var(--line); }
+  .bars i.f { background: var(--accent); }
+  .meter span { font: var(--t-foot); color: var(--ink-2); }
+  .empty { margin: 8px var(--side) 0; padding: 20px 16px; border-radius: var(--r-group); background: var(--raised); display: grid; justify-items: start; gap: 6px; }
+  .empty i { font-size: 28px; color: var(--ink-2); }
+  .empty b { font: var(--t-head); }
+  .empty p { font: var(--t-foot); color: var(--ink-2); }
+  .err { margin: 8px var(--side) 0; padding: 16px; border-radius: var(--r-group); background: var(--raised); display: grid; gap: 6px; }
+  .err i { font-size: 28px; color: var(--negative); }
+  .err b { font: var(--t-head); }
+  .err p { font: var(--t-foot); color: var(--ink-2); }
+  .btn-acc { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 50px; border-radius: var(--r-btn); background: var(--accent); color: var(--on-accent); font: var(--t-head); }
+  .sk { background: var(--raised); border-radius: var(--r-group); margin: 8px var(--side) 0; }
 
-  /* course tab */
-  .units { list-style: none; margin: 0; padding: 0; }
-  .units li { display: flex; align-items: center; justify-content: space-between; min-height: 60px; border-bottom: 1px solid var(--line); gap: var(--s3); }
-  .units .st { font: var(--t-foot); color: var(--ink-2); display: flex; align-items: center; gap: 6px; }
-  .units .st .ph-check-circle { color: var(--positive); font-size: 20px; }
-  .units li.cur .w-tr { color: var(--accent); }
+  /* units list (Course tab) */
+  .units { list-style: none; margin: 8px var(--side) 0; padding: 0; border-radius: var(--r-group); background: var(--raised); }
+  .units li { display: flex; gap: 12px; align-items: center; min-height: 56px; padding: 8px 16px; border-bottom: 1px solid var(--line); }
+  .units li:last-child { border-bottom: 0; }
+  .units .u-n { font: var(--t-foot); color: var(--ink-2); width: 60px; flex: none; }
+  .units .u-t { flex: 1; min-width: 0; }
+  .units .u-t b { font: var(--t-head); display: block; }
+  .units .u-t span { font: var(--t-foot); color: var(--ink-2); }
+  .units .u-s { font: var(--t-foot); color: var(--ink-2); display: flex; gap: 4px; align-items: center; font-variant-numeric: tabular-nums; }
+  .units .u-s.cur { color: var(--ink); font-weight: 600; }
+  .units .u-s .ph-fill { color: var(--positive); font-size: 18px; }
 
   /* tab bar */
-  .tabbar { position: absolute; left: 0; right: 0; bottom: 0; height: var(--tab-h); padding-bottom: var(--safe-bottom); display: flex; background: var(--ground); border-top: 1px solid var(--line); z-index: 10; }
-  .tabbar button { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: 600 11px/13px var(--f); color: var(--ink-2); }
+  .tabbar { position: absolute; inset: auto 0 0 0; height: var(--tabbar); padding-bottom: var(--safe-bottom); z-index: 7; display: grid; grid-template-columns: repeat(3, 1fr);
+    background: var(--ground); border-top: 1px solid var(--line); }
+  .tabbar button { display: grid; justify-items: center; align-content: center; gap: 2px; font: 600 10px/12px var(--font); color: var(--ink-2); min-height: 49px; }
   .tabbar button i { font-size: 26px; }
   .tabbar button[aria-current="page"] { color: var(--accent); }
+  [data-theme="dark"] .tabbar button[aria-current="page"] { color: #E07A1F; }
 
-  /* lesson / practice view */
-  .lv { position: absolute; inset: 0; background: var(--ground); z-index: 20; display: flex; flex-direction: column; }
-  .lv[hidden] { display: none; }
-  .lv-top { margin-top: var(--safe-top); height: 52px; display: flex; align-items: center; gap: var(--s3); padding: 0 var(--s4) 0 var(--s2); }
-  .iconbtn { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; }
-  .lv-bar { flex: 1; height: 8px; border-radius: 4px; background: var(--raised); overflow: hidden; }
-  .lv-bar i { display: block; height: 100%; width: 100%; background: var(--accent); transform-origin: left center; transition: transform .3s cubic-bezier(.2,.8,.2,1); }
-  .lv-count { font: var(--t-foot); color: var(--ink-2); min-width: 44px; text-align: right; }
-  .lv .pic { height: 120px; margin: 0 var(--s4); border-radius: var(--r-card); flex: none; }
-  .lv.no-photo .pic { display: none; }
-  .lv-body { padding: var(--s5) var(--s4); display: flex; flex-direction: column; flex: 1; }
-  .lv-body h2 { font: var(--t-foot); color: var(--ink-2); outline: none; }
-  .lv .phrase .tr { font: var(--t-hero); }
-  .lv .audio { color: var(--accent); }
-  .opts { display: flex; flex-direction: column; gap: var(--s3); margin-top: var(--s5); }
-  .opt { display: flex; align-items: center; justify-content: space-between; min-height: 56px; padding: 0 var(--s4); border-radius: var(--r-card); box-shadow: inset 0 0 0 1px var(--line); text-align: left; font: var(--t-body); background: var(--ground); }
-  .opt i { font-size: 22px; }
-  .opt.right { box-shadow: inset 0 0 0 2px var(--positive); }
-  .opt.right i { color: var(--positive); }
-  .opt.wrong { box-shadow: inset 0 0 0 2px var(--negative); }
-  .opt.wrong i { color: var(--negative); }
-  .opt.gone { visibility: hidden; }
-  .sum { margin-top: var(--s5); }
-  .sum h3 { font: var(--t-hero); }
-  .sum p { font: var(--t-body); color: var(--ink-2); margin-top: var(--s2); }
-  .sum .primary { margin-top: auto; }
-  .lv-body .grow { flex: 1; }
+  /* lesson: a full-screen step with its own exit */
+  #lesson { position: absolute; inset: 0; z-index: 8; background: var(--ground); padding-top: var(--safe-top); display: flex; flex-direction: column;
+    transform: translateY(100%); visibility: hidden; transition: transform .34s cubic-bezier(.2,.8,.2,1), visibility 0s .34s; }
+  #lesson.open { transform: none; visibility: visible; transition: transform .34s cubic-bezier(.2,.8,.2,1); }
+  .l-head { display: flex; align-items: center; gap: 12px; padding: 0 var(--side) 0 8px; min-height: 52px; }
+  .icon-btn { width: 44px; height: 44px; display: grid; place-items: center; font-size: 24px; border-radius: 22px; flex: none; }
+  .l-prog { flex: 1; display: grid; gap: 4px; }
+  .l-prog .segs { display: flex; gap: 3px; }
+  .l-prog .segs i { flex: 1; height: 6px; border-radius: 3px; background: var(--line); }
+  .l-prog .segs i.f { background: var(--accent); }
+  .l-count { font: var(--t-foot); color: var(--ink-2); font-variant-numeric: tabular-nums; min-width: 44px; text-align: right; }
+  .l-body { flex: 1; padding: 20px var(--side) 0; display: flex; flex-direction: column; }
+  .l-body h2 { font: var(--t-head); color: var(--ink-2); outline: none; }
+  .l-phrase { display: flex; gap: 14px; align-items: center; margin: 14px 0 22px; }
+  .l-phrase .speak { border: 1.5px solid var(--line); color: var(--ink); }
+  .l-phrase p { font: 700 28px/34px var(--font); }
+  .opts { display: grid; gap: 10px; }
+  .opt { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 12px 16px; border-radius: var(--r-btn); text-align: left;
+    background: var(--ground); border: 1.5px solid var(--line); font: var(--t-body); color: var(--ink); }
+  .opt[aria-pressed="true"] { border-color: var(--accent); border-width: 2.5px; font-weight: 600; }
+  .opt:disabled { opacity: 1; }
+  .l-foot { padding: 16px var(--side) calc(var(--safe-bottom) + 12px); margin-top: auto; }
+  .btn-acc:disabled { background: var(--raised); color: var(--ink-2); }
 
-  .fb { position: absolute; left: 0; right: 0; bottom: 0; background: var(--raised); border-radius: 16px 16px 0 0; padding: var(--s4) var(--s4) calc(var(--safe-bottom) + var(--s2)); z-index: 2; }
-  .fb[hidden] { display: none; }
-  .fb .opt { background: var(--ground); width: 100%; }
-  .fb-h { display: flex; align-items: center; gap: var(--s2); margin-top: var(--s4); font: 700 22px/28px var(--f); }
-  .fb-h i { font-size: 28px; }
-  .fb.ok .fb-h i { color: var(--positive); }
-  .fb.no .fb-h i { color: var(--negative); }
-  .fb-ans { font: var(--t-head); margin-top: var(--s2); }
-  .fb-why { font: var(--t-sub); color: var(--ink-2); margin-top: var(--s1); }
-  .fb-act { display: flex; gap: var(--s3); margin-top: var(--s4); }
-  .fb-act .ghost { flex: none; display: flex; align-items: center; gap: 6px; height: 50px; }
-  .fb-act .primary { margin: 0; flex: 1; }
+  /* feedback: docked at the bottom of the lesson, the chosen tile lands in it */
+  #fb { position: absolute; inset: auto 0 0 0; padding: 16px var(--side) calc(var(--safe-bottom) + 12px); border-radius: 16px 16px 0 0; color: #FFFFFF; view-transition-name: fb; z-index: 2; }
+  #fb[hidden] { display: none; }
+  #fb.ok { background: var(--positive); }
+  #fb.no { background: var(--negative); }
+  .fb-title { display: flex; align-items: center; gap: 8px; font: var(--t-title); }
+  .fb-title i { font-size: 28px; }
+  .echo { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 12px 16px; margin-top: 12px; border-radius: var(--r-btn); background: #FFFFFF; color: #000000; font: 600 17px/22px var(--font); }
+  .echo i { font-size: 22px; margin-left: auto; }
+  #fb.ok .echo i { color: var(--positive); }
+  #fb.no .echo i { color: var(--negative); }
+  .fb-ans { font: var(--t-head); margin-top: 12px; }
+  .fb-why { font: 400 16px/22px var(--font); margin-top: 6px; }
+  .fb-row { display: flex; gap: 10px; margin-top: 16px; }
+  .fb-row .speak { border: 1.5px solid #FFFFFF; color: #FFFFFF; width: 50px; height: 50px; border-radius: var(--r-btn); }
+  .btn-white { flex: 1; min-height: 50px; border-radius: var(--r-btn); background: #FFFFFF; color: #000000; font: var(--t-head); }
+  @media (prefers-reduced-motion: no-preference) {
+    ::view-transition-group(ans) { z-index: 3; }
+    ::view-transition-new(fb) { animation: fb-in .2s cubic-bezier(.2,.8,.2,1) both; }
+    @keyframes fb-in { from { opacity: 0; } }
+  }
 
-  /* states by hash */
-  .banner { display: none; align-items: center; gap: var(--s2); margin-top: var(--s2); padding: var(--s3); border-radius: var(--r-card); background: var(--raised); font: var(--t-foot); }
-  .banner i { font-size: 20px; }
-  [data-state="offline"] .banner { display: flex; }
-  .err { display: none; }
-  [data-state="error"] .lesson { display: none; }
-  [data-state="error"] .err { display: block; margin-top: var(--s2); padding: var(--s4); border-radius: var(--r-card); box-shadow: inset 0 0 0 1px var(--line); }
-  .err h2 { font: var(--t-head); margin-top: var(--s2); }
-  .err p { font: var(--t-sub); color: var(--ink-2); margin-top: var(--s1); }
-  .err i.ph { font-size: 28px; color: var(--negative); }
-  .skel { display: none; }
-  [data-state="loading"] .real { display: none; }
-  [data-state="loading"] .skel { display: block; }
-  .sk { background: var(--raised); border-radius: var(--r-card); }
-  @media (prefers-reduced-motion: no-preference) { .sk { animation: sk 1.2s ease-in-out infinite alternate; } @keyframes sk { to { opacity: .55; } } }
-  @media (prefers-reduced-motion: reduce) { *, ::view-transition-group(*) { transition-duration: .01ms !important; } }
+  /* lesson complete */
+  .done { padding: 28px var(--side) 0; flex: 1; display: flex; flex-direction: column; }
+  .done h2 { font: var(--t-large); letter-spacing: -0.02em; outline: none; }
+  .done .d-sub { font: var(--t-body); color: var(--ink-2); margin-top: 4px; }
+  .score { margin-top: 28px; }
+  .score .c-line b { font: var(--t-title); font-variant-numeric: tabular-nums; }
+  .score .track { height: 12px; border-radius: 6px; background: var(--raised); margin-top: 10px; overflow: hidden; }
+  .score .track i { display: block; height: 100%; background: var(--accent); border-radius: 6px; transform-origin: left; }
+  .facts { margin-top: 24px; border-radius: var(--r-group); background: var(--raised); }
+  .facts div { display: flex; justify-content: space-between; min-height: 48px; align-items: center; padding: 0 16px; border-bottom: 1px solid var(--line); }
+  .facts div:last-child { border-bottom: 0; }
+  .facts dd { font: var(--t-head); font-variant-numeric: tabular-nums; }
+
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  ::view-transition-old(photo), ::view-transition-new(photo) { height: 100%; object-fit: cover; }
+  @media (prefers-reduced-motion: reduce) { *, ::view-transition-group(*) { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 </style>
 </head>
 <body>
-<div class="statusbar">
-  <span id="clock">10:08</span>
-  <svg viewBox="0 0 66 12" aria-hidden="true">
-    <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
-    <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
-    <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
-    <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" style="stroke: var(--chrome)" opacity=".5"/>
-    <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
-  </svg>
-</div>
+  <div class="statusbar">
+    <span id="clock">10:08</span>
+    <svg viewBox="0 0 66 12" aria-hidden="true">
+      <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/>
+      <rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/>
+      <path d="M31 2.2a9 9 0 0 1 7 3l-1.5 1.5a7 7 0 0 0-11 0L24 5.2a9 9 0 0 1 7-3zm0 4a5 5 0 0 1 4 2l-4 4-4-4a5 5 0 0 1 4-2z"/>
+      <rect x="44" y="0.5" width="19" height="11" rx="3" fill="none" style="stroke: var(--chrome)" opacity=".5"/>
+      <rect x="45.5" y="2" width="14" height="8" rx="1.8"/><rect x="64" y="4" width="1.6" height="4" rx=".8" opacity=".5"/>
+    </svg>
+  </div>
 
-<main id="screen">
-  <!-- TODAY -->
-  <section class="view" id="v-today" aria-label="Today">
-    <div class="scroll">
-      <header class="top">
-        <h1 class="brand">Söz</h1>
-        <div class="week" id="week" role="img"></div>
-      </header>
+  <main id="screen">
+    <div class="topstrip"></div>
+    <section class="panel" id="p-today" aria-label="Today"></section>
+    <section class="panel" id="p-course" aria-label="Course" hidden></section>
+    <section class="panel" id="p-words" aria-label="Words" hidden></section>
 
-      <div class="banner" role="status"><i class="ph ph-wifi-slash"></i><span id="off-msg">Offline. Lesson 4 is downloaded, so you can do it now. Results sync when you are back online.</span></div>
+    <nav class="tabbar" aria-label="Tabs">
+      <button data-act="tab" data-tab="today" aria-current="page"><i class="ph-fill ph-house"></i>Today</button>
+      <button data-act="tab" data-tab="course"><i class="ph ph-path"></i>Course</button>
+      <button data-act="tab" data-tab="words"><i class="ph ph-cards"></i>Words</button>
+    </nav>
 
-      <div class="skel" aria-label="Loading">
-        <div class="sk" style="height:330px;margin-top:8px"></div>
-        <div class="sk" style="height:96px;margin-top:16px"></div>
-        <div class="sk" style="height:28px;width:60%;margin-top:24px"></div>
-        <div class="sk" style="height:56px;margin-top:12px"></div>
+    <section id="lesson" role="dialog" aria-modal="true" aria-labelledby="l-title" inert>
+      <div class="l-head">
+        <button class="icon-btn" data-act="close" aria-label="Close, progress is saved"><i class="ph ph-x"></i></button>
+        <div class="l-prog"><div class="segs" id="segs"></div></div>
+        <span class="l-count" id="l-count"></span>
       </div>
+      <div id="l-main" style="flex:1;display:flex;flex-direction:column"></div>
+      <div id="fb" hidden aria-live="polite"></div>
+    </section>
+    <p class="sr" id="live" aria-live="polite"></p>
+  </main>
 
-      <div class="real">
-        <article class="lesson" id="card" aria-labelledby="card-unit">
-          <div class="pic" style="--c:#7a5236">
-            <img id="card-img" src="https://images.unsplash.com/photo-1647772809729-7afb10f80766?w=800&h=300&q=80&auto=format&fit=crop"
-                 alt="Breakfast table with tea glasses" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()">
-          </div>
-          <div class="body">
-            <p class="unit" id="card-unit"></p>
-            <div class="phrase">
-              <div><p class="tr" id="card-tr" lang="tr"></p><p class="en" id="card-en"></p></div>
-              <button class="audio" id="card-audio"><i class="ph ph-speaker-high ph-ico"></i></button>
-            </div>
-            <p class="scope num" id="card-scope"></p>
-            <button class="primary" id="start"></button>
-          </div>
-        </article>
-
-        <div class="err" role="alert">
-          <i class="ph ph-cloud-x"></i>
-          <h2 id="err-h">Lesson 4 did not download</h2>
-          <p>Check your connection, then try again. Your progress is saved.</p>
-          <button class="primary" id="retry">Try again</button>
-        </div>
-
-        <button class="course" id="course-btn" aria-describedby="receipt">
-          <div class="row"><h2>A1 course</h2><span class="pct num" id="pct"></span></div>
-          <div class="bar" id="bar" aria-hidden="true"></div>
-          <div class="row"><span class="meta num" id="course-meta"></span><i class="ph ph-caret-right"></i></div>
-          <p class="receipt" id="receipt" aria-live="polite"></p>
-        </button>
-
-        <section class="weak" aria-labelledby="weak-h">
-          <div class="row">
-            <h2 id="weak-h">Weak words <span class="num" id="weak-n"></span></h2>
-            <button class="ghost" id="practise"></button>
-          </div>
-          <p class="note">Strength drops when you have not seen a word for a while.</p>
-          <p class="receipt" id="p-receipt" aria-live="polite"></p>
-          <ul class="words" id="weak-list"></ul>
-        </section>
-      </div>
-    </div>
-  </section>
-
-  <!-- WORDS -->
-  <section class="view" id="v-words" aria-label="Words" hidden>
-    <div class="scroll">
-      <h1 class="bigtitle">Words</h1>
-      <div class="row"><h2 class="sub-h" style="margin:0">Weak <span class="num" id="weak-n2" style="color:var(--ink-2);font-weight:400"></span></h2><button class="ghost" id="practise2"></button></div>
-      <ul class="words" id="weak-list2"></ul>
-      <h2 class="sub-h">Strong</h2>
-      <ul class="words" id="strong-list"></ul>
-    </div>
-  </section>
-
-  <!-- COURSE -->
-  <section class="view" id="v-course" aria-label="Course" hidden>
-    <div class="scroll">
-      <h1 class="bigtitle">Course</h1>
-      <p class="note num" id="course-sum" style="margin:0 0 8px"></p>
-      <ul class="units" id="units"></ul>
-    </div>
-  </section>
-
-  <nav class="tabbar" aria-label="Tabs">
-    <button data-tab="today" aria-current="page"><i class="ph-fill ph-house"></i>Today</button>
-    <button data-tab="words"><i class="ph ph-cards"></i>Words</button>
-    <button data-tab="course"><i class="ph ph-path"></i>Course</button>
-  </nav>
-
-  <!-- LESSON / PRACTICE (pushed, modal-free) -->
-  <section class="lv" id="lv" hidden aria-labelledby="lv-h">
-    <div class="lv-top">
-      <button class="iconbtn" id="lv-close" aria-label="Exit, progress is saved"><i class="ph ph-x ph-ico"></i></button>
-      <div class="lv-bar" aria-hidden="true"><i id="lv-fill"></i></div>
-      <span class="lv-count num" id="lv-count"></span>
-    </div>
-    <div class="pic" style="--c:#7a5236">
-      <img id="lv-img" src="https://images.unsplash.com/photo-1647772809729-7afb10f80766?w=800&h=300&q=80&auto=format&fit=crop"
-           alt="" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()">
-    </div>
-    <div class="lv-body" id="lv-body"></div>
-    <div class="fb" id="fb" hidden role="status" aria-live="polite">
-      <div id="fb-tile"></div>
-      <p class="fb-h" id="fb-h"></p>
-      <p class="fb-ans" id="fb-ans"></p>
-      <p class="fb-why" id="fb-why"></p>
-      <div class="fb-act">
-        <button class="ghost" id="fb-audio"><i class="ph ph-speaker-high"></i>Play</button>
-        <button class="primary" id="fb-go">Continue</button>
-      </div>
-    </div>
-  </section>
-</main>
-<div class="home-indicator"></div>
-
-<script>
-/* motion-kit.js (mobile-ui-craft 5.0), inlined */
+  <div class="home-indicator"></div>
+  <script>document.getElementById('clock').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, '');</script>
+  <script>/* motion-kit.js (mobile-ui-craft 5.0). Zero dependencies. Inline it in one <script> of the prototype; it defines window.MK.
+   Everything that should be filmable runs on WAAPI or view transitions, which scripts/capture.mjs `film:` slows down.
+   requestAnimationFrame is used only for MK.tilt smoothing (pointer-driven, not filmed); never build a filmed move on it.
+   Springs are CSS linear() easings generated at mass 1; the tokens are the Material 3 Expressive stiffness/damping pairs. */
 (() => {
-  const MK = (window.MK = { out: 'cubic-bezier(.2,.8,.2,1)' });
+  const MK = (window.MK = { out: 'cubic-bezier(.2,.8,.2,1)' }); // out: for fades and menus, never for springs
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   MK.reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Spring as a linear() easing: stiffness k, damping ratio zeta (<= 1). ms is the time to settle within 0.2%.
   MK.spring = (k, zeta, pts = 36) => {
     const w0 = Math.sqrt(k), wd = w0 * Math.sqrt(Math.max(1e-6, 1 - zeta * zeta));
     const x = zeta < 1
@@ -335,13 +270,18 @@
     v[pts] = 1;
     return { easing: `linear(${v.join(', ')})`, ms: Math.round(T * 1000) };
   };
+  // spatial moves things and may overshoot; effects (opacity, colour) must not overshoot
   MK.ease = { spatial: MK.spring(380, 0.8), fast: MK.spring(800, 0.6), slow: MK.spring(200, 0.8), effects: MK.spring(1600, 1) };
+
+  // Shared-element and state morphs. Give the two ends the same view-transition-name (unique, set only while morphing).
   let vtStyle;
   MK.morph = (update, opts = {}) => {
     if (!document.startViewTransition || document.visibilityState !== 'visible') return Promise.resolve(update()).then(() => {});
     if (!vtStyle) {
       const e = MK.ease.spatial;
       vtStyle = document.head.appendChild(document.createElement('style'));
+      // under Reduce Motion the named groups jump and only the page crossfades.
+      // The page fades out before the new one fades in: a simultaneous crossfade shows old and new text on top of each other.
       vtStyle.textContent = `::view-transition-group(*){animation-duration:${e.ms}ms;animation-timing-function:${e.easing}}
 ::view-transition-group(root){animation-duration:200ms;animation-timing-function:ease-out}
 ::view-transition-old(root){animation:mk-vt-out 90ms ease-out both}::view-transition-new(root){animation:mk-vt-in 150ms 60ms ease-out both}
@@ -350,13 +290,24 @@
     }
     const typed = opts.types && window.ViewTransition && 'types' in ViewTransition.prototype;
     const vt = typed ? document.startViewTransition({ update, types: opts.types }) : document.startViewTransition(update);
-    vt.ready.catch(() => {});
+    vt.ready.catch(() => {}); // a skipped transition rejects ready; the update still ran, so finished is what we return
     return vt.finished;
   };
-  MK.freeze = (el) => { const t = getComputedStyle(el).transform; el.getAnimations().forEach((a) => a.cancel()); el.style.transform = t === 'none' ? '' : t; };
+
+  // Commit the on-screen transform and stop animations, so a grab or a new move starts from where the element is.
+  MK.freeze = (el) => {
+    const cs = getComputedStyle(el), t = cs.transform, tr = cs.translate, sc = cs.scale; // read before cancel: computed values are live
+    el.getAnimations().forEach((a) => a.cancel());
+    el.style.transform = t === 'none' ? '' : t;
+    el.style.translate = tr === 'none' ? '' : tr; // MK.flip animates these two, so a mid-flip grab needs them too
+    el.style.scale = sc === 'none' ? '' : sc;
+  };
+
+  // FLIP for one element or an array. Uses the translate/scale properties, so it composes with the element's own transform.
+  // Scaling distorts children and radii: flip boxes, or use MK.morph for rich content.
   MK.flip = (targets, mutate, ease = MK.ease.spatial) => {
     const els = [].concat(targets), red = MK.reduced();
-    const first = els.map((e) => e.getBoundingClientRect());
+    const first = els.map((e) => e.getBoundingClientRect()); // measured while any earlier flip is still in flight
     els.forEach((e) => e.getAnimations().filter((a) => a.id === 'mk-flip').forEach((a) => a.cancel()));
     mutate();
     return Promise.all(els.map((e, i) => {
@@ -370,13 +321,110 @@
       return an.finished.catch(() => {});
     })).then(() => {});
   };
+
+  // Pointer drag with capture. Velocity (px/ms) comes from the last ~80 ms of movement. Returns a disposer.
+  // axis 'x' or 'y' locks the other axis and leaves that scroll direction to the browser.
+  MK.drag = (el, { axis, onStart, onMove, onEnd } = {}) => {
+    el.style.touchAction = axis === 'x' ? 'pan-y' : axis === 'y' ? 'pan-x' : 'none';
+    let id = null, x0 = 0, y0 = 0, pts = [];
+    const d = (e) => ({ dx: axis === 'y' ? 0 : e.clientX - x0, dy: axis === 'x' ? 0 : e.clientY - y0 });
+    const down = (e) => {
+      if (id !== null || (e.pointerType === 'mouse' && e.button)) return;
+      MK.freeze(el);
+      id = e.pointerId; x0 = e.clientX; y0 = e.clientY; pts = [[e.timeStamp, e.clientX, e.clientY]];
+      try { el.setPointerCapture(id); } catch { /* synthetic events have no active pointer */ }
+      onStart?.(e);
+    };
+    const move = (e) => {
+      if (e.pointerId !== id) return;
+      pts.push([e.timeStamp, e.clientX, e.clientY]);
+      onMove?.(d(e).dx, d(e).dy, e);
+    };
+    const up = (e) => {
+      if (e.pointerId !== id) return;
+      id = null;
+      const p0 = pts.find((p) => e.timeStamp - p[0] <= 80) || pts[pts.length - 1], p1 = pts[pts.length - 1], dt = p1[0] - p0[0];
+      const vx = dt > 1 && axis !== 'y' ? (p1[1] - p0[1]) / dt : 0, vy = dt > 1 && axis !== 'x' ? (p1[2] - p0[2]) / dt : 0;
+      onEnd?.({ ...d(e), vx, vy });
+    };
+    const ev = [['pointerdown', down], ['pointermove', move], ['pointerup', up], ['pointercancel', up]];
+    ev.forEach(([n, f]) => el.addEventListener(n, f));
+    return () => ev.forEach(([n, f]) => el.removeEventListener(n, f));
+  };
+
+  // Spring on x, y (px), r (deg), s (scale), seeded with the release velocity v (units per ms). The spring is simulated
+  // into WAAPI keyframes, so the move is a normal Animation: cancel it (or MK.freeze) to grab it mid-flight.
+  MK.fling = (el, { from = {}, to = {}, v = {}, k = 380, zeta = 0.8 } = {}) => {
+    if (MK.reduced()) { k = 1600; zeta = 1; v = {}; } // no overshoot, no carried momentum
+    const base = { x: 0, y: 0, r: 0, s: 1 }, tol = { x: 0.3, y: 0.3, r: 0.05, s: 0.002 };
+    const A = { ...base, ...from }, B = { ...base, ...to }, c = 2 * zeta * Math.sqrt(k), dt = 1 / 240, keys = Object.keys(base);
+    const p = { ...A }, w = Object.fromEntries(keys.map((q) => [q, (v[q] || 0) * 1000]));
+    const css = () => `translate(${p.x}px,${p.y}px) rotate(${p.r}deg) scale(${p.s})`;
+    const frames = [{ transform: css() }];
+    for (let i = 1; i < 720; i++) {
+      keys.forEach((q) => { w[q] += (-k * (p[q] - B[q]) - c * w[q]) * dt; p[q] += w[q] * dt; });
+      if (i % 4) continue;
+      if (keys.every((q) => Math.abs(p[q] - B[q]) < tol[q] && Math.abs(w[q]) < tol[q] * 8)) break;
+      frames.push({ transform: css() });
+    }
+    Object.assign(p, B);
+    const end = css();
+    frames.push({ transform: end });
+    const an = el.animate(frames, { duration: (frames.length * 1000) / 60, easing: 'linear', fill: 'forwards' });
+    an.finished.then(() => { el.style.transform = end; an.cancel(); }, () => {}); // a cancelled fling leaves the transform alone
+    return an;
+  };
+
+  // Perspective tilt that follows the pointer, low-pass smoothed (rAF, see header), spring back on leave.
+  // It owns el.style.transform: tilt an inner element if the outer one is thrown. Sets --mx/--my (0-100%) for a highlight.
+  // Returns a disposer.
+  MK.tilt = (el, { max = 10 } = {}) => {
+    let tx = 0, ty = 0, cx = 0, cy = 0, raf = 0;
+    const pose = () => `perspective(700px) rotateX(${-cy * max}deg) rotateY(${cx * max}deg)`;
+    const step = () => {
+      cx += (tx - cx) * 0.15; cy += (ty - cy) * 0.15;
+      el.style.transform = pose();
+      el.style.setProperty('--mx', `${50 + cx * 50}%`); el.style.setProperty('--my', `${50 + cy * 50}%`);
+      raf = Math.abs(tx - cx) + Math.abs(ty - cy) > 0.002 ? requestAnimationFrame(step) : 0;
+    };
+    const aim = (x, y) => { if (MK.reduced()) return; tx = clamp(x, -1, 1); ty = clamp(y, -1, 1); raf = raf || requestAnimationFrame(step); };
+    const move = (e) => { const r = el.getBoundingClientRect(); aim(((e.clientX - r.left) / r.width) * 2 - 1, ((e.clientY - r.top) / r.height) * 2 - 1); };
+    const leave = () => {
+      cancelAnimationFrame(raf); raf = 0;
+      const e = MK.ease.fast, from = pose(), cx0 = cx, cy0 = cy;
+      tx = ty = cx = cy = 0;
+      el.style.transform = '';
+      el.style.setProperty('--mx', '50%'); el.style.setProperty('--my', '50%');
+      if (!MK.reduced() && Math.abs(cx0) + Math.abs(cy0) > 0.01) el.animate([{ transform: from }, { transform: pose() }], { duration: e.ms, easing: e.easing });
+    };
+    const ev = [['pointermove', move], ['pointerleave', leave], ['pointerup', leave], ['pointercancel', leave]];
+    ev.forEach(([n, f]) => el.addEventListener(n, f));
+    el._mkAim = aim;
+    return () => { leave(); ev.forEach(([n, f]) => el.removeEventListener(n, f)); delete el._mkAim; };
+  };
+  // Gyro tilt for el, started by a tap on button (iOS asks for permission inside a user gesture; needs HTTPS, so file:// gets nothing).
+  MK.tilt.gyro = (button, el, opts) => {
+    const on = (e) => el._mkAim?.((e.gamma || 0) / 30, ((e.beta || 0) - 45) / 30);
+    const click = async () => {
+      const D = window.DeviceOrientationEvent;
+      if (!D || MK.reduced() || (typeof D.requestPermission === 'function' && (await D.requestPermission().catch(() => 'denied')) !== 'granted')) return;
+      if (!el._mkAim) MK.tilt(el, opts);
+      addEventListener('deviceorientation', on);
+    };
+    button.addEventListener('click', click);
+    return () => { button.removeEventListener('click', click); removeEventListener('deviceorientation', on); };
+  };
+
+  // Digit roll for a figure in tabular numerals: only the digits that changed slide. text is the whole formatted string.
+  // A different shape (where the digits and the other characters sit) rebuilds the figure with a fade. The element gets role=img and aria-label = text.
   MK.roll = (el, text) => {
     text = String(text);
     el.setAttribute('role', 'img'); el.setAttribute('aria-label', text);
     if (el.dataset.mkText === text) return;
     const red = MK.reduced(), e = MK.ease.fast;
-    if (el.dataset.mkLen !== String(text.length)) {
-      el.dataset.mkLen = text.length;
+    const shape = text.replace(/\d/g, '0'); // same length is not same layout: '1h 20m' vs '12 min'
+    if (el.dataset.mkLen !== shape) {
+      el.dataset.mkLen = shape;
       el.style.cssText += ';display:inline-flex;height:1em;line-height:1;overflow:hidden;font-variant-numeric:tabular-nums';
       el.innerHTML = [...text].map((ch) => /\d/.test(ch)
         ? '<span aria-hidden="true" style="display:block;height:1em;overflow:hidden"><span class="mk-col" style="display:flex;flex-direction:column">'
@@ -387,7 +435,7 @@
     }
     let k = 0;
     el.querySelectorAll('.mk-col').forEach((col) => {
-      while (!/\d/.test(text[k])) k++;
+      while (k < text.length && !/\d/.test(text[k])) k++;
       const to = +text[k++], from = +col.dataset.d, at = (n) => `translateY(${-n}em)`;
       col.style.transform = at(to); col.dataset.d = to;
       if (from !== to && !red && el.dataset.mkText !== undefined) col.animate([{ transform: at(from) }, { transform: at(to) }], { duration: e.ms, easing: e.easing });
@@ -395,286 +443,316 @@
     if (red && el.dataset.mkText !== undefined) el.animate([{ opacity: 0.4 }, { opacity: 1 }], { duration: 150, easing: MK.out });
     el.dataset.mkText = text;
   };
+
+  // navigator.vibrate patterns. iOS Safari has no vibrate: this is a silent no-op there, so never rely on it alone.
   const PATTERNS = { selection: 6, light: 10, medium: 20, success: [10, 40, 10], warning: [20, 60, 20], error: [30, 50, 30, 50, 30] };
   MK.haptic = (kind = 'light') => { try { navigator.vibrate?.(PATTERNS[kind] ?? 10); } catch { /* blocked before a user gesture */ } };
 })();
 </script>
+  <script>
+  // ---------- sample content (layout testing only; real course content comes from the curriculum team) ----------
+  const IMG = (id, w = 300) => `https://images.unsplash.com/photo-${id}?w=${w}&h=${w}&q=80&auto=format&fit=crop&dpr=2`;
+  const UNITS = [
+    ['Merhaba', 'Greetings'], ['Sayılar', 'Numbers'], ['Ailem', 'My family'], ['Yemek ve içecek', 'Food and drink'],
+    ['Şehirde', 'In the city'], ['Alışveriş', 'Shopping'], ['Günler ve saatler', 'Days and times'], ['Tatil', 'Holidays'],
+  ];
+  const PER_UNIT = 6, TOTAL = UNITS.length * PER_UNIT;
+  const UNIT4 = ['Yiyecekler', 'İçecekler', 'Kafede', 'Lokantada', 'Kahvaltı', 'Tekrar'];
+  // each exercise: q, options (first one is right), reason
+  const LESSONS = [
+    { n: 3, tr: 'Kafede', en: 'At the café', img: '1690063860120-3521cead6c1c', c: '#7d3f22', phrase: ['Bir çay, lütfen.', 'A tea, please.'], newWords: 6, ex: [
+      ['Bir çay, lütfen.', ['A tea, please.', 'Two teas, please.', 'The tea is hot.'], 'Bir is "one" and also works as "a". Lütfen is "please".'],
+      ['Hesap, lütfen.', ['The bill, please.', 'The menu, please.', 'Water, please.'], 'Hesap is the bill.'],
+      ['Şeker var mı?', ['Is there sugar?', 'Is it sweet?', 'I want sugar.'], 'Var mı? asks whether something is there.'],
+      ['Su istiyorum.', ['I want water.', 'I have water.', 'Is there water?'], 'İstiyorum is "I want". The verb comes last.'],
+      ['Menü nerede?', ['Where is the menu?', 'What is on the menu?', 'Is this the menu?'], 'Nerede is "where".'],
+      ['Çok lezzetli.', ['Very tasty.', 'Too much.', 'Very hot.'], 'Çok is "very", lezzetli is "tasty".'],
+      ['Bir kahve daha.', ['One more coffee.', 'Only one coffee.', 'A big coffee.'], 'Daha is "more".'],
+      ['Afiyet olsun.', ['Enjoy your meal.', 'Cheers.', 'See you soon.'], 'Said to someone who is about to eat or has just eaten.'],
+    ] },
+    { n: 4, tr: 'Lokantada', en: 'At the restaurant', img: '1555939594-58d7cb561ad1', c: '#6b4a2c', phrase: ['Masa boş mu?', 'Is the table free?'], newWords: 5, ex: [
+      ['Masa boş mu?', ['Is the table free?', 'Is the table big?', 'Where is the table?'], 'Boş is "empty" or "free". Mu makes it a question.'],
+      ['İki kişiyiz.', ['There are two of us.', 'We are hungry.', 'Two menus, please.'], 'Kişi is "person". -yiz means "we are".'],
+      ['Ne önerirsiniz?', ['What do you recommend?', 'What would you like?', 'What is this?'], 'Önermek is "to recommend".'],
+      ['Acı değil, lütfen.', ['Not spicy, please.', 'Very spicy, please.', 'Not cold, please.'], 'Acı is "spicy". Değil is "not".'],
+      ['Hesabı ayıralım.', ['Let\'s split the bill.', 'Let\'s pay the bill.', 'The bill is wrong.'], 'Ayırmak is "to split".'],
+      ['Kart geçiyor mu?', ['Do you take cards?', 'Is the card new?', 'Where is my card?'], 'Geçmek here means "to be accepted".'],
+    ] },
+    { n: 5, tr: 'Kahvaltı', en: 'Breakfast', img: '1633040243823-6bf8d4edb0ec', c: '#8c5a2e', phrase: ['Kahvaltı hazır.', 'Breakfast is ready.'], newWords: 4, ex: [
+      ['Kahvaltı hazır.', ['Breakfast is ready.', 'Breakfast is late.', 'Is breakfast ready?'], 'Hazır is "ready".'],
+      ['Yumurta ister misin?', ['Do you want an egg?', 'I want an egg.', 'Is there an egg?'], 'İster misin? is "do you want?"'],
+      ['Çayı şekersiz içerim.', ['I drink tea without sugar.', 'I drink tea with sugar.', 'The tea has no sugar.'], '-siz means "without".'],
+      ['Zeytin çok güzel.', ['The olives are very good.', 'Olives are expensive.', 'One olive, please.'], 'Güzel is "good" or "lovely".'],
+      ['Biraz daha ekmek?', ['A bit more bread?', 'Is there bread?', 'Very little bread.'], 'Biraz is "a little". Daha is "more".'],
+    ] },
+    // the unit ends with a review built from the learner's own words
+    { n: 6, tr: 'Tekrar', en: 'Unit review', img: '1509042239860-f550ce710b93', c: '#6e5240', phrase: ['Afiyet olsun.', 'Enjoy your meal.'], newWords: 0, ex: null },
+  ];
+  const WORDS = [
+    ['su', 'water', 1], ['ekmek', 'bread', 2], ['teşekkür ederim', 'thank you', 2], ['hesap', 'the bill', 1],
+    ['peynir', 'cheese', 2], ['yoğurt', 'yogurt', 2], ['kahvaltı', 'breakfast', 1],
+    ['merhaba', 'hello', 4], ['çay', 'tea', 4], ['evet', 'yes', 4], ['hayır', 'no', 3], ['lütfen', 'please', 3],
+  ].map(([tr, en, s]) => ({ tr, en, s }));
+  const LEVEL = ['', 'Weak', 'Fading', 'Good', 'Strong'];
 
-<script>
-document.getElementById('clock').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, '');
-const $ = (id) => document.getElementById(id);
+  // ---------- one state; every view renders from it ----------
+  const S = { tab: 'today', streak: 12, doneToday: false, li: 0, saved: null, run: null, opener: null };
+  const weak = () => WORDS.filter((w) => w.s <= 2).sort((a, b) => a.s - b.s);
+  const lessonsDone = () => 3 * PER_UNIT + LESSONS[S.li].n - 1;
+  const pct = () => Math.round((lessonsDone() / TOTAL) * 100);
+  const exCount = (L) => (L.ex ? L.ex.length : wordExercises(WORDS.slice(0, 8)).length);
+  console.assert(lessonsDone() === 20 && pct() === 42, 'course figures');
 
-/* ---------- sample data (realistic, not real figures) ---------- */
-const PER_UNIT = 6;
-const UNITS = [
-  ['Selamlaşma', 'Greetings'], ['Sayılar', 'Numbers'], ['Kahvaltı', 'Breakfast'], ['Pazarda', 'At the market'],
-  ['Yol tarifi', 'Directions'], ['Aile', 'Family'], ['Saat ve günler', 'Time and days'], ['Hava durumu', 'Weather'],
-  ['İş', 'Work'], ['Seyahat', 'Travel'], ['Doktorda', 'At the doctor'], ['Hafta sonu', 'The weekend'],
-];
-const TOTAL = UNITS.length * PER_UNIT;
-const PHOTO_UNIT = 2; // only the breakfast unit has a photo in this prototype
-// "|" marks where a suffix starts; it is shown in the accent and stripped for audio and answers
-const L4 = [
-  ['Çay iste|r mi|sin?', ['Would you like tea?', 'Do you have tea?', 'Is the tea hot?'], 0, 'İster = wants. Misin turns it into a question to you: would you like?'],
-  ['Evet, lütfen.', ['No, thanks.', 'Yes, please.', 'Yes, I do.'], 1, 'Evet = yes, lütfen = please.'],
-  ['Şeker|li mi, şeker|siz mi?', ['Is it sweet?', 'Sugar, please.', 'With sugar or without?'], 2, '-li means with, -siz means without.'],
-  ['Şeker|siz, lütfen.', ['Without sugar, please.', 'With sugar, please.', 'More sugar, please.'], 0, '-siz means without: şekersiz, without sugar.'],
-  ['Peynir iste|r mi|siniz?', ['Do you like cheese?', 'Would you like cheese?', 'Is this cheese?'], 1, '-siniz is the polite or plural form of -sin. Liking would be sever.'],
-  ['Hayır, teşekkür|ler.', ['No, thanks.', 'Not yet.', 'Yes, please.'], 0, 'Hayır = no, teşekkürler = thanks.'],
-  ['Bir çay daha, lütfen.', ['One tea, please.', 'Tea for two, please.', 'One more tea, please.'], 2, 'Daha = more: bir çay daha, one more tea.'],
-  ['Ekmek var mı?', ['Is there any bread?', 'Do you want bread?', 'Is the bread fresh?'], 0, 'Var mı = is there? Var on its own means there is.'],
-];
-const L5 = [
-  ['Hesap, lütfen.', ['The menu, please.', 'The bill, please.', 'Water, please.'], 1, 'Hesap = the bill.'],
-  ['Ne kadar?', ['How much?', 'How many?', 'What time?'], 0, 'Ne kadar = how much. How many is kaç.'],
-  ['Yüz lira.', ['Ten lira.', 'One thousand lira.', 'One hundred lira.'], 2, 'Yüz = 100, on = 10, bin = 1.000.'],
-  ['Kart|la öde|yebilir mi|yim?', ['Can I pay by card?', 'Do you have a card?', 'Can I pay in cash?'], 0, '-la = by or with. Cash is nakit.'],
-  ['Tabii.', ['Thank you.', 'Of course.', 'Maybe.'], 1, 'Tabii = of course.'],
-  ['Afiyet olsun.', ['Good morning.', 'Goodbye.', 'Enjoy your meal.'], 2, 'Said to someone eating, or after a meal.'], // slop-ok: a lesson answer choice, not a greeting header
-];
-const REVIEW = [...L4.slice(0, 4), ...L5.slice(0, 4)];
-const LESSONS = { 15: { tr: 'Çay iste|r mi|sin?', en: 'Would you like tea?', items: L4, words: 6 },
-                  16: { tr: 'Hesap, lütfen.', en: 'The bill, please.', items: L5, words: 5 } };
-const lessonAt = (n) => LESSONS[n] || { tr: REVIEW[0][0], en: REVIEW[0][1][REVIEW[0][2]], items: REVIEW, words: 0 };
+  const states = ['loading', 'empty', 'error', 'offline'];
+  const stateNow = () => (states.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'content');
 
-let done = 15;                                     // lessons finished in the course
-const saved = {};                                  // lesson index -> exercises answered, kept on exit
-const WORDS = [
-  { tr: 'şeker|siz', en: 'without sugar', s: 1 }, { tr: 'değil', en: 'not', s: 1 },
-  { tr: 'peynir|li', en: 'with cheese', s: 2 }, { tr: 'ılık', en: 'lukewarm', s: 2 },
-  { tr: 'kahvaltı|da', en: 'at breakfast', s: 2 }, { tr: 'yumurta|lar', en: 'eggs', s: 3 },
-  { tr: "İstanbul'|da", en: 'in Istanbul', s: 3 },
-  { tr: 'merhaba', en: 'hello', s: 4 }, { tr: 'teşekkür|ler', en: 'thanks', s: 4 }, { tr: 'evet', en: 'yes', s: 4 },
-  { tr: 'hayır', en: 'no', s: 4 }, { tr: 'çay', en: 'tea', s: 4 }, { tr: 'ekmek', en: 'bread', s: 4 },
-];
-// this week, Monday first; today is Thursday 12 November
-const WEEK = [['M', 'Monday', 'done'], ['T', 'Tuesday', 'done'], ['W', 'Wednesday', ''], ['T', 'Thursday', 'today'], ['F', 'Friday', ''], ['S', 'Saturday', ''], ['S', 'Sunday', '']];
-const STRENGTH = ['', 'Weak', 'Fair', 'Good', 'Strong'];
-
-/* ---------- helpers ---------- */
-const plain = (s) => s.replace(/\|/g, '');
-const marked = (s) => s.replace(/\|([^\s?.,'’]+)/g, '<span class="sfx">$1</span>');
-const pct = (n) => Math.round((n / TOTAL) * 100);
-const state = () => document.documentElement.dataset.state;
-const weak = () => state() === 'empty' ? [] : WORDS.filter((w) => w.s < 4);
-function speak(text) {
-  if (!('speechSynthesis' in window)) return;
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(plain(text)); u.lang = 'tr-TR'; u.rate = .9;
-  speechSynthesis.speak(u);
-}
-
-/* ---------- render: today ---------- */
-function renderWeek() {
-  const n = WEEK.filter((d) => d[2] === 'done').length;
-  $('week').setAttribute('aria-label', `This week: ${n} days with a lesson${WEEK[3][2] === 'today' ? ', today not yet' : ', including today'}`);
-  $('week').innerHTML = WEEK.map(([l, , st]) => `<div class="day ${st}" aria-hidden="true">${l}<b>${st === 'done' ? '<i class="ph ph-check" style="font-size:16px"></i>' : ''}</b></div>`).join('');
-}
-function renderCard() {
-  const u = Math.floor(done / PER_UNIT), l = done % PER_UNIT + 1, L = lessonAt(done), n = L.items.length, a = saved[done] || 0;
-  $('card').classList.toggle('no-photo', u !== PHOTO_UNIT);
-  $('card-unit').textContent = `Unit ${u + 1}: ${UNITS[u][1]}, Lesson ${l} of ${PER_UNIT}`;
-  $('card-tr').innerHTML = marked(L.tr); $('card-en').textContent = L.en;
-  $('card-audio').setAttribute('aria-label', `Play ${plain(L.tr)}`);
-  $('card-scope').textContent = `5 min, ${L.words ? L.words + ' new words, ' : 'review, '}${a} of ${n} exercises`;
-  $('start').textContent = a ? 'Continue lesson' : 'Start lesson';
-  $('err-h').textContent = `Lesson ${l} did not download`;
-  $('off-msg').textContent = `Offline. Lesson ${l} is downloaded, so you can do it now. Results sync when you are back online.`;
-}
-function segFill(i) { return Math.max(0, Math.min(1, (done - i * PER_UNIT) / PER_UNIT)); }
-function renderCourse() {
-  const u = Math.min(Math.floor(done / PER_UNIT), UNITS.length - 1);
-  $('bar').innerHTML = UNITS.map((_, i) => `<span class="seg"><i style="width:${segFill(i) * 100}%"></i></span>`).join('');
-  MK.roll($('pct'), pct(done) + '%');
-  $('course-meta').textContent = `Unit ${u + 1} of ${UNITS.length}, ${UNITS[u][1]}. ${done} of ${TOTAL} lessons.`;
-  $('course-btn').setAttribute('aria-label', `A1 course, ${pct(done)}% done, ${done} of ${TOTAL} lessons. Open course.`);
-  $('course-sum').textContent = `A1, ${done} of ${TOTAL} lessons, ${pct(done)}%`;
-  $('units').innerHTML = UNITS.map(([tr, en], i) => {
-    const d = Math.round(segFill(i) * PER_UNIT), cur = i === u && d < PER_UNIT;
-    const st = d === PER_UNIT ? `<i class="ph-fill ph-check-circle"></i>${d} of ${PER_UNIT}` : d || cur ? `${d} of ${PER_UNIT}` : 'Not started';
-    return `<li class="${cur ? 'cur' : ''}"><div><div class="w-tr" lang="tr">${i + 1}. ${tr}</div><div class="w-en">${en}</div></div><span class="st num">${st}</span></li>`;
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const photo = (id, c, alt, cls) => `<div class="ph-wrap ${cls}" style="--c:${c}"><img src="${IMG(id)}" alt="${esc(alt)}" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()"></div>`;
+  const meter = (s) => `<div class="meter" aria-label="Strength ${s} of 4, ${LEVEL[s]}"><div class="bars" aria-hidden="true">${[1, 2, 3, 4].map((k) => `<i class="${k <= s ? 'f' : ''}"></i>`).join('')}</div><span aria-hidden="true">${LEVEL[s]}</span></div>`;
+  const wordRows = (list) => `<ul class="words">${list.map((w) => `<li><div class="w-text"><p class="w-tr" lang="tr">${esc(w.tr)}</p><p class="w-en">${esc(w.en)}</p></div>${meter(w.s)}</li>`).join('')}</ul>`;
+  const steps = () => UNITS.map((_, i) => {
+    const f = i < 3 ? 100 : i === 3 ? ((LESSONS[S.li].n - 1) / PER_UNIT) * 100 : 0;
+    return `<span><i style="--f:${f}%"></i></span>`;
   }).join('');
-}
-const wordRow = (w) => `<li><div><div class="w-tr" lang="tr">${marked(w.tr)}</div><div class="w-en">${w.en}</div></div>
-  <div class="meter" role="img" aria-label="Strength ${w.s} of 4, ${STRENGTH[w.s]}">${STRENGTH[w.s]}<span>${[1, 2, 3, 4].map((k) => `<i class="${k <= w.s ? 'on' : ''}"></i>`).join('')}</span></div></li>`;
-const EMPTY = '<li class="empty" style="display:block;border:0"><i class="ph ph-cards"></i>No weak words right now. Words you miss in lessons show up here.</li>';
-function renderWords() {
-  const list = weak(), n = list.length, label = n ? `Practise ${n}` : 'Practise';
-  for (const [ul, cnt, btn] of [['weak-list', 'weak-n', 'practise'], ['weak-list2', 'weak-n2', 'practise2']]) {
-    $(ul).innerHTML = n ? list.map(wordRow).join('') : EMPTY;
-    $(cnt).textContent = n;
-    $(btn).textContent = label; $(btn).disabled = !n;
-    $(btn).setAttribute('aria-label', n ? `Practise ${n} weak words` : 'Practise, no weak words');
-  }
-  $('strong-list').innerHTML = WORDS.filter((w) => w.s >= 4).map(wordRow).join('');
-}
-function renderAll() { renderWeek(); renderCard(); renderCourse(); renderWords(); }
 
-/* ---------- states by hash ---------- */
-const STATES = ['loading', 'empty', 'error', 'offline'];
-const sync = () => { const s = location.hash.slice(1); document.documentElement.dataset.state = STATES.includes(s) ? s : 'content'; renderWords(); };
-addEventListener('hashchange', sync);
-$('retry').onclick = () => { history.replaceState(null, '', location.pathname + location.search); sync(); $('start').focus({ preventScroll: true }); };
+  function todayCard(st) {
+    if (st === 'loading') return `<div class="sk" style="height:300px"></div>`;
+    if (st === 'error') return `<div class="err" role="alert"><i class="ph ph-warning-circle" aria-hidden="true"></i><b>Today's lesson didn't load</b><p>Check your connection, then try again.</p><button class="btn-acc" data-act="retry" style="margin-top:8px">Try again</button></div>`;
+    const L = LESSONS[S.li], resumed = S.saved && S.saved.li === S.li, n = exCount(L);
+    return `<article class="today" aria-labelledby="t-title">
+      ${S.doneToday ? `<p class="done-line"><i class="ph-fill ph-check-circle" aria-hidden="true"></i>Today's lesson done</p>` : ''}
+      <div class="t-top">
+        <div><p class="t-meta">Unit 4, lesson ${L.n} of ${PER_UNIT}</p><h2 id="t-title" lang="tr">${L.tr}</h2><p class="t-sub">${L.en}</p></div>
+        ${photo(L.img, L.c, L.en, 't-photo')}
+      </div>
+      <div class="t-phrase">
+        <button class="speak" data-act="speak" data-say="${esc(L.phrase[0])}" aria-label="Play ${esc(L.phrase[0])}"><i class="ph ph-speaker-high"></i></button>
+        <div><p class="t-tr" lang="tr">${L.phrase[0]}</p><p class="t-en">${L.phrase[1]}</p></div>
+      </div>
+      <dl class="t-scope">
+        <div><dt>Time</dt><dd>5 min</dd></div>
+        <div><dt>Exercises</dt><dd>${resumed ? `${S.saved.i} of ${n} done` : n}</dd></div>
+        <div><dt>New words</dt><dd>${L.newWords}</dd></div>
+      </dl>
+      <button class="btn-light" data-act="start" id="start">${resumed ? 'Continue lesson' : 'Start lesson'}</button>
+    </article>`;
+  }
 
-/* ---------- tabs ---------- */
-document.querySelectorAll('[data-tab]').forEach((b) => b.onclick = () => showTab(b.dataset.tab));
-function showTab(t) {
-  document.querySelectorAll('[data-tab]').forEach((b) => {
-    const on = b.dataset.tab === t, i = b.querySelector('i');
-    on ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current');
-    i.className = i.className.replace(/ph-fill|ph(?=\s)/, on ? 'ph-fill' : 'ph');
-  });
-  ['today', 'words', 'course'].forEach((v) => $('v-' + v).hidden = v !== t);
-}
-$('course-btn').onclick = () => showTab('course');
+  function renderToday() {
+    const st = stateNow(), w = st === 'empty' ? [] : weak();
+    const U = UNITS[3];
+    document.getElementById('p-today').innerHTML = `
+      <header class="navbar"><h1>Söz</h1>
+        <div class="streak"><b class="num"><span id="streak-n">${S.streak}</span> days</b><span>streak</span></div></header>
+      ${st === 'offline' ? `<p class="note"><i class="ph ph-cloud-slash" aria-hidden="true"></i>Offline. Downloaded lessons still work.</p>` : ''}
+      ${todayCard(st)}
+      <section class="sec" aria-labelledby="c-h">
+        <div class="sec-head"><h2 id="c-h">Course</h2></div>
+        ${st === 'loading' ? `<div class="sk" style="height:96px"></div>` : `
+        <div class="group"><button class="course-row" data-act="tab" data-tab="course" aria-label="Turkish A1, ${pct()} percent done, ${lessonsDone()} of ${TOTAL} lessons. Open course">
+          <div class="c-line"><b style="font:var(--t-head)">Turkish A1</b><span class="c-pct"><span id="pct-n">${pct()}%</span> done</span><i class="ph ph-caret-right" aria-hidden="true"></i></div>
+          <div class="steps" aria-hidden="true">${steps()}</div>
+          <div class="c-foot"><span>Unit 4 of 8, <span lang="tr">${U[0]}</span></span><span class="num">${lessonsDone()} of ${TOTAL} lessons</span></div>
+        </button></div>`}
+      </section>
+      <section class="sec" aria-labelledby="w-h">
+        <div class="sec-head"><h2 id="w-h">Weak words</h2>
+          ${w.length && st !== 'loading' ? `<button class="btn-out" data-act="practise"><i class="ph ph-arrow-clockwise" aria-hidden="true"></i>Practise ${w.length}</button>` : ''}</div>
+        ${st === 'loading' ? `<div class="sk" style="height:168px"></div>` : w.length ? wordRows(w)
+          : `<div class="empty"><i class="ph ph-cards" aria-hidden="true"></i><b>No weak words</b><p>Words you miss in lessons show up here.</p></div>`}
+      </section>`;
+    document.getElementById('p-today').setAttribute('aria-busy', st === 'loading');
+  }
 
-/* ---------- lesson and practice runner ---------- */
-let S = null; // session
-function openSession(mode) {
-  const lessonMode = mode === 'lesson';
-  if (lessonMode) {
-    const L = lessonAt(done);
-    S = { mode, key: done, items: L.items, i: saved[done] || 0, right: 0, opener: $('start') };
-  } else {
-    const list = weak(); if (!list.length) return;
-    const all = WORDS.map((w) => w.en);
-    // three choices: the word's meaning and the next two meanings in the list, rotated so the answer moves
-    const items = list.map((w, k) => { const o = [w.en, all[(WORDS.indexOf(w) + 1) % all.length], all[(WORDS.indexOf(w) + 5) % all.length]];
-      const r = k % 3; const opts = [...o.slice(3 - r), ...o.slice(0, 3 - r)]; return [w.tr, opts, opts.indexOf(w.en), `${plain(w.tr)} = ${w.en}.`, w]; });
-    S = { mode, items, i: 0, right: 0, opener: document.activeElement?.id === 'practise2' ? $('practise2') : $('practise') };
+  function renderCourse() {
+    const cur = LESSONS[S.li].n;
+    document.getElementById('p-course').innerHTML = `
+      <header class="navbar"><h1>Course</h1></header>
+      <p class="sub num">Turkish A1, ${lessonsDone()} of ${TOTAL} lessons, ${pct()}% done</p>
+      <ul class="units">${UNITS.map(([tr, en], i) => `<li><span class="u-n">Unit ${i + 1}</span><div class="u-t"><b lang="tr">${tr}</b><span>${en}</span></div>
+        ${i < 3 ? `<span class="u-s"><i class="ph-fill ph-check-circle" aria-hidden="true"></i>Done</span>` : i === 3 ? `<span class="u-s cur">${cur - 1} of ${PER_UNIT}</span>` : `<span class="u-s">Not started</span>`}</li>`).join('')}</ul>
+      <div class="sec-head" style="margin-top:var(--gap)"><h2>Unit 4 lessons</h2></div>
+      <ul class="units">${UNIT4.map((t, i) => `<li><span class="u-n">Lesson ${i + 1}</span><div class="u-t"><b lang="tr">${t}</b></div>
+        ${i + 1 < cur ? `<span class="u-s"><i class="ph-fill ph-check-circle" aria-hidden="true"></i>Done</span>` : i + 1 === cur ? `<span class="u-s cur">Next</span>` : '<span class="u-s"></span>'}</li>`).join('')}</ul>`;
   }
-  const photo = lessonMode && Math.floor(done / PER_UNIT) === PHOTO_UNIT;
-  const src = $('card-img');
-  if (photo && src) src.style.viewTransitionName = 'photo';
-  MK.morph(() => {
-    if (src) src.style.viewTransitionName = '';
-    $('lv').classList.toggle('no-photo', !photo);
-    if (photo && $('lv-img')) $('lv-img').style.viewTransitionName = 'photo';
-    $('lv').hidden = false; renderItem();
-  }).then(() => { if ($('lv-img')) $('lv-img').style.viewTransitionName = ''; });
-}
-function renderItem() {
-  const n = S.items.length, [tr, opts] = S.items[S.i];
-  $('fb').hidden = true;
-  $('lv-fill').style.transform = `scaleX(${S.i / n})`;
-  $('lv-count').textContent = `${S.i + 1} of ${n}`;
-  $('lv-body').innerHTML = `<h2 id="lv-h" tabindex="-1">${S.mode === 'lesson' ? 'Exercise' : 'Practice'} ${S.i + 1} of ${n}. What does this mean?</h2>
-    <div class="phrase"><p class="tr" lang="tr">${marked(tr)}</p><button class="audio" id="lv-audio" aria-label="Play ${plain(tr)}"><i class="ph ph-speaker-high ph-ico"></i></button></div>
-    <div class="opts">${opts.map((o, k) => `<button class="opt" data-k="${k}"><span>${o}</span><i class="ph" aria-hidden="true"></i></button>`).join('')}</div>`;
-  $('lv-audio').onclick = () => speak(tr);
-  $('lv-body').querySelectorAll('.opt').forEach((b) => b.onclick = () => answer(b));
-  $('lv-h').focus({ preventScroll: true });
-}
-function answer(btn) {
-  const [tr, opts, a, why, w] = S.items[S.i], k = +btn.dataset.k, ok = k === a;
-  const all = [...$('lv-body').querySelectorAll('.opt')];
-  all.forEach((b) => b.disabled = true);
-  S.answered = (S.answered || 0) + 1; if (ok) S.right++;
-  if (w && ok) w.s = Math.min(4, w.s + 1);             // practice: a right answer strengthens the word, a miss does not punish
-  if (S.mode === 'lesson') saved[S.key] = S.i + 1;      // answered exercises are kept even if the learner exits now
-  btn.classList.add(ok ? 'right' : 'wrong');
-  btn.querySelector('i').className = ok ? 'ph-fill ph-check-circle' : 'ph-fill ph-x-circle';
-  if (!ok) { all[a].classList.add('right'); all[a].querySelector('i').className = 'ph-fill ph-check-circle'; }
-  MK.haptic(ok ? 'success' : 'error');
-  // signature: the chosen answer tile travels into the feedback sheet, which gives the reason
-  const first = btn.getBoundingClientRect(), clone = btn.cloneNode(true);
-  clone.removeAttribute('data-k'); clone.disabled = true;
-  $('fb-tile').replaceChildren(clone);
-  $('fb').className = 'fb ' + (ok ? 'ok' : 'no'); $('fb').hidden = false;
-  $('fb-h').innerHTML = ok ? '<i class="ph-fill ph-check-circle"></i>Correct' : '<i class="ph-fill ph-x-circle"></i>Not quite';
-  $('fb-ans').textContent = ok ? `${plain(tr)} = ${opts[a]}` : `Answer: ${opts[a]}`;
-  $('fb-why').textContent = why;
-  $('fb-audio').onclick = () => speak(tr);
-  btn.classList.add('gone');
-  const last = clone.getBoundingClientRect(), e = MK.ease.spatial;
-  if (MK.reduced()) clone.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: MK.out });
-  else clone.animate([{ transform: `translate(${first.left - last.left}px, ${first.top - last.top}px)` }, { transform: 'none' }], { duration: e.ms, easing: e.easing });
-  $('fb').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160, easing: MK.out });
-  $('lv-fill').style.transform = `scaleX(${(S.i + 1) / S.items.length})`;
-  $('fb-go').focus({ preventScroll: true });
-}
-$('fb-go').onclick = () => { S.i++; S.i < S.items.length ? renderItem() : summary(); };
-function summary() {
-  const n = S.items.length;
-  $('fb').hidden = true; $('lv-count').textContent = `${n} of ${n}`;
-  if (S.mode === 'lesson') {
-    const l = S.key % PER_UNIT + 1;
-    $('lv-body').innerHTML = `<h2 id="lv-h" tabindex="-1">Lesson ${l} complete</h2><div class="sum"><h3>${S.right} of ${n} right</h3>
-      <p>Lesson ${l} of ${PER_UNIT} in ${UNITS[Math.floor(S.key / PER_UNIT)][1]} is done. ${S.key + 1} of ${TOTAL} lessons in A1.</p></div><div class="grow"></div>
-      <button class="primary" id="lv-done">Back to Today</button>`;
-  } else {
-    const strong = S.items.filter((it) => it[4].s >= 4).length;
-    $('lv-body').innerHTML = `<h2 id="lv-h" tabindex="-1">Practice complete</h2><div class="sum"><h3>${S.right} of ${n} right</h3>
-      <p>${strong ? `${strong} ${strong === 1 ? 'word is' : 'words are'} strong now and left the weak list.` : 'Each right answer made a word stronger.'}</p></div><div class="grow"></div>
-      <button class="primary" id="lv-done">Done</button>`;
+
+  function renderWords() {
+    const all = [...WORDS].sort((a, b) => a.s - b.s), w = weak();
+    document.getElementById('p-words').innerHTML = `
+      <header class="navbar"><h1>Words</h1></header>
+      <p class="sub num">${WORDS.length} words, ${w.length} weak</p>
+      ${w.length ? `<div style="padding:0 var(--side)"><button class="btn-acc" data-act="practise">Practise ${w.length} weak words</button></div>` : ''}
+      <div class="group" style="margin-top:16px;padding-top:2px">${wordRows(all)}</div>`;
   }
-  $('lv-done').onclick = () => closeSession(true);
-  $('lv-h').focus({ preventScroll: true });
-  MK.haptic('success');
-}
-function closeSession(finished) {
-  if (!S) return;
-  const s = S, prev = done, photo = s.mode === 'lesson' && !$('lv').classList.contains('no-photo');
-  if (s.mode === 'lesson' && finished) {
-    const l = s.key % PER_UNIT + 1;
-    done = s.key + 1; delete saved[s.key];
-    WEEK[3][2] = 'done';
-    $('receipt').textContent = `Today: Lesson ${l} done, ${s.right} of ${s.items.length} right.`;
+  const renderAll = () => { renderToday(); renderCourse(); renderWords(); };
+
+  // ---------- lesson and practice runs ----------
+  function wordExercises(list) {
+    return list.map((w, i) => {
+      const others = WORDS.filter((x) => x !== w), a = others[(i * 3) % others.length], b = others[(i * 3 + 5) % others.length];
+      return [w.tr, [w.en, a.en, b.en], `${w.tr[0].toLocaleUpperCase('tr')}${w.tr.slice(1)} means "${w.en}".`, w];
+    });
   }
-  if (s.mode === 'practice') $('p-receipt').textContent = `Practised ${s.answered || 0} of ${s.items.length} words, ${s.right} right.`;
-  if (photo && $('lv-img')) $('lv-img').style.viewTransitionName = 'photo';
-  S = null;
-  MK.morph(() => {
-    if ($('lv-img')) $('lv-img').style.viewTransitionName = '';
-    $('lv').hidden = true;
+  function openRun(run, opener) {
+    S.run = run; S.opener = opener;
+    const el = document.getElementById('lesson');
+    el.inert = false; el.classList.add('open');
+    document.querySelectorAll('.panel, .tabbar').forEach((p) => (p.inert = true));
+    renderEx();
+    requestAnimationFrame(() => document.getElementById('l-title')?.focus({ preventScroll: true }));
+  }
+  function closeRun() {
+    const r = S.run; if (!r) return;
+    if (r.mode === 'lesson' && !r.finished) {
+      const i = r.answered ? r.i + 1 : r.i; // an answer already given still counts
+      S.saved = i > 0 ? { li: S.li, i, correct: r.correct } : null;
+    }
+    S.run = null;
+    const el = document.getElementById('lesson');
+    el.classList.remove('open'); el.inert = true;
+    document.getElementById('fb').hidden = true;
+    document.querySelectorAll('.panel, .tabbar').forEach((p) => (p.inert = false));
+    const before = { streak: S.streak0, pct: S.pct0 };
     renderAll();
-    if (photo && $('card-img') && !$('card').classList.contains('no-photo')) $('card-img').style.viewTransitionName = 'photo';
-  }).then(() => {
-    if ($('card-img')) $('card-img').style.viewTransitionName = '';
-    s.opener.focus({ preventScroll: true });
-    if (done !== prev) settle(prev);
-  });
-}
-// the peak's end: the course bar fills once to the real count, today's day checks, the next lesson rises out of the card
-function settle(prev) {
-  const e = MK.ease.spatial, f = MK.ease.fast, red = MK.reduced();
-  [...$('bar').children].forEach((seg, i) => {
-    const before = Math.max(0, Math.min(1, (prev - i * PER_UNIT) / PER_UNIT)), now = segFill(i);
-    if (now === before || !now) return;
-    const fill = seg.firstChild;
-    red ? fill.animate([{ opacity: .3 }, { opacity: 1 }], { duration: 200, easing: MK.out })
-        : fill.animate([{ transform: `scaleX(${before / now})` }, { transform: 'scaleX(1)' }], { duration: e.ms, easing: e.easing });
-  });
-  const today = $('week').children[3].querySelector('b');
-  red ? today.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200 }) : today.animate([{ transform: 'scale(.6)' }, { transform: 'scale(1)' }], { duration: f.ms, easing: f.easing });
-  const body = $('card').querySelector('.body');
-  red ? body.animate([{ opacity: .3 }, { opacity: 1 }], { duration: 200, easing: MK.out })
-      : body.animate([{ transform: 'translateY(14px)', opacity: .4 }, { transform: 'none', opacity: 1 }], { duration: e.ms, easing: e.easing });
-}
-$('start').onclick = () => openSession('lesson');
-$('practise').onclick = $('practise2').onclick = (ev) => { ev.currentTarget.focus({ preventScroll: true }); openSession('practice'); };
-$('card-audio').onclick = () => speak(lessonAt(done).tr);
-$('lv-close').onclick = () => closeSession(false);
-addEventListener('keydown', (e) => {
-  if (e.key !== 'Escape' || $('lv').hidden || !S) return;
-  if (!$('fb').hidden) $('fb-go').click(); else closeSession(false); // top layer first: the feedback sheet, then the lesson
-});
+    const target = S.opener && document.querySelector(`[data-act="${S.opener}"]`);
+    (target || document.getElementById('p-today')).focus({ preventScroll: true });
+    // detail motion: changed figures roll once the lesson has slid away
+    if (before.streak !== undefined) setTimeout(() => {
+      rollFrom('streak-n', before.streak, String(S.streak)); rollFrom('pct-n', before.pct, `${pct()}%`);
+      S.streak0 = S.pct0 = undefined;
+    }, 340);
+  }
+  function rollFrom(id, from, to) {
+    const el = document.getElementById(id); if (!el || from === to) return;
+    MK.roll(el, from); MK.roll(el, to);
+  }
 
-renderAll(); sync();
+  function renderEx() {
+    const r = S.run, main = document.getElementById('l-main'), n = r.ex.length;
+    document.getElementById('segs').innerHTML = r.ex.map((_, k) => `<i class="${k < r.i + (r.answered || r.finished ? 1 : 0) ? 'f' : ''}"></i>`).join('');
+    document.getElementById('l-count').textContent = r.finished ? `${n} of ${n}` : `${r.i + 1} of ${n}`;
+    document.getElementById('fb').hidden = true;
+    if (r.finished) return renderDone();
+    const [q, opts] = r.ex[r.i];
+    const order = [0, 1, 2].map((k) => (k + r.i) % 3); // the right answer moves around
+    main.innerHTML = `<div class="l-body">
+        <h2 id="l-title" tabindex="-1">${r.mode === 'lesson' ? 'What does this mean?' : 'What does this word mean?'}</h2>
+        <div class="l-phrase"><button class="speak" data-act="speak" data-say="${esc(q)}" aria-label="Play ${esc(q)}"><i class="ph ph-speaker-high"></i></button><p lang="tr">${esc(q)}</p></div>
+        <div class="opts" role="group" aria-label="Answers">${order.map((k) => `<button class="opt" data-act="pick" data-k="${k}" aria-pressed="${r.picked === k}">${esc(opts[k])}</button>`).join('')}</div>
+      </div>
+      <div class="l-foot"><button class="btn-acc" data-act="check" id="check" ${r.picked == null ? 'disabled' : ''}>${r.picked == null ? 'Choose an answer' : 'Check'}</button></div>`;
+  }
 
-/* ---------- self-check: figures reconcile, figures are tabular ---------- */
-(() => {
-  const check = (c, m) => { if (!c) console.error('self-check: ' + m); };
-  check(pct(15) === 21 && pct(16) === 22, 'percent of course');
-  check(LESSONS[15].items.length === 8 && LESSONS[16].items.length === 6, 'exercise counts');
-  check(LESSONS[15].items.every(([, o, a]) => o.length === 3 && a >= 0 && a < 3), 'answer index');
-  check(weak().length === 7 || state() === 'empty', 'weak count');
-  document.fonts.ready.then(() => {
-    const m = (t) => { const s = document.createElement('span'); s.className = 'num'; s.style.cssText = 'position:absolute;visibility:hidden;font:600 17px "Public Sans";font-variant-numeric:tabular-nums'; s.textContent = t; document.body.append(s); const w = s.getBoundingClientRect().width; s.remove(); return w; };
-    check(Math.abs(m('0000') - m('1111')) < .5, 'tabular figures in Public Sans');
-    check(document.fonts.check('600 17px "Public Sans"', 'ğşıİ'), 'Turkish glyphs in Public Sans');
+  function check() {
+    const r = S.run; if (r.picked == null || r.answered) return;
+    const [q, opts, why, word] = r.ex[r.i], ok = r.picked === 0;
+    const tile = document.querySelector(`.opt[data-k="${r.picked}"]`), fb = document.getElementById('fb');
+    r.answered = true; r.lastOk = ok;
+    MK.haptic(ok ? 'success' : 'error');
+    tile.style.viewTransitionName = 'ans';
+    MK.morph(() => {
+      tile.style.viewTransitionName = '';
+      document.querySelectorAll('.opt').forEach((b) => (b.disabled = true));
+      document.getElementById('check').hidden = true;
+      fb.className = ok ? 'ok' : 'no';
+      fb.innerHTML = `<p class="fb-title"><i class="ph-fill ${ok ? 'ph-check-circle' : 'ph-x-circle'}" aria-hidden="true"></i>${ok ? 'Correct' : 'Not quite'}</p>
+        <div class="echo" id="echo"><span>${esc(opts[r.picked])}</span><i class="ph-fill ${ok ? 'ph-check-circle' : 'ph-x-circle'}" aria-hidden="true"></i></div>
+        ${ok ? '' : `<p class="fb-ans">Answer: ${esc(opts[0])}</p>`}
+        <p class="fb-why">${esc(why)}</p>
+        <div class="fb-row"><button class="speak" data-act="speak" data-say="${esc(q)}" aria-label="Play ${esc(q)} again"><i class="ph ph-speaker-high"></i></button>
+          <button class="btn-white" data-act="next" id="next">Continue</button></div>`;
+      fb.hidden = false;
+      document.getElementById('echo').style.viewTransitionName = 'ans';
+      document.querySelectorAll('#segs i')[r.i].classList.add('f');
+    }).then(() => {
+      const e = document.getElementById('echo'); if (e) e.style.viewTransitionName = '';
+      document.getElementById('next')?.focus({ preventScroll: true });
+    });
+    if (ok) r.correct++;
+    if (word) word.s = Math.max(1, Math.min(4, word.s + (ok ? 1 : 0)));
+  }
+
+  function next() {
+    const r = S.run; r.i++; r.picked = null; r.answered = false;
+    if (r.i >= r.ex.length) {
+      r.finished = true; r.i = r.ex.length - 1;
+      if (r.mode === 'lesson') {
+        S.streak0 = String(S.streak); S.pct0 = `${pct()}%`;
+        if (!S.doneToday) { S.streak++; S.doneToday = true; }
+        S.saved = null; S.li = Math.min(S.li + 1, LESSONS.length - 1);
+      }
+      MK.haptic('success');
+    }
+    renderEx();
+    document.getElementById('l-title')?.focus({ preventScroll: true });
+  }
+
+  function renderDone() {
+    const r = S.run, n = r.ex.length, L = r.lesson;
+    const main = document.getElementById('l-main');
+    const facts = r.mode === 'lesson'
+      ? `<div><dt>New words</dt><dd>${L.newWords}</dd></div><div><dt>Streak</dt><dd>${S.streak} days</dd></div><div><dt>Course</dt><dd>${pct()}% done</dd></div>`
+      : `<div><dt>Words practised</dt><dd>${n}</dd></div><div><dt>Still weak</dt><dd>${weak().length}</dd></div>`;
+    main.innerHTML = `<div class="done">
+        <h2 id="l-title" tabindex="-1">${r.mode === 'lesson' ? `<span lang="tr">${L.tr}</span> done` : 'Practice done'}</h2>
+        <p class="d-sub">${r.mode === 'lesson' ? `Unit 4, lesson ${L.n} of ${PER_UNIT}` : 'Weak words'}</p>
+        <div class="score"><div class="c-line"><span>Correct</span><b>${r.correct} of ${n}</b></div><div class="track"><i id="fill"></i></div></div>
+        <dl class="facts">${facts}</dl>
+      </div>
+      <div class="l-foot"><button class="btn-acc" data-act="close-done">Back to today</button></div>`;
+    document.getElementById('live').textContent = `${r.correct} of ${n} correct`;
+    // the score bar fills once to the real score
+    const f = document.getElementById('fill'), to = r.correct / n, e = MK.ease.spatial;
+    f.style.transform = `scaleX(${to})`;
+    if (!MK.reduced()) f.animate([{ transform: 'scaleX(0)' }, { transform: `scaleX(${to})` }], { duration: e.ms + 200, easing: e.easing, delay: 120, fill: 'backwards' });
+  }
+
+  // ---------- audio: the device's Turkish voice; text is always on screen too ----------
+  function speak(btn) {
+    const t = btn.dataset.say;
+    if (!('speechSynthesis' in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(t); u.lang = 'tr-TR'; u.rate = 0.85;
+    btn.classList.add('on'); u.onend = u.onerror = () => btn.classList.remove('on');
+    speechSynthesis.speak(u);
+  }
+
+  // ---------- actions ----------
+  const ACT = {
+    tab(b) {
+      S.tab = b.dataset.tab;
+      document.querySelectorAll('.tabbar button').forEach((t) => {
+        const on = t.dataset.tab === S.tab; t.toggleAttribute('aria-current', on); if (on) t.setAttribute('aria-current', 'page');
+        t.querySelector('i').className = `${on ? 'ph-fill' : 'ph'} ${t.querySelector('i').className.split(' ').pop()}`;
+      });
+      ['today', 'course', 'words'].forEach((k) => (document.getElementById(`p-${k}`).hidden = k !== S.tab));
+    },
+    start() {
+      const L = LESSONS[S.li], ex = L.ex || wordExercises(WORDS.slice(0, 8));
+      const sv = S.saved && S.saved.li === S.li ? S.saved : null;
+      openRun({ mode: 'lesson', lesson: L, ex, i: sv ? sv.i : 0, correct: sv ? sv.correct : 0, picked: null, answered: false }, 'start');
+    },
+    practise() { openRun({ mode: 'practise', ex: wordExercises(weak()), i: 0, correct: 0, picked: null, answered: false }, 'practise'); },
+    pick(b) {
+      if (S.run.answered) return;
+      S.run.picked = +b.dataset.k; MK.haptic('selection');
+      document.querySelectorAll('.opt').forEach((o) => o.setAttribute('aria-pressed', o === b));
+      const c = document.getElementById('check'); c.disabled = false; c.textContent = 'Check';
+    },
+    check, next,
+    close: closeRun,
+    'close-done': closeRun,
+    speak,
+    retry() { history.replaceState(null, '', location.pathname + location.search); renderAll(); },
+  };
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+    ACT[b.dataset.act]?.(b);
   });
-})();
-</script>
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && S.run) closeRun(); });
+  addEventListener('hashchange', () => { document.documentElement.dataset.state = stateNow(); renderAll(); });
+  document.documentElement.dataset.state = stateNow();
+  renderAll();
+  </script>
 </body>
 </html>

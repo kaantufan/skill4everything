@@ -140,7 +140,9 @@ const locate = (spec) => {
   }
   if (spec.css || spec.text) {
     if (!el) return null;
-    el.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' }); // 'instant': page CSS may set scroll-behavior:smooth
+    // scroll only when the target is off screen: a finger never scrolls to tap something it can already see
+    const b = el.getBoundingClientRect();
+    if (b.top < 0 || b.left < 0 || b.bottom > innerHeight || b.right > innerWidth) el.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' }); // 'instant': page CSS may set scroll-behavior:smooth
   }
   const r = el?.getBoundingClientRect();
   const x = el ? r.left + r.width / 2 : spec.x, y = el ? r.top + r.height / 2 : spec.y;

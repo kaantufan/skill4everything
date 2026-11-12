@@ -25,11 +25,11 @@ Kutlanan uygulamalar tersini yapıyor: konudan başlıyor ve tek bir tutarlı si
 
 ### Ne üretiyor
 
-Aşağıdaki sekiz ekranın her biri tek bir istekle, **Claude Opus 5.5 (high)** tarafından, skill 5 yüklüyken üretildi. Hiçbiri elle düzeltilmedi. Görüntüler açılış anı; her prototip ana görevi sonuna kadar götürüyor (sepet ve sipariş, ödeme ve rezervasyon, nefes seansı ve ışık kapama, kaydetme ve geri alma).
+Aşağıdaki sekiz ekranın her biri tek bir istekle, **Claude Opus 5.5 (high)** tarafından, skill 5.1 yüklüyken üretildi. Hiçbiri elle düzeltilmedi. Görüntüler açılış anı; her prototip ana görevi sonuna kadar götürüyor (sepet ve sipariş, ödeme ve rezervasyon, nefes seansı ve ışık kapama, kaydetme ve geri alma).
 
 ![mobile-ui-craft 5 ile](docs/previews/v5-with-skill.png)
 
-İmza hareketleri, 10 kat yavaşlatılmış film şeridi olarak (yukarıdan aşağı: nefes halkası tam ekrana büyüyor; yemek fotoğrafı sepete uçuyor ve toplam yuvarlanıyor; vergi ayrılınca yalnızca değişen rakamlar kayıyor):
+İmza hareketleri, 10 kat yavaşlatılmış film şeridi olarak (yukarıdan aşağı: nefes noktası tam ekran nefes şekline büyüyor; yemek fotoğrafı sepete uçuyor ve toplam yuvarlanıyor; sıradaki kapak küçük karttan ana kapak yerine büyüyor):
 
 ![İmza hareketleri](docs/previews/v5-motion.png)
 
@@ -43,18 +43,19 @@ Prototipler [`docs/prototypes/v5/`](docs/prototypes/v5) klasöründe (4.1 ve 3.1
 
 Sürüm 4'te UX üç durağan kareden puanlanıyordu. Bu kez her Opus 5.5 (high) hakemi her adayı `capture.mjs --steps` ile kendisi kullandı: ana görevi denedi, geçişi 10 kat yavaş filme aldı, geri ve Esc'e bastı, sekmeleri ve diğer kontrolleri denedi, sayfanın sonuna indi. UX yedi maddelik bir ölçütle ve tavan kurallarıyla puanlandı (örnek: kendi kendine iş yapan prototip en fazla 7, iki ölü kontrol en fazla 7, içeriğin üstüne binen bildirim en fazla 8). Kaynak kod okunmadı, adaylar kördü, her nişte iki hakem vardı. Skill üç tur geliştirildi; her turun hakem notları bir sonrakinin kuralı oldu.
 
-| Tur | Skill sürümü | Beğeni | UX | En iyi (16) | Aynı turda skill'siz (beğeni / UX) |
+| Tur | O turda eklenen | Beğeni | UX | En iyi (16) | Aynı turda skill'siz (beğeni / UX) |
 |---|---|---|---|---|---|
-| 1 | 5.0 | 6.8 | 7.5 | 16 | 6.8 / 4.9 |
-| 2 | 5.1 | 6.4 | 8.3 | 14 | 6.9 / 4.7 |
-| 3 | 5.2 (bu sürüm) | 6.7 | 8.2 | 11 (5.1 ile yarışırken) | 6.9 / 4.9 |
+| 1 | hareket kiti, 9 çıtası, kendi kendini kullanma testi | 6.8 | 7.5 | 16 | 6.8 / 4.9 |
+| 2 | hiçbir şey kendiliğinden olmaz, geri bildirimin yeri, tipografi ve sembol kuralları | 6.4 | 8.3 | 14 | 6.9 / 4.7 |
+| 3 | Esc katmanı, yerinde düzenleme, yerel sayı biçimi, büyük marka yüzeyi (5.0 olarak yayımlandı) | 6.7 | 8.2 | 11 | 6.9 / 4.9 |
+| 4 | tek durum her yerde aynı, içerik dokunulmaz, görünür seçenekler, Geri Al sonrası düzen, adın vurgu renginde yazılmaması (bu sürüm, 5.1) | **6.9** | 8.2 | 8 (5.0 ile 8-8 berabere) | 6.8 / 5.0 |
 
-Aynı etkileşimli testte sürüm 4.1, birinci turda beğenide 5.6, UX'te 5.6 aldı.
+Aynı etkileşimli testte sürüm 4.1, birinci turda beğenide 5.6, UX'te 5.6 aldı. 4. turda 5.1'in en düşük UX puanı 7, en kötü seçildiği karar 0.
 
-- **UX 9'a niş bazında ulaştı, ortalamada ulaşmadı.** Son sürüm finans, koşu ve seyahatte iki hakemden de 9 aldı; 16 kararın 9'u "9". Ortalama 8.2-8.3'te sabitlendi. Kalan kesintiler kural eksiği değil, tek seferlik hatalar: yemekte Geri Al'ın sayfa düzenini bozması, müzikte şarkı sözüne dokununca şarkının değişmesi, dilde "zayıf kelimeler" sayısına "iyi" kelimelerin karışması. Skill'in kendi kuralı gereği üç düzeltme turundan sonra durdum.
+- **UX 9'a niş bazında ulaştı, ortalamada ulaşmadı.** Son üç turda ortalama 8.2-8.3'te sabit kaldı; her turda kararların yaklaşık üçte biri ile yarısı "9" (5.1'de koşu, müzik, uyku ve flörtte 9 var). Kalan kesintiler kural eksiği değil, üretimden üretime değişen tek seferlik hatalar: yemekte yeni eklenen ürünün sepet çubuğunun altında kalması, uykuda "Bitir" düğmesinin aslında duraklatması, dilde "zayıf kelimeler" listesine "iyi" kelimelerin karışması. Dördüncü tur bu yüzden UX'i değil beğeniyi yükseltti: 5.1, skill'siz sürümü beğenide ilk kez yakaladı (6.9'a 6.8).
 - **En büyük sıçrama kendi kuralımızı silmekten geldi.** Sürüm 4'ün "otomatik demo"su durağan karelerde etkileşimi göstermek içindi; hakemler prototipi kullanınca bu, uygulamanın kullanıcı adına para ayırması, sepete yemek eklemesi, beğeni göndermesi olarak okundu ve her nişte puan kırdırdı. 5.1 "hiçbir şey kendiliğinden olmaz" kuralını getirdi; ardından en sık kesinti olan içeriğin üstüne binen bildirimler sabit çubuğa ya da satır içine taşındı.
-- **Beğenide skill'siz ile başa baş.** Sürüm 4'te beğenide geride kalınıyordu (6.1-6.6'ya karşı 7.6-7.9); bu testte fark 0.2-0.5'e indi. Hakemler hareketi filmde görebildi: kapağın büyümesi, nefes halkasının tam ekrana açılması, yalnızca değişen rakamların kayması övüldü. Skill'sizin çekiciliği yine sıcak krem zemin, serif başlık ve çizimlerden geliyor; ama prototiplerinin çoğu dokununca hiçbir şey yapmıyor (UX 4.7-4.9).
-- **AI izlenimi değişmedi.** Durağan karelerle yapılan kör AI testinde 5.2 ortalama 79, 4.1 76, skill'siz 91, gerçek uygulama 7 aldı; 16 kararın hiçbirinde 5.2 "en AI" seçilmedi. Hareket ve 3D katmanı AI izlenimini artırmadı. Hakemlerin 5.2 için yazdığı izler: uygulama adının vurgu renginde yazılması ve tasarımı anlatan yardımcı cümleler ("Son çubuk: son 0,46 km...").
+- **Beğenide skill'siz ile başa baş.** Sürüm 4'te beğenide geride kalınıyordu (6.1-6.6'ya karşı 7.6-7.9); bu testte fark kapandı. Hakemler hareketi filmde görebildi: kapağın büyümesi, nefes halkasının tam ekrana açılması, yalnızca değişen rakamların kayması övüldü. Skill'sizin çekiciliği yine sıcak krem zemin, serif başlık ve çizimlerden geliyor; ama prototiplerinin çoğu dokununca hiçbir şey yapmıyor (UX 4.7-4.9).
+- **AI izlenimi değişmedi.** Durağan karelerle yapılan kör AI testinde 5.0 ortalama 79, 4.1 76, skill'siz 91, gerçek uygulama 7 aldı; 16 kararın hiçbirinde 5.0 "en AI" seçilmedi. Hareket ve 3D katmanı AI izlenimini artırmadı. Hakemlerin 5.0 için yazdığı izler (uygulama adının vurgu renginde yazılması, tasarımı anlatan yardımcı cümleler: "Son çubuk: son 0,46 km...") 5.1'de kurala dönüştü; 5.1 için AI testi yeniden yapılmadı.
 - **Sınırlar.** Hakemler üretici ile aynı model ailesinden; her turda niş başına tek üretim; etkileşim başsız Chrome'da, dokunma öykünmesiyle; hiçbir prototip cihazda denenmedi ve hiçbir insan puanlamadı. Ölçüt sürüm 5 için yazıldı, bu yüzden sürüm 4'ün durağan kare puanlarıyla doğrudan karşılaştırılamaz; karşılaştırma aynı turdaki skill'siz ve 4.1 adaylarıyla yapıldı.
 
 ### Ölçüm: sürüm 4
@@ -284,6 +285,7 @@ cd skills/mobile-ui-craft && claude plugin eval . --allow-tools Write,Edit,Bash 
 - **4.0** kullanıcının 3.1 çıktısını hoş bulmaması ve kör testte hâlâ yaklaşık yüzde 80 AI sanılması üzerine: rastgele dağıtım yerine nişe göre araştırılmış tutarlı yönler (10 yön, 24 niş), gri boş kutular yerine gerçek malzeme (doğrulanmış fotoğraf, gerçek harita, içerikten örneklenen renk), görevi bir adım ileri taşıyan ve durumları gösteren prototipler, tek bir bitmiş imza anı. `deal.mjs` artık yön dağıtıcı ve kontrastı kodda denetliyor; `assets/imagery.md` ve `references/ux-check.md` eklendi; `capture.mjs` görselleri ve haritayı bekliyor; `slop-scan.mjs` gri yuva, Lucide, gradyan metin, sol kenar şeritli kart ve avatar servislerini yakalıyor. Sabit genişlikli rakamı olmayan üç yazı tipi (Albert Sans, Libre Franklin, Fredoka) Chrome'da ölçülerek katalogdan çıkarıldı.
 - **4.1** 4.0 ölçümündeki hakem notlarından: tasarlanan görünüm sistemden bağımsız açılır, her ekranda ürün adı ve bir marka yüzeyi, otomatik demo ana eylemi yapar ve sonucu ekranda kalır, "ücretler dahil" yazan toplam ücretleri gösterir, çubukların altından içerik okunmaz, fotoğraf yalnızca katalogdaki tarifi uyan öğeye konur, kapaklar ünlü tablo ya da bulanık soyut değil, örnek adlar ünlü örnek setlerinden (Northwind, Acme) değil, satış noktaları manzara cümlesi değil düz bilgi.
 - **5.0** "UX'te ciddi gelişme, 3D, morph, geçişler ve AI-slop tipografinin engellenmesi" isteği üzerine. Hareket: nişe göre dağıtılan imza hareketi (aynı nesne yolculuk eder), Apple ve Material 3 Expressive yay değerleri, test edilmiş `assets/motion-kit.js`, 3D yalnızca fiziksel nesneler için, hareket izleri (sırayla belirme, sürekli parlama, yüzen öğe, daktilo, sayaç) tarayıcıda. UX: yedi maddelik "9 çıtası" ve tavan kuralları, prototipi `capture.mjs --steps` ile kendin kullanma, ölü kontrol yok, hiçbir şey kendiliğinden olmaz (otomatik demo kaldırıldı), geri bildirim sabit çubukta ya da satır içinde, Esc kaydedileni silmez, düzenleme sayfa içinde, metin duruma göre değişir, yerel sayı ve para biçimi, ana işin tasarlanmış bir sonu var; sekiz nişe "lider uygulamaların doğru yaptığı ayrıntılar". Tipografi ve sembol: 15 yeni engelleyici kural. `capture.mjs` paralel koşularda çakışmayan port ve yalnızca görünür öğeye dokunma.
+- **5.1** dördüncü etkileşimli turun notlarından: bir durum her göründüğü yerde aynı (duraklatılmış şarkı sırada da duraklatılmış, "Zayıf kelimeler 7" altında yedi zayıf kelime, aynı süre aynı yuvarlama), okunacak içerik dokunulmaz ve geçici liste kaynağını değiştirmez, seçenekler gizli döngü değil görünür, Geri Al sonrası başlık ve çubuklar yerinde ve odak geri gelen öğede, öğeler arasında boş kare yok, ürün adı tek başına vurgu renginde yazılmaz, grafiği anlatan açıklama cümlesi yok; kendi kendini kullanma testine "içeriğe dokun" ve "sayfa sonunda Geri Al" adımları. Beğeni 6.7'den 6.9'a çıktı, UX 8.2'de kaldı.
 
 ### Araştırma
 

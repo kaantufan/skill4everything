@@ -3,193 +3,208 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kıvılcım Keşfet</title>
+<title>Kıvılcım · Keşfet</title>
+<script>{ const t = new URLSearchParams(location.search).get('theme'); if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t; }</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;600;700&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css">
-<script>/* the designed appearance is light; ?theme=dark shows the other one */
-(() => { const t = new URLSearchParams(location.search).get('theme'); if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t; })();</script>
 <style>
-  /* device frame (assets/phone-frame.html) */
+  /* Phone frame (assets/phone-frame.html) */
   :root { --w: 393px; --h: 852px; --safe-top: 59px; --safe-bottom: 34px; --chrome: #000; }
-  [data-theme="dark"], [data-viewer] { --chrome: #fff; }
-  [data-theme="dark"] { color-scheme: dark; }
+  [data-theme="dark"] { --chrome: #fff; color-scheme: dark; }
   * { box-sizing: border-box; }
   html, body { margin: 0; width: var(--w); height: var(--h); overflow: hidden; }
   body { position: relative; font-family: var(--font); -webkit-font-smoothing: antialiased; background: var(--ground); color: var(--ink); }
-  .statusbar { position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 10; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 28px 10px; font: 600 16px -apple-system, "SF Pro Text", system-ui, sans-serif; color: var(--chrome); pointer-events: none; }
+  body.onphoto { --chrome: #fff; }
+  .statusbar { position: absolute; inset: 0 0 auto 0; height: var(--safe-top); z-index: 60; display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 28px 10px; font-weight: 600; font-size: 16px; color: var(--chrome); pointer-events: none; font-family: -apple-system, "SF Pro Text", system-ui, sans-serif; }
   .statusbar svg { height: 12px; fill: var(--chrome); }
-  .home-indicator { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 10; width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none; }
-  #screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+  .home-indicator { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 60; width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); opacity: .9; pointer-events: none; }
+  #screen { position: absolute; inset: 0; overflow: hidden; }
 </style>
 <style>
-  /* PRODUCT TOKENS: Kıvılcım, direction photo-editorial. Screens below use only these. */
+  /* PRODUCT TOKENS: dealt direction photo-editorial, Schibsted Grotesk, action black */
   :root {
     --ground: #FFFFFF; --raised: #F7F7F7; --ink: #1A1A1A; --ink-2: #5F5F5F; --line: #EBEBEB;
     --accent: #111111; --on-accent: #FFFFFF; --positive: #1F7A4C; --negative: #D93B30;
-    --scrim: rgb(0 0 0 / .45); --viewer: #000; --on-viewer: #fff; --viewer-btn: rgb(255 255 255 / .16);
+    --wash-mix: 30%;
     --font: "Schibsted Grotesk", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif;
-    /* type roles (rem, so the user's text size scales them) */
-    --t-hero: 700 2.75rem/1.05 var(--font);      /* the person's name: 44 */
-    --t-title: 700 1.75rem/1.1 var(--font);      /* 28 */
-    --t-answer: 600 1.375rem/1.3 var(--font);    /* prompt answers: 22 */
-    --t-section: 600 1.25rem/1.25 var(--font);   /* 20 */
-    --t-body: 400 1rem/1.45 var(--font);         /* 16 */
-    --t-label: 600 1.0625rem/1.2 var(--font);    /* buttons: 17 */
-    --t-meta: 400 .875rem/1.4 var(--font);       /* 14 */
-    --t-tab: 600 .75rem/1 var(--font);           /* 12 */
+    --t-title: 28px; --t-section: 20px; --t-body: 16px; --t-meta: 14px;
     --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
-    --r-chip: 10px; --r-btn: 14px; --r-card: 16px;
-    --press: 120ms; --fade: 180ms;
-    --wash: 26%;  /* how much of the photo's colour tints the common-ground band */
+    --r-card: 16px; --r-panel: 12px; --r-chip: 10px;
+    --appbar-h: 52px; --tab-h: 49px; --bar-h: 68px;
+    --scrim: linear-gradient(180deg, rgb(0 0 0 / 0) 45%, rgb(0 0 0 / .64) 100%);
+    --scrim-top: linear-gradient(180deg, rgb(0 0 0 / .38) 0, rgb(0 0 0 / 0) 130px);
   }
   [data-theme="dark"] {
     --ground: #0A0A0A; --raised: #1A1A1A; --ink: #FFFFFF; --ink-2: #B3B3B3; --line: #2A2A2A;
-    --accent: #FFFFFF; --on-accent: #0A0A0A; --positive: #3DB87A; --negative: #F0605A;
-    --scrim: rgb(0 0 0 / .6); --wash: 30%;
+    --accent: #FFFFFF; --on-accent: #0A0A0A; --positive: #3DB87A; --negative: #F0605A; --wash-mix: 30%;
   }
 </style>
 <style>
-  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  [hidden] { display: none !important; }
-  button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
-    transition: transform var(--press) cubic-bezier(.22,1,.36,1), opacity var(--fade) ease-out; }
-  button:active { transform: scale(.97); }
-  button:disabled { opacity: .4; cursor: default; }
-  :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; box-shadow: 0 0 0 4px var(--ground); }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    transition: transform .12s cubic-bezier(.22,1,.36,1); }
+  button:active:not(:disabled) { transform: scale(.97); }
+  :focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; border-radius: 8px; }
   h1, h2, h3, p { margin: 0; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .num { font-variant-numeric: tabular-nums; }
 
-  /* navigation bar */
-  .nav { flex: none; height: calc(var(--safe-top) + 52px); padding: var(--safe-top) var(--s4) 0; display: flex; align-items: center; justify-content: space-between; gap: var(--s3);
-    background: var(--ground); border-bottom: 1px solid transparent; transition: border-color var(--fade) ease-out; position: relative; z-index: 2; }
-  .nav.scrolled { border-color: var(--line); }
-  .nav h1 { font: var(--t-title); letter-spacing: -.02em; white-space: nowrap; }
-  .compact { display: flex; align-items: center; gap: 6px; font: 600 1rem/1 var(--font); min-width: 0; opacity: 0; transform: translateY(4px); transition: opacity var(--fade) ease-out, transform var(--fade) ease-out; }
-  .compact span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .nav.scrolled .compact { opacity: 1; transform: none; }
+  /* never-grey image slot */
+  .pic { position: relative; overflow: hidden; background: var(--c, #8a7464); }
+  .pic img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; transition: opacity .4s ease-out; }
+  .pic img.in { opacity: 1; }
 
-  .view { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-  .scroller { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
-  .scroller::-webkit-scrollbar { display: none; }
+  /* app bar */
+  .appbar { position: absolute; inset: 0 0 auto 0; height: calc(var(--safe-top) + var(--appbar-h)); padding: var(--safe-top) var(--s4) 0; z-index: 5;
+    display: flex; align-items: center; background: var(--ground); }
+  .title { font-size: var(--t-title); font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
 
-  /* never-grey photo slot */
-  .slot { position: relative; overflow: hidden; background: var(--c); margin: 0; }
-  .slot img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .4s ease-out; display: block; }
-  .slot img.in { opacity: 1; }
-  /* both ends are centre crops of one photo: show only the new one, so the box grows without a double image */
-  ::view-transition-old(photo) { animation: none; opacity: 0; }
-  ::view-transition-new(photo) { animation: none; height: 100%; width: 100%; object-fit: cover; }
+  .views { position: absolute; left: 0; right: 0; top: calc(var(--safe-top) + var(--appbar-h)); bottom: calc(var(--tab-h) + var(--safe-bottom)); }
+  .view { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding: var(--s2) var(--s4) var(--s5); }
+  .view::-webkit-scrollbar { display: none; }
+  #v-discover { padding-bottom: calc(var(--bar-h) + var(--s4)); }
 
-  /* profile */
-  .who { padding: var(--s1) var(--s4) var(--s4); }
-  .name { font: var(--t-hero); letter-spacing: -.03em; display: flex; flex-wrap: wrap; align-items: center; column-gap: 10px; }
-  .verified { font-size: 1.75rem; }
-  .meta { font: var(--t-meta); color: var(--ink-2); margin-top: 6px; }
-  .hero { height: 304px; }
-  .inline { height: 440px; margin: var(--s4) var(--s4) 0; border-radius: var(--r-card); }
-  .photo-open { all: unset; display: block; width: 100%; height: 100%; cursor: zoom-in; }
-  .photo-open:focus-visible { outline: 3px solid #fff; outline-offset: -6px; }
-  .like-photo { position: absolute; right: var(--s3); bottom: var(--s3); width: 48px; height: 48px; border-radius: 50%; border: 0; background: var(--ground); color: var(--ink); display: grid; place-items: center; font-size: 24px; }
+  /* discovery card: the photo, then the overlap on a wash sampled from that photo */
+  .card { --tint: var(--c); border-radius: var(--r-card); overflow: hidden; background: color-mix(in oklab, var(--tint) var(--wash-mix), var(--ground)); transition: background-color .6s ease-out; }
+  .card-pic { aspect-ratio: 1 / 1; }
+  .pic .shade { position: absolute; inset: 0; background: var(--scrim); pointer-events: none; }
+  .who { position: absolute; left: var(--s4); right: var(--s4); bottom: var(--s4); color: #fff; pointer-events: none; }
+  .name { font-size: var(--t-title); font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; overflow-wrap: anywhere; }
+  .who .line2 { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s3); margin-top: 6px; font-size: var(--t-meta); }
+  .verified { display: inline-flex; align-items: center; gap: 4px; font-size: var(--t-meta); font-weight: 600; }
+  .verified i { font-size: 18px; }
+  .open-hit { position: absolute; inset: 0; border-radius: 0; }
+  .open-hit:active { transform: none; }
+  .open-hit:focus-visible { outline-offset: -4px; }
 
-  .common { background: color-mix(in oklab, var(--tint) var(--wash), var(--ground)); padding: 20px var(--s4) var(--s5); transition: background-color .6s ease-out; }
-  .common h3 { font: var(--t-section); margin-bottom: var(--s3); }
-  .chips { display: flex; flex-wrap: wrap; gap: var(--s2); list-style: none; margin: 0; padding: 0; }
-  .chip { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 var(--s3); border-radius: var(--r-chip); font: 600 .9375rem/1 var(--font); }
-  .chip.on { background: var(--accent); color: var(--on-accent); }
-  .chip.off { color: var(--ink-2); font-weight: 400; border: 1px solid color-mix(in oklab, var(--ink) 24%, transparent); }
+  .shared { padding: var(--s4); }
+  .sec { font-size: var(--t-section); font-weight: 600; line-height: 1.25; }
+  .chips { list-style: none; margin: var(--s3) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--s2); }
+  .chip { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 6px 12px; border-radius: var(--r-chip); font-size: var(--t-meta);
+    border: 1px solid color-mix(in oklab, var(--ink) 22%, transparent); color: var(--ink); }
+  .chip.on { background: var(--ink); color: var(--ground); border-color: var(--ink); font-weight: 600; }
+  .chip i { font-size: 16px; }
 
-  .prompt { margin: var(--s4) var(--s4) 0; background: var(--raised); border-radius: var(--r-card); padding: 20px 20px var(--s3); }
-  .q { font: 600 .875rem/1.3 var(--font); color: var(--ink-2); margin-bottom: var(--s2); }
-  .a { font: var(--t-answer); letter-spacing: -.01em; }
-  .prompt .row { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); margin-top: var(--s3); min-height: 48px; }
-  .tag { font: var(--t-meta); display: inline-flex; align-items: center; gap: 6px; }
-  .like-btn { flex: none; width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--line); background: var(--ground); color: var(--ink); display: grid; place-items: center; font-size: 24px; }
-  .safety { margin: var(--s6) var(--s4) var(--s5); padding-top: var(--s2); border-top: 1px solid var(--line); }
-  .safety button { display: flex; align-items: center; gap: var(--s2); min-height: 48px; padding: 0; border: 0; background: none; font: var(--t-body); color: var(--ink-2); }
-  .safety i { font-size: 20px; }
-
-  .offline { display: flex; gap: 10px; align-items: center; margin: 0 var(--s4) var(--s3); padding: var(--s3); border-radius: var(--s3); background: var(--raised); font: var(--t-meta); }
-  .offline i { font-size: 20px; flex: none; }
-  .state { padding: var(--s6) var(--s5); }
-  .state h2 { font: var(--t-title); letter-spacing: -.02em; margin-bottom: var(--s2); }
-  .state p { font: var(--t-body); color: var(--ink-2); margin-bottom: var(--s5); }
-  .sk { background: var(--raised); border-radius: var(--s2); }
+  .prompts { padding: 0 var(--s3) var(--s3); display: grid; gap: var(--s3); }
+  .prompt { background: var(--ground); border-radius: var(--r-panel); padding: var(--s4); }
+  .prompt .q { font-size: var(--t-meta); color: var(--ink-2); }
+  .prompt .a { font-size: var(--t-section); font-weight: 600; line-height: 1.3; margin-top: 6px; }
+  .prow { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); margin-top: var(--s3); }
+  .tag { font-size: var(--t-meta); color: var(--ink-2); }
+  .tag b { color: var(--ink); font-weight: 600; }
+  .heart { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--line); margin-left: auto; }
+  .heart i { font-size: 22px; }
+  .more { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; border-radius: var(--r-panel);
+    background: var(--ground); font-weight: 600; font-size: var(--t-body); }
 
   /* docked decision bar: receipt and Undo live here, never in a toast */
-  .actionbar { flex: none; background: var(--ground); border-top: 1px solid var(--line); padding: 10px var(--s4) var(--s3); }
-  .receipt { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); min-height: 44px; margin-bottom: 6px; }
-  .receipt p { font: 400 .9375rem/1.3 var(--font); }
-  .link { min-height: 44px; padding: 0 var(--s2); border: 0; background: none; font: 600 .9375rem/1 var(--font); text-decoration: underline; text-underline-offset: 3px; flex: none; }
-  .decide { display: grid; grid-template-columns: 1fr 1.5fr; gap: var(--s3); }
-  .btn { min-height: 54px; border-radius: var(--r-btn); border: 0; display: flex; align-items: center; justify-content: center; gap: var(--s2); font: var(--t-label); padding: 0 var(--s4); }
+  .actionbar { position: absolute; left: 0; right: 0; bottom: calc(var(--tab-h) + var(--safe-bottom)); z-index: 6; background: var(--ground);
+    border-top: 1px solid var(--line); padding: var(--s2) var(--s4); }
+  .receipt { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); min-height: 44px; padding-bottom: var(--s1); }
+  .receipt[hidden] { display: none; }
+  .receipt span { font-size: var(--t-meta); font-weight: 600; overflow-wrap: anywhere; }
+  .link { min-height: 44px; padding: 0 var(--s2); font-weight: 600; font-size: var(--t-body); text-decoration: underline; text-underline-offset: 3px; }
+  .decide { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); min-height: 52px; border-radius: var(--r-panel);
+    font-size: var(--t-body); font-weight: 600; }
   .btn i { font-size: 22px; }
-  .btn-1 { background: var(--accent); color: var(--on-accent); }
-  .btn-2 { background: var(--raised); color: var(--ink); border: 1px solid var(--line); }
-  .btn-danger { background: var(--negative); color: var(--ground); }
-  .btn-sm { min-height: 44px; font-size: .9375rem; flex: 1; }
-  .btn-full { width: 100%; margin-top: var(--s4); }
+  .btn-pass { border: 1.5px solid var(--ink); }
+  .btn-like { background: var(--accent); color: var(--on-accent); }
+  .btn:disabled { opacity: .45; }
 
   /* tab bar */
-  .tabbar { flex: none; display: grid; grid-template-columns: repeat(4, 1fr); background: var(--ground); border-top: 1px solid var(--line); padding-bottom: var(--safe-bottom); }
-  .tab { position: relative; min-height: 50px; border: 0; background: none; color: var(--ink-2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font: var(--t-tab); }
+  .tabbar { position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--tab-h) + var(--safe-bottom)); padding-bottom: var(--safe-bottom); z-index: 7;
+    display: grid; grid-template-columns: repeat(4, 1fr); background: var(--ground); border-top: 1px solid var(--line); }
+  .tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 11px; color: var(--ink-2); min-height: 49px; position: relative; }
   .tab i { font-size: 26px; }
-  .tab[aria-current="page"] { color: var(--ink); }
-  .badge { position: absolute; top: 4px; left: calc(50% + 8px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: var(--on-accent); font: 600 .75rem/18px var(--font); font-variant-numeric: tabular-nums; }
+  .tab[aria-current="page"] { color: var(--ink); font-weight: 600; }
+  .badge { position: absolute; top: 3px; left: calc(50% + 7px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--ink); color: var(--ground);
+    font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; }
+  #screen[data-tab]:not([data-tab="discover"]) #bar { display: none; }
 
-  /* other tabs */
-  .person { display: grid; grid-template-columns: 56px 1fr; gap: var(--s3); padding: var(--s4); border-bottom: 1px solid var(--line); }
-  .avatar { width: 56px; height: 56px; border-radius: 50%; }
-  .pname { font: 600 1.0625rem/1.3 var(--font); }
-  .psub { font: var(--t-meta); color: var(--ink-2); margin-top: 2px; }
-  .note { font: var(--t-body); background: var(--raised); border-radius: var(--s3); padding: 10px var(--s3); margin-top: var(--s2); }
-  .pact { display: flex; gap: var(--s2); margin-top: var(--s3); align-items: center; }
-  .pact p { flex: 1; font: var(--t-body); }
-  .chat-time { font: var(--t-meta); color: var(--ink-2); }
-  .sect { font: var(--t-section); padding: var(--s5) var(--s4) var(--s3); }
-  .me-head { display: flex; gap: var(--s4); align-items: center; padding: var(--s2) var(--s4) var(--s2); }
-  .me-photo { width: 88px; height: 88px; border-radius: 50%; flex: none; }
-  .pad { padding: 0 var(--s4); }
-  .chip.mine { border: 1px solid color-mix(in oklab, var(--ink) 24%, transparent); }
-  .end-pad { height: var(--s6); }
+  /* states */
+  .skeleton, .state { display: none; }
+  .skeleton .sk { background: var(--raised); border-radius: var(--r-card); }
+  .state { flex-direction: column; align-items: flex-start; gap: var(--s3); padding: var(--s6) var(--s2); }
+  .state p { color: var(--ink-2); font-size: var(--t-body); line-height: 1.45; max-width: 32ch; }
+  .btn-solid { background: var(--accent); color: var(--on-accent); padding: 0 var(--s5); }
+  html[data-state="loading"] #v-discover .skeleton { display: block; }
+  html[data-state="empty"] #st-empty, html[data-state="error"] #st-error, html[data-state="offline"] #st-offline,
+  html[data-state="content"] #screen.drained #st-empty { display: flex; }
+  html:not([data-state="content"]) #card, #screen.drained #card { display: none; }
+  html:not([data-state="content"]) #bar { display: none; }
+  #screen.drained .decide { display: none; }
+  #screen.drained .receipt { padding-bottom: 0; }
 
-  /* photo viewer: the hero photo grows into it */
-  #viewer { position: absolute; inset: 0; z-index: 8; background: var(--viewer); color: var(--on-viewer); display: flex; flex-direction: column; }
-  .v-top { height: calc(var(--safe-top) + 56px); padding: var(--safe-top) var(--s2) 0; display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; }
-  .v-count { text-align: center; font: 600 1rem/1 var(--font); font-variant-numeric: tabular-nums; }
-  .v-track { flex: 1; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
-  .v-track::-webkit-scrollbar { display: none; }
-  .v-slide { flex: none; width: 100%; scroll-snap-align: center; display: grid; place-items: center; }
-  .v-slide .slot { width: 100%; aspect-ratio: 4 / 5; }
-  .v-bot { display: flex; justify-content: space-between; padding: var(--s3) var(--s4) calc(var(--safe-bottom) + var(--s3)); }
-  .icon-btn { width: 48px; height: 48px; border-radius: 50%; border: 0; background: var(--viewer-btn); color: var(--on-viewer); display: grid; place-items: center; font-size: 24px; }
-  #viewer :focus-visible { outline-color: #fff; box-shadow: none; }
+  /* likes, chats, profile tabs */
+  .group { margin-top: var(--s4); }
+  .group:first-child { margin-top: var(--s2); }
+  .rows { list-style: none; margin: var(--s2) 0 0; padding: 0; }
+  .row { display: flex; align-items: center; gap: var(--s3); min-height: 72px; border-bottom: 1px solid var(--line); }
+  .row .pic { width: 56px; height: 56px; border-radius: var(--r-panel); flex: none; }
+  .row b { display: block; font-size: var(--t-body); font-weight: 600; }
+  .row > div > span { display: block; font-size: var(--t-meta); color: var(--ink-2); margin-top: 2px; overflow-wrap: anywhere; }
+  .muted { color: var(--ink-2); font-size: var(--t-body); padding: var(--s3) 0; }
+  .me { display: flex; align-items: center; gap: var(--s4); margin-top: var(--s2); }
+  .me .pic { width: 88px; height: 88px; border-radius: var(--r-card); flex: none; }
+  .me p { color: var(--ink-2); font-size: var(--t-meta); margin-top: 4px; }
+  .help { color: var(--ink-2); font-size: var(--t-meta); margin-top: 6px; }
+  button.chip { min-height: 44px; }
+
+  /* full profile, opened from the card photo */
+  .overlay { position: absolute; inset: 0; z-index: 20; background: var(--ground); }
+  .overlay[hidden] { display: none; }
+  .ov-scroll { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding-bottom: calc(var(--bar-h) + var(--safe-bottom) + var(--s4)); }
+  .ov-scroll::-webkit-scrollbar { display: none; }
+  .ov-head { position: sticky; top: 0; z-index: 3; height: calc(var(--safe-top) + var(--appbar-h)); margin-bottom: calc(-1 * (var(--safe-top) + var(--appbar-h)));
+    padding: var(--safe-top) var(--s3) 0; display: flex; align-items: center; gap: var(--s3); background: transparent; transition: background-color .2s ease-out; }
+  .ov-head.solid { background: var(--ground); border-bottom: 1px solid var(--line); }
+  .ov-mini { display: inline-flex; align-items: center; gap: 6px; font-size: 17px; font-weight: 600; opacity: 0; transition: opacity .2s ease-out; }
+  .ov-head.solid .ov-mini { opacity: 1; }
+  .iconbtn { width: 44px; height: 44px; flex: none; border-radius: 50%; display: grid; place-items: center; background: var(--ground); color: var(--ink); }
+  .iconbtn i { font-size: 22px; }
+  .ov-pic { height: 440px; }
+  .ov-pic .top { position: absolute; inset: 0; background: var(--scrim-top); pointer-events: none; }
+  .ov-main { padding: var(--s4); display: grid; gap: var(--s4); }
+  .ov-name .name { color: var(--ink); }
+  .ov-name .verified { color: var(--ink); margin-top: 6px; }
+  .ov-name p { color: var(--ink-2); font-size: var(--t-body); margin-top: 4px; }
+  .ov-shared { --tint: var(--c); border-radius: var(--r-card); background: color-mix(in oklab, var(--tint) var(--wash-mix), var(--ground)); }
+  .ov-main .prompt { background: var(--raised); }
+  .photo2 { position: relative; border-radius: var(--r-card); aspect-ratio: 4 / 5; }
+  .photo2 .heart { position: absolute; right: var(--s3); bottom: var(--s3); background: var(--ground); border-color: var(--line); }
+  .safety { display: flex; gap: var(--s3); padding-top: var(--s4); border-top: 1px solid var(--line); }
+  .danger { flex: 1; min-height: 48px; border-radius: var(--r-panel); border: 1px solid var(--line); color: var(--negative); font-weight: 600; }
+  .ov-bar { bottom: 0; padding-bottom: calc(var(--safe-bottom) + var(--s2)); }
+  ::view-transition-old(hero), ::view-transition-new(hero) { height: 100%; width: 100%; object-fit: cover; }
 
   /* sheet */
-  #scrim { position: absolute; inset: 0; z-index: 8; background: var(--scrim); }
-  #sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 9; background: var(--ground); border-radius: var(--r-card) var(--r-card) 0 0;
-    padding: var(--s2) var(--s4) calc(var(--safe-bottom) + var(--s4)); max-height: calc(100% - var(--safe-top) - var(--s4)); overflow-y: auto; }
-  .handle { width: 36px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto var(--s1); }
-  .sheet-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); min-height: 52px; margin-bottom: var(--s2); }
-  .sheet-head h2 { font: var(--t-section); }
-  .plain-btn { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--raised); color: var(--ink); display: grid; place-items: center; font-size: 20px; }
-  .quote { background: var(--raised); border-radius: var(--r-card); padding: var(--s4); }
-  .quote .slot { height: 200px; border-radius: var(--s3); }
-  .quote.photo { padding: 0; background: none; }
-  .field-label { display: block; font: 600 .875rem/1.3 var(--font); margin: 20px 0 6px; }
-  textarea { width: 100%; min-height: 88px; border: 1px solid color-mix(in oklab, var(--ink) 24%, transparent); border-radius: var(--s3); padding: var(--s3); font: var(--t-body); background: var(--ground); color: var(--ink); resize: none; }
-  .count { font: 400 .8125rem/1.3 var(--font); color: var(--ink-2); text-align: right; margin-top: var(--s1); font-variant-numeric: tabular-nums; }
-  .opt { display: flex; align-items: center; gap: var(--s3); width: 100%; min-height: 72px; padding: var(--s3) var(--s4); margin-top: var(--s2); text-align: left; border: 1px solid var(--line); border-radius: var(--r-btn); background: var(--ground); }
-  .opt i { font-size: 24px; flex: none; }
-  .opt b { display: block; font: var(--t-label); }
-  .opt span { display: block; font: var(--t-meta); color: var(--ink-2); margin-top: 2px; }
-  .sheet-p { font: var(--t-body); color: var(--ink-2); }
-  .reason { display: flex; align-items: center; gap: var(--s3); min-height: 52px; border-bottom: 1px solid var(--line); font: var(--t-body); }
-  .reason input { width: 22px; height: 22px; accent-color: var(--accent); margin: 0; }
-  .err { font: 600 .875rem/1.3 var(--font); color: var(--negative); margin-top: var(--s2); min-height: 1.2em; }
+  .scrim { position: absolute; inset: 0; z-index: 30; background: rgb(0 0 0 / .42); }
+  .scrim[hidden], .sheet[hidden] { display: none; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 31; max-height: 82%; overflow-y: auto; background: var(--ground);
+    border-radius: var(--r-card) var(--r-card) 0 0; padding: var(--s2) var(--s4) calc(var(--safe-bottom) + var(--s4)); }
+  .grab { width: 36px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto var(--s2); }
+  .sh-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
+  .sh-head .iconbtn { background: var(--raised); }
+  .sh-body { display: grid; gap: var(--s4); margin-top: var(--s3); }
+  .quote { background: var(--raised); border-radius: var(--r-panel); padding: var(--s4); }
+  .quote .q { font-size: var(--t-meta); color: var(--ink-2); }
+  .quote .a { font-size: 18px; font-weight: 600; line-height: 1.3; margin-top: 4px; }
+  .quote-pic { width: 96px; aspect-ratio: 4 / 5; border-radius: var(--r-panel); }
+  label.lbl { display: block; font-size: var(--t-meta); font-weight: 600; margin-bottom: 6px; }
+  textarea { width: 100%; min-height: 88px; resize: none; font: inherit; font-size: var(--t-body); color: var(--ink); background: var(--ground);
+    border: 1px solid color-mix(in oklab, var(--ink) 30%, transparent); border-radius: var(--r-panel); padding: var(--s3); }
+  .hint { font-size: var(--t-meta); color: var(--ink-2); margin-top: 6px; }
+  .reasons { display: grid; gap: 0; border: 0; padding: 0; margin: 0; }
+  .reasons label { display: flex; align-items: center; gap: var(--s3); min-height: 48px; border-bottom: 1px solid var(--line); font-size: var(--t-body); }
+  .reasons input { width: 22px; height: 22px; accent-color: var(--ink); margin: 0; }
+  .err { color: var(--negative); font-size: var(--t-meta); font-weight: 600; }
+  .err[hidden] { display: none; }
+  .btn-wide { width: 100%; }
 
-  @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 </style>
 </head>
 <body>
@@ -204,85 +219,119 @@
     </svg>
   </div>
 
-  <main id="screen">
-    <header class="nav" id="nav">
-      <h1 id="title">Kıvılcım</h1>
-      <div class="compact" id="compact" aria-hidden="true"></div>
-    </header>
+  <main id="screen" data-tab="discover">
+    <header class="appbar"><h1 class="title" id="title" tabindex="-1">Kıvılcım</h1></header>
 
-    <section class="view" id="v-discover" aria-labelledby="title">
-      <div class="scroller" id="disc">
-        <div class="offline" id="offline" hidden><i class="ph ph-wifi-slash" aria-hidden="true"></i><p>Çevrimdışısın. Beğenilerin bağlantı gelince gönderilir.</p></div>
-        <article id="profile"></article>
-        <div id="st-loading" hidden aria-label="Profil yükleniyor" role="status">
-          <div style="padding:4px 16px 16px"><div class="sk" style="width:62%;height:44px"></div><div class="sk" style="width:40%;height:16px;margin-top:10px"></div></div>
-          <div class="sk" style="height:340px;border-radius:0"></div>
-          <div style="padding:20px 16px"><div class="sk" style="width:50%;height:22px"></div><div style="display:flex;gap:8px;margin-top:12px"><div class="sk" style="width:96px;height:36px"></div><div class="sk" style="width:80px;height:36px"></div><div class="sk" style="width:64px;height:36px"></div></div></div>
-        </div>
-        <div class="state" id="st-error" hidden role="alert">
-          <h2>Profiller yüklenemedi</h2>
-          <p>Bağlantını kontrol edip tekrar dene.</p>
-          <button class="btn btn-1" id="retry">Tekrar dene</button>
-        </div>
-        <div class="state" id="st-empty" hidden>
-          <h2>Yakınındaki herkesi gördün</h2>
-          <p>10 km içinde şu an yeni profil yok.</p>
-          <button class="btn btn-1" id="replay" hidden></button>
-        </div>
-      </div>
-      <div class="actionbar" id="actionbar">
-        <div class="receipt" id="receipt" hidden>
-          <p id="receipt-text"></p>
-          <button class="link" id="undo">Geri al</button>
-        </div>
-        <div class="decide" id="decide">
-          <button class="btn btn-2" id="pass"><i class="ph ph-x" aria-hidden="true"></i>Geç</button>
-          <button class="btn btn-1" id="like"><i class="ph ph-heart" aria-hidden="true"></i>Beğen</button>
-        </div>
-      </div>
-    </section>
+    <div class="views" id="views">
+      <section class="view" id="v-discover" aria-label="Keşfet">
+        <article class="card" id="card" aria-labelledby="card-name"></article>
 
-    <section class="view" id="v-likes" hidden aria-labelledby="title"><div class="scroller" id="likes-scroll"></div></section>
-    <section class="view" id="v-chats" hidden aria-labelledby="title"><div class="scroller" id="chats-scroll"></div></section>
-    <section class="view" id="v-me" hidden aria-labelledby="title"><div class="scroller" id="me-scroll"></div></section>
+        <div class="skeleton" aria-hidden="true">
+          <div class="sk" style="aspect-ratio:1/1"></div>
+          <div class="sk" style="height:96px;margin-top:12px"></div>
+          <div class="sk" style="height:120px;margin-top:12px"></div>
+        </div>
+        <p class="sr" id="loading-msg"></p>
+
+        <div class="state" id="st-empty">
+          <h2 class="sec">Şimdilik bu kadar</h2>
+          <p>Çevrende ayarlarına uyan herkesi gördün. Yeni katılanlar burada görünecek.</p>
+          <button class="btn btn-solid" data-goto="likes">Seni beğenenlere bak</button>
+        </div>
+        <div class="state" id="st-error">
+          <h2 class="sec">Profiller yüklenemedi</h2>
+          <p>Sunucuya ulaşamadık. Verdiğin kararlar kayıtlı.</p>
+          <button class="btn btn-solid" data-retry>Tekrar dene</button>
+        </div>
+        <div class="state" id="st-offline">
+          <h2 class="sec">İnternet bağlantısı yok</h2>
+          <p>Bağlandığında yeni profiller yüklenecek.</p>
+          <button class="btn btn-solid" data-retry>Tekrar dene</button>
+        </div>
+      </section>
+
+      <section class="view" id="v-likes" aria-label="Beğeniler" hidden>
+        <div class="group">
+          <h2 class="sec">Seni beğenenler</h2>
+          <ul class="rows" id="liked-me"></ul>
+        </div>
+        <div class="group">
+          <h2 class="sec">Gönderdiklerin</h2>
+          <ul class="rows" id="sent"></ul>
+        </div>
+      </section>
+
+      <section class="view" id="v-chats" aria-label="Sohbetler" hidden>
+        <div class="state" style="display:flex">
+          <h2 class="sec">Henüz sohbet yok</h2>
+          <p>Bir beğenine karşılık gelince sohbet burada açılır.</p>
+          <button class="btn btn-solid" data-goto="discover">Keşfet'e dön</button>
+        </div>
+      </section>
+
+      <section class="view" id="v-profile" aria-label="Profil" hidden>
+        <div class="me">
+          <div class="pic" style="--c:#7d6a5c"><img id="me-img" alt="Emre'nin profil fotoğrafı" crossorigin="anonymous"></div>
+          <div><h2 class="name" style="font-size:24px">Emre, <span class="num">31</span></h2><p>Kadıköy</p></div>
+        </div>
+        <div class="group" style="margin-top:24px">
+          <h2 class="sec">İlgi alanların</h2>
+          <p class="help">Keşfet'teki ortak noktalar bunlara göre işaretlenir.</p>
+          <div class="chips" id="my-interests"></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="actionbar" id="bar">
+      <div class="receipt" id="receipt" role="status" hidden><span id="receipt-text"></span><button class="link" id="undo">Geri al</button></div>
+      <div class="decide">
+        <button class="btn btn-pass" data-act="pass"><i class="ph ph-x" aria-hidden="true"></i>Geç</button>
+        <button class="btn btn-like" data-act="like"><i class="ph-fill ph-heart" aria-hidden="true"></i>Beğen</button>
+      </div>
+    </div>
 
     <nav class="tabbar" aria-label="Sekmeler">
-      <button class="tab" data-tab="discover" data-icon="compass" aria-current="page"><i class="ph-fill ph-compass" aria-hidden="true"></i>Keşfet</button>
-      <button class="tab" data-tab="likes" data-icon="heart"><i class="ph ph-heart" aria-hidden="true"></i>Beğeniler<span class="badge" id="badge"></span></button>
-      <button class="tab" data-tab="chats" data-icon="chat-circle"><i class="ph ph-chat-circle" aria-hidden="true"></i>Sohbetler</button>
-      <button class="tab" data-tab="me" data-icon="user"><i class="ph ph-user" aria-hidden="true"></i>Profil</button>
+      <button class="tab" data-tab="discover" aria-current="page"><i class="ph-fill ph-compass" aria-hidden="true"></i><span>Keşfet</span></button>
+      <button class="tab" data-tab="likes" id="tab-likes"><i class="ph ph-heart" aria-hidden="true"></i><span>Beğeniler</span><span class="badge num" id="likes-badge" aria-hidden="true">2</span></button>
+      <button class="tab" data-tab="chats"><i class="ph ph-chats-circle" aria-hidden="true"></i><span>Sohbetler</span></button>
+      <button class="tab" data-tab="profile"><i class="ph ph-user-circle" aria-hidden="true"></i><span>Profil</span></button>
     </nav>
+
+    <div class="overlay" id="ov" role="dialog" aria-modal="true" aria-labelledby="ov-name" hidden>
+      <div class="ov-scroll" id="ovs">
+        <div class="ov-head" id="ovh">
+          <button class="iconbtn" id="ov-close" aria-label="Profili kapat"><i class="ph ph-caret-down" aria-hidden="true"></i></button>
+          <span class="ov-mini" id="ov-mini" aria-hidden="true"></span>
+        </div>
+        <div id="ov-body"></div>
+      </div>
+      <div class="actionbar ov-bar">
+        <div class="decide">
+          <button class="btn btn-pass" data-act="pass"><i class="ph ph-x" aria-hidden="true"></i>Geç</button>
+          <button class="btn btn-like" data-act="like"><i class="ph-fill ph-heart" aria-hidden="true"></i>Beğen</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="scrim" id="scrim" hidden></div>
+    <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-title" hidden>
+      <div class="grab" aria-hidden="true"></div>
+      <div class="sh-head"><h2 class="sec" id="sh-title" tabindex="-1"></h2><button class="iconbtn" id="sh-close" aria-label="Kapat"><i class="ph ph-x" aria-hidden="true"></i></button></div>
+      <div class="sh-body" id="sh-body"></div>
+    </div>
+
+    <div class="sr" id="live" aria-live="polite"></div>
   </main>
-
-  <div id="viewer" hidden role="dialog" aria-modal="true" aria-label="Fotoğraflar">
-    <div class="v-top">
-      <button class="icon-btn" id="v-close" aria-label="Fotoğrafları kapat"><i class="ph ph-x" aria-hidden="true"></i></button>
-      <p class="v-count" id="v-count" aria-live="polite"></p>
-      <span></span>
-    </div>
-    <div class="v-track" id="v-track"></div>
-    <div class="v-bot">
-      <button class="icon-btn" id="v-prev" aria-label="Önceki fotoğraf"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
-      <button class="icon-btn" id="v-next" aria-label="Sonraki fotoğraf"><i class="ph ph-caret-right" aria-hidden="true"></i></button>
-    </div>
-  </div>
-
-  <div id="scrim" hidden></div>
-  <div id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheet-title"></div>
-  <p class="sr" id="live" aria-live="polite"></p>
 
   <div class="home-indicator"></div>
   <script>document.getElementById('clock').textContent = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });</script>
-  <script>/* motion-kit.js (mobile-ui-craft 5.0). Zero dependencies. Inline it in one <script> of the prototype; it defines window.MK.
-   Everything that should be filmable runs on WAAPI or view transitions, which scripts/capture.mjs `film:` slows down.
-   requestAnimationFrame is used only for MK.tilt smoothing (pointer-driven, not filmed); never build a filmed move on it.
-   Springs are CSS linear() easings generated at mass 1; the tokens are the Material 3 Expressive stiffness/damping pairs. */
+
+<script>
+/* motion-kit.js (mobile-ui-craft 5.0), inlined */
 (() => {
-  const MK = (window.MK = { out: 'cubic-bezier(.2,.8,.2,1)' }); // out: for fades and menus, never for springs
+  const MK = (window.MK = { out: 'cubic-bezier(.2,.8,.2,1)' });
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   MK.reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  // Spring as a linear() easing: stiffness k, damping ratio zeta (<= 1). ms is the time to settle within 0.2%.
   MK.spring = (k, zeta, pts = 36) => {
     const w0 = Math.sqrt(k), wd = w0 * Math.sqrt(Math.max(1e-6, 1 - zeta * zeta));
     const x = zeta < 1
@@ -294,18 +343,13 @@
     v[pts] = 1;
     return { easing: `linear(${v.join(', ')})`, ms: Math.round(T * 1000) };
   };
-  // spatial moves things and may overshoot; effects (opacity, colour) must not overshoot
   MK.ease = { spatial: MK.spring(380, 0.8), fast: MK.spring(800, 0.6), slow: MK.spring(200, 0.8), effects: MK.spring(1600, 1) };
-
-  // Shared-element and state morphs. Give the two ends the same view-transition-name (unique, set only while morphing).
   let vtStyle;
   MK.morph = (update, opts = {}) => {
     if (!document.startViewTransition || document.visibilityState !== 'visible') return Promise.resolve(update()).then(() => {});
     if (!vtStyle) {
       const e = MK.ease.spatial;
       vtStyle = document.head.appendChild(document.createElement('style'));
-      // under Reduce Motion the named groups jump and only the page crossfades.
-      // The page fades out before the new one fades in: a simultaneous crossfade shows old and new text on top of each other.
       vtStyle.textContent = `::view-transition-group(*){animation-duration:${e.ms}ms;animation-timing-function:${e.easing}}
 ::view-transition-group(root){animation-duration:200ms;animation-timing-function:ease-out}
 ::view-transition-old(root){animation:mk-vt-out 90ms ease-out both}::view-transition-new(root){animation:mk-vt-in 150ms 60ms ease-out both}
@@ -314,22 +358,19 @@
     }
     const typed = opts.types && window.ViewTransition && 'types' in ViewTransition.prototype;
     const vt = typed ? document.startViewTransition({ update, types: opts.types }) : document.startViewTransition(update);
-    vt.ready.catch(() => {}); // a skipped transition rejects ready; the update still ran, so finished is what we return
+    vt.ready.catch(() => {});
     return vt.finished;
   };
-
-  // Commit the on-screen transform and stop animations, so a grab or a new move starts from where the element is.
   MK.freeze = (el) => {
-    const t = getComputedStyle(el).transform;
+    const cs = getComputedStyle(el), t = cs.transform, tr = cs.translate, sc = cs.scale;
     el.getAnimations().forEach((a) => a.cancel());
     el.style.transform = t === 'none' ? '' : t;
+    el.style.translate = tr === 'none' ? '' : tr;
+    el.style.scale = sc === 'none' ? '' : sc;
   };
-
-  // FLIP for one element or an array. Uses the translate/scale properties, so it composes with the element's own transform.
-  // Scaling distorts children and radii: flip boxes, or use MK.morph for rich content.
   MK.flip = (targets, mutate, ease = MK.ease.spatial) => {
     const els = [].concat(targets), red = MK.reduced();
-    const first = els.map((e) => e.getBoundingClientRect()); // measured while any earlier flip is still in flight
+    const first = els.map((e) => e.getBoundingClientRect());
     els.forEach((e) => e.getAnimations().filter((a) => a.id === 'mk-flip').forEach((a) => a.cancel()));
     mutate();
     return Promise.all(els.map((e, i) => {
@@ -343,427 +384,335 @@
       return an.finished.catch(() => {});
     })).then(() => {});
   };
-
-  // Pointer drag with capture. Velocity (px/ms) comes from the last ~80 ms of movement. Returns a disposer.
-  // axis 'x' or 'y' locks the other axis and leaves that scroll direction to the browser.
-  MK.drag = (el, { axis, onStart, onMove, onEnd } = {}) => {
-    el.style.touchAction = axis === 'x' ? 'pan-y' : axis === 'y' ? 'pan-x' : 'none';
-    let id = null, x0 = 0, y0 = 0, pts = [];
-    const d = (e) => ({ dx: axis === 'y' ? 0 : e.clientX - x0, dy: axis === 'x' ? 0 : e.clientY - y0 });
-    const down = (e) => {
-      if (id !== null || (e.pointerType === 'mouse' && e.button)) return;
-      MK.freeze(el);
-      id = e.pointerId; x0 = e.clientX; y0 = e.clientY; pts = [[e.timeStamp, e.clientX, e.clientY]];
-      try { el.setPointerCapture(id); } catch { /* synthetic events have no active pointer */ }
-      onStart?.(e);
-    };
-    const move = (e) => {
-      if (e.pointerId !== id) return;
-      pts.push([e.timeStamp, e.clientX, e.clientY]);
-      onMove?.(d(e).dx, d(e).dy, e);
-    };
-    const up = (e) => {
-      if (e.pointerId !== id) return;
-      id = null;
-      const p0 = pts.find((p) => e.timeStamp - p[0] <= 80) || pts[pts.length - 1], p1 = pts[pts.length - 1], dt = p1[0] - p0[0];
-      const vx = dt > 1 && axis !== 'y' ? (p1[1] - p0[1]) / dt : 0, vy = dt > 1 && axis !== 'x' ? (p1[2] - p0[2]) / dt : 0;
-      onEnd?.({ ...d(e), vx, vy });
-    };
-    const ev = [['pointerdown', down], ['pointermove', move], ['pointerup', up], ['pointercancel', up]];
-    ev.forEach(([n, f]) => el.addEventListener(n, f));
-    return () => ev.forEach(([n, f]) => el.removeEventListener(n, f));
-  };
-
-  // Spring on x, y (px), r (deg), s (scale), seeded with the release velocity v (units per ms). The spring is simulated
-  // into WAAPI keyframes, so the move is a normal Animation: cancel it (or MK.freeze) to grab it mid-flight.
-  MK.fling = (el, { from = {}, to = {}, v = {}, k = 380, zeta = 0.8 } = {}) => {
-    if (MK.reduced()) { k = 1600; zeta = 1; v = {}; } // no overshoot, no carried momentum
-    const base = { x: 0, y: 0, r: 0, s: 1 }, tol = { x: 0.3, y: 0.3, r: 0.05, s: 0.002 };
-    const A = { ...base, ...from }, B = { ...base, ...to }, c = 2 * zeta * Math.sqrt(k), dt = 1 / 240, keys = Object.keys(base);
-    const p = { ...A }, w = Object.fromEntries(keys.map((q) => [q, (v[q] || 0) * 1000]));
-    const css = () => `translate(${p.x}px,${p.y}px) rotate(${p.r}deg) scale(${p.s})`;
-    const frames = [{ transform: css() }];
-    for (let i = 1; i < 720; i++) {
-      keys.forEach((q) => { w[q] += (-k * (p[q] - B[q]) - c * w[q]) * dt; p[q] += w[q] * dt; });
-      if (i % 4) continue;
-      if (keys.every((q) => Math.abs(p[q] - B[q]) < tol[q] && Math.abs(w[q]) < tol[q] * 8)) break;
-      frames.push({ transform: css() });
-    }
-    Object.assign(p, B);
-    const end = css();
-    frames.push({ transform: end });
-    const an = el.animate(frames, { duration: (frames.length * 1000) / 60, easing: 'linear', fill: 'forwards' });
-    an.finished.then(() => { el.style.transform = end; an.cancel(); }, () => {}); // a cancelled fling leaves the transform alone
-    return an;
-  };
-
-  // Perspective tilt that follows the pointer, low-pass smoothed (rAF, see header), spring back on leave.
-  // It owns el.style.transform: tilt an inner element if the outer one is thrown. Sets --mx/--my (0-100%) for a highlight.
-  // Returns a disposer.
-  MK.tilt = (el, { max = 10 } = {}) => {
-    let tx = 0, ty = 0, cx = 0, cy = 0, raf = 0;
-    const pose = () => `perspective(700px) rotateX(${-cy * max}deg) rotateY(${cx * max}deg)`;
-    const step = () => {
-      cx += (tx - cx) * 0.15; cy += (ty - cy) * 0.15;
-      el.style.transform = pose();
-      el.style.setProperty('--mx', `${50 + cx * 50}%`); el.style.setProperty('--my', `${50 + cy * 50}%`);
-      raf = Math.abs(tx - cx) + Math.abs(ty - cy) > 0.002 ? requestAnimationFrame(step) : 0;
-    };
-    const aim = (x, y) => { if (MK.reduced()) return; tx = clamp(x, -1, 1); ty = clamp(y, -1, 1); raf = raf || requestAnimationFrame(step); };
-    const move = (e) => { const r = el.getBoundingClientRect(); aim(((e.clientX - r.left) / r.width) * 2 - 1, ((e.clientY - r.top) / r.height) * 2 - 1); };
-    const leave = () => {
-      cancelAnimationFrame(raf); raf = 0;
-      const e = MK.ease.fast, from = pose(), cx0 = cx, cy0 = cy;
-      tx = ty = cx = cy = 0;
-      el.style.transform = '';
-      el.style.setProperty('--mx', '50%'); el.style.setProperty('--my', '50%');
-      if (!MK.reduced() && Math.abs(cx0) + Math.abs(cy0) > 0.01) el.animate([{ transform: from }, { transform: pose() }], { duration: e.ms, easing: e.easing });
-    };
-    const ev = [['pointermove', move], ['pointerleave', leave], ['pointerup', leave], ['pointercancel', leave]];
-    ev.forEach(([n, f]) => el.addEventListener(n, f));
-    el._mkAim = aim;
-    return () => { leave(); ev.forEach(([n, f]) => el.removeEventListener(n, f)); delete el._mkAim; };
-  };
-  // Gyro tilt for el, started by a tap on button (iOS asks for permission inside a user gesture; needs HTTPS, so file:// gets nothing).
-  MK.tilt.gyro = (button, el, opts) => {
-    const on = (e) => el._mkAim((e.gamma || 0) / 30, ((e.beta || 0) - 45) / 30);
-    const click = async () => {
-      const D = window.DeviceOrientationEvent;
-      if (!D || MK.reduced() || (typeof D.requestPermission === 'function' && (await D.requestPermission()) !== 'granted')) return;
-      if (!el._mkAim) MK.tilt(el, opts);
-      addEventListener('deviceorientation', on);
-    };
-    button.addEventListener('click', click);
-    return () => { button.removeEventListener('click', click); removeEventListener('deviceorientation', on); };
-  };
-
-  // Digit roll for a figure in tabular numerals: only the digits that changed slide. text is the whole formatted string.
-  // A different length rebuilds the figure with a fade. The element gets role=img and aria-label = text.
-  MK.roll = (el, text) => {
-    text = String(text);
-    el.setAttribute('role', 'img'); el.setAttribute('aria-label', text);
-    if (el.dataset.mkText === text) return;
-    const red = MK.reduced(), e = MK.ease.fast;
-    if (el.dataset.mkLen !== String(text.length)) {
-      el.dataset.mkLen = text.length;
-      el.style.cssText += ';display:inline-flex;height:1em;line-height:1;overflow:hidden;font-variant-numeric:tabular-nums';
-      el.innerHTML = [...text].map((ch) => /\d/.test(ch)
-        ? '<span aria-hidden="true" style="display:block;height:1em;overflow:hidden"><span class="mk-col" style="display:flex;flex-direction:column">'
-          + [...'0123456789'].map((n) => `<i style="display:block;height:1em;font-style:normal">${n}</i>`).join('') + '</span></span>'
-        : `<span aria-hidden="true">${ch}</span>`).join('');
-      el.querySelectorAll('.mk-col').forEach((c) => { c.dataset.d = 0; });
-      if (el.dataset.mkText !== undefined) el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: MK.out });
-    }
-    let k = 0;
-    el.querySelectorAll('.mk-col').forEach((col) => {
-      while (!/\d/.test(text[k])) k++;
-      const to = +text[k++], from = +col.dataset.d, at = (n) => `translateY(${-n}em)`;
-      col.style.transform = at(to); col.dataset.d = to;
-      if (from !== to && !red && el.dataset.mkText !== undefined) col.animate([{ transform: at(from) }, { transform: at(to) }], { duration: e.ms, easing: e.easing });
-    });
-    if (red && el.dataset.mkText !== undefined) el.animate([{ opacity: 0.4 }, { opacity: 1 }], { duration: 150, easing: MK.out });
-    el.dataset.mkText = text;
-  };
-
-  // navigator.vibrate patterns. iOS Safari has no vibrate: this is a silent no-op there, so never rely on it alone.
+  MK.roll = (el, text) => { el.textContent = String(text); el.setAttribute('aria-label', String(text)); }; // shortcut: digit roll not needed on this screen
   const PATTERNS = { selection: 6, light: 10, medium: 20, success: [10, 40, 10], warning: [20, 60, 20], error: [30, 50, 30, 50, 30] };
   MK.haptic = (kind = 'light') => { try { navigator.vibrate?.(PATTERNS[kind] ?? 10); } catch { /* blocked before a user gesture */ } };
+  void clamp;
 })();
 </script>
-  <script>
-  const $ = (s, r = document) => r.querySelector(s);
-  const html = document.documentElement;
-  const IMG = (ph, w = 800, h = 1000) => `https://images.unsplash.com/photo-${ph.id}?w=${w}&h=${h}&q=80&auto=format&fit=crop&crop=${ph.crop || 'faces'}`;
-  const imgTag = (ph, extra = '') => `<img src="${IMG(ph)}" alt="${ph.alt}" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()" ${extra}>`;
 
-  // Sample data (made-up people, Unsplash portraits). The viewer's own interests decide what counts as shared.
-  const ME = { name: 'Ece', age: 28, photo: { id: '1534528741775-53994a69daeb', c: '#b8aea6', alt: 'Ece' },
-    interests: ['Fotoğraf', 'Bisiklet', 'Caz', 'Sinema', 'Yüzme'],
-    prompts: [{ q: 'Bir pazar günüm', a: 'Erken kalkıp Belgrad Ormanı’nda bisiklet.' }, { q: 'Beni en çok heyecanlandıran', a: 'Yeni açıklanan bir konser takvimi.' }] };
+<script>
+/* ---------- data: sample people (made-up names, Unsplash portraits) ---------- */
+const U = (id, w, h, crop = 'faces') => `https://images.unsplash.com/photo-${id}?w=${w}&h=${h}&fit=crop&crop=${crop}&q=80&auto=format&dpr=2`;
+const ALL = ['Bisiklet', 'Caz', 'Kahve', 'Koşu', 'Sinema', 'Kamp', 'Fotoğraf', 'Tırmanış', 'Ekmek yapmak', 'Seramik', 'Kitap', 'Yemek yapmak', 'Yüzme', 'Tiyatro'];
+const ME = { interests: new Set(['Bisiklet', 'Caz', 'Kahve', 'Koşu', 'Sinema', 'Kamp']) };
+const PEOPLE = [
+  { id: 'defne', name: 'Defne', age: 29, place: 'Kadıköy', km: 3, verified: true, job: 'Mimar',
+    photo: '1544005313-94ddf0286df2', c: '#9c8270', alt: 'Defne, çizgili tişörtle gülümsüyor',
+    interests: ['Bisiklet', 'Caz', 'Kahve', 'Fotoğraf', 'Tırmanış', 'Ekmek yapmak'],
+    prompts: [
+      { q: 'Pazar sabahları', a: 'Bisikletle Moda’ya inip sahilde kahve içiyorum.', about: ['Bisiklet', 'Kahve'] },
+      { q: 'Son zamanlarda dinlediğim', a: 'Plaktan caz, en çok da piyanolu trio kayıtları.', about: ['Caz'] },
+      { q: 'Anlaşırız, eğer', a: 'Plan son dakika değişince sorun etmiyorsan.', about: [] } ],
+    photo2: { id: '1602848597941-0d3d3a2c1241', c: '#7a2a24', alt: 'Defne’nin fotoğrafı: kırmızı etiketli bir plak' } },
+  { id: 'aysegul', name: 'Ayşegül Nur', age: 33, place: 'Beşiktaş', km: 6, verified: true, job: null,
+    photo: '1573497019940-1c28c88b4f3e', c: '#8a6a58', alt: 'Ayşegül Nur, kıvırcık saçlı, gülümsüyor',
+    interests: ['Sinema', 'Kamp', 'Seramik', 'Kitap', 'Koşu'],
+    prompts: [
+      { q: 'Hafta sonu planım', a: 'Sabah koşusu, öğleden sonra seramik atölyesi.', about: ['Koşu'] },
+      { q: 'En son izlediğim film', a: 'Eski bir Yeşilçam filmi, annemle.', about: ['Sinema'] },
+      { q: 'Anlaşırız, eğer', a: 'Çadır kurmayı biliyorsan.', about: ['Kamp'] } ],
+    photo2: { id: '1501785888041-af3ef285b470', c: '#4a6a7a', alt: 'Ayşegül Nur’un fotoğrafı: dağların arasında bir göl' } },
+  { id: 'ipek', name: 'İpek', age: 27, place: 'Cihangir', km: 4, verified: false, job: 'Grafik tasarımcı',
+    photo: '1534528741775-53994a69daeb', c: '#8c7b6e', alt: 'İpek, siyah tişörtle',
+    interests: ['Tırmanış', 'Fotoğraf', 'Tiyatro', 'Yüzme'],
+    prompts: [
+      { q: 'Hafta içi akşamları', a: 'Tırmanış salonu ya da tiyatro provası.', about: ['Tırmanış', 'Tiyatro'] },
+      { q: 'Bir gün denemek istediğim', a: 'Kaçkarlar’da bir hafta yürüyüş.', about: [] } ],
+    photo2: null },
+  { id: 'melis', name: 'Melis', age: 30, place: 'Ataşehir', km: 9, verified: true, job: 'Diş hekimi',
+    photo: '1494790108377-be9c29b29330', c: '#9a4a40', alt: 'Melis, kırmızı kazakla gülümsüyor',
+    interests: ['Kahve', 'Koşu', 'Sinema', 'Yemek yapmak', 'Kitap'],
+    prompts: [
+      { q: 'Pazar sabahları', a: 'Sahilde 10 km, sonra uzun bir kahvaltı.', about: ['Koşu'] },
+      { q: 'Kahve mi, çay mı', a: 'Sabah filtre kahve, akşam demli çay.', about: ['Kahve'] },
+      { q: 'Anlaşırız, eğer', a: 'Film bitince hemen telefona bakmıyorsan.', about: ['Sinema'] } ],
+    photo2: { id: '1509042239860-f550ce710b93', c: '#8a6a4a', alt: 'Melis’in fotoğrafı: masada iki latte' } },
+];
+const LIKED_ME = [
+  { name: 'Selin', age: 28, photo: '1580489944761-15a19d654956', c: '#a08c7c', what: '“Kahve mi, çay mı” yanıtını beğendi' },
+  { name: 'Nehir', age: 26, photo: '1517841905240-472988babdf9', c: '#6c7a8a', what: 'Fotoğrafını beğendi' },
+];
+const byId = Object.fromEntries(PEOPLE.map((p) => [p.id, p]));
 
-  const PROFILES = [
-    { name: 'Deniz', age: 29, acc: 'Deniz’i', gen: 'Deniz’in', dat: 'Deniz’e', place: 'Kadıköy', km: 3, verified: true,
-      interests: ['Fotoğraf', 'Bisiklet', 'Caz', 'Kamp', 'Tırmanış'],
-      photos: [{ id: '1531746020798-e6953c6e8e04', c: '#d39aa5', alt: 'Deniz, pembe bir duvarın önünde' },
-               { id: '1626956291772-3aa243614fd0', c: '#7f97ad', crop: 'entropy', alt: 'Vapur ve İstanbul silueti' },
-               { id: '1596633313465-1256feb1c6d9', c: '#6d5a48', crop: 'entropy', alt: 'Raflarda plaklar' }],
-      prompts: [{ q: 'Bir pazar günüm', a: 'Moda sahilinde bisiklet, sonra uzun bir kahvaltı.', tag: 'Bisiklet' },
-                { q: 'Son zamanlarda öğrendiğim', a: 'Film makinesiyle çekmek. Rulonun yarısı hâlâ bulanık.', tag: 'Fotoğraf' },
-                { q: 'Benimle anlaşırsın, eğer', a: 'Hafta içi bir caz konserine son dakika gelebiliyorsan.', tag: 'Caz' }] },
-    { name: 'Mert', age: 32, acc: 'Mert’i', gen: 'Mert’in', dat: 'Mert’e', place: 'Beşiktaş', km: 6, verified: true,
-      interests: ['Sinema', 'Koşu', 'Yemek', 'Satranç'],
-      photos: [{ id: '1507003211169-0a1dd7228f2d', c: '#b49c86', alt: 'Mert, gri tişörtle gülümsüyor' },
-               { id: '1564407727371-3eece6c58961', c: '#8a9bb0', crop: 'entropy', alt: 'Ortaköy Camii ve köprü' },
-               { id: '1509042239860-f550ce710b93', c: '#a07a5c', crop: 'entropy', alt: 'Masada iki latte' }],
-      prompts: [{ q: 'Bu ay izlediğim en iyi film', a: 'Beyoğlu’nda bir Kurosawa gösterimi.', tag: 'Sinema' },
-                { q: 'Hafta sonu beni bulabileceğin yer', a: 'Sabah Maçka Parkı’nda koşu.' }] },
-    { name: 'Mihrimah Selin', age: 27, acc: 'Mihrimah Selin’i', gen: 'Mihrimah Selin’in', dat: 'Mihrimah Selin’e', place: null, km: 8, verified: false,
-      interests: ['Yoga', 'Seramik', 'Tiyatro'],
-      photos: [{ id: '1544005313-94ddf0286df2', c: '#c4b2a0', alt: 'Mihrimah Selin, çizgili tişörtle gülümsüyor' },
-               { id: '1600500636274-2e64593efb62', c: '#5aa0a8', crop: 'entropy', alt: 'Beyaz duvarda turkuaz kapılar' },
-               { id: '1567880905822-56f8e06fe630', c: '#d8d2c8', crop: 'entropy', alt: 'Beyaz bir kafenin içi' }],
-      prompts: [{ q: 'Beni en çok güldüren', a: 'Annemin sesli mesajları.' },
-                { q: 'Birlikte yapalım', a: 'Cumartesi sabahı bir seramik atölyesi.' },
-                { q: 'Asla hayır diyemediğim', a: 'Simit ve çay, günün her saati.' }] },
-  ];
-  const LIKERS = [
-    { name: 'Zeynep', age: 30, acc: 'Zeynep’i', photo: { id: '1580489944761-15a19d654956', c: '#c8b9ab', alt: 'Zeynep' }, what: '“Bir pazar günüm” yanıtını beğendi', note: 'Belgrad Ormanı’nda hangi parkur?', state: 'new' },
-    { name: 'Burak', age: 34, acc: 'Burak’ı', photo: { id: '1522556189639-b150ed9c4330', c: '#9c8b7a', alt: 'Burak' }, what: 'Fotoğrafını beğendi', note: null, state: 'new' },
-  ];
-  const CHATS = [{ name: 'Can', photo: { id: '1500648767791-00dcc994a43e', c: '#a39282', alt: 'Can' }, last: 'Cumartesi Moda’da buluşalım mı?', time: '21:40' }];
+/* ---------- state: one place, every view renders from it ---------- */
+const S = { queue: PEOPLE.map((p) => p.id), history: [], sent: [], receipt: null, tab: 'discover' };
+const cur = () => byId[S.queue[0]];
+const sharedOf = (p) => p.interests.filter((i) => ME.interests.has(i));
 
-  let deck = PROFILES.slice(), pos = 0, passed = [], last = null, tab = 'discover';
-  const disc = $('#disc'), art = $('#profile'), nav = $('#nav');
-  const shared = (p) => p.interests.filter((i) => ME.interests.includes(i));
-  const live = (t) => { $('#live').textContent = ''; requestAnimationFrame(() => { $('#live').textContent = t; }); };
-  const hashState = () => { const s = location.hash.slice(1); return ['loading', 'empty', 'error', 'offline'].includes(s) ? s : 'content'; };
-  const badge = (p) => p.verified ? '<i class="ph-fill ph-seal-check verified" aria-hidden="true"></i><span class="sr">, doğrulanmış profil</span>' : '';
+const $ = (s, r = document) => r.querySelector(s);
+const screen = $('#screen'), views = $('#views'), discover = $('#v-discover'), card = $('#card');
+const ov = $('#ov'), ovs = $('#ovs'), ovh = $('#ovh'), sheet = $('#sheet'), scrim = $('#scrim');
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const img = (src, alt, extra = '') => `<img src="${src}" alt="${esc(alt)}" crossorigin="anonymous" ${extra} onload="this.classList.add('in')" onerror="this.remove()">`;
+const live = (t) => { const l = $('#live'); l.textContent = ''; requestAnimationFrame(() => { l.textContent = t; }); };
 
-  function profileHTML(p) {
-    const sh = shared(p);
-    const chips = [...sh, ...p.interests.filter((i) => !sh.includes(i))].map((i) => sh.includes(i)
-      ? `<li class="chip on"><i class="ph ph-check" aria-hidden="true"></i>${i}<span class="sr">, ortak</span></li>`
-      : `<li class="chip off">${i}</li>`).join('');
-    const photo = (i, cls) => { const ph = p.photos[i]; if (!ph) return '';
-      return `<figure class="slot ${cls}" style="--c:${ph.c}"><button class="photo-open" data-idx="${i}" aria-label="Fotoğrafı büyüt, ${i + 1} / ${p.photos.length}">${imgTag(ph)}</button>`
-        + `<button class="like-photo" data-like="photo:${i}" aria-label="${p.gen} fotoğrafını beğen"><i class="ph ph-heart" aria-hidden="true"></i></button></figure>`; };
-    const prompt = (i) => { const q = p.prompts[i]; if (!q) return '';
-      const tag = q.tag && sh.includes(q.tag) ? `<span class="tag"><i class="ph ph-check" aria-hidden="true"></i>Ortak: ${q.tag}</span>` : '<span></span>';
-      return `<section class="prompt"><p class="q">${q.q}</p><p class="a">${q.a}</p><div class="row">${tag}`
-        + `<button class="like-btn" data-like="prompt:${i}" aria-label="${p.gen} “${q.q}” yanıtını beğen"><i class="ph ph-heart" aria-hidden="true"></i></button></div></section>`; };
-    return `<div class="who"><h2 class="name" id="pname" tabindex="-1">${p.name}, ${p.age}${badge(p)}</h2>`
-      + `<p class="meta">${[p.place, `${p.km} km uzakta`].filter(Boolean).join(', ')}</p></div>`
-      + photo(0, 'hero')
-      + `<section class="common" aria-label="Ortak ilgi alanları"><h3>${sh.length ? `${sh.length} ortak ilgi alanı` : 'Ortak ilgi alanınız yok'}</h3><ul class="chips">${chips}</ul></section>`
-      + prompt(0) + photo(1, 'inline') + prompt(1) + prompt(2) + photo(2, 'inline')
-      + `<div class="safety"><button id="report-open"><i class="ph ph-flag" aria-hidden="true"></i>${p.acc} şikâyet et veya engelle</button></div>`;
-  }
+/* ---------- colour sampled from the photo: the card's wash follows the person ---------- */
+async function dominant(im) {
+  await im.decode(); const c = document.createElement('canvas'); c.width = c.height = 24;
+  const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(im, 0, 0, 24, 24);
+  const d = x.getImageData(0, 0, 24, 24).data, bins = {};
+  for (let i = 0; i < d.length; i += 4) { const r = d[i], g = d[i + 1], b = d[i + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+    if (mx < 40 || mn > 225 || mx - mn < 28) continue;
+    const k = (r >> 4) + ',' + (g >> 4) + ',' + (b >> 4); (bins[k] ??= [0, 0, 0, 0]); const v = bins[k]; v[0]++; v[1] += r; v[2] += g; v[3] += b; }
+  const top = Object.values(bins).sort((a, b) => b[0] - a[0])[0];
+  return top ? `rgb(${top[1] / top[0] | 0} ${top[2] / top[0] | 0} ${top[3] / top[0] | 0})` : null;
+}
+// preload every photo so a swap never shows an empty frame, and sample its colour once
+PEOPLE.forEach((p) => {
+  const im = new Image(); im.crossOrigin = 'anonymous'; im.src = U(p.photo, 400, 400);
+  dominant(im).then((col) => { if (!col) return; p.tint = col; if (cur() === p) { card.style.setProperty('--tint', col); $('.ov-shared')?.style.setProperty('--tint', col); } }).catch(() => {});
+  if (p.photo2) { const i2 = new Image(); i2.src = U(p.photo2.id, 400, 500, 'entropy'); }
+});
 
-  // the common-ground band takes its colour from the person's own photo
-  async function dominant(img) {
-    await img.decode(); const c = document.createElement('canvas'); c.width = c.height = 24;
-    const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0, 24, 24);
-    const d = x.getImageData(0, 0, 24, 24).data, bins = {};
-    for (let i = 0; i < d.length; i += 4) { const r = d[i], g = d[i + 1], b = d[i + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b);
-      if (mx < 40 || mn > 225 || mx - mn < 28) continue;
-      const k = (r >> 4) + ',' + (g >> 4) + ',' + (b >> 4); (bins[k] ??= [0, 0, 0, 0]); const v = bins[k]; v[0]++; v[1] += r; v[2] += g; v[3] += b; }
-    const top = Object.values(bins).sort((a, b) => b[0] - a[0])[0];
-    if (!top) throw new Error('no colour');
-    return `rgb(${top[1] / top[0] | 0} ${top[2] / top[0] | 0} ${top[3] / top[0] | 0})`;
-  }
+/* ---------- render ---------- */
+function sharedBlock(p) {
+  const sh = sharedOf(p), rest = p.interests.filter((i) => !ME.interests.has(i));
+  const head = sh.length ? `<span class="num">${sh.length}</span> ortak ilgi alanı` : 'Ortak ilgi alanı yok';
+  const chips = sh.map((i) => `<li class="chip on"><i class="ph ph-check" aria-hidden="true"></i>${esc(i)}<span class="sr"> (ortak)</span></li>`).join('')
+    + rest.map((i) => `<li class="chip">${esc(i)}</li>`).join('');
+  return `<h3 class="sec">${head}</h3><ul class="chips">${chips}</ul>`;
+}
+function promptHTML(p, pr, i) {
+  const common = pr.about.filter((a) => ME.interests.has(a));
+  const tag = common.length ? `<span class="tag">Ortak: <b>${common.map(esc).join(', ')}</b></span>` : '';
+  return `<div class="prompt"><p class="q">${esc(pr.q)}</p><p class="a">${esc(pr.a)}</p>
+    <div class="prow">${tag}<button class="heart" data-like-prompt="${i}" aria-label="Yanıtı beğen: ${esc(pr.q)}"><i class="ph ph-heart" aria-hidden="true"></i></button></div></div>`;
+}
+const verifiedHTML = (p) => p.verified ? `<span class="verified"><i class="ph-fill ph-seal-check" aria-hidden="true"></i>Doğrulandı</span>` : '';
 
-  function showDiscover(animate) {
-    const s = hashState(), p = deck[pos];
-    const empty = s === 'empty' || (s !== 'loading' && s !== 'error' && !p);
-    const showP = !empty && s !== 'loading' && s !== 'error';
-    $('#st-loading').hidden = s !== 'loading'; $('#st-error').hidden = s !== 'error'; $('#st-empty').hidden = !empty;
-    $('#offline').hidden = s !== 'offline';
-    art.hidden = !showP; $('#decide').hidden = !showP;
-    const n = s === 'empty' ? 0 : passed.length, rp = $('#replay');
-    rp.hidden = !n; rp.textContent = `Geçtiğin ${n} profili yeniden gör`;
-    nav.classList.remove('scrolled'); $('#compact').innerHTML = '';
-    if (!showP) return;
-    art.innerHTML = profileHTML(p);
-    art.style.setProperty('--tint', p.photos[0].c);
-    $('#compact').innerHTML = `<span>${p.name}, ${p.age}</span>${p.verified ? '<i class="ph-fill ph-seal-check" aria-hidden="true"></i>' : ''}`;
-    const hero = $('.hero img', art);
-    if (hero) { const go = () => dominant(hero).then((c) => art.style.setProperty('--tint', c)).catch(() => {}); hero.complete ? go() : hero.addEventListener('load', go, { once: true }); }
-    console.assert(art.querySelectorAll('.chip.on').length === shared(p).length, 'shared count must match the checked chips');
-    if (animate) {
-      art.getAnimations().forEach((a) => a.cancel());
-      const e = MK.ease.spatial;
-      art.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: MK.out });
-      if (!MK.reduced()) art.animate([{ transform: 'translateY(14px) scale(.98)' }, { transform: 'none' }], { duration: e.ms, easing: e.easing });
-    }
-  }
+function renderCard() {
+  const p = cur();
+  screen.classList.toggle('drained', !p);
+  if (!p) { card.innerHTML = ''; return; }
+  card.style.setProperty('--c', p.c);
+  card.style.setProperty('--tint', p.tint || p.c);
+  card.innerHTML = `
+    <div class="pic card-pic" id="card-pic" style="--c:${p.c}">
+      ${img(U(p.photo, 400, 400), p.alt)}
+      <div class="shade"></div>
+      <div class="who"><h2 class="name" id="card-name">${esc(p.name)}, <span class="num">${p.age}</span></h2>
+        <div class="line2"><span>${esc(p.place)}, <span class="num">${p.km}</span> km</span>${verifiedHTML(p)}</div></div>
+      <button class="open-hit" data-open aria-label="${esc(p.name)} profilinin tamamını aç"></button>
+    </div>
+    <div class="shared">${sharedBlock(p)}</div>
+    <div class="prompts">${p.prompts.slice(0, 2).map((pr, i) => promptHTML(p, pr, i)).join('')}
+      <button class="more" data-open>Profilin tamamı</button></div>`;
+  // self-check: the heading count equals the checked chips under it
+  console.assert(card.querySelectorAll('.chip.on').length === sharedOf(p).length, 'shared count mismatch');
+}
 
-  function receipt(text, undoable) {
-    $('#receipt').hidden = !text; $('#receipt-text').textContent = text || ''; $('#undo').hidden = !undoable;
-    if (text) live(text);
-  }
+function renderOverlay() {
+  const p = cur(); if (!p) return;
+  const pr = p.prompts.map((x, i) => promptHTML(p, x, i));
+  const pic2 = p.photo2 ? `<div class="pic photo2" style="--c:${p.photo2.c}">${img(U(p.photo2.id, 400, 500, 'entropy'), p.photo2.alt)}
+      <button class="heart" data-like-photo aria-label="Fotoğrafı beğen"><i class="ph ph-heart" aria-hidden="true"></i></button></div>` : '';
+  pr.splice(1, 0, pic2);
+  $('#ov-mini').innerHTML = `${esc(p.name)}, <span class="num">${p.age}</span>${p.verified ? '<i class="ph-fill ph-seal-check" aria-hidden="true"></i>' : ''}`;
+  $('#ov-body').innerHTML = `
+    <div class="pic ov-pic" id="ov-pic" style="--c:${p.c}">${img(U(p.photo, 400, 400), p.alt)}<div class="top"></div></div>
+    <div class="ov-main">
+      <div class="ov-name"><h2 class="name" id="ov-name" tabindex="-1">${esc(p.name)}, <span class="num">${p.age}</span></h2>
+        ${verifiedHTML(p)}<p>${esc(p.place)}, <span class="num">${p.km}</span> km</p>${p.job ? `<p>${esc(p.job)}</p>` : ''}</div>
+      <div class="shared ov-shared" style="--c:${p.c};--tint:${p.tint || p.c}">${sharedBlock(p)}</div>
+      ${pr.join('')}
+      <div class="safety"><button class="danger" data-report>Bildir</button><button class="danger" data-block>Engelle</button></div>
+    </div>`;
+}
 
-  // like, pass, block, report: the state commits at once, so a fast second tap acts on the next person, never on a half-finished one
-  function decide(kind, opts = {}) {
-    const p = deck[pos]; if (!p || hashState() === 'loading' || hashState() === 'error') return;
-    const offline = hashState() === 'offline';
-    if (kind === 'block' || kind === 'report') { deck.splice(pos, 1); last = null; }
-    else { last = { kind, p, at: pos }; if (kind === 'pass') passed.push(p); pos++; }
-    const text = {
-      like: offline ? `${p.dat} beğeni sırada` : opts.note ? `${p.dat} notunla beğeni gönderildi` : `${p.dat} beğeni gönderildi`,
-      pass: `${p.acc} geçtin`, block: `${p.name} engellendi`, report: 'Şikâyetin alındı',
-    }[kind];
-    receipt(text, kind === 'like' || kind === 'pass');
-    MK.haptic(kind === 'block' ? 'medium' : 'light');
-    disc.scrollTop = 0; showDiscover(true);
-    ($('#pname') || $('#st-empty h2')).focus?.({ preventScroll: true });
-  }
-  function undo() {
-    if (!last) return;
-    const { kind, p, at } = last;
-    if (kind === 'pass') passed.pop();
-    pos = at; last = null; receipt(null); live(`${p.name} geri geldi`);
-    disc.scrollTop = 0; showDiscover(true); $('#pname')?.focus({ preventScroll: true });
-  }
+function renderBar() {
+  const r = S.receipt, el = $('#receipt');
+  el.hidden = !r;
+  if (r) { $('#receipt-text').textContent = r.text; $('#undo').hidden = !r.undo; }
+}
+function renderLikes() {
+  const row = (x) => `<li class="row"><div class="pic" style="--c:${x.c}">${img(U(x.photo, 112, 112), x.name)}</div><div><b>${esc(x.name)}, <span class="num">${x.age}</span></b><span>${esc(x.what)}</span></div></li>`;
+  $('#liked-me').innerHTML = LIKED_ME.map(row).join('');
+  $('#sent').innerHTML = S.sent.length
+    ? S.sent.map((s) => { const p = byId[s.id]; return row({ name: p.name, age: p.age, photo: p.photo, c: p.c,
+        what: (s.what) + (s.note ? `, notun: “${s.note}”` : '') }); }).join('')
+    : '<li class="muted">Henüz kimseyi beğenmedin.</li>';
+  $('#tab-likes').setAttribute('aria-label', `Beğeniler, ${LIKED_ME.length} kişi seni beğendi`);
+}
+function renderMe() {
+  $('#my-interests').innerHTML = ALL.map((i) => `<button class="chip${ME.interests.has(i) ? ' on' : ''}" aria-pressed="${ME.interests.has(i)}" data-interest="${esc(i)}">${ME.interests.has(i) ? '<i class="ph ph-check" aria-hidden="true"></i>' : ''}${esc(i)}</button>`).join('');
+}
+function render() { renderCard(); renderBar(); renderLikes(); }
 
-  /* sheet */
-  const sheet = $('#sheet'), scrim = $('#scrim');
-  let opener = null;
-  function openSheet(body, from) {
-    opener = from; sheet.innerHTML = `<div class="handle" aria-hidden="true"></div>${body}`;
-    const wasOpen = !sheet.hidden;
-    sheet.hidden = scrim.hidden = false; disc.style.overflowY = 'hidden';
-    if (!wasOpen) {
-      const e = MK.ease.spatial;
-      sheet.animate(MK.reduced() ? [{ opacity: 0 }, { opacity: 1 }] : [{ transform: 'translateY(100%)' }, { transform: 'none' }], MK.reduced() ? { duration: 150 } : { duration: e.ms, easing: e.easing });
-      scrim.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: MK.out });
-    }
-    $('#sheet-title').focus({ preventScroll: true });
+/* ---------- decisions: the card steps aside, the next one is already there ---------- */
+let ghost = null;
+function cardSwap(kind) {
+  ghost?.remove(); ghost = null;
+  const red = MK.reduced();
+  if (getComputedStyle(card).display !== 'none' && card.innerHTML) {
+    const r = card.getBoundingClientRect(), v = views.getBoundingClientRect();
+    ghost = card.cloneNode(true); ghost.removeAttribute('id'); ghost.querySelectorAll('[id]').forEach((e) => e.removeAttribute('id'));
+    ghost.inert = true; ghost.setAttribute('aria-hidden', 'true');
+    Object.assign(ghost.style, { position: 'absolute', left: r.left - v.left + 'px', top: r.top - v.top + 'px', width: r.width + 'px', zIndex: 2, pointerEvents: 'none', margin: 0 });
+    views.append(ghost);
+    const g = ghost, dx = kind === 'pass' ? -28 : 0, dy = kind === 'pass' ? 0 : -20;
+    g.animate(red ? [{ opacity: 1 }, { opacity: 0 }] : [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: `translate(${dx}px,${dy}px) scale(.98)` }],
+      { duration: 180, easing: MK.out, fill: 'forwards' }).finished.then(() => { g.remove(); if (ghost === g) ghost = null; }, () => {});
   }
-  function closeSheet(keepFocus) {
-    if (sheet.hidden) return;
-    disc.style.overflowY = '';
-    const a = sheet.animate(MK.reduced() ? [{ opacity: 1 }, { opacity: 0 }] : [{ transform: 'none' }, { transform: 'translateY(100%)' }], { duration: 200, easing: MK.out });
-    scrim.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, easing: MK.out });
-    a.finished.then(() => { sheet.hidden = scrim.hidden = true; sheet.innerHTML = ''; });
-    if (!keepFocus && opener?.isConnected) opener.focus({ preventScroll: true });
-  }
-  const head = (title) => `<div class="sheet-head"><h2 id="sheet-title" tabindex="-1">${title}</h2><button class="plain-btn" data-close aria-label="Kapat"><i class="ph ph-x" aria-hidden="true"></i></button></div>`;
+  return () => {
+    if (!cur() || getComputedStyle(card).display === 'none') return;
+    card.animate(red ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 0, transform: 'scale(.97)' }, { opacity: 1, transform: 'none' }],
+      { duration: 260, delay: 70, easing: MK.out, fill: 'backwards' });
+  };
+}
+const RECEIPT = { like: 'Beğenildi', prompt: 'Beğeni gönderildi', photo: 'Beğeni gönderildi', pass: 'Geçildi', block: 'Engellendi', report: 'Bildirildi' };
+function decide(kind, extra = {}) {
+  const p = cur(); if (!p) return;
+  const fromOverlay = !ov.hidden;
+  if (fromOverlay) hideOverlay();
+  const enter = cardSwap(kind === 'pass' || kind === 'block' || kind === 'report' ? 'pass' : 'like');
+  S.queue.shift();
+  const undoable = kind !== 'report';
+  S.history.push({ id: p.id, kind, undoable });
+  if (['like', 'prompt', 'photo'].includes(kind)) S.sent.unshift({ id: p.id, what: extra.what || 'Profilini beğendin', note: extra.note || '' });
+  S.receipt = { text: `${RECEIPT[kind]}: ${p.name}`, undo: undoable };
+  render(); discover.scrollTop = 0; enter();
+  if (kind !== 'pass') MK.haptic('light');
+  live(S.receipt.text + (cur() ? `. Sıradaki: ${cur().name}` : '. Gösterilecek başka profil yok'));
+  const f = cur() ? $(`#bar [data-act="${kind === 'pass' ? 'pass' : 'like'}"]`) : $('#undo');
+  (f && !f.hidden ? f : $('#title')).focus({ preventScroll: true });
+}
+function undo() {
+  const h = S.history[S.history.length - 1]; if (!h || !h.undoable) return;
+  S.history.pop();
+  const enter = cardSwap('none');
+  S.queue.unshift(h.id);
+  S.sent = S.sent.filter((s) => s.id !== h.id);
+  S.receipt = null;
+  render(); discover.scrollTop = 0; enter();
+  live(`Geri alındı: ${byId[h.id].name}`);
+  $('#card [data-open]').focus({ preventScroll: true });
+}
 
-  function likeSheet(what, from) {
-    const p = deck[pos], [type, i] = what.split(':');
-    const item = type === 'prompt'
-      ? `<div class="quote"><p class="q">${p.prompts[i].q}</p><p class="a">${p.prompts[i].a}</p></div>`
-      : `<div class="quote photo"><div class="slot" style="--c:${p.photos[i].c}">${imgTag(p.photos[i])}</div></div>`;
-    openSheet(head(`${p.dat} beğeni gönder`) + item
-      + `<label class="field-label" for="note">Not ekle (isteğe bağlı)</label><textarea id="note" maxlength="150" rows="3" autocomplete="off" autocapitalize="sentences" enterkeyhint="send"></textarea>`
-      + `<p class="count" id="note-count">0/150</p><button class="btn btn-1 btn-full" id="send-like"><i class="ph ph-heart" aria-hidden="true"></i>Beğeni gönder</button>`, from);
-  }
-  function reportSheet(from) {
-    const p = deck[pos];
-    openSheet(head(`${p.acc} şikâyet et veya engelle`)
-      + `<button class="opt" id="go-block"><i class="ph ph-prohibit" aria-hidden="true"></i><div><b>Engelle</b><span>Birbirinizi artık görmezsiniz.</span></div></button>`
-      + `<button class="opt" id="go-report"><i class="ph ph-flag" aria-hidden="true"></i><div><b>Şikâyet et</b><span>Kıvılcım ekibi inceler, ${p.name} kimin bildirdiğini görmez.</span></div></button>`, from);
-  }
-  function blockStep() {
-    const p = deck[pos];
-    openSheet(head(`${p.acc} engelle`) + `<p class="sheet-p">Birbirinizi artık görmezsiniz. Engeli Ayarlar’dan kaldırabilirsin.</p>`
-      + `<button class="btn btn-danger btn-full" id="do-block">${p.acc} engelle</button><button class="btn btn-2 btn-full" data-close>Vazgeç</button>`, opener);
-  }
-  function reasonStep() {
-    const p = deck[pos], reasons = ['Sahte profil', 'Uygunsuz fotoğraf', 'Taciz veya tehdit', '18 yaşından küçük olabilir', 'Başka bir sebep'];
-    openSheet(head(`${p.acc} şikâyet et`) + `<fieldset style="border:0;margin:0;padding:0"><legend class="sr">Şikâyet sebebi</legend>`
-      + reasons.map((r, k) => `<label class="reason"><input type="radio" name="reason" value="${k}">${r}</label>`).join('') + `</fieldset>`
-      + `<p class="err" id="reason-err" aria-live="assertive"></p><button class="btn btn-1 btn-full" id="do-report">Şikâyeti gönder</button>`, opener);
-  }
+/* ---------- full profile: the card photo grows into it (shared element) ---------- */
+let opener = null;
+function openProfile(from) {
+  if (!cur()) return;
+  opener = from;
+  renderOverlay();
+  const src = $('#card-pic'), dst = $('#ov-pic');
+  src.style.viewTransitionName = 'hero';
+  MK.morph(() => { src.style.viewTransitionName = ''; dst.style.viewTransitionName = 'hero'; ov.hidden = false; ovs.scrollTop = 0; ovh.classList.remove('solid'); document.body.classList.add('onphoto'); })
+    .then(() => { dst.style.viewTransitionName = ''; });
+  $('#ov-name').focus({ preventScroll: true });
+}
+function closeProfile() {
+  if (ov.hidden) return;
+  const src = $('#ov-pic'), dst = $('#card-pic');
+  const travel = src && dst && ovs.scrollTop < 300; // photo still on screen: it flies back; otherwise a plain fade
+  if (travel) src.style.viewTransitionName = 'hero';
+  MK.morph(() => { if (travel) { src.style.viewTransitionName = ''; dst.style.viewTransitionName = 'hero'; } ov.hidden = true; document.body.classList.remove('onphoto'); })
+    .then(() => { if (dst) dst.style.viewTransitionName = ''; });
+  (opener && opener.isConnected ? opener : $('#card [data-open]'))?.focus({ preventScroll: true });
+}
+function hideOverlay() {
+  document.body.classList.remove('onphoto');
+  ov.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, easing: MK.out }).finished.then(() => { ov.hidden = true; }, () => { ov.hidden = true; });
+}
+ovs.addEventListener('scroll', () => {
+  const solid = ovs.scrollTop > 440 - 111 - 8;
+  ovh.classList.toggle('solid', solid);
+  document.body.classList.toggle('onphoto', !solid && !ov.hidden);
+}, { passive: true });
 
-  /* photo viewer: the tapped photo is the thing that grows */
-  const viewer = $('#viewer'), track = $('#v-track');
-  let vIdx = 0, vOpener = null;
-  const setCount = (i) => { vIdx = i; const n = track.children.length; $('#v-count').textContent = `${i + 1} / ${n}`; $('#v-prev').disabled = i === 0; $('#v-next').disabled = i === n - 1; };
-  function openViewer(i, btn) {
-    const p = deck[pos], src = btn.querySelector('img'); vOpener = btn;
-    track.innerHTML = p.photos.map((ph) => `<div class="v-slide"><div class="slot" style="--c:${ph.c}"><img class="in" src="${IMG(ph)}" alt="${ph.alt}" crossorigin="anonymous" onerror="this.remove()"></div></div>`).join('');
-    const dst = track.children[i].querySelector('img');
-    if (src) src.style.viewTransitionName = 'photo';
-    MK.morph(() => {
-      if (src) src.style.viewTransitionName = '';
-      dst.style.viewTransitionName = 'photo';
-      viewer.hidden = false; html.dataset.viewer = ''; track.scrollLeft = i * track.clientWidth; setCount(i);
-    }).then(() => { dst.style.viewTransitionName = ''; $('#v-close').focus({ preventScroll: true }); });
-  }
-  function closeViewer() {
-    if (viewer.hidden) return;
-    const from = track.children[vIdx]?.querySelector('img'), to = $(`.photo-open[data-idx="${vIdx}"] img`, art);
-    const r = to?.getBoundingClientRect(), dr = disc.getBoundingClientRect();
-    const fly = to && from && r.bottom > dr.top && r.top < dr.bottom; // fly home only to a photo that is on screen
-    if (fly) from.style.viewTransitionName = 'photo';
-    MK.morph(() => {
-      if (fly) { from.style.viewTransitionName = ''; to.style.viewTransitionName = 'photo'; }
-      viewer.hidden = true; delete html.dataset.viewer;
-    }).then(() => { if (fly) to.style.viewTransitionName = ''; vOpener?.focus({ preventScroll: true }); });
-  }
-  const page = (d) => { const i = Math.max(0, Math.min(track.children.length - 1, vIdx + d)); track.scrollTo({ left: i * track.clientWidth, behavior: MK.reduced() ? 'auto' : 'smooth' }); setCount(i); };
-  track.addEventListener('scroll', () => { const i = Math.round(track.scrollLeft / track.clientWidth); if (i !== vIdx) setCount(i); }, { passive: true });
-  $('#v-close').onclick = closeViewer; $('#v-prev').onclick = () => page(-1); $('#v-next').onclick = () => page(1);
+/* ---------- sheets: like a prompt or photo with a note, report ---------- */
+let sheetOpener = null, onSend = null;
+function openSheet(title, body, send) {
+  sheetOpener = document.activeElement; onSend = send;
+  $('#sh-title').textContent = title; $('#sh-body').innerHTML = body;
+  sheet.hidden = false; scrim.hidden = false;
+  const e = MK.ease.spatial;
+  if (!MK.reduced()) sheet.animate([{ transform: 'translateY(100%)' }, { transform: 'none' }], { duration: e.ms, easing: e.easing });
+  scrim.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: MK.out });
+  $('#sh-title').focus({ preventScroll: true });
+}
+function closeSheet(restoreFocus = true) {
+  if (sheet.hidden) return;
+  const done = () => { sheet.hidden = true; scrim.hidden = true; };
+  if (MK.reduced()) done();
+  else { sheet.animate([{ transform: 'none' }, { transform: 'translateY(100%)' }], { duration: 200, easing: MK.out }).finished.then(done, done);
+         scrim.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, easing: MK.out }); }
+  if (restoreFocus && sheetOpener?.isConnected) sheetOpener.focus({ preventScroll: true });
+}
+function likeSheet(kind, i) {
+  const p = cur(); if (!p) return;
+  const pr = kind === 'prompt' ? p.prompts[i] : null;
+  const quote = pr ? `<div class="quote"><p class="q">${esc(pr.q)}</p><p class="a">${esc(pr.a)}</p></div>`
+    : `<div class="pic quote-pic" style="--c:${p.photo2.c}">${img(U(p.photo2.id, 400, 500, 'entropy'), p.photo2.alt)}</div>`;
+  openSheet(pr ? 'Yanıtı beğen' : 'Fotoğrafı beğen', `${quote}
+    <div><label class="lbl" for="note">Not ekle</label><textarea id="note" maxlength="150" enterkeyhint="send" autocomplete="off" aria-describedby="note-hint"></textarea>
+    <p class="hint" id="note-hint">İsteğe bağlı. ${esc(p.name)} beğenini bu notla görür.</p></div>
+    <button class="btn btn-like btn-wide" data-send><i class="ph-fill ph-heart" aria-hidden="true"></i>Beğeniyi gönder</button>`,
+    () => { const note = $('#note').value.trim(); closeSheet(false);
+      decide(kind, { note, what: pr ? `“${pr.q}” yanıtını beğendin` : 'Fotoğrafını beğendin' }); });
+}
+function reportSheet() {
+  const p = cur(); if (!p) return;
+  const reasons = ['Sahte profil', 'Uygunsuz fotoğraf', 'Rahatsız edici davranış', '18 yaşından küçük olabilir', 'Başka bir sebep'];
+  openSheet('Profili bildir', `<fieldset class="reasons"><legend class="sr">Sebep</legend>${reasons.map((r) => `<label><input type="radio" name="why" value="${r}">${r}</label>`).join('')}</fieldset>
+    <p class="err" id="why-err" role="alert" hidden>Bir sebep seç.</p>
+    <p class="hint">${esc(p.name)} bildirdiğini görmez. Profil Keşfet'ten kalkar.</p>
+    <button class="btn btn-solid btn-wide" data-send>Bildir</button>`,
+    () => { if (!$('input[name="why"]:checked')) { $('#why-err').hidden = false; return; } closeSheet(false); decide('report'); });
+}
 
-  /* other tabs */
-  const avatar = (ph, cls = 'avatar') => `<div class="slot ${cls}" style="--c:${ph.c}"><img src="${IMG(ph, 200, 200)}" alt="" crossorigin="anonymous" onload="this.classList.add('in')" onerror="this.remove()"></div>`;
-  function renderLikes() {
-    const rows = LIKERS.map((l, k) => {
-      const top = `<p class="pname">${l.name}, ${l.age}</p>`;
-      if (l.state === 'match') return `<div class="person">${avatar(l.photo)}<div>${top}<div class="pact"><p>${l.name} ile eşleştiniz</p><button class="btn btn-2 btn-sm" style="flex:none" data-go-chats>Sohbetlere git</button></div></div></div>`;
-      if (l.state === 'pass') return `<div class="person">${avatar(l.photo)}<div>${top}<div class="pact"><p>${l.acc} geçtin</p><button class="link" data-liker="${k}" data-set="new">Geri al</button></div></div></div>`;
-      return `<div class="person">${avatar(l.photo)}<div>${top}<p class="psub">${l.what}</p>${l.note ? `<p class="note">${l.note}</p>` : ''}`
-        + `<div class="pact"><button class="btn btn-2 btn-sm" data-liker="${k}" data-set="pass"><i class="ph ph-x" aria-hidden="true"></i>Geç</button><button class="btn btn-1 btn-sm" data-liker="${k}" data-set="match"><i class="ph ph-heart" aria-hidden="true"></i>Eşleş</button></div></div></div>`;
-    }).join('');
-    $('#likes-scroll').innerHTML = `<h2 class="sect">Seni beğenenler</h2>${rows}<div class="end-pad"></div>`;
-    const n = LIKERS.filter((l) => l.state === 'new').length, b = $('#badge');
-    b.textContent = n; b.hidden = !n; b.setAttribute('aria-hidden', 'true');
-    b.parentElement.setAttribute('aria-label', n ? `Beğeniler, ${n} yeni` : 'Beğeniler');
-    console.assert($('#likes-scroll').querySelectorAll('[data-set="match"]').length === n, 'badge must match the open likes');
-  }
-  function renderChats() {
-    const matched = LIKERS.filter((l) => l.state === 'match').map((l) => ({ name: l.name, photo: l.photo, last: 'Yeni eşleşme, henüz mesaj yok', time: 'Şimdi' }));
-    $('#chats-scroll').innerHTML = [...matched, ...CHATS].map((c) => `<div class="person">${avatar(c.photo)}<div><div style="display:flex;justify-content:space-between;gap:12px"><p class="pname">${c.name}</p><span class="chat-time">${c.time}</span></div><p class="psub">${c.last}</p></div></div>`).join('') + '<div class="end-pad"></div>';
-  }
-  function renderMe() {
-    $('#me-scroll').innerHTML = `<div class="me-head">${avatar(ME.photo, 'me-photo')}<p class="pname" style="font:var(--t-title)">${ME.name}, ${ME.age}</p></div>`
-      + `<h2 class="sect">İlgi alanların</h2><ul class="chips pad">${ME.interests.map((i) => `<li class="chip mine">${i}</li>`).join('')}</ul>`
-      + `<h2 class="sect">Yanıtların</h2>${ME.prompts.map((q) => `<section class="prompt" style="margin-top:0;margin-bottom:12px"><p class="q">${q.q}</p><p class="a">${q.a}</p></section>`).join('')}<div class="end-pad"></div>`;
-  }
-  const scrollMemo = {};
-  function setTab(t) {
-    const cur = $(`#v-${tab} .scroller`); scrollMemo[tab] = cur.scrollTop;
-    tab = t;
-    document.querySelectorAll('.tab').forEach((b) => { const on = b.dataset.tab === t; b.toggleAttribute('aria-current', on); if (on) b.setAttribute('aria-current', 'page');
-      b.querySelector('i').className = `${on ? 'ph-fill' : 'ph'} ph-${b.dataset.icon}`; });
-    ['discover', 'likes', 'chats', 'me'].forEach((v) => { $(`#v-${v}`).hidden = v !== t; });
-    $('#title').textContent = { discover: 'Kıvılcım', likes: 'Beğeniler', chats: 'Sohbetler', me: 'Profil' }[t];
-    $('#compact').hidden = t !== 'discover';
-    if (t === 'likes') renderLikes(); if (t === 'chats') renderChats(); if (t === 'me') renderMe();
-    $(`#v-${t} .scroller`).scrollTop = scrollMemo[t] || 0;
-    nav.classList.toggle('scrolled', (scrollMemo[t] || 0) > 72);
-  }
-
-  /* wiring */
-  art.addEventListener('click', (e) => {
-    const like = e.target.closest('[data-like]'), open = e.target.closest('.photo-open'), rep = e.target.closest('#report-open');
-    if (like) likeSheet(like.dataset.like, like);
-    else if (open) openViewer(+open.dataset.idx, open);
-    else if (rep) reportSheet(rep);
+/* ---------- tabs ---------- */
+function goTab(t) {
+  S.tab = t; screen.dataset.tab = t;
+  document.querySelectorAll('.tab').forEach((b) => {
+    const on = b.dataset.tab === t, i = b.querySelector('i');
+    on ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current');
+    i.className = i.className.replace(/\bph(-fill)?\b(?= )/, on ? 'ph-fill' : 'ph');
   });
-  sheet.addEventListener('click', (e) => {
-    const t = e.target;
-    if (t.closest('[data-close]')) return closeSheet();
-    if (t.closest('#send-like')) { const note = $('#note').value.trim(); closeSheet(true); return decide('like', { note }); }
-    if (t.closest('#go-block')) return blockStep();
-    if (t.closest('#go-report')) return reasonStep();
-    if (t.closest('#do-block')) { closeSheet(true); return decide('block'); }
-    if (t.closest('#do-report')) {
-      if (!sheet.querySelector('input[name=reason]:checked')) { $('#reason-err').textContent = 'Bir sebep seç.'; return; }
-      closeSheet(true); return decide('report');
-    }
-  });
-  sheet.addEventListener('input', (e) => { if (e.target.id === 'note') $('#note-count').textContent = `${e.target.value.length}/150`; });
-  sheet.addEventListener('change', () => { const er = $('#reason-err'); if (er) er.textContent = ''; });
-  scrim.onclick = () => closeSheet();
-  $('#like').onclick = () => decide('like');
-  $('#pass').onclick = () => decide('pass');
-  $('#undo').onclick = undo;
-  $('#retry').onclick = () => { history.replaceState(null, '', location.pathname + location.search); showDiscover(true); };
-  $('#replay').onclick = () => { deck.push(...passed); passed = []; last = null; receipt(null); showDiscover(true); $('#pname')?.focus({ preventScroll: true }); };
-  document.querySelectorAll('.tab').forEach((b) => { b.onclick = () => setTab(b.dataset.tab); });
-  $('#v-likes').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-liker]'); if (b) { const l = LIKERS[+b.dataset.liker]; l.state = b.dataset.set; renderLikes(); live(l.state === 'match' ? `${l.name} ile eşleştiniz` : l.state === 'pass' ? `${l.acc} geçtin` : `${l.name} geri geldi`); if (l.state === 'match') MK.haptic('success'); }
-    if (e.target.closest('[data-go-chats]')) setTab('chats');
-  });
-  disc.addEventListener('scroll', () => { nav.classList.toggle('scrolled', disc.scrollTop > 72 && !art.hidden); }, { passive: true });
-  addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { if (!sheet.hidden) closeSheet(); else if (!viewer.hidden) closeViewer(); }
-    if (!viewer.hidden && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) page(e.key === 'ArrowRight' ? 1 : -1);
-  });
-  addEventListener('hashchange', () => showDiscover(false));
-  showDiscover(false); renderLikes();
-  </script>
+  ['discover', 'likes', 'chats', 'profile'].forEach((v) => { $('#v-' + v).hidden = v !== t; });
+  $('#title').textContent = { discover: 'Kıvılcım', likes: 'Beğeniler', chats: 'Sohbetler', profile: 'Profil' }[t];
+  if (t === 'profile') renderMe();
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b === scrim) return;
+  if (b.dataset.act) decide(b.dataset.act);
+  else if (b.hasAttribute('data-open')) openProfile(b);
+  else if (b.dataset.likePrompt !== undefined) likeSheet('prompt', +b.dataset.likePrompt);
+  else if (b.hasAttribute('data-like-photo')) likeSheet('photo');
+  else if (b.hasAttribute('data-send')) onSend?.();
+  else if (b.hasAttribute('data-report')) reportSheet();
+  else if (b.hasAttribute('data-block')) decide('block');
+  else if (b.id === 'undo') undo();
+  else if (b.id === 'ov-close') closeProfile();
+  else if (b.id === 'sh-close') closeSheet();
+  else if (b.dataset.tab) goTab(b.dataset.tab);
+  else if (b.dataset.goto) goTab(b.dataset.goto);
+  else if (b.hasAttribute('data-retry')) { history.replaceState(null, '', location.pathname + location.search); sync(); }
+  else if (b.dataset.interest) { const i = b.dataset.interest; ME.interests.has(i) ? ME.interests.delete(i) : ME.interests.add(i); renderMe(); renderCard();
+    $(`[data-interest="${CSS.escape(i)}"]`)?.focus({ preventScroll: true }); }
+});
+scrim.addEventListener('click', () => closeSheet());
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (!sheet.hidden) closeSheet(); else if (!ov.hidden) closeProfile();
+});
+new ResizeObserver(([en]) => screen.style.setProperty('--bar-h', en.target.offsetHeight + 'px')).observe($('#bar'));
+
+/* ---------- states by URL hash ---------- */
+const STATES = ['loading', 'empty', 'error', 'offline'];
+function sync() {
+  const s = location.hash.slice(1), st = STATES.includes(s) ? s : 'content';
+  document.documentElement.dataset.state = st;
+  $('#loading-msg').textContent = st === 'loading' ? 'Profiller yükleniyor' : '';
+  if (st !== 'content') { closeSheet(false); if (!ov.hidden) { ov.hidden = true; document.body.classList.remove('onphoto'); } }
+}
+addEventListener('hashchange', sync);
+
+$('#me-img').outerHTML = img(U('1507003211169-0a1dd7228f2d', 176, 176), "Emre'nin profil fotoğrafı");
+render(); sync();
+</script>
 </body>
 </html>

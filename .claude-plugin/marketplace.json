@@ -6,7 +6,7 @@
     {
       "name": "mobile-ui-craft",
       "description": "Design, build, restyle and review mobile app UI and UX with a coherent look of its own: a researched direction dealt from the niche, real photos and maps instead of drawn or empty slots, and prototypes that carry the task one step further with real states and one signature motion of real content.",
-      "version": "5.0.0",
+      "version": "5.1.0",
       "source": "./",
       "skills": ["./skills/mobile-ui-craft"],
       "author": { "name": "Kaan Tufan" },

@@ -4,7 +4,7 @@ description: >-
   Design, build, restyle and review mobile app UI and UX for iOS (SwiftUI, UIKit), Android (Jetpack Compose, Kotlin), Flutter and React Native or Expo, so each app gets a coherent look of its own that does not read as AI-generated: a researched direction dealt from the niche, real photos and maps instead of drawn or empty slots, and UX that carries the task one step further with real states. Use this skill whenever the task touches a mobile screen, flow, component, theme, navigation, onboarding, paywall, animation, haptics, icon set or app mockup or prototype, or the user says an app looks generic, plain, off, cheap or AI-made, even if they never say "design". Not for websites or desktop apps.
 license: MIT
 metadata:
-  version: "5.0.0"
+  version: "5.1.0"
   baseline: "2026-11"
 ---
 
